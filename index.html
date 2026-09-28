@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ro" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>DIiH Mobile Hub</title>
+  
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- Tailwind CSS CDN pentru design modern -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            darkbg: '#090d16',
+            cardbg: '#131b2e',
+            bordercol: '#232f48'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Elimină highlight-ul de tap pe mobil */
+    * { -webkit-tap-highlight-color: transparent; }
+    /* Scrollbar fin pentru lista mare */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #090d16; }
+    ::-webkit-scrollbar-thumb { background: #232f48; border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-darkbg text-slate-100 font-sans pb-24 antialiased selection:bg-cyan-800">
+
+  <!-- HEADER APLICAȚIE (Mobile AppBar) -->
+  <header class="sticky top-0 z-40 bg-darkbg/95 backdrop-blur-md border-b border-bordercol px-4 py-3">
+    <div class="flex items-center justify-between max-w-lg mx-auto">
+      <div class="flex items-center space-x-2">
+        <span class="text-xl">🧭</span>
+        <div>
+          <h1 class="font-bold text-base tracking-wide text-white leading-tight">DIiH Hub</h1>
+          <p id="todayDateLabel" class="text-xs text-slate-400 font-medium"></p>
+        </div>
+      </div>
+      <button onclick="fetchDataFromSheet()" class="p-2 rounded-xl bg-cardbg border border-bordercol hover:bg-slate-800 text-slate-300 active:scale-95 transition">
+        <svg id="syncIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+      </button>
+    </div>
+
+    <!-- BARA DE CĂUTARE INSTANT -->
+    <div class="max-w-lg mx-auto mt-2.5">
+      <div class="relative">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </span>
+        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Caută nume, rudenie, localitate..." class="w-full bg-cardbg border border-bordercol rounded-xl pl-9 pr-8 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition">
+        <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">✕</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONȚINUT PRINCIPAL -->
+  <main class="max-w-lg mx-auto px-4 mt-4 space-y-4">
+
+    <!-- TAB 1: ASTĂZI (Card Catisma + Aniversări) -->
+    <section id="todaySection" class="space-y-4">
+      
+      <!-- Card Catisma Zilei -->
+      <div class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg">
+        <div class="flex items-center justify-between text-xs font-semibold text-rose-300 uppercase tracking-wider mb-2">
+          <span>📖 Citirea Psaltirii</span>
+          <span class="bg-rose-950/80 border border-rose-800 text-rose-200 px-2 py-0.5 rounded-full">De Rând</span>
+        </div>
+        <h2 id="psaltireTitle" class="text-base font-bold text-white leading-snug">Se calculează...</h2>
+        <p id="psaltireStari" class="text-xs text-slate-300 mt-1 font-mono"></p>
+        <div class="mt-3 pt-3 border-t border-slate-700/60 flex items-center justify-between">
+          <span class="text-xs text-slate-400">Pravilă de dimineață</span>
+          <button onclick="togglePsaltireDetails()" class="text-xs text-cyan-400 font-medium hover:underline flex items-center space-x-1">
+            <span>Rânduială & Rugăciune</span>
+            <span>↓</span>
+          </button>
+        </div>
+        <!-- Detalii Rânduială Expandabile -->
+        <div id="psaltireDetails" class="hidden mt-3 pt-3 border-t border-slate-700/60 text-xs text-slate-300 space-y-2 whitespace-pre-line font-sans max-h-64 overflow-y-auto"></div>
+      </div>
+
+      <!-- Card Aniversări & Comemorări Astăzi -->
+      <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-semibold text-cyan-300 uppercase tracking-wider mb-3">
+          <span>🕯️ Pomeniri Astăzi</span>
+          <span id="todayCountBadge" class="bg-slate-800 px-2 py-0.5 rounded-full text-slate-300">0</span>
+        </div>
+        <div id="todayEventsList" class="space-y-2.5">
+          <p class="text-xs text-slate-400 italic py-2 text-center">Nicio aniversare sau trecere la Domnul în această zi.</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- LISTA COMPLETĂ DE PERSOANE (POMELNIC) -->
+    <section id="pomelnicSection" class="space-y-2.5">
+      <div class="flex items-center justify-between px-1">
+        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Registru Pomelnic (<span id="totalCount">0</span>)</h3>
+        <div class="flex space-x-1">
+          <button onclick="filterPomelnic('ALL')" id="filterAll" class="px-2.5 py-1 text-xs rounded-lg bg-cyan-900/60 text-cyan-200 border border-cyan-700 font-medium">Toți</button>
+          <button onclick="filterPomelnic('VIU')" id="filterViu" class="px-2.5 py-1 text-xs rounded-lg bg-cardbg text-slate-400 border border-bordercol hover:text-white">Vii</button>
+          <button onclick="filterPomelnic('ADORMIT')" id="filterAdormit" class="px-2.5 py-1 text-xs rounded-lg bg-cardbg text-slate-400 border border-bordercol hover:text-white">Adormiți</button>
+        </div>
+      </div>
+
+      <!-- Container Carduri Oameni -->
+      <div id="peopleListContainer" class="space-y-2">
+        <div class="text-center py-12 text-slate-400 text-xs">
+          <p>Se încarcă datele...</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL PENTRU FIȘĂ COMPLETĂ PERSOANĂ -->
+  <div id="personModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[85vh] overflow-y-auto space-y-3">
+      <div class="flex items-start justify-between border-b border-bordercol pb-3">
+        <div>
+          <span id="modalBadge" class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"></span>
+          <h2 id="modalName" class="text-lg font-bold text-white mt-1 leading-snug"></h2>
+        </div>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1 text-lg">✕</button>
+      </div>
+
+      <div id="modalDetails" class="text-xs space-y-2.5 text-slate-200 divide-y divide-bordercol/40"></div>
+
+      <div class="pt-3">
+        <button onclick="closeModal()" class="w-full bg-slate-800 border border-bordercol py-2.5 rounded-xl font-medium text-xs text-white active:scale-95 transition">Închide</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configurare Rotație Psaltire (Baza: 22.09.2026 = Rândul 6)
+    const BASE_DATE = new Date(2026, 8, 22);
+    const BASE_RAND = 6;
+    const CATISME_INFO = {
+      1:  { roman: "I",     display: "1–3 | 4–6 | 7–8" },
+      2:  { roman: "II",    display: "9–10 | 11–13 | 14–16" },
+      3:  { roman: "III",   display: "17 | 18–20 | 21–23" },
+      4:  { roman: "IV",    display: "24–26 | 27–29 | 30–31" },
+      5:  { roman: "V",     display: "32–33 | 34–35 | 36" },
+      6:  { roman: "VI",    display: "37–39 | 40–42 | 43–45" },
+      7:  { roman: "VII",   display: "46–48 | 49–50 | 51–54" },
+      8:  { roman: "VIII",  display: "55–57 | 58–60 | 61–63" },
+      9:  { roman: "IX",    display: "64–66 | 67 | 68–69" },
+      10: { roman: "X",     display: "70–71 | 72–73 | 74–76" },
+      11: { roman: "XI",    display: "77 | 78–80 | 81–84" },
+      12: { roman: "XII",   display: "85–87 | 88 | 89–90" },
+      13: { roman: "XIII",  display: "91–93 | 94–96 | 97–100" },
+      14: { roman: "XIV",   display: "101–102 | 103 | 104" },
+      15: { roman: "XV",    display: "105 | 106 | 107–108" },
+      16: { roman: "XVI",   display: "109–111 | 112–114 | 115–117" },
+      17: { roman: "XVII",  display: "118:1–72 | 118:73–131 | 118:132–176" },
+      18: { roman: "XVIII", display: "119–123 | 124–128 | 129–133" },
+      19: { roman: "XIX",   display: "134–136 | 137–139 | 140–142" },
+      20: { roman: "XX",    display: "143–144 | 145–147 | 148–150" }
+    };
+
+    let allPeople = [];
+    let currentFilter = 'ALL';
+
+    // Inițializare aplicație
+    document.addEventListener("DOMContentLoaded", () => {
+      displayCurrentDate();
+      calculateTodayPsaltire();
+      loadCachedData();
+      registerServiceWorker();
+    });
+
+    function displayCurrentDate() {
+      const now = new Date();
+      const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+      const str = now.toLocaleDateString('ro-RO', options);
+      document.getElementById('todayDateLabel').textContent = str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    function calculateTodayPsaltire() {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const base = new Date(BASE_DATE.getTime());
+      base.setHours(0,0,0,0);
+
+      const diffDays = Math.round((today.getTime() - base.getTime()) / (1000 * 60 * 60 * 24));
+      const catismaNum = ((BASE_RAND - 1 + diffDays) % 20 + 20) % 20 + 1;
+      const info = CATISME_INFO[catismaNum];
+
+      document.getElementById('psaltireTitle').textContent = `Catisma ${info.roman} (${catismaNum})`;
+      document.getElementById('psaltireStari').textContent = `Psalmii: ${info.display}`;
+      document.getElementById('psaltireDetails').textContent = 
+`RÂNDUIALĂ ZILNICĂ:
+• Început: Sfinte Dumnezeule... Preasfântă Treime... Tatăl nostru...
+• Troparele de umilință & Rugăciunea către Sfânta Treime
+• Psalmii împărțiți pe cele 3 Stări de la Slavă
+• Încheiere: 40 de Doamne miluiește și Rugăciunea Catismei ${info.roman}.`;
+    }
+
+    function togglePsaltireDetails() {
+      const el = document.getElementById('psaltireDetails');
+      el.classList.toggle('hidden');
+    }
+
+    // Funcție de încărcare / randare persoane
+    function loadCachedData() {
+      const local = localStorage.getItem('diih_people_data');
+      if (local) {
+        allPeople = JSON.parse(local);
+        renderData();
+      } else {
+        // Date demo locale inițiale (până conectăm Apps Script-ul live)
+        allPeople = [
+          { rowId: 124, prenume: "Andreea", nume: "Murar", stare: "Viu", dn: "31.08.1991", da: "", grad: "Familie", info: "Soția lui Bogdan Murar", copii: "Luca Murar", sot: "Bogdan-Paul Murar", parinti: "Stoia Ioan și Maria" },
+          { rowId: 2, prenume: "Diaconul Ion", nume: "Creanga", stare: "Adormit", dn: "03.01.1837", da: "31.12.1889", grad: "Cler", info: "Scriitor și dascăl român", copii: "Constantin", sot: "Ileana", parinti: "Ștefan și Smaranda" },
+          { rowId: 9, prenume: "Nicolae", nume: "Murar", stare: "Adormit", dn: "11.12.1936", da: "18.12.1964", grad: "Bunici", info: "Cașva - Ticu Lae", copii: "Cristina și Sorin", sot: "Aurelia Iacob", parinti: "-" }
+        ];
+        renderData();
+      }
+    }
+
+    function renderData() {
+      document.getElementById('totalCount').textContent = allPeople.length;
+      checkTodayAnniversaries();
+      filterPomelnic(currentFilter);
+    }
+
+    function checkTodayAnniversaries() {
+      const now = new Date();
+      const currentDay = now.getDate();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+
+      const todayListContainer = document.getElementById('todayEventsList');
+      const matches = [];
+
+      allPeople.forEach(p => {
+        if (p.dn) {
+          const parts = p.dn.split(/[\.\/\-]/);
+          if (parts.length === 3 && parseInt(parts[0], 10) === currentDay && parseInt(parts[1], 10) === currentMonth) {
+            const varsta = currentYear - parseInt(parts[2], 10);
+            matches.push({ type: 'BIRTH', person: p, age: varsta });
+          }
+        }
+        if (p.da && p.stare === 'Adormit') {
+          const parts = p.da.split(/[\.\/\-]/);
+          if (parts.length === 3 && parseInt(parts[0], 10) === currentDay && parseInt(parts[1], 10) === currentMonth) {
+            const aniAdormit = currentYear - parseInt(parts[2], 10);
+            matches.push({ type: 'DEATH', person: p, years: aniAdormit });
+          }
+        }
+      });
+
+      document.getElementById('todayCountBadge').textContent = matches.length;
+
+      if (matches.length > 0) {
+        todayListContainer.innerHTML = matches.map(m => {
+          if (m.type === 'BIRTH') {
+            return `
+              <div onclick="openPersonModal(${m.person.rowId})" class="p-2.5 rounded-xl bg-slate-900/80 border border-emerald-900/50 flex items-center justify-between cursor-pointer active:scale-98 transition">
+                <div>
+                  <span class="text-xs font-bold text-emerald-300">🎂 Naștere: ${m.person.prenume} ${m.person.nume}</span>
+                  <p class="text-[11px] text-slate-400">Împlinește ${m.age} ani</p>
+                </div>
+                <span class="text-xs text-slate-500">›</span>
+              </div>`;
+          } else {
+            return `
+              <div onclick="openPersonModal(${m.person.rowId})" class="p-2.5 rounded-xl bg-slate-900/80 border border-amber-900/50 flex items-center justify-between cursor-pointer active:scale-98 transition">
+                <div>
+                  <span class="text-xs font-bold text-amber-300">† Pomenire: ${m.person.prenume} ${m.person.nume}</span>
+                  <p class="text-[11px] text-slate-400">Adormit de ${m.years} ani</p>
+                </div>
+                <span class="text-xs text-slate-500">›</span>
+              </div>`;
+          }
+        }).join('');
+      }
+    }
+
+    function filterPomelnic(type) {
+      currentFilter = type;
+      ['filterAll', 'filterViu', 'filterAdormit'].forEach(id => {
+        document.getElementById(id).className = "px-2.5 py-1 text-xs rounded-lg bg-cardbg text-slate-400 border border-bordercol hover:text-white";
+      });
+
+      if (type === 'ALL') document.getElementById('filterAll').className = "px-2.5 py-1 text-xs rounded-lg bg-cyan-900/60 text-cyan-200 border border-cyan-700 font-medium";
+      if (type === 'VIU') document.getElementById('filterViu').className = "px-2.5 py-1 text-xs rounded-lg bg-emerald-900/60 text-emerald-200 border border-emerald-700 font-medium";
+      if (type === 'ADORMIT') document.getElementById('filterAdormit').className = "px-2.5 py-1 text-xs rounded-lg bg-amber-900/60 text-amber-200 border border-amber-700 font-medium";
+
+      handleSearch();
+    }
+
+    function handleSearch() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      clearBtn.classList.toggle('hidden', q === '');
+
+      const filtered = allPeople.filter(p => {
+        if (currentFilter === 'VIU' && p.stare !== 'Viu') return false;
+        if (currentFilter === 'ADORMIT' && p.stare !== 'Adormit') return false;
+
+        if (q === '') return true;
+        const haystack = `${p.prenume} ${p.nume} ${p.info || ''} ${p.grad || ''} ${p.sot || ''} ${p.copii || ''}`.toLowerCase();
+        return haystack.includes(q);
+      });
+
+      const container = document.getElementById('peopleListContainer');
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-center py-8 text-slate-500 text-xs">Nicio persoană găsită.</p>`;
+        return;
+      }
+
+      const currentYear = new Date().getFullYear();
+
+      container.innerHTML = filtered.map(p => {
+        const isViu = p.stare === 'Viu';
+        const badgeColor = isViu ? 'bg-emerald-950 border-emerald-800 text-emerald-300' : 'bg-amber-950 border-amber-800 text-amber-300';
+        const icon = isViu ? '🌱' : '†';
+
+        let dateInfo = '';
+        if (p.dn) dateInfo += `n. ${p.dn}`;
+        if (p.da) dateInfo += ` • d. ${p.da}`;
+
+        return `
+          <div onclick="openPersonModal(${p.rowId})" class="p-3 bg-cardbg border border-bordercol rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-600 active:scale-98 transition shadow-sm">
+            <div class="space-y-0.5">
+              <div class="flex items-center space-x-2">
+                <span class="text-sm font-semibold text-white">${p.prenume} ${p.nume}</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${icon} ${p.stare}</span>
+              </div>
+              <p class="text-[11px] text-slate-400">${dateInfo || 'Fără date calendaristice'}</p>
+              ${p.grad ? `<p class="text-[10px] text-slate-500">${p.grad}</p>` : ''}
+            </div>
+            <span class="text-slate-500 text-base pr-1">›</span>
+          </div>`;
+      }).join('');
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      handleSearch();
+    }
+
+    function openPersonModal(rowId) {
+      const p = allPeople.find(x => x.rowId === rowId);
+      if (!p) return;
+
+      const isViu = p.stare === 'Viu';
+      const badge = document.getElementById('modalBadge');
+      badge.textContent = `${isViu ? '🌱' : '†'} ${p.stare}`;
+      badge.className = isViu ? 'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300' : 'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-950 border border-amber-800 text-amber-300';
+
+      document.getElementById('modalName').textContent = `${p.prenume} ${p.nume}`;
+
+      const detailsEl = document.getElementById('modalDetails');
+      let html = '';
+
+      if (p.dn) html += `<div class="py-1.5"><span class="text-slate-400 block text-[10px] uppercase">Data nașterii</span><span class="text-white">${p.dn}</span></div>`;
+      if (p.da) html += `<div class="py-1.5"><span class="text-slate-400 block text-[10px] uppercase">Data adormirii</span><span class="text-white">${p.da}</span></div>`;
+      if (p.grad) html += `<div class="py-1.5"><span class="text-slate-400 block text-[10px] uppercase">Grad / Cler</span><span class="text-white">${p.grad}</span></div>`;
+      if (p.sot) html += `<div class="py-1.5"><span class="text-slate-400 block text-[10px] uppercase">Soț / Soție</span><span class="text-white">${p.sot}</span></div>`;
+      if (p.copii) html += `<div class="py-1.5"><span class="text-slate-400 block text-[10px] uppercase">Copii</span><span class="text-white">${p.copii}</span></div>`;
+      if (p.parinti) html += `<div class="py-1.5"><span class="text-slate-400 block text-[10px] uppercase">Părinți</span><span class="text-white">${p.parinti}</span></div>`;
+      if (p.info) html += `<div class="py-1.5"><span class="text-slate-400 block text-[10px] uppercase">Informații biografice</span><span class="text-slate-300 whitespace-pre-line">${p.info}</span></div>`;
+
+      detailsEl.innerHTML = html;
+      document.getElementById('personModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('personModal').classList.add('hidden');
+    }
+
+    function registerServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail:', err));
+      }
+    }
+
+    // Funcția care va trage datele live din Google Apps Script (Etapa următoare)
+    function fetchDataFromSheet() {
+      const icon = document.getElementById('syncIcon');
+      icon.classList.add('animate-spin');
+      setTimeout(() => {
+        icon.classList.remove('animate-spin');
+        alert("Sincronizare completă!");
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
