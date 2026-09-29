@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>DIiH Mobile Hub v10</title>
+  <title id="htmlAppTitle">DIiH Mobile Hub v11</title>
   
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#090d16">
@@ -30,18 +30,38 @@
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: #090d16; }
     ::-webkit-scrollbar-thumb { background: #232f48; border-radius: 4px; }
+
+    /* STIL PENTRU TIPAR / SALVARE PDF Bisericesc */
+    @media print {
+      body * { visibility: hidden; }
+      #printablePomelnicArea, #printablePomelnicArea * { visibility: visible; }
+      #printablePomelnicArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 20px;
+        font-family: 'Times New Roman', serif;
+      }
+      .no-print { display: none !important; }
+    }
   </style>
 </head>
 <body class="bg-darkbg text-slate-100 font-sans pb-28 antialiased selection:bg-cyan-800" onclick="closeContextMenu()">
 
-  <!-- TOAST DISCRET (Bifă verde, fără pop-up) -->
+  <!-- ZONĂ INVIZIBILĂ DEDICATĂ TIPĂRIRII / SALVĂRII PDF -->
+  <div id="printablePomelnicArea" class="hidden"></div>
+
+  <!-- TOAST DISCRET -->
   <div id="toastSuccess" class="fixed top-4 right-4 z-50 bg-emerald-900 border border-emerald-600 text-emerald-100 text-xs px-3 py-2 rounded-xl shadow-xl flex items-center space-x-2 transition-all opacity-0 pointer-events-none transform -translate-y-2">
     <span>✔</span>
     <span id="toastMsg">Salvat</span>
   </div>
 
-  <!-- CONTEXT MENU CLICK DREAPTA (Pentru Laptop) -->
-  <div id="laptopContextMenu" class="hidden fixed z-50 bg-[#162035] border border-slate-700 shadow-2xl rounded-xl py-1 text-xs text-slate-200 min-w-[200px]">
+  <!-- CONTEXT MENU CLICK DREAPTA (Laptop) -->
+  <div id="laptopContextMenu" class="hidden fixed z-50 bg-[#162035] border border-slate-700 shadow-2xl rounded-xl py-1 text-xs text-slate-200 min-w-[210px]">
     <div class="px-3 py-1.5 border-b border-slate-700/60 font-semibold text-white truncate" id="ctxMenuPersonName">Persoană</div>
     <button onclick="ctxToggleAtentie()" id="ctxToggleAtentieBtn" class="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center space-x-2 transition">
       <span>⚠️</span>
@@ -57,9 +77,9 @@
   <header class="sticky top-0 z-40 bg-darkbg/95 backdrop-blur-md border-b border-bordercol px-4 py-3">
     <div class="flex items-center justify-between max-w-lg mx-auto">
       <div class="flex items-center space-x-2">
-        <span class="text-xl">🧭</span>
+        <span id="headerAppLogo" class="text-xl">🧭</span>
         <div>
-          <h1 class="font-bold text-base tracking-wide text-white leading-tight">DIiH Hub</h1>
+          <h1 id="headerAppTitle" class="font-bold text-base tracking-wide text-white leading-tight">DIiH Hub</h1>
           <p id="todayDateLabel" class="text-xs text-slate-400 font-medium"></p>
         </div>
       </div>
@@ -78,7 +98,7 @@
     <!-- TAB 1: ASTĂZI -->
     <section id="tab-today" class="tab-content space-y-4">
       
-      <!-- Card Catisma Zilei -->
+      <!-- Catisma Zilei -->
       <div onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
         <div class="flex items-center justify-between text-xs font-semibold text-rose-300 uppercase tracking-wider mb-2">
           <span>📖 Citirea Psaltirii</span>
@@ -118,14 +138,20 @@
         <div id="anniversaryList" class="space-y-2"></div>
       </div>
 
-      <!-- Pomelnicul de Astăzi (20 de rând din Coloana C) -->
+      <!-- Pomelnicul de Astăzi (Calup configurabil cu buton de Tipar PDF) -->
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <div>
-            <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider">📿 Pomelnicul de Astăzi</span>
-            <p class="text-[10px] text-slate-400">Pomenire din lista celor bifate activ în Coloana C</p>
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider">📿 Pomelnicul de Astăzi</span>
+              <button onclick="printDailyPomelnicPDF()" class="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 rounded text-[10px] font-semibold flex items-center space-x-1 transition" title="Exportă sau Printează PDF">
+                <span>🖨️</span>
+                <span>PDF</span>
+              </button>
+            </div>
+            <p class="text-[10px] text-slate-400">Pomenire ciclică din lista celor activi (Coloana C)</p>
           </div>
-          <span id="pomelnic20Badge" class="bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs px-2 py-0.5 rounded-full font-mono">0 de rând</span>
+          <span id="pomelnicBatchBadge" class="bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs px-2 py-0.5 rounded-full font-mono">0 de rând</span>
         </div>
         <div id="dailyPomelnicList" class="space-y-1.5 divide-y divide-bordercol/30">
           <p class="text-xs text-slate-400 italic py-2 text-center">Se calculează pomelnicul...</p>
@@ -134,7 +160,7 @@
 
     </section>
 
-    <!-- TAB 2: POMELNIC COMPLET (Cu BATCH SELECTION & CLICK DREAPTA) -->
+    <!-- TAB 2: POMELNIC COMPLET (Cu Meniu Categorie, Filtre, Batch & Export PDF) -->
     <section id="tab-pomelnic" class="tab-content hidden space-y-3">
       <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -144,23 +170,30 @@
         <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">✕</button>
       </div>
 
-      <!-- Filtre rapide + Buton Activare Selecție Multiplă -->
+      <!-- Filtru Dropdown Categorie / Grad (Discret și Curat) -->
+      <div class="flex items-center space-x-2 bg-cardbg p-2 rounded-xl border border-bordercol">
+        <span class="text-[11px] text-slate-400 whitespace-nowrap">📂 Categorie:</span>
+        <select id="categoryDropdown" onchange="handleSearch()" class="bg-darkbg text-white border border-bordercol rounded-lg px-2 py-1 text-xs flex-1 focus:outline-none focus:border-cyan-500">
+          <option value="ALL">Toate Categoriile</option>
+        </select>
+      </div>
+
+      <!-- Butoane rapide de filtrare -->
       <div class="flex items-center justify-between px-1 pt-1 overflow-x-auto space-x-1 pb-1">
         <button onclick="filterPomelnic('ALL')" id="filterAll" class="px-2.5 py-1 text-xs rounded-lg bg-cyan-900/60 text-cyan-200 border border-cyan-700 font-medium whitespace-nowrap">Toți (<span id="totalCount">0</span>)</button>
         <button onclick="filterPomelnic('ATENTIE')" id="filterAtentie" class="px-2.5 py-1 text-xs rounded-lg bg-rose-950/80 text-rose-300 border border-rose-800 hover:text-white font-medium whitespace-nowrap">⚠️ Atenție (<span id="atentieCount">0</span>)</button>
         <button onclick="filterPomelnic('VIU')" id="filterViu" class="px-2.5 py-1 text-xs rounded-lg bg-cardbg text-slate-400 border border-bordercol hover:text-white whitespace-nowrap">Vii</button>
         <button onclick="filterPomelnic('ADORMIT')" id="filterAdormit" class="px-2.5 py-1 text-xs rounded-lg bg-cardbg text-slate-400 border border-bordercol hover:text-white whitespace-nowrap">Adormiți</button>
-        
-        <!-- Butonul dedicat pentru selecție multiplă (util pe telefon) -->
         <button onclick="toggleSelectMode()" id="toggleSelectModeBtn" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white font-medium whitespace-nowrap">☑️ Selectează</button>
       </div>
 
-      <!-- Bara flotantă de acțiuni multiple (Apare doar când sunt bifate persoane) -->
+      <!-- Bara flotantă de acțiuni multiple (Apare la selecție) -->
       <div id="batchActionBar" class="hidden sticky top-14 z-30 bg-slate-900/95 border border-cyan-700/60 p-2.5 rounded-2xl shadow-2xl flex items-center justify-between text-xs space-x-2">
         <span class="text-cyan-300 font-bold pl-1"><span id="batchCount">0</span> selectați</span>
-        <div class="flex items-center space-x-1.5">
-          <button onclick="applyBatchAtentie(true)" class="px-2.5 py-1.5 bg-rose-950 border border-rose-700 text-rose-200 rounded-xl font-bold hover:bg-rose-900 transition">⚠️ Pune Atenție</button>
-          <button onclick="applyBatchAtentie(false)" class="px-2.5 py-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 rounded-xl font-bold hover:bg-emerald-900 transition">✅ Scoate Atenție</button>
+        <div class="flex items-center space-x-1.5 overflow-x-auto">
+          <button onclick="printSelectedPomelnicPDF()" class="px-2 py-1.5 bg-cyan-950 border border-cyan-700 text-cyan-200 rounded-xl font-bold hover:bg-cyan-900 transition whitespace-nowrap">📄 Exportă PDF</button>
+          <button onclick="applyBatchAtentie(true)" class="px-2 py-1.5 bg-rose-950 border border-rose-700 text-rose-200 rounded-xl font-bold hover:bg-rose-900 transition whitespace-nowrap">⚠️ Atenție</button>
+          <button onclick="applyBatchAtentie(false)" class="px-2 py-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 rounded-xl font-bold hover:bg-emerald-900 transition whitespace-nowrap">✅ Scoate</button>
           <button onclick="cancelSelection()" class="p-1.5 text-slate-400 hover:text-white">✕</button>
         </div>
       </div>
@@ -208,43 +241,78 @@
       </div>
     </section>
 
-    <!-- TAB 5: SETĂRI & CONSOLĂ LOG LIVE -->
+    <!-- TAB 5: SETĂRI & ADMINISTRARE APLICAȚIE -->
     <section id="tab-setari" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-4 shadow-sm">
-        <div class="border-b border-bordercol pb-2">
-          <h3 class="text-xs font-bold text-white uppercase tracking-wider">🔔 Configurare Notificări</h3>
-          <p class="text-[11px] text-slate-400">Alerte native Android & Desktop</p>
+        
+        <!-- SECȚIUNEA 1: CURĂȚARE CACHE & RESETARE FĂRĂ DEVTOOLS -->
+        <div class="border-b border-bordercol pb-3 space-y-2">
+          <h3 class="text-xs font-bold text-rose-400 uppercase tracking-wider">🧹 Curățare Date & Resetare Versiune Nouă</h3>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Elimină cache-ul stocat, resetează Service Worker-ul și reîncarcă direct versiunea curentă de pe GitHub, fără să mai fie nevoie să deschizi F12 DevTools sau să reinstalezi aplicația.
+          </p>
+          <button onclick="forceCleanStorageAndReload()" class="w-full bg-rose-950 hover:bg-rose-900 border border-rose-700 text-rose-200 text-xs py-2.5 rounded-xl font-bold active:scale-95 transition flex items-center justify-center space-x-2">
+            <span>⚡ Curăță Cache & Reîncarcă Aplicația ACUM</span>
+          </button>
         </div>
 
-        <div class="flex space-x-2">
-          <button onclick="requestNotificationPermission()" class="flex-1 bg-cyan-900 border border-cyan-700 text-cyan-200 text-xs py-2.5 rounded-xl font-medium">Permite Notificări</button>
-          <button onclick="triggerTestNotification()" class="flex-1 bg-emerald-900 border border-emerald-700 text-emerald-200 text-xs py-2.5 rounded-xl font-medium">🔔 Test Notificare ACUM</button>
-        </div>
-
-        <!-- Identificare Device -->
-        <div class="p-3 bg-darkbg border border-bordercol rounded-xl space-y-2 text-xs">
-          <span class="font-bold text-white block">📱 Identificare Dispozitiv Curent</span>
-          <div class="flex items-center space-x-2">
-            <span class="text-slate-400 text-[11px]">Nume:</span>
-            <input type="text" id="deviceNameInput" onchange="saveDeviceName()" class="flex-1 bg-cardbg border border-bordercol rounded-lg px-2 py-1 text-white text-xs">
+        <!-- SECȚIUNEA 2: PERSONALIZARE TITLU, LOGO ȘI DIMENSIUNE POMELNIC (Sincronizate Cloud) -->
+        <div class="border-b border-bordercol pb-3 space-y-3 text-xs">
+          <h3 class="font-bold text-white uppercase tracking-wider">🎨 Personalizare Aplicație (Sincronizat Cloud)</h3>
+          
+          <div class="grid grid-cols-3 gap-2">
+            <div class="col-span-2">
+              <label class="text-[10px] text-slate-400 block mb-1">Nume Aplicație:</label>
+              <input type="text" id="settingAppTitle" value="DIiH Hub" class="w-full bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-1">Logo (Emoji):</label>
+              <input type="text" id="settingAppLogo" value="🧭" class="w-full bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white text-center">
+            </div>
           </div>
-          <p id="deviceMetaText" class="text-[10px] text-slate-500 font-mono"></p>
+
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Număr persoane de rând la Pomelnicul Zilnic:</label>
+            <div class="flex items-center space-x-2">
+              <input type="number" id="settingPomelnicBatchSize" min="5" max="100" value="20" class="w-24 bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white text-center font-bold">
+              <span class="text-[11px] text-slate-400">persoane pe zi (rotație ciclică completă)</span>
+            </div>
+          </div>
+
+          <button onclick="saveGlobalCustomSettings()" class="w-full bg-cyan-900 hover:bg-cyan-800 border border-cyan-700 text-cyan-100 text-xs py-2 rounded-xl font-medium active:scale-95 transition">
+            💾 Salvează Setările în Cloud (Google Sheets)
+          </button>
+        </div>
+
+        <!-- SECȚIUNEA 3: BACKUP LOCAL JSON -->
+        <div class="border-b border-bordercol pb-3 space-y-2">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">💾 Salvare Backup Local (Fără Net)</h3>
+          <p class="text-[11px] text-slate-400">Descarcă toate persoanele, cumpărăturile și gândurile într-un fișier local securizat.</p>
+          <button onclick="downloadJsonBackup()" class="w-full bg-slate-800 hover:bg-slate-700 border border-bordercol text-slate-200 text-xs py-2.5 rounded-xl font-medium active:scale-95 transition">
+            📥 Descarcă Fișier Backup (.json)
+          </button>
+        </div>
+
+        <!-- SECȚIUNEA 4: NOTIFICĂRI -->
+        <div class="border-b border-bordercol pb-3 space-y-3">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">🔔 Notificări</h3>
+          <div class="flex space-x-2">
+            <button onclick="requestNotificationPermission()" class="flex-1 bg-cyan-900 border border-cyan-700 text-cyan-200 text-xs py-2 rounded-xl font-medium">Permite</button>
+            <button onclick="triggerTestNotification()" class="flex-1 bg-emerald-900 border border-emerald-700 text-emerald-200 text-xs py-2 rounded-xl font-medium">🔔 Test Notificare</button>
+          </div>
         </div>
 
         <!-- CONSOLĂ LOG LIVE -->
-        <div class="pt-2 border-t border-bordercol space-y-2">
+        <div class="space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-300 uppercase tracking-wider block">📊 Consolă Log Live</span>
             <button onclick="clearDiagnosticLog()" class="text-[10px] text-slate-500 hover:text-white">Curăță</button>
           </div>
-          <div id="liveLogConsole" class="bg-black/90 border border-slate-800 rounded-xl p-3 font-mono text-[10px] text-emerald-400 max-h-48 overflow-y-auto space-y-1">
-            <p class="text-slate-500 italic">> Consola activă. Conectat la LOG_app...</p>
-          </div>
-          <div class="flex space-x-2 pt-1">
-            <button onclick="copyLogToClipboard()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 text-xs py-2 rounded-xl">📋 Copiază Log</button>
-            <button onclick="downloadLogFile()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 text-xs py-2 rounded-xl">💾 Descarcă (.txt)</button>
+          <div id="liveLogConsole" class="bg-black/90 border border-slate-800 rounded-xl p-3 font-mono text-[10px] text-emerald-400 max-h-40 overflow-y-auto space-y-1">
+            <p class="text-slate-500 italic">> Conectat la LOG_app...</p>
           </div>
         </div>
+
       </div>
     </section>
 
@@ -292,9 +360,6 @@
           <span class="text-rose-400 font-bold block">Structura Catismei de astăzi:</span>
           <p id="modalPsaltireDetails" class="font-mono text-slate-200"></p>
         </div>
-        <p class="text-slate-400 leading-relaxed">
-          Site-ul oficial Doxologia blochează afișarea în ferestre interne. Apasă pe butonul de mai jos pentru a citi textul direct pe portalul liturgic:
-        </p>
         <a id="externalDoxologiaBtn" href="#" target="_blank" class="w-full bg-rose-900 hover:bg-rose-800 border border-rose-700 text-white font-medium text-xs py-3 rounded-xl flex items-center justify-center space-x-2 transition">
           <span>📖 Deschide Textul Complet pe Doxologia.ro</span>
           <span>↗</span>
@@ -307,7 +372,7 @@
     </div>
   </div>
 
-  <!-- MODAL FIȘĂ PERSOANĂ & EDITARE -->
+  <!-- MODAL PERSOANĂ & EDITARE -->
   <div id="personModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
     <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[85vh] overflow-y-auto space-y-3">
       <div class="flex items-start justify-between border-b border-bordercol pb-3">
@@ -337,8 +402,6 @@
             <option value="Viu">Viu</option>
             <option value="Adormit">Adormit</option>
           </select>
-
-          <!-- Bifa Coloana V -->
           <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
             <input type="checkbox" id="editNecesitaAtentie" class="rounded text-rose-600 focus:ring-0">
             <span class="text-[11px] text-rose-300 font-medium">⚠️ Necesită Atenție</span>
@@ -358,7 +421,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v10";
+    const APP_VERSION = "v11";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -393,7 +456,12 @@
     let selectedPersonForEdit = null;
     let systemDiagnosticsLog = [];
 
-    // STARE SELECTARE MULTIPLĂ (BATCH SELECTION)
+    // SETĂRI GLOBALE SINCRONIZABILE
+    let appTitle = localStorage.getItem('diih_app_title') || "DIiH Hub";
+    let appLogo = localStorage.getItem('diih_app_logo') || "🧭";
+    let pomelnicBatchSize = parseInt(localStorage.getItem('diih_batch_size') || "20", 10);
+
+    // STARE SELECTARE MULTIPLĂ
     let isSelectModeActive = false;
     let selectedRowIds = new Set();
     let contextMenuTargetPerson = null;
@@ -410,30 +478,95 @@
     const browserName = navigator.userAgent.includes('Chrome') ? 'Chrome' : (navigator.userAgent.includes('Edge') ? 'Edge' : 'Browser');
 
     document.addEventListener("DOMContentLoaded", () => {
+      applyAppBrandUI();
       displayCurrentDate();
       calculateTodayPsaltire();
-      initDeviceMetaUI();
       loadStoredData();
       fetchDataFromSheet(false);
       registerServiceWorker();
-      logEventToCloud('app_start', 'session', deviceId, 'Aplicația a fost pornită');
+      setupOnlineOfflineHandlers();
+      logEventToCloud('app_start', 'session', deviceId, 'Aplicația pornită v11');
     });
 
-    function initDeviceMetaUI() {
-      const nameInput = document.getElementById('deviceNameInput');
-      if (nameInput) nameInput.value = deviceName;
-      const metaText = document.getElementById('deviceMetaText');
-      if (metaText) metaText.textContent = `ID: ${deviceId} | ${deviceType} | ${browserName} | Versiune: ${APP_VERSION}`;
+    function applyAppBrandUI() {
+      document.getElementById('headerAppTitle').textContent = appTitle;
+      document.getElementById('htmlAppTitle').textContent = `${appTitle} ${APP_VERSION}`;
+      document.getElementById('headerAppLogo').textContent = appLogo;
+
+      const titleInput = document.getElementById('settingAppTitle');
+      if (titleInput) titleInput.value = appTitle;
+      const logoInput = document.getElementById('settingAppLogo');
+      if (logoInput) logoInput.value = appLogo;
+      const batchInput = document.getElementById('settingPomelnicBatchSize');
+      if (batchInput) batchInput.value = pomelnicBatchSize;
     }
 
-    function saveDeviceName() {
-      const nameInput = document.getElementById('deviceNameInput');
-      if (nameInput && nameInput.value.trim()) {
-        deviceName = nameInput.value.trim();
-        localStorage.setItem('diih_device_name', deviceName);
-        showToast("Nume dispozitiv salvat!");
-        logEventToCloud('update_device_name', 'device', deviceId, `Nume schimbat în: ${deviceName}`);
+    function saveGlobalCustomSettings() {
+      const newTitle = document.getElementById('settingAppTitle').value.trim() || "DIiH Hub";
+      const newLogo = document.getElementById('settingAppLogo').value.trim() || "🧭";
+      const newBatch = parseInt(document.getElementById('settingPomelnicBatchSize').value, 10) || 20;
+
+      appTitle = newTitle;
+      appLogo = newLogo;
+      pomelnicBatchSize = newBatch;
+
+      localStorage.setItem('diih_app_title', appTitle);
+      localStorage.setItem('diih_app_logo', appLogo);
+      localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
+
+      applyAppBrandUI();
+      renderDailyPomelnic20();
+      showToast("Setări salvate și trimise în Cloud!");
+
+      logEventToCloud('update_settings', 'settings', 'global', `Setări noi: ${appTitle} | ${appLogo} | ${pomelnicBatchSize} pe zi`);
+
+      // Salvare directă în Google Sheets (foaia Setari)
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&appTitle=${encodeURIComponent(appTitle)}&appLogo=${encodeURIComponent(appLogo)}&pomelnicBatchSize=${pomelnicBatchSize}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    // CURĂȚARE CACHE & REFRESH FĂRĂ DEVTOOLS
+    async function forceCleanStorageAndReload() {
+      showToast("Se curăță cache-ul...");
+      logEventToCloud('clean_cache', 'system', deviceId, 'Curățare automată cache & service worker inițiată');
+
+      try {
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          await Promise.all(regs.map(r => r.unregister()));
+        }
+        sessionStorage.clear();
+      } catch (e) {
+        console.error(e);
       }
+
+      showToast("Resetare completă!");
+      setTimeout(() => {
+        window.location.reload(true);
+      }, 700);
+    }
+
+    // DETECȚIE ONLINE / OFFLINE
+    function setupOnlineOfflineHandlers() {
+      const ind = document.getElementById('onlineIndicator');
+      function updateStatus() {
+        if (navigator.onLine) {
+          ind.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+          ind.title = "Online";
+        } else {
+          ind.className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse";
+          ind.title = "Offline (Funcționează din date locale)";
+          showToast("Aplicație offline - folosește memoria locală");
+        }
+      }
+      window.addEventListener('online', () => { updateStatus(); fetchDataFromSheet(true); });
+      window.addEventListener('offline', updateStatus);
+      updateStatus();
     }
 
     function showToast(msg) {
@@ -450,7 +583,6 @@
       }
     }
 
-    // LOG CLOUD ÎN TABUL LOG_app
     function logEventToCloud(action, entity, entityId, message, status = "INFO", durationMs = 0) {
       const entry = `[${new Date().toLocaleTimeString()}] [${action}] ${message}`;
       systemDiagnosticsLog.push(entry);
@@ -461,6 +593,8 @@
         con.innerHTML = systemDiagnosticsLog.map(l => `<p>> ${l}</p>`).join('');
         con.scrollTop = con.scrollHeight;
       }
+
+      if (!navigator.onLine) return;
 
       const script = document.createElement('script');
       const params = new URLSearchParams({
@@ -519,7 +653,6 @@
       document.getElementById('modalPsaltireDetails').textContent = `Psalmii rânduiți: ${info.display}`;
       document.getElementById('externalDoxologiaBtn').href = `https://doxologia.ro/${info.slug}`;
       document.getElementById('psaltireIframeModal').classList.remove('hidden');
-      logEventToCloud('view_catisma', 'psaltire', `Catisma_${currentCatismaNum}`, `Deschis detalii Catisma ${info.roman}`);
     }
 
     function closePsaltireIframeModal() {
@@ -542,7 +675,7 @@
       logEventToCloud('switch_tab', 'navigation', tabId, `Navigare în tabul ${tabId}`);
     }
 
-    // SINCRONIZARE DATE LIVE
+    // SINCRONIZARE LIVE
     function fetchDataFromSheet(showFeedback = false) {
       const icon = document.getElementById('syncIcon');
       if (icon) icon.classList.add('animate-spin');
@@ -555,6 +688,16 @@
         if (handled) return;
         handled = true;
         const dur = Date.now() - startT;
+
+        if (data.settings) {
+          if (data.settings.appTitle) appTitle = data.settings.appTitle;
+          if (data.settings.appLogo) appLogo = data.settings.appLogo;
+          if (data.settings.pomelnicBatchSize) pomelnicBatchSize = data.settings.pomelnicBatchSize;
+          localStorage.setItem('diih_app_title', appTitle);
+          localStorage.setItem('diih_app_logo', appLogo);
+          localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
+          applyAppBrandUI();
+        }
 
         if (data.pomelnic) {
           allPeople = data.pomelnic;
@@ -569,10 +712,11 @@
           localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         }
 
+        populateCategoryDropdown();
         renderAll();
         if (icon) icon.classList.remove('animate-spin');
         if (showFeedback) showToast("Sincronizat!");
-        logEventToCloud('sync_success', 'database', 'all', `Descărcat: ${allPeople.length} pers, ${allShopping.length} shop, ${allGanduri.length} gânduri`, 'SUCCESS', dur);
+        logEventToCloud('sync_success', 'database', 'all', `Descărcat: ${allPeople.length} pers, ${allShopping.length} shop`, 'SUCCESS', dur);
         delete window[callbackName];
       };
 
@@ -589,6 +733,7 @@
       allPeople = JSON.parse(localStorage.getItem('diih_people') || '[]');
       allShopping = JSON.parse(localStorage.getItem('diih_shopping') || '[]');
       allGanduri = JSON.parse(localStorage.getItem('diih_ganduri') || '[]');
+      populateCategoryDropdown();
       renderAll();
     }
 
@@ -659,32 +804,36 @@
       }).join('');
     }
 
-    // 2. POMELNICUL DE 20
+    // 2. POMELNICUL ZILNIC (Dimensiune Configurabilă & Rotație Ciclică Completă)
+    let currentDailyPomelnicList = [];
+
     function renderDailyPomelnic20() {
       const today = new Date();
-      const currentYear = today.getFullYear();
+      today.setHours(0,0,0,0);
+      const base = new Date(BASE_DATE.getTime());
+      base.setHours(0,0,0,0);
+
       const eligiblePeople = allPeople.filter(p => p.famCheck === true);
       const container = document.getElementById('dailyPomelnicList');
 
       if (eligiblePeople.length === 0) {
         container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">Nicio persoană bifată activ în Coloana C.</p>`;
-        document.getElementById('pomelnic20Badge').textContent = `0 de rând`;
+        document.getElementById('pomelnicBatchBadge').textContent = `0 de rând`;
+        currentDailyPomelnicList = [];
         return;
       }
 
-      const startYear = new Date(currentYear, 0, 0);
-      const diff = today - startYear;
-      const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-      const count = Math.min(20, eligiblePeople.length);
-      const startIndex = (dayOfYear * 20) % eligiblePeople.length;
+      const diffDays = Math.max(0, Math.round((today.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)));
+      const count = Math.min(pomelnicBatchSize, eligiblePeople.length);
+      const startIndex = (diffDays * count) % eligiblePeople.length;
 
       let selected = [];
       for (let i = 0; i < count; i++) {
         selected.push(eligiblePeople[(startIndex + i) % eligiblePeople.length]);
       }
 
-      document.getElementById('pomelnic20Badge').textContent = `${selected.length} de rând`;
+      currentDailyPomelnicList = selected;
+      document.getElementById('pomelnicBatchBadge').textContent = `${selected.length} de rând`;
 
       container.innerHTML = selected.map(p => {
         const isViu = p.stare === 'Viu';
@@ -702,7 +851,28 @@
       }).join('');
     }
 
-    // 3. REGISTRU POMELNIC & FILTRU COLOANA V
+    // 3. POPULARE DROPDOWN CATEGORII (GRAD)
+    function populateCategoryDropdown() {
+      const dd = document.getElementById('categoryDropdown');
+      if (!dd) return;
+      const currentVal = dd.value;
+
+      const categories = new Set();
+      allPeople.forEach(p => {
+        if (p.grad && p.grad.trim()) categories.add(p.grad.trim());
+      });
+
+      const sorted = Array.from(categories).sort();
+      let html = `<option value="ALL">Toate Categoriile</option>`;
+      sorted.forEach(c => {
+        html += `<option value="${encodeURIComponent(c)}">${c}</option>`;
+      });
+
+      dd.innerHTML = html;
+      dd.value = currentVal || "ALL";
+    }
+
+    // 4. FILTRARE & REGISTRU POMELNIC
     function filterPomelnic(type) {
       currentFilter = type;
       ['filterAll', 'filterAtentie', 'filterViu', 'filterAdormit'].forEach(id => {
@@ -715,7 +885,7 @@
       if (type === 'ADORMIT') document.getElementById('filterAdormit').className = "px-2.5 py-1 text-xs rounded-lg bg-amber-900/60 text-amber-200 border border-amber-700 font-medium whitespace-nowrap";
 
       handleSearch();
-      logEventToCloud('filter_pomelnic', 'filter', type, `Filtrat pomelnic după: ${type}`);
+      logEventToCloud('filter_pomelnic', 'filter', type, `Filtrat după ${type}`);
     }
 
     function renderPomelnicList() {
@@ -727,10 +897,15 @@
       const clearBtn = document.getElementById('clearSearchBtn');
       if (clearBtn) clearBtn.classList.toggle('hidden', q === '');
 
+      const catDd = document.getElementById('categoryDropdown');
+      const selectedCategory = catDd ? decodeURIComponent(catDd.value) : 'ALL';
+
       const filtered = allPeople.filter(p => {
         if (currentFilter === 'ATENTIE' && p.necesitaAtentie !== true) return false;
         if (currentFilter === 'VIU' && p.stare !== 'Viu') return false;
         if (currentFilter === 'ADORMIT' && p.stare !== 'Adormit') return false;
+
+        if (selectedCategory !== 'ALL' && (!p.grad || p.grad.trim() !== selectedCategory)) return false;
 
         if (q === '') return true;
         const haystack = `${p.prenume} ${p.nume} ${p.info || ''} ${p.grad || ''} ${p.sot || ''} ${p.copii || ''}`.toLowerCase();
@@ -796,7 +971,111 @@
       }
     }
 
-    // MOD SELECTARE MULTIPLĂ (MOBIL & DESKTOP)
+    // 5. MOTOR TIPĂRIRE / SALVARE PDF PENTRU POMELNIC
+    function printDailyPomelnicPDF() {
+      if (!currentDailyPomelnicList || currentDailyPomelnicList.length === 0) {
+        return showToast("Nicio persoană în pomelnicul de astăzi.");
+      }
+      generateAndPrintPDF(currentDailyPomelnicList, "POMELNIC DE RÂND");
+    }
+
+    function printSelectedPomelnicPDF() {
+      if (selectedRowIds.size === 0) return showToast("Selectează cel puțin o persoană.");
+      const list = allPeople.filter(p => selectedRowIds.has(p.rowId));
+      generateAndPrintPDF(list, "POMELNIC");
+    }
+
+    function generateAndPrintPDF(peopleList, mainHeaderTitle) {
+      const vii = peopleList.filter(p => p.stare !== 'Adormit');
+      const adormiti = peopleList.filter(p => p.stare === 'Adormit');
+      const printContainer = document.getElementById('printablePomelnicArea');
+
+      let html = `
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+          <h1 style="font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 2px;">${mainHeaderTitle}</h1>
+          <p style="font-size: 13px; margin: 5px 0 0 0; font-style: italic;">Data pomenirii: ${new Date().toLocaleDateString('ro-RO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+      `;
+
+      if (vii.length > 0 && adormiti.length > 0) {
+        // DOUĂ COLOANE PARALELE (Vii în stânga | Adormiți în dreapta)
+        html += `
+          <div style="display: flex; justify-content: space-between; gap: 40px;">
+            <div style="flex: 1;">
+              <h2 style="font-size: 18px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 12px; text-align: center;">PENTRU CEI VII (🌱)</h2>
+              <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.8;">
+                ${vii.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 11px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
+              </ol>
+            </div>
+
+            <div style="flex: 1;">
+              <h2 style="font-size: 18px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 12px; text-align: center;">PENTRU CEI ADORMIȚI (†)</h2>
+              <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.8;">
+                ${adormiti.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 11px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
+              </ol>
+            </div>
+          </div>
+        `;
+      } else if (vii.length > 0) {
+        // DOAR VII
+        html += `
+          <div style="max-width: 600px; margin: 0 auto;">
+            <h2 style="font-size: 20px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 15px; text-align: center;">PENTRU CEI VII (🌱)</h2>
+            <ol style="margin: 0; padding-left: 25px; font-size: 15px; line-height: 2;">
+              ${vii.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 12px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
+            </ol>
+          </div>
+        `;
+      } else if (adormiti.length > 0) {
+        // DOAR ADORMIȚI
+        html += `
+          <div style="max-width: 600px; margin: 0 auto;">
+            <h2 style="font-size: 20px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 15px; text-align: center;">PENTRU CEI ADORMIȚI (†)</h2>
+            <ol style="margin: 0; padding-left: 25px; font-size: 15px; line-height: 2;">
+              ${adormiti.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 12px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
+            </ol>
+          </div>
+        `;
+      }
+
+      printContainer.innerHTML = html;
+      printContainer.classList.remove('hidden');
+
+      logEventToCloud('export_pdf_pomelnic', 'pomelnic', 'print', `Export PDF generat pentru ${peopleList.length} persoane`);
+
+      // Deschide direct caseta de dialog nativă de Print/Save as PDF
+      window.print();
+
+      setTimeout(() => {
+        printContainer.classList.add('hidden');
+        printContainer.innerHTML = '';
+      }, 1000);
+    }
+
+    // 6. BACKUP LOCAL JSON
+    function downloadJsonBackup() {
+      const backupData = {
+        appVersion: APP_VERSION,
+        exportedAt: new Date().toISOString(),
+        settings: { appTitle, appLogo, pomelnicBatchSize },
+        people: allPeople,
+        shopping: allShopping,
+        ganduri: allGanduri
+      };
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `diih_backup_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      showToast("Backup local descărcat!");
+      logEventToCloud('download_backup_json', 'backup', 'local', 'Backup JSON descărcat cu succes');
+    }
+
+    // 7. SELECȚIE MULTIPLĂ & CLICK DREAPTA
     function toggleSelectMode() {
       isSelectModeActive = !isSelectModeActive;
       const btn = document.getElementById('toggleSelectModeBtn');
@@ -805,9 +1084,7 @@
           ? "px-2.5 py-1 text-xs rounded-lg bg-cyan-800 text-white border border-cyan-600 font-bold whitespace-nowrap" 
           : "px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white font-medium whitespace-nowrap";
       }
-      if (!isSelectModeActive) {
-        selectedRowIds.clear();
-      }
+      if (!isSelectModeActive) selectedRowIds.clear();
       updateBatchActionBar();
       renderPomelnicList();
     }
@@ -821,11 +1098,8 @@
     }
 
     function toggleRowSelection(rowId) {
-      if (selectedRowIds.has(rowId)) {
-        selectedRowIds.delete(rowId);
-      } else {
-        selectedRowIds.add(rowId);
-      }
+      if (selectedRowIds.has(rowId)) selectedRowIds.delete(rowId);
+      else selectedRowIds.add(rowId);
       updateBatchActionBar();
       renderPomelnicList();
     }
@@ -852,12 +1126,10 @@
       renderPomelnicList();
     }
 
-    // APLICARE BATCH PENTRU CEI SELECTAȚI
     function applyBatchAtentie(flagValue) {
       if (selectedRowIds.size === 0) return;
       const idsArray = Array.from(selectedRowIds);
 
-      // Actualizare locală instantanee
       idsArray.forEach(id => {
         const p = allPeople.find(x => x.rowId === id);
         if (p) p.necesitaAtentie = flagValue;
@@ -865,9 +1137,8 @@
 
       localStorage.setItem('diih_people', JSON.stringify(allPeople));
       showToast(`${idsArray.length} persoane actualizate!`);
-      logEventToCloud('batch_update_atentie', 'pomelnic', idsArray.join(','), `Batch Atenție setat la ${flagValue} pentru ${idsArray.length} persoane`);
+      logEventToCloud('batch_update_atentie', 'pomelnic', idsArray.join(','), `Batch Atenție setat la ${flagValue}`);
 
-      // Trimitere către Google Sheets
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateAtentie&rowIds=${idsArray.join(',')}&necesitaAtentie=${flagValue}&callback=void`;
       document.body.appendChild(script);
@@ -876,7 +1147,6 @@
       renderAll();
     }
 
-    // CLICK DREAPTA PE LAPTOP
     function handleLaptopContextMenu(e, rowId) {
       e.preventDefault();
       const p = allPeople.find(x => x.rowId === rowId);
@@ -912,7 +1182,6 @@
       closeContextMenu();
     }
 
-    // COMUTARE RAPIDĂ INDIVIDUALĂ
     function quickToggleAtentie(rowId) {
       const p = allPeople.find(x => x.rowId === rowId);
       if (!p) return;
@@ -922,14 +1191,14 @@
       renderAll();
       showToast(p.necesitaAtentie ? "Setat: Necesită Atenție!" : "Scos din Atenție!");
 
-      logEventToCloud('quick_toggle_atentie', 'pomelnic', rowId, `Comutat Atenție la ${p.necesitaAtentie} pentru ${p.prenume} ${p.nume}`);
+      logEventToCloud('quick_toggle_atentie', 'pomelnic', rowId, `Comutat Atenție la ${p.necesitaAtentie} pentru ${p.prenume}`);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${rowId}&necesitaAtentie=${p.necesitaAtentie}&callback=void`;
       document.body.appendChild(script);
     }
 
-    // 4. GÂNDURI CU ID UNIC
+    // 8. GÂNDURI CU ID UNIC
     function handleGandKeyDown(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -1018,7 +1287,7 @@
       `).join('');
     }
 
-    // 5. CUMPĂRĂTURI CU ID UNIC
+    // 9. CUMPĂRĂTURI CU ID UNIC
     function handleShopKeyDown(e) {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -1041,7 +1310,7 @@
       document.getElementById('shopProdus').value = '';
       document.getElementById('shopCantitate').value = '';
 
-      logEventToCloud('add_shopping', 'shopping', newId, `Adăugat produs: ${produs} (${cantitate}) la ${magazin}`);
+      logEventToCloud('add_shopping', 'shopping', newId, `Adăugat: ${produs} (${cantitate})`);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&id=${encodeURIComponent(newId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&callback=void`;
@@ -1084,36 +1353,28 @@
       `).join('');
     }
 
-    // 6. MOTOR NOTIFICĂRI
+    // 10. NOTIFICĂRI NATIVE
     function requestNotificationPermission() {
-      if (!("Notification" in window)) {
-        showToast("Notificările nu sunt suportate.");
-        logEventToCloud('notification_permission', 'device', deviceId, 'Notificările nu sunt suportate de browser', 'WARN');
-        return;
-      }
+      if (!("Notification" in window)) return showToast("Notificările nu sunt suportate.");
       Notification.requestPermission().then(p => {
         if (p === "granted") {
           showToast("Notificări activate!");
-          logEventToCloud('notification_permission', 'device', deviceId, 'Permisiune notificări acordată', 'SUCCESS');
-          triggerNotification("DIiH Hub", "Notificările au fost activate cu succes!");
+          triggerNotification(appTitle, "Notificările au fost activate cu succes!");
         } else {
           showToast("Permisiune refuzată.");
-          logEventToCloud('notification_permission', 'device', deviceId, 'Permisiune notificări refuzată', 'WARN');
         }
       });
     }
 
     function triggerTestNotification() {
-      if (!("Notification" in window)) {
-        return showToast("Dispozitivul nu suportă notificări.");
-      }
+      if (!("Notification" in window)) return showToast("Dispozitivul nu suportă notificări.");
       if (Notification.permission !== "granted") {
         Notification.requestPermission().then(p => {
-          if (p === "granted") triggerNotification("Test DIiH Hub", "Notificarea de test funcționează perfect pe S24 Ultra!");
+          if (p === "granted") triggerNotification(`Test ${appTitle}`, "Notificarea funcționează perfect pe dispozitivul tău!");
           else showToast("Permisiune refuzată.");
         });
       } else {
-        triggerNotification("Test DIiH Hub", "Notificarea de test funcționează perfect pe S24 Ultra!");
+        triggerNotification(`Test ${appTitle}`, "Notificarea funcționează perfect pe dispozitivul tău!");
       }
     }
 
@@ -1139,7 +1400,7 @@
       }
     }
 
-    // 7. EDITARE PERSOANĂ
+    // 11. EDITARE PERSOANĂ
     function openPersonModal(rowId) {
       const p = allPeople.find(x => x.rowId === rowId);
       if (!p) return;
@@ -1151,11 +1412,8 @@
       badge.className = isViu ? 'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-300' : 'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-950 border border-amber-800 text-amber-300';
 
       const atentieBadge = document.getElementById('modalAtentieBadge');
-      if (p.necesitaAtentie) {
-        atentieBadge.classList.remove('hidden');
-      } else {
-        atentieBadge.classList.add('hidden');
-      }
+      if (p.necesitaAtentie) atentieBadge.classList.remove('hidden');
+      else atentieBadge.classList.add('hidden');
 
       document.getElementById('modalName').textContent = `${p.prenume} ${p.nume}`;
 
@@ -1216,11 +1474,12 @@
       selectedPersonForEdit.necesitaAtentie = necesitaAtentie;
 
       localStorage.setItem('diih_people', JSON.stringify(allPeople));
+      populateCategoryDropdown();
       renderAll();
       closePersonModal();
       showToast("Modificări salvate!");
 
-      logEventToCloud('update_person', 'pomelnic', selectedPersonForEdit.rowId, `Actualizat ${prenume} ${nume} | Necesită Atenție: ${necesitaAtentie}`);
+      logEventToCloud('update_person', 'pomelnic', selectedPersonForEdit.rowId, `Actualizat ${prenume} ${nume} | Atenție: ${necesitaAtentie}`);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&callback=void`;
@@ -1229,21 +1488,6 @@
 
     function closePersonModal() {
       document.getElementById('personModal').classList.add('hidden');
-    }
-
-    // 8. DIAGNOSTIC LOG & EXPORT
-    function copyLogToClipboard() {
-      navigator.clipboard.writeText(systemDiagnosticsLog.join("\n")).then(() => showToast("Log copiat!"));
-    }
-
-    function downloadLogFile() {
-      const blob = new Blob([systemDiagnosticsLog.join("\n")], { type: "text/plain" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `diih_log_${deviceId}_${Date.now()}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
     }
 
     function registerServiceWorker() {
