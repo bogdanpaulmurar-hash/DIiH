@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>DIiH Mobile Hub</title>
+  <title>DIiH Mobile Hub v6</title>
   
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#090d16">
@@ -34,13 +34,13 @@
 </head>
 <body class="bg-darkbg text-slate-100 font-sans pb-28 antialiased selection:bg-cyan-800">
 
-  <!-- HEADER COMPACT -->
+  <!-- HEADER -->
   <header class="sticky top-0 z-40 bg-darkbg/95 backdrop-blur-md border-b border-bordercol px-4 py-3">
     <div class="flex items-center justify-between max-w-lg mx-auto">
       <div class="flex items-center space-x-2">
         <span class="text-xl">🧭</span>
         <div>
-          <h1 class="font-bold text-base tracking-wide text-white leading-tight">DIiH Hub</h1>
+          <h1 class="font-bold text-base tracking-wide text-white leading-tight">DIiH Hub v6</h1>
           <p id="todayDateLabel" class="text-xs text-slate-400 font-medium"></p>
         </div>
       </div>
@@ -56,11 +56,11 @@
     <!-- TAB 1: ASTĂZI -->
     <section id="tab-today" class="tab-content space-y-4">
       
-      <!-- Card Catisma Zilei -->
-      <div onclick="openPsaltireTextModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
+      <!-- Card Catisma Zilei (Click: Deschide Iframe Doxologia integrat) -->
+      <div onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
         <div class="flex items-center justify-between text-xs font-semibold text-rose-300 uppercase tracking-wider mb-2">
           <span>📖 Citirea Psaltirii</span>
-          <span class="bg-rose-950/80 border border-rose-800 text-rose-200 px-2 py-0.5 rounded-full">Apasă pentru text</span>
+          <span class="bg-rose-950/80 border border-rose-800 text-rose-200 px-2 py-0.5 rounded-full">Apasă pentru text complet</span>
         </div>
         <h2 id="psaltireTitle" class="text-base font-bold text-white leading-snug">Se calculează...</h2>
         <p id="psaltireStari" class="text-xs text-slate-300 mt-1 font-mono"></p>
@@ -75,7 +75,10 @@
         <div>
           <span class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Gândul Biblic al Zilei:</span>
           <p id="biblicalQuote" class="text-xs text-slate-200 italic leading-relaxed">„Căutați mai întâi împărăția lui Dumnezeu și dreptatea Lui, și toate acestea se vor adăuga vouă...”</p>
-          <p id="biblicalRef" class="text-[11px] font-semibold text-amber-400 mt-1 text-right">Matei 6, 33 (Noul Testament)</p>
+          <div class="flex items-center justify-between mt-1">
+            <a href="https://www.bibliaortodoxa.ro/carte.php?id=55&cap=6" target="_blank" class="text-[10px] text-cyan-400 hover:underline">Accesează textul pe BibliaOrtodoxa ↗</a>
+            <p id="biblicalRef" class="text-[11px] font-semibold text-amber-400">Matei 6, 33 (Noul Testament)</p>
+          </div>
         </div>
         <div class="pt-2 border-t border-slate-700/50">
           <span class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Notă de subsol & Tâlcuire:</span>
@@ -93,23 +96,23 @@
         <div id="anniversaryList" class="space-y-2"></div>
       </div>
 
-      <!-- Pomelnicul de Astăzi (20 persoane de rând din cele 258) -->
+      <!-- Pomelnicul de Astăzi (20 persoane de rând) -->
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <div>
             <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider">📿 Pomelnicul de Astăzi</span>
             <p class="text-[10px] text-slate-400">Pomenire din lista celor bifate în Coloana D</p>
           </div>
-          <span id="pomelnic20Badge" class="bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs px-2 py-0.5 rounded-full font-mono">0 de rând</span>
+          <span id="pomelnic20Badge" class="bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs px-2 py-0.5 rounded-full font-mono">20 de rând</span>
         </div>
         <div id="dailyPomelnicList" class="space-y-1.5 divide-y divide-bordercol/30">
-          <p class="text-xs text-slate-400 italic py-2 text-center">Se calculează pomelnicul...</p>
+          <p class="text-xs text-slate-400 italic py-2 text-center">Se încarcă lista de pomenire...</p>
         </div>
       </div>
 
     </section>
 
-    <!-- TAB 2: POMELNIC COMPLET (Cu Bara de Căutare dedicată) -->
+    <!-- TAB 2: POMELNIC COMPLET (Cu Bara de Căutare Aici) -->
     <section id="tab-pomelnic" class="tab-content hidden space-y-3">
       <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -144,7 +147,7 @@
       </div>
 
       <div class="space-y-2">
-        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">Gânduri salvate anterior</h4>
+        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">Gânduri salvate</h4>
         <div id="savedGanduriList" class="space-y-2"></div>
       </div>
     </section>
@@ -162,7 +165,10 @@
       </div>
 
       <div class="space-y-2">
-        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">Articole de cumpărat</h4>
+        <div class="flex items-center justify-between px-1">
+          <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">De cumpărat</h4>
+          <span class="text-[10px] text-slate-500">Bifează pentru a șterge automat</span>
+        </div>
         <div id="shoppingListContainer" class="space-y-1.5"></div>
       </div>
     </section>
@@ -176,8 +182,8 @@
         </div>
 
         <div class="flex space-x-2">
-          <button onclick="requestNotificationPermission()" class="flex-1 bg-cyan-900 border border-cyan-700 text-cyan-200 text-xs py-2 rounded-xl font-medium">Permite Notificări</button>
-          <button onclick="triggerTestNotification()" class="flex-1 bg-emerald-900 border border-emerald-700 text-emerald-200 text-xs py-2 rounded-xl font-medium">🔔 Test Notificare ACUM</button>
+          <button onclick="requestNotificationPermission()" class="flex-1 bg-cyan-900 border border-cyan-700 text-cyan-200 text-xs py-2.5 rounded-xl font-medium">Permite Notificări</button>
+          <button onclick="triggerTestNotification()" class="flex-1 bg-emerald-900 border border-emerald-700 text-emerald-200 text-xs py-2.5 rounded-xl font-medium">🔔 Test Notificare ACUM</button>
         </div>
 
         <div class="space-y-4 text-xs">
@@ -267,20 +273,25 @@
     </div>
   </nav>
 
-  <!-- MODAL TEXT CATISMĂ DOXOLOGIA -->
-  <div id="psaltireModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] flex flex-col">
-      <div class="flex items-start justify-between border-b border-bordercol pb-3">
+  <!-- MODAL CU IFRAME DIRECT DOXOLOGIA PENTRU CATISMĂ -->
+  <div id="psaltireIframeModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg h-[92vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden mx-auto">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-bordercol bg-darkbg">
         <div>
           <span class="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-full font-bold uppercase">Text Liturgic Doxologia</span>
-          <h2 id="modalPsaltireTitle" class="text-base font-bold text-white mt-1"></h2>
+          <h2 id="modalIframeTitle" class="text-xs font-bold text-white mt-0.5"></h2>
         </div>
-        <button onclick="closePsaltireModal()" class="text-slate-400 hover:text-white p-1 text-lg">✕</button>
+        <button onclick="closePsaltireIframeModal()" class="text-slate-400 hover:text-white p-2 text-lg">✕</button>
       </div>
-      <div id="modalPsaltireContent" class="py-3 text-xs text-slate-200 overflow-y-auto space-y-4 font-serif leading-relaxed pr-1 flex-1"></div>
-      <div class="pt-3 border-t border-bordercol flex space-x-2">
-        <a id="doxologiaWebLink" href="#" target="_blank" class="flex-1 text-center bg-slate-800 border border-bordercol py-2.5 rounded-xl font-medium text-xs text-rose-300">Deschide pe Doxologia.ro ↗</a>
-        <button onclick="closePsaltireModal()" class="flex-1 bg-slate-700 py-2.5 rounded-xl font-medium text-xs text-white">Închide</button>
+
+      <!-- IFRAME SCROLLABIL DIRECT PE DOXOLOGIA -->
+      <div class="flex-1 w-full bg-white">
+        <iframe id="doxologiaIframe" src="" class="w-full h-full border-0"></iframe>
+      </div>
+
+      <div class="p-3 bg-darkbg border-t border-bordercol flex justify-between items-center text-xs">
+        <a id="externalDoxologiaBtn" href="#" target="_blank" class="text-cyan-400 hover:underline">Deschide în filă externă ↗</a>
+        <button onclick="closePsaltireIframeModal()" class="px-5 py-2 bg-slate-800 rounded-xl text-white font-medium">Închide</button>
       </div>
     </div>
   </div>
@@ -374,32 +385,18 @@
       document.getElementById('psaltireStari').textContent = `Psalmii: ${info.display}`;
     }
 
-    function openPsaltireTextModal() {
+    function openPsaltireIframeModal() {
       const info = CATISME_INFO[currentCatismaNum];
-      document.getElementById('modalPsaltireTitle').textContent = `Catisma ${info.roman} [Ps. ${info.display}]`;
-      document.getElementById('doxologiaWebLink').href = `https://doxologia.ro/${info.slug}`;
-
-      document.getElementById('modalPsaltireContent').innerHTML = `
-        <div class="p-3 bg-darkbg rounded-xl border border-bordercol space-y-2">
-          <p class="font-bold text-rose-300">RÂNDUIALA DINAINTE:</p>
-          <p class="italic text-[11px] text-slate-300">Sfinte Dumnezeule... Preasfântă Treime... Tatăl nostru... Troparele de umilință și Rugăciunea către Preasfânta Treime («Întru tot Sfântă Treime, Dumnezeule și Făcătorule a toată lumea, ajută-mi...»).</p>
-        </div>
-        <div class="p-3 bg-darkbg rounded-xl border border-bordercol space-y-2">
-          <p class="font-bold text-cyan-300">PSALMII CATISMEI ${info.roman}:</p>
-          <p class="text-xs text-slate-200">Psalmii acestei catisme sunt împărțiți pe cele 3 stări: <strong>${info.display}</strong>.</p>
-          <p class="text-xs text-slate-300">Apasă mai jos pe butonul <strong>«Deschide pe Doxologia.ro»</strong> pentru a citi textul diortosit oficial.</p>
-        </div>
-        <div class="p-3 bg-darkbg rounded-xl border border-bordercol space-y-2">
-          <p class="font-bold text-amber-300">RÂNDUIALA DE DUPĂ CATISMĂ:</p>
-          <p class="italic text-[11px] text-slate-300">Sfinte Dumnezeule... Tatăl nostru... Troparele Catismei ${info.roman}, 40 de Doamne miluiește și Rugăciunea Mare a Catismei.</p>
-        </div>
-      `;
-
-      document.getElementById('psaltireModal').classList.remove('hidden');
+      document.getElementById('modalIframeTitle').textContent = `Catisma ${info.roman} [Ps. ${info.display}]`;
+      const url = `https://doxologia.ro/${info.slug}`;
+      document.getElementById('doxologiaIframe').src = url;
+      document.getElementById('externalDoxologiaBtn').href = url;
+      document.getElementById('psaltireIframeModal').classList.remove('hidden');
     }
 
-    function closePsaltireModal() {
-      document.getElementById('psaltireModal').classList.add('hidden');
+    function closePsaltireIframeModal() {
+      document.getElementById('psaltireIframeModal').classList.add('hidden');
+      document.getElementById('doxologiaIframe').src = '';
     }
 
     function switchTab(tabId) {
@@ -417,18 +414,18 @@
       });
     }
 
-    // PRELUARE DATE LIVE PRIN JSONP (Rezolvă complet conexiunea)
+    // SINCRONIZARE JSONP ROBUSTĂ
     function fetchDataFromSheet(showToast = false) {
       const icon = document.getElementById('syncIcon');
       if (icon) icon.classList.add('animate-spin');
-      logDiagnostic("Pornire fetch live către Google Sheets...");
+      logDiagnostic("Pornire fetch live...");
 
       const callbackName = 'handleGoogleData_' + Date.now();
       window[callbackName] = function(data) {
-        logDiagnostic("Date primite cu succes de la Google Sheets", { 
-          totalPomelnic: data.pomelnic ? data.pomelnic.length : 0,
-          totalCumparaturi: data.cumparaturi ? data.cumparaturi.length : 0,
-          totalGanduri: data.ganduri ? data.ganduri.length : 0
+        logDiagnostic("Date primite live:", {
+          peopleCount: data.pomelnic ? data.pomelnic.length : 0,
+          shopCount: data.cumparaturi ? data.cumparaturi.length : 0,
+          gandCount: data.ganduri ? data.ganduri.length : 0
         });
 
         if (data.pomelnic) {
@@ -452,10 +449,9 @@
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getAllData&callback=${callbackName}`;
-      script.onerror = function(err) {
+      script.onerror = function() {
         if (icon) icon.classList.remove('animate-spin');
-        logDiagnostic("EROARE rețea JSONP la conectare", err);
-        console.warn("Nu s-a putut conecta la Google Sheets. Se folosește memoria cache.");
+        logDiagnostic("Eroare script fetch. Folosim memoria locală.");
       };
       document.body.appendChild(script);
     }
@@ -464,14 +460,13 @@
       allPeople = JSON.parse(localStorage.getItem('diih_people') || '[]');
       allShopping = JSON.parse(localStorage.getItem('diih_shopping') || '[]');
       allGanduri = JSON.parse(localStorage.getItem('diih_ganduri') || '[]');
-      logDiagnostic("Date încărcate din memoria locală (Cache)", { totalPeople: allPeople.length });
       renderAll();
     }
 
     function renderAll() {
       document.getElementById('totalCount').textContent = allPeople.length;
       renderAnniversariesToday();
-      renderDailyPomelnicNoDate();
+      renderDailyPomelnic20();
       renderPomelnicList();
       renderShoppingList();
       renderGanduriList();
@@ -533,22 +528,20 @@
     }
 
     // 2. POMELNICUL DE ASTĂZI (Cele 20 de persoane de rând din cele 258)
-    function renderDailyPomelnicNoDate() {
+    function renderDailyPomelnic20() {
       const today = new Date();
       const currentYear = today.getFullYear();
 
-      // Recunoaștere robustă a bifei din Coloana D
+      // Filtrăm direct toți cei cu famCheck === true
       const eligiblePeople = allPeople.filter(p => p.famCheck === true);
 
       const container = document.getElementById('dailyPomelnicList');
 
       if (eligiblePeople.length === 0) {
         container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">Nicio persoană bifată în Coloana D (Pomelnic_calendar).</p>`;
-        document.getElementById('pomelnic20Badge').textContent = `0 de rând`;
         return;
       }
 
-      // Rotație ciclică pe baza zilei din an
       const startYear = new Date(currentYear, 0, 0);
       const diff = today - startYear;
       const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -560,8 +553,6 @@
       for (let i = 0; i < count; i++) {
         selected.push(eligiblePeople[(startIndex + i) % eligiblePeople.length]);
       }
-
-      document.getElementById('pomelnic20Badge').textContent = `${selected.length} de rând`;
 
       container.innerHTML = selected.map(p => {
         const isViu = p.stare === 'Viu';
@@ -596,7 +587,6 @@
       handleSearch();
     }
 
-    // CĂUTAREA AFIȘEAZĂ TOT REGISTRUL (~990 PERSOANE)
     function handleSearch() {
       const q = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase().trim() : '';
       const clearBtn = document.getElementById('clearSearchBtn');
@@ -652,26 +642,31 @@
       }
     }
 
-    // SALVARE GÂND ÎN GOOGLE SHEETS
+    // SALVARE GÂND (Instant UI + Salvare Google Sheets)
     function saveGandToSheet() {
       const gand = document.getElementById('gandInput').value.trim();
       const sursa = document.getElementById('gandSursa').value.trim() || 'Personal';
       if (!gand) return alert("Scrie un gând înainte de a salva!");
 
-      logDiagnostic("Trimitere gând spre Google Sheets...", { gand, sursa });
-      const callbackName = 'handleSaveGand_' + Date.now();
-      window[callbackName] = function(res) {
-        logDiagnostic("Răspuns salvare gând primit:", res);
-        alert("Gândul a fost salvat în Google Sheets!");
-        document.getElementById('gandInput').value = '';
-        document.getElementById('gandSursa').value = '';
-        fetchDataFromSheet(false);
-        delete window[callbackName];
-      };
+      // Update instant pe ecran
+      allGanduri.unshift({ gand, sursa, data: new Date().toLocaleDateString('ro-RO') });
+      localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
+      renderGanduriList();
 
+      document.getElementById('gandInput').value = '';
+      document.getElementById('gandSursa').value = '';
+
+      // Trimitere către Google Sheets
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&callback=${callbackName}`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&callback=void`;
       document.body.appendChild(script);
+    }
+
+    function deleteGand(index) {
+      if (!confirm("Vrei să ștergi acest gând?")) return;
+      allGanduri.splice(index, 1);
+      localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
+      renderGanduriList();
     }
 
     function sendGandViaEmail() {
@@ -690,9 +685,10 @@
         container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">Niciun gând salvat încă.</p>`;
         return;
       }
-      container.innerHTML = allGanduri.map(g => `
-        <div class="p-3 bg-cardbg border border-bordercol rounded-xl text-xs space-y-1">
-          <p class="text-slate-200 leading-relaxed">${g.gand}</p>
+      container.innerHTML = allGanduri.map((g, idx) => `
+        <div class="p-3 bg-cardbg border border-bordercol rounded-xl text-xs space-y-1 relative group">
+          <button onclick="deleteGand(${idx})" class="absolute top-2 right-2 text-slate-500 hover:text-rose-400 p-1">🗑️</button>
+          <p class="text-slate-200 leading-relaxed pr-6">${g.gand}</p>
           <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
             <span class="text-amber-400 font-semibold">— ${g.sursa || 'Personal'}</span>
             <span>${g.data || ''}</span>
@@ -701,27 +697,30 @@
       `).join('');
     }
 
-    // SALVARE CUMPĂRĂTURI ÎN GOOGLE SHEETS
+    // SALVARE CUMPĂRĂTURI (Instant UI + Auto-ștergere la bifare)
     function addShoppingItem() {
       const magazin = document.getElementById('shopMagazin').value.trim() || 'General';
       const produs = document.getElementById('shopProdus').value.trim();
       const cantitate = document.getElementById('shopCantitate').value.trim() || '1';
       if (!produs) return alert("Introdu numele produsului!");
 
-      logDiagnostic("Trimitere produs spre Google Sheets...", { magazin, produs, cantitate });
-      const callbackName = 'handleSaveShop_' + Date.now();
-      window[callbackName] = function(res) {
-        logDiagnostic("Răspuns adăugare produs primit:", res);
-        alert("Produsul a fost adăugat în Google Sheets!");
-        document.getElementById('shopProdus').value = '';
-        document.getElementById('shopCantitate').value = '';
-        fetchDataFromSheet(false);
-        delete window[callbackName];
-      };
+      // Update instant pe ecran
+      allShopping.push({ id: Date.now(), magazin, produs, cantitate });
+      localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
+      renderShoppingList();
+
+      document.getElementById('shopProdus').value = '';
+      document.getElementById('shopCantitate').value = '';
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&callback=${callbackName}`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&callback=void`;
       document.body.appendChild(script);
+    }
+
+    function removeShoppingItem(index) {
+      allShopping.splice(index, 1);
+      localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
+      renderShoppingList();
     }
 
     function renderShoppingList() {
@@ -730,42 +729,44 @@
         container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">Lista este goală.</p>`;
         return;
       }
-      container.innerHTML = allShopping.map(item => `
-        <div class="p-2.5 bg-cardbg border border-bordercol rounded-xl flex items-center justify-between text-xs">
+      container.innerHTML = allShopping.map((item, idx) => `
+        <div class="p-2.5 bg-cardbg border border-bordercol rounded-xl flex items-center justify-between text-xs transition">
           <div>
             <span class="font-semibold text-white">${item.produs}</span>
             <span class="text-slate-400 text-[11px] block">${item.magazin} • Cantitate: ${item.cantitate}</span>
           </div>
-          <input type="checkbox" class="w-4 h-4 rounded bg-darkbg border-bordercol text-emerald-600 focus:ring-0">
+          <button onclick="removeShoppingItem(${idx})" class="p-1.5 text-slate-400 hover:text-emerald-400 border border-slate-700 rounded-lg text-xs flex items-center space-x-1">
+            <span>✔</span>
+            <span class="text-[10px]">Cumpărat</span>
+          </button>
         </div>
       `).join('');
     }
 
-    // MOTOR ACTIV DE NOTIFICĂRI (Rulează periodic)
+    // MOTOR NOTIFICĂRI
     function requestNotificationPermission() {
-      if (!("Notification" in window)) return alert("Acest dispozitiv nu suportă notificări.");
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
+      if (!("Notification" in window)) return alert("Dispozitivul nu suportă notificări.");
+      Notification.requestPermission().then(p => {
+        if (p === "granted") {
           triggerNotification("DIiH Hub", "Notificările au fost activate cu succes!");
         } else {
-          alert("Permisiunea pentru notificări a fost refuzată.");
+          alert("Permisiunea a fost refuzată.");
         }
       });
     }
 
     function triggerTestNotification() {
       if (!("Notification" in window) || Notification.permission !== "granted") {
-        return alert("Te rugăm să apeși mai întâi pe «Permite Notificări».");
+        return alert("Apasă mai întâi pe «Permite Notificări».");
       }
-      triggerNotification("Test DIiH Hub", "Notificarea de test funcționează perfect pe dispozitivul tău!");
+      triggerNotification("Test DIiH Hub", "Notificarea de test funcționează perfect!");
     }
 
     function triggerNotification(title, body) {
       if ("Notification" in window && Notification.permission === "granted") {
         new Notification(title, {
           body: body,
-          icon: "https://cdn-icons-png.flaticon.com/512/3004/3004458.png",
-          badge: "https://cdn-icons-png.flaticon.com/512/3004/3004458.png"
+          icon: "https://cdn-icons-png.flaticon.com/512/3004/3004458.png"
         });
       }
     }
@@ -795,7 +796,6 @@
     }
 
     function startNotificationScheduler() {
-      // Verifică la fiecare 30 de secunde dacă a sosit ora vreunei notificări
       setInterval(() => {
         const configStr = localStorage.getItem('diih_notifications_config');
         if (!configStr) return;
@@ -805,7 +805,6 @@
         const currentHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         const lastSentKey = `last_notify_${currentHHMM}`;
 
-        // Prevenim declanșarea dublă în același minut
         if (sessionStorage.getItem(lastSentKey)) return;
 
         Object.keys(config).forEach(key => {
@@ -818,14 +817,10 @@
       }, 30000);
     }
 
-    // DIAGNOSTIC & EXPORT LOG
+    // DIAGNOSTIC LOG
     function copyLogToClipboard() {
       const logText = systemDiagnosticsLog.join("\n");
-      navigator.clipboard.writeText(logText).then(() => {
-        alert("Logul a fost copiat în clipboard! Îl poți lipi direct în chat.");
-      }).catch(err => {
-        alert("Eroare la copiere: " + err);
-      });
+      navigator.clipboard.writeText(logText).then(() => alert("Logul a fost copiat în clipboard!"));
     }
 
     function downloadLogFile() {
