@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diih-cache-v8';
+const CACHE_NAME = 'diih-cache-v9';
 const ASSETS = [
   './index.html',
   './manifest.json'
@@ -24,8 +24,29 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
+// Strategie Network-First pentru pagină și manifest, exclude complet API-ul Google
 self.addEventListener('fetch', (e) => {
+  const url = e.request.url;
+  if (url.includes('script.google.com') || url.includes('doxologia.ro')) {
+    return; // Lăsăm request-urile de rețea directe
+  }
+
   e.respondWith(
-    fetch(e.request).catch(() => caches.match(e.request))
+    fetch(e.request)
+      .then((res) => {
+        return caches.open(CACHE_NAME).then((cache) => {
+          cache.put(e.request, res.clone());
+          return res;
+        });
+      })
+      .catch(() => caches.match(e.request))
   );
+});
+
+// Suport Notificări Push & Mesaje interne
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+    const { title, options } = event.data;
+    self.registration.showNotification(title, options);
+  }
 });
