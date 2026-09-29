@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>DIiH Mobile Hub v9</title>
+  <title>DIiH Mobile Hub v10</title>
   
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#090d16">
@@ -32,12 +32,25 @@
     ::-webkit-scrollbar-thumb { background: #232f48; border-radius: 4px; }
   </style>
 </head>
-<body class="bg-darkbg text-slate-100 font-sans pb-28 antialiased selection:bg-cyan-800">
+<body class="bg-darkbg text-slate-100 font-sans pb-28 antialiased selection:bg-cyan-800" onclick="closeContextMenu()">
 
   <!-- TOAST DISCRET (Bifă verde, fără pop-up) -->
   <div id="toastSuccess" class="fixed top-4 right-4 z-50 bg-emerald-900 border border-emerald-600 text-emerald-100 text-xs px-3 py-2 rounded-xl shadow-xl flex items-center space-x-2 transition-all opacity-0 pointer-events-none transform -translate-y-2">
     <span>✔</span>
     <span id="toastMsg">Salvat</span>
+  </div>
+
+  <!-- CONTEXT MENU CLICK DREAPTA (Pentru Laptop) -->
+  <div id="laptopContextMenu" class="hidden fixed z-50 bg-[#162035] border border-slate-700 shadow-2xl rounded-xl py-1 text-xs text-slate-200 min-w-[200px]">
+    <div class="px-3 py-1.5 border-b border-slate-700/60 font-semibold text-white truncate" id="ctxMenuPersonName">Persoană</div>
+    <button onclick="ctxToggleAtentie()" id="ctxToggleAtentieBtn" class="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center space-x-2 transition">
+      <span>⚠️</span>
+      <span id="ctxToggleAtentieText">Comută Atenție</span>
+    </button>
+    <button onclick="ctxOpenEditModal()" class="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center space-x-2 transition">
+      <span>✏️</span>
+      <span>Editează Fișa Completă</span>
+    </button>
   </div>
 
   <!-- HEADER -->
@@ -121,7 +134,7 @@
 
     </section>
 
-    <!-- TAB 2: POMELNIC COMPLET (Cu Filtrul de Atenție Coloana V) -->
+    <!-- TAB 2: POMELNIC COMPLET (Cu BATCH SELECTION & CLICK DREAPTA) -->
     <section id="tab-pomelnic" class="tab-content hidden space-y-3">
       <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -131,12 +144,25 @@
         <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">✕</button>
       </div>
 
-      <!-- Filtre rapide -->
+      <!-- Filtre rapide + Buton Activare Selecție Multiplă -->
       <div class="flex items-center justify-between px-1 pt-1 overflow-x-auto space-x-1 pb-1">
         <button onclick="filterPomelnic('ALL')" id="filterAll" class="px-2.5 py-1 text-xs rounded-lg bg-cyan-900/60 text-cyan-200 border border-cyan-700 font-medium whitespace-nowrap">Toți (<span id="totalCount">0</span>)</button>
         <button onclick="filterPomelnic('ATENTIE')" id="filterAtentie" class="px-2.5 py-1 text-xs rounded-lg bg-rose-950/80 text-rose-300 border border-rose-800 hover:text-white font-medium whitespace-nowrap">⚠️ Atenție (<span id="atentieCount">0</span>)</button>
         <button onclick="filterPomelnic('VIU')" id="filterViu" class="px-2.5 py-1 text-xs rounded-lg bg-cardbg text-slate-400 border border-bordercol hover:text-white whitespace-nowrap">Vii</button>
         <button onclick="filterPomelnic('ADORMIT')" id="filterAdormit" class="px-2.5 py-1 text-xs rounded-lg bg-cardbg text-slate-400 border border-bordercol hover:text-white whitespace-nowrap">Adormiți</button>
+        
+        <!-- Butonul dedicat pentru selecție multiplă (util pe telefon) -->
+        <button onclick="toggleSelectMode()" id="toggleSelectModeBtn" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white font-medium whitespace-nowrap">☑️ Selectează</button>
+      </div>
+
+      <!-- Bara flotantă de acțiuni multiple (Apare doar când sunt bifate persoane) -->
+      <div id="batchActionBar" class="hidden sticky top-14 z-30 bg-slate-900/95 border border-cyan-700/60 p-2.5 rounded-2xl shadow-2xl flex items-center justify-between text-xs space-x-2">
+        <span class="text-cyan-300 font-bold pl-1"><span id="batchCount">0</span> selectați</span>
+        <div class="flex items-center space-x-1.5">
+          <button onclick="applyBatchAtentie(true)" class="px-2.5 py-1.5 bg-rose-950 border border-rose-700 text-rose-200 rounded-xl font-bold hover:bg-rose-900 transition">⚠️ Pune Atenție</button>
+          <button onclick="applyBatchAtentie(false)" class="px-2.5 py-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 rounded-xl font-bold hover:bg-emerald-900 transition">✅ Scoate Atenție</button>
+          <button onclick="cancelSelection()" class="p-1.5 text-slate-400 hover:text-white">✕</button>
+        </div>
       </div>
 
       <div id="peopleListContainer" class="space-y-2"></div>
@@ -205,7 +231,7 @@
           <p id="deviceMetaText" class="text-[10px] text-slate-500 font-mono"></p>
         </div>
 
-        <!-- CONSOLĂ LOG LIVE PE ECRAN -->
+        <!-- CONSOLĂ LOG LIVE -->
         <div class="pt-2 border-t border-bordercol space-y-2">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-300 uppercase tracking-wider block">📊 Consolă Log Live</span>
@@ -250,7 +276,7 @@
     </div>
   </nav>
 
-  <!-- MODAL CATISMA (Curățat de iframe gri) -->
+  <!-- MODAL CATISMA -->
   <div id="psaltireIframeModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
     <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden mx-auto p-5 space-y-4">
       <div class="flex items-center justify-between border-b border-bordercol pb-3">
@@ -267,7 +293,7 @@
           <p id="modalPsaltireDetails" class="font-mono text-slate-200"></p>
         </div>
         <p class="text-slate-400 leading-relaxed">
-          Site-ul oficial Doxologia blochează afișarea în ferestre interne (protecție de securitate). Apasă pe butonul de mai jos pentru a citi textul complet direct pe portalul liturgic:
+          Site-ul oficial Doxologia blochează afișarea în ferestre interne. Apasă pe butonul de mai jos pentru a citi textul direct pe portalul liturgic:
         </p>
         <a id="externalDoxologiaBtn" href="#" target="_blank" class="w-full bg-rose-900 hover:bg-rose-800 border border-rose-700 text-white font-medium text-xs py-3 rounded-xl flex items-center justify-center space-x-2 transition">
           <span>📖 Deschide Textul Complet pe Doxologia.ro</span>
@@ -281,7 +307,7 @@
     </div>
   </div>
 
-  <!-- MODAL FIȘĂ PERSOANĂ & EDITARE (Include Bifa Coloana V: Necesită Atenție) -->
+  <!-- MODAL FIȘĂ PERSOANĂ & EDITARE -->
   <div id="personModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
     <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[85vh] overflow-y-auto space-y-3">
       <div class="flex items-start justify-between border-b border-bordercol pb-3">
@@ -295,7 +321,6 @@
         <button onclick="closePersonModal()" class="text-slate-400 hover:text-white p-1 text-lg">✕</button>
       </div>
       
-      <!-- Detalii vizualizare -->
       <div id="modalDetails" class="text-xs space-y-2.5 text-slate-200 divide-y divide-bordercol/40"></div>
 
       <!-- Formular Editare -->
@@ -313,7 +338,7 @@
             <option value="Adormit">Adormit</option>
           </select>
 
-          <!-- Bifa Coloana V: NECESITA_Atentie!!! -->
+          <!-- Bifa Coloana V -->
           <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
             <input type="checkbox" id="editNecesitaAtentie" class="rounded text-rose-600 focus:ring-0">
             <span class="text-[11px] text-rose-300 font-medium">⚠️ Necesită Atenție</span>
@@ -333,7 +358,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v9";
+    const APP_VERSION = "v10";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -367,6 +392,11 @@
     let currentCatismaNum = 1;
     let selectedPersonForEdit = null;
     let systemDiagnosticsLog = [];
+
+    // STARE SELECTARE MULTIPLĂ (BATCH SELECTION)
+    let isSelectModeActive = false;
+    let selectedRowIds = new Set();
+    let contextMenuTargetPerson = null;
 
     // METADATE DISPOZITIV
     let deviceId = localStorage.getItem('diih_device_id');
@@ -420,7 +450,7 @@
       }
     }
 
-    // TRANSMITERE EVENIMENT ÎN TABUL LOG_app
+    // LOG CLOUD ÎN TABUL LOG_app
     function logEventToCloud(action, entity, entityId, message, status = "INFO", durationMs = 0) {
       const entry = `[${new Date().toLocaleTimeString()}] [${action}] ${message}`;
       systemDiagnosticsLog.push(entry);
@@ -432,7 +462,6 @@
         con.scrollTop = con.scrollHeight;
       }
 
-      // Transmitere asincronă către Google Sheets (LOG_app)
       const script = document.createElement('script');
       const params = new URLSearchParams({
         token: API_TOKEN,
@@ -630,7 +659,7 @@
       }).join('');
     }
 
-    // 2. POMELNICUL DE 20 (Coloana C)
+    // 2. POMELNICUL DE 20
     function renderDailyPomelnic20() {
       const today = new Date();
       const currentYear = today.getFullYear();
@@ -673,7 +702,7 @@
       }).join('');
     }
 
-    // 3. REGISTRU POMELNIC & FILTRU COLOANA V (NECESITĂ ATENȚIE)
+    // 3. REGISTRU POMELNIC & FILTRU COLOANA V
     function filterPomelnic(type) {
       currentFilter = type;
       ['filterAll', 'filterAtentie', 'filterViu', 'filterAdormit'].forEach(id => {
@@ -725,19 +754,36 @@
         if (p.dn) dateInfo += `n. ${p.dn}`;
         if (p.da) dateInfo += ` • d. ${p.da}`;
 
+        const isChecked = selectedRowIds.has(p.rowId);
+
         return `
-          <div onclick="openPersonModal(${p.rowId})" class="p-3 bg-cardbg border border-bordercol rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-600 active:scale-98 transition shadow-sm">
-            <div class="space-y-0.5">
-              <div class="flex items-center space-x-2">
-                <span class="text-sm font-semibold text-white">${p.prenume} ${p.nume}</span>
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${icon} ${p.stare}</span>
-                ${p.necesitaAtentie ? '<span class="text-[9px] bg-rose-950 border border-rose-800 text-rose-300 px-1 py-0.2 rounded font-bold">⚠️ Atenție</span>' : ''}
-                ${p.famCheck ? '<span class="text-[9px] bg-cyan-950 border border-cyan-800 text-cyan-300 px-1 py-0.2 rounded font-bold">📿 Pomenire</span>' : ''}
+          <div oncontextmenu="handleLaptopContextMenu(event, ${p.rowId})" onclick="handlePersonCardClick(event, ${p.rowId})" class="p-3 bg-cardbg border ${isChecked ? 'border-cyan-500 bg-slate-800/80' : 'border-bordercol'} rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-600 active:scale-98 transition shadow-sm relative">
+            
+            <div class="flex items-center space-x-2.5 overflow-hidden">
+              ${isSelectModeActive ? `
+                <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleRowSelection(${p.rowId})" class="w-4 h-4 rounded text-cyan-500 focus:ring-0">
+              ` : ''}
+
+              <div class="space-y-0.5 truncate">
+                <div class="flex items-center space-x-2">
+                  <span class="text-sm font-semibold text-white truncate">${p.prenume} ${p.nume}</span>
+                  <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${icon} ${p.stare}</span>
+                  ${p.necesitaAtentie ? '<span class="text-[9px] bg-rose-950 border border-rose-800 text-rose-300 px-1 py-0.2 rounded font-bold">⚠️ Atenție</span>' : ''}
+                  ${p.famCheck ? '<span class="text-[9px] bg-cyan-950 border border-cyan-800 text-cyan-300 px-1 py-0.2 rounded font-bold">📿 Pomenire</span>' : ''}
+                </div>
+                <p class="text-[11px] text-slate-400 truncate">${dateInfo || 'Fără date calendaristice'}</p>
+                ${p.grad ? `<p class="text-[10px] text-slate-500 truncate">${p.grad}</p>` : ''}
               </div>
-              <p class="text-[11px] text-slate-400">${dateInfo || 'Fără date calendaristice'}</p>
-              ${p.grad ? `<p class="text-[10px] text-slate-500">${p.grad}</p>` : ''}
             </div>
-            <span class="text-slate-500 text-base pr-1">›</span>
+
+            <div class="flex items-center space-x-1">
+              ${!isSelectModeActive ? `
+                <button onclick="event.stopPropagation(); quickToggleAtentie(${p.rowId})" class="p-1.5 rounded-lg border ${p.necesitaAtentie ? 'border-rose-800 text-rose-300 bg-rose-950/60' : 'border-slate-700 text-slate-500 hover:text-white'} text-xs" title="Comută Atenție">
+                  ⚠️
+                </button>
+              ` : ''}
+              <span class="text-slate-500 text-base pr-1">›</span>
+            </div>
           </div>`;
       }).join('');
     }
@@ -748,6 +794,139 @@
         input.value = '';
         handleSearch();
       }
+    }
+
+    // MOD SELECTARE MULTIPLĂ (MOBIL & DESKTOP)
+    function toggleSelectMode() {
+      isSelectModeActive = !isSelectModeActive;
+      const btn = document.getElementById('toggleSelectModeBtn');
+      if (btn) {
+        btn.className = isSelectModeActive 
+          ? "px-2.5 py-1 text-xs rounded-lg bg-cyan-800 text-white border border-cyan-600 font-bold whitespace-nowrap" 
+          : "px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white font-medium whitespace-nowrap";
+      }
+      if (!isSelectModeActive) {
+        selectedRowIds.clear();
+      }
+      updateBatchActionBar();
+      renderPomelnicList();
+    }
+
+    function handlePersonCardClick(e, rowId) {
+      if (isSelectModeActive) {
+        toggleRowSelection(rowId);
+      } else {
+        openPersonModal(rowId);
+      }
+    }
+
+    function toggleRowSelection(rowId) {
+      if (selectedRowIds.has(rowId)) {
+        selectedRowIds.delete(rowId);
+      } else {
+        selectedRowIds.add(rowId);
+      }
+      updateBatchActionBar();
+      renderPomelnicList();
+    }
+
+    function updateBatchActionBar() {
+      const bar = document.getElementById('batchActionBar');
+      const countEl = document.getElementById('batchCount');
+      if (bar && countEl) {
+        if (isSelectModeActive && selectedRowIds.size > 0) {
+          countEl.textContent = selectedRowIds.size;
+          bar.classList.remove('hidden');
+        } else {
+          bar.classList.add('hidden');
+        }
+      }
+    }
+
+    function cancelSelection() {
+      selectedRowIds.clear();
+      isSelectModeActive = false;
+      const btn = document.getElementById('toggleSelectModeBtn');
+      if (btn) btn.className = "px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white font-medium whitespace-nowrap";
+      updateBatchActionBar();
+      renderPomelnicList();
+    }
+
+    // APLICARE BATCH PENTRU CEI SELECTAȚI
+    function applyBatchAtentie(flagValue) {
+      if (selectedRowIds.size === 0) return;
+      const idsArray = Array.from(selectedRowIds);
+
+      // Actualizare locală instantanee
+      idsArray.forEach(id => {
+        const p = allPeople.find(x => x.rowId === id);
+        if (p) p.necesitaAtentie = flagValue;
+      });
+
+      localStorage.setItem('diih_people', JSON.stringify(allPeople));
+      showToast(`${idsArray.length} persoane actualizate!`);
+      logEventToCloud('batch_update_atentie', 'pomelnic', idsArray.join(','), `Batch Atenție setat la ${flagValue} pentru ${idsArray.length} persoane`);
+
+      // Trimitere către Google Sheets
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateAtentie&rowIds=${idsArray.join(',')}&necesitaAtentie=${flagValue}&callback=void`;
+      document.body.appendChild(script);
+
+      cancelSelection();
+      renderAll();
+    }
+
+    // CLICK DREAPTA PE LAPTOP
+    function handleLaptopContextMenu(e, rowId) {
+      e.preventDefault();
+      const p = allPeople.find(x => x.rowId === rowId);
+      if (!p) return;
+
+      contextMenuTargetPerson = p;
+      const menu = document.getElementById('laptopContextMenu');
+      document.getElementById('ctxMenuPersonName').textContent = `${p.prenume} ${p.nume}`;
+      
+      const txt = document.getElementById('ctxToggleAtentieText');
+      txt.textContent = p.necesitaAtentie ? "Scoate bifa de Atenție" : "Setează Necesită Atenție";
+
+      menu.style.left = `${Math.min(e.pageX, window.innerWidth - 220)}px`;
+      menu.style.top = `${e.pageY}px`;
+      menu.classList.remove('hidden');
+    }
+
+    function closeContextMenu() {
+      const menu = document.getElementById('laptopContextMenu');
+      if (menu) menu.classList.add('hidden');
+    }
+
+    function ctxToggleAtentie() {
+      if (!contextMenuTargetPerson) return;
+      quickToggleAtentie(contextMenuTargetPerson.rowId);
+      closeContextMenu();
+    }
+
+    function ctxOpenEditModal() {
+      if (!contextMenuTargetPerson) return;
+      openPersonModal(contextMenuTargetPerson.rowId);
+      toggleEditMode();
+      closeContextMenu();
+    }
+
+    // COMUTARE RAPIDĂ INDIVIDUALĂ
+    function quickToggleAtentie(rowId) {
+      const p = allPeople.find(x => x.rowId === rowId);
+      if (!p) return;
+
+      p.necesitaAtentie = !p.necesitaAtentie;
+      localStorage.setItem('diih_people', JSON.stringify(allPeople));
+      renderAll();
+      showToast(p.necesitaAtentie ? "Setat: Necesită Atenție!" : "Scos din Atenție!");
+
+      logEventToCloud('quick_toggle_atentie', 'pomelnic', rowId, `Comutat Atenție la ${p.necesitaAtentie} pentru ${p.prenume} ${p.nume}`);
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${rowId}&necesitaAtentie=${p.necesitaAtentie}&callback=void`;
+      document.body.appendChild(script);
     }
 
     // 4. GÂNDURI CU ID UNIC
@@ -905,7 +1084,7 @@
       `).join('');
     }
 
-    // 6. MOTOR NOTIFICĂRI (Fix Android S24 Ultra & Desktop)
+    // 6. MOTOR NOTIFICĂRI
     function requestNotificationPermission() {
       if (!("Notification" in window)) {
         showToast("Notificările nu sunt suportate.");
@@ -941,7 +1120,6 @@
     function triggerNotification(title, body) {
       logEventToCloud('send_notification', 'notification', deviceId, `Notificare: ${title}`);
       
-      // Metoda 1: Prin Service Worker (Obligatoriu pentru telefoane Android PWA)
       if (navigator.serviceWorker && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({
           type: 'SHOW_NOTIFICATION',
@@ -954,7 +1132,6 @@
           }
         });
       } else if ("Notification" in window && Notification.permission === "granted") {
-        // Metoda 2: Fallback Desktop
         new Notification(title, {
           body: body,
           icon: "https://cdn-icons-png.flaticon.com/512/3004/3004458.png"
@@ -962,7 +1139,7 @@
       }
     }
 
-    // 7. EDITARE PERSOANĂ & SALVARE COLOANA V (NECESITĂ ATENȚIE)
+    // 7. EDITARE PERSOANĂ
     function openPersonModal(rowId) {
       const p = allPeople.find(x => x.rowId === rowId);
       if (!p) return;
@@ -1045,7 +1222,6 @@
 
       logEventToCloud('update_person', 'pomelnic', selectedPersonForEdit.rowId, `Actualizat ${prenume} ${nume} | Necesită Atenție: ${necesitaAtentie}`);
 
-      // Salvare directă pe Google Sheets (inclusiv Coloana V)
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&callback=void`;
       document.body.appendChild(script);
