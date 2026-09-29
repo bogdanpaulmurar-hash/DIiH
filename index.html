@@ -343,15 +343,13 @@
     }
 
     // SINCRONIZARE LIVE CU GOOGLE SHEETS
+    // PRELUARE DATE LIVE PRIN JSONP (Ocolește orice blocaj de rețea)
     async function fetchDataFromSheet(showToast = false) {
       const icon = document.getElementById('syncIcon');
-      icon.classList.add('animate-spin');
-
-      try {
-        const url = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getAllData`;
-        const res = await fetch(url);
-        const data = await res.json();
-
+      if (icon) icon.classList.add('animate-spin');
+      // Nume callback unic
+      const callbackName = 'handleGoogleSheetData_' + Date.now();
+      window[callbackName] = function(data) {
         if (data.pomelnic) {
           allPeople = data.pomelnic;
           localStorage.setItem('diih_people', JSON.stringify(allPeople));
@@ -364,14 +362,18 @@
           allGanduri = data.ganduri;
           localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         }
-
         renderAll();
+        if (icon) icon.classList.remove('animate-spin');
         if (showToast) alert("Sincronizare cu Google Sheets reușită!");
-      } catch (err) {
-        console.warn("Eroare fetch live sau URL nesetat, folosim memoria cache:", err);
-      } finally {
-        icon.classList.remove('animate-spin');
-      }
+        delete window[callbackName];
+      };
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getAllData&callback=${callbackName}`;
+      script.onerror = function() {
+        if (icon) icon.classList.remove('animate-spin');
+        console.warn("Nu s-a putut conecta la Google Sheets. Se folosesc datele din memoria cache.");
+      };
+      document.body.appendChild(script);
     }
 
     function loadStoredData() {
@@ -534,22 +536,28 @@
     }
 
     // MODUL GÂNDURI (Salvare în Sheet sau Email)
+    // SALVARE GÂND ÎN GOOGLE SHEET (Fără blocaj CORS)
     async function saveGandToSheet() {
       const gand = document.getElementById('gandInput').value.trim();
       const sursa = document.getElementById('gandSursa').value.trim() || 'Personal';
       if (!gand) return alert("Scrie un gând înainte de a salva!");
-
+      const btn = event.target;
+      btn.textContent = "Se salvează...";
       try {
         await fetch(GOOGLE_SCRIPT_API_URL, {
           method: "POST",
+          mode: "no-cors", // Esențial pentru a permite trimiterea din browser către Google Apps Script
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify({ token: API_TOKEN, action: "addGand", gand: gand, sursa: sursa })
         });
-        alert("Gândul a fost salvat în Google Sheets!");
+        alert("Gândul a fost trimis spre salvare în Google Sheets!");
         document.getElementById('gandInput').value = '';
         document.getElementById('gandSursa').value = '';
-        fetchDataFromSheet(false);
+        setTimeout(() => fetchDataFromSheet(false), 1500);
       } catch (err) {
         alert("Eroare la salvare: " + err.message);
+      } finally {
+        btn.textContent = "💾 Salvează în Sheet";
       }
     }
 
@@ -578,23 +586,29 @@
     }
 
     // MODUL CUMPĂRĂTURI
+    // SALVARE CUMPĂRĂTURI ÎN GOOGLE SHEET (Fără blocaj CORS)
     async function addShoppingItem() {
       const magazin = document.getElementById('shopMagazin').value.trim() || 'General';
       const produs = document.getElementById('shopProdus').value.trim();
       const cantitate = document.getElementById('shopCantitate').value.trim() || '1';
-
       if (!produs) return alert("Introdu numele produsului!");
-
+      const btn = event.target;
+      btn.textContent = "Se adaugă...";
       try {
         await fetch(GOOGLE_SCRIPT_API_URL, {
           method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify({ token: API_TOKEN, action: "addCumparaturi", magazin, produs, cantitate })
         });
         document.getElementById('shopProdus').value = '';
         document.getElementById('shopCantitate').value = '';
-        fetchDataFromSheet(false);
+        alert("Produsul a fost adăugat!");
+        setTimeout(() => fetchDataFromSheet(false), 1500);
       } catch (err) {
-        alert("Eroare la salvare: " + err.message);
+        alert("Eroare: " + err.message);
+      } finally {
+        btn.textContent = "➕ Adaugă pe listă";
       }
     }
 
