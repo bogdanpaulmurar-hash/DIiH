@@ -521,8 +521,8 @@
       const today = new Date();
       const currentYear = today.getFullYear();
 
-      // Doar persoanele cu Bifa din Coloana D (Fam_check = TRUE) ȘI care NU au date
-      const noDatePeople = allPeople.filter(p => p.famCheck === true && !p.dn && !p.da);
+      // Doar persoanele cu Bifa din Coloana D (Pomelnic_calendar = TRUE) ȘI care NU au date
+      const noDatePeople = allPeople.filter(p => p.Pomelnic_calendar === TRUE && !p.dn && !p.da);
 
       const container = document.getElementById('dailyPomelnicList');
 
