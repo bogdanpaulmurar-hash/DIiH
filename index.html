@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>DIiH Mobile Hub</title>
+  <title>DIiH Mobile Hub v8</title>
   
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#090d16">
@@ -34,6 +34,12 @@
 </head>
 <body class="bg-darkbg text-slate-100 font-sans pb-28 antialiased selection:bg-cyan-800">
 
+  <!-- TOAST DISCRET VERDE (Fără pop-up-uri cu OK!) -->
+  <div id="toastSuccess" class="fixed top-4 right-4 z-50 bg-emerald-900 border border-emerald-600 text-emerald-100 text-xs px-3 py-2 rounded-xl shadow-xl flex items-center space-x-2 transition-all opacity-0 pointer-events-none transform -translate-y-2">
+    <span>✔</span>
+    <span id="toastMsg">Salvat cu succes!</span>
+  </div>
+
   <!-- HEADER -->
   <header class="sticky top-0 z-40 bg-darkbg/95 backdrop-blur-md border-b border-bordercol px-4 py-3">
     <div class="flex items-center justify-between max-w-lg mx-auto">
@@ -44,9 +50,11 @@
           <p id="todayDateLabel" class="text-xs text-slate-400 font-medium"></p>
         </div>
       </div>
-      <button onclick="fetchDataFromSheet(true)" class="p-2 rounded-xl bg-cardbg border border-bordercol hover:bg-slate-800 text-slate-300 active:scale-95 transition">
-        <svg id="syncIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-      </button>
+      <div class="flex items-center space-x-1">
+        <button onclick="fetchDataFromSheet(true)" class="p-2 rounded-xl bg-cardbg border border-bordercol hover:bg-slate-800 text-slate-300 active:scale-95 transition" title="Sincronizează datele">
+          <svg id="syncIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -56,7 +64,7 @@
     <!-- TAB 1: ASTĂZI -->
     <section id="tab-today" class="tab-content space-y-4">
       
-      <!-- Card Catisma Zilei (Apasă pentru text Doxologia) -->
+      <!-- Card Catisma Zilei (Click: Deschide textul Doxologia) -->
       <div onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
         <div class="flex items-center justify-between text-xs font-semibold text-rose-300 uppercase tracking-wider mb-2">
           <span>📖 Citirea Psaltirii</span>
@@ -96,7 +104,7 @@
         <div id="anniversaryList" class="space-y-2"></div>
       </div>
 
-      <!-- Pomelnicul de Astăzi (Calculat după Coloana C == TRUE) -->
+      <!-- Pomelnicul de Astăzi (Calculat STRICT după Coloana C == TRUE) -->
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <div>
@@ -112,7 +120,7 @@
 
     </section>
 
-    <!-- TAB 2: POMELNIC COMPLET (Cu Bara de Căutare dedicată) -->
+    <!-- TAB 2: POMELNIC COMPLET (Cu Bara de Căutare Aici) -->
     <section id="tab-pomelnic" class="tab-content hidden space-y-3">
       <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -133,7 +141,7 @@
       <div id="peopleListContainer" class="space-y-2"></div>
     </section>
 
-    <!-- TAB 3: GÂNDURI (Cu tastă Enter și Share Nativ) -->
+    <!-- TAB 3: GÂNDURI -->
     <section id="tab-ganduri" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-3 shadow-sm">
         <h3 class="text-xs font-semibold text-amber-300 uppercase tracking-wider">✍️ Notează Gândul Zilei</h3>
@@ -152,7 +160,7 @@
       </div>
     </section>
 
-    <!-- TAB 4: CUMPĂRĂTURI (Cu tastă Enter și Auto-ștergere) -->
+    <!-- TAB 4: CUMPĂRĂTURI -->
     <section id="tab-cumparaturi" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-3 shadow-sm">
         <h3 class="text-xs font-semibold text-emerald-300 uppercase tracking-wider">🛒 Adaugă Produs</h3>
@@ -173,7 +181,7 @@
       </div>
     </section>
 
-    <!-- TAB 5: SETĂRI & DIAGNOSTIC -->
+    <!-- TAB 5: SETĂRI & CONSOLĂ LOG LIVE -->
     <section id="tab-setari" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-4 shadow-sm">
         <div class="border-b border-bordercol pb-2">
@@ -234,12 +242,18 @@
 
         <button onclick="saveNotificationSettings()" class="w-full bg-slate-800 border border-bordercol text-white text-xs py-2.5 rounded-xl font-medium hover:bg-slate-700 active:scale-95 transition">Salvează Setările de Notificare</button>
 
-        <!-- SECȚIUNE DIAGNOSTIC & EXPORT LOG -->
+        <!-- CONSOLĂ LOG LIVE PE ECRAN -->
         <div class="pt-4 border-t border-bordercol space-y-2">
-          <span class="text-xs font-bold text-slate-300 uppercase tracking-wider block">📊 Diagnostic & Export Log</span>
-          <div class="flex space-x-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wider block">📊 Consolă Log Live</span>
+            <button onclick="clearDiagnosticLog()" class="text-[10px] text-slate-500 hover:text-white">Curăță</button>
+          </div>
+          <div id="liveLogConsole" class="bg-black/90 border border-slate-800 rounded-xl p-3 font-mono text-[10px] text-emerald-400 max-h-48 overflow-y-auto space-y-1">
+            <p class="text-slate-500 italic">> Consola este activă. Așteaptă date...</p>
+          </div>
+          <div class="flex space-x-2 pt-1">
             <button onclick="copyLogToClipboard()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 text-xs py-2 rounded-xl">📋 Copiază Log</button>
-            <button onclick="downloadLogFile()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 text-xs py-2 rounded-xl">💾 Descarcă Fișier Log</button>
+            <button onclick="downloadLogFile()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 text-xs py-2 rounded-xl">💾 Descarcă (.txt)</button>
           </div>
         </div>
       </div>
@@ -273,7 +287,7 @@
     </div>
   </nav>
 
-  <!-- MODAL CU IFRAME DIRECT DOXOLOGIA PENTRU CATISMĂ -->
+  <!-- MODAL CU IFRAME DIRECT DOXOLOGIA -->
   <div id="psaltireIframeModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
     <div class="bg-cardbg border border-bordercol w-full max-w-lg h-[92vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden mx-auto">
       <div class="flex items-center justify-between px-4 py-3 border-b border-bordercol bg-darkbg">
@@ -307,7 +321,7 @@
       <!-- Detalii vizualizare -->
       <div id="modalDetails" class="text-xs space-y-2.5 text-slate-200 divide-y divide-bordercol/40"></div>
 
-      <!-- Formular Editare (ascuns implicit) -->
+      <!-- Formular Editare -->
       <div id="editPersonForm" class="hidden space-y-2 pt-2 border-t border-bordercol text-xs">
         <div class="grid grid-cols-2 gap-2">
           <input type="text" id="editPrenume" placeholder="Prenume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
@@ -319,7 +333,7 @@
           <option value="Viu">Viu</option>
           <option value="Adormit">Adormit</option>
         </select>
-        <button onclick="savePersonEdit()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl text-white font-medium">💾 Salvează Modificările în Sheet</button>
+        <button onclick="savePersonEdit()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl text-white font-medium active:scale-95 transition">💾 Salvează în Sheet</button>
       </div>
 
       <div class="pt-3 flex space-x-2">
@@ -375,10 +389,36 @@
       startNotificationScheduler();
     });
 
+    function showToast(msg) {
+      const el = document.getElementById('toastSuccess');
+      const txt = document.getElementById('toastMsg');
+      if (el && txt) {
+        txt.textContent = msg;
+        el.classList.remove('opacity-0', '-translate-y-2');
+        el.classList.add('opacity-100', 'translate-y-0');
+        setTimeout(() => {
+          el.classList.remove('opacity-100', 'translate-y-0');
+          el.classList.add('opacity-0', '-translate-y-2');
+        }, 2200);
+      }
+    }
+
     function logDiagnostic(msg, obj = null) {
       const entry = `[${new Date().toLocaleTimeString()}] ${msg}`;
       systemDiagnosticsLog.push(obj ? `${entry} | ${JSON.stringify(obj)}` : entry);
       if (systemDiagnosticsLog.length > 100) systemDiagnosticsLog.shift();
+
+      const con = document.getElementById('liveLogConsole');
+      if (con) {
+        con.innerHTML = systemDiagnosticsLog.map(l => `<p>> ${l}</p>`).join('');
+        con.scrollTop = con.scrollHeight;
+      }
+    }
+
+    function clearDiagnosticLog() {
+      systemDiagnosticsLog = [];
+      const con = document.getElementById('liveLogConsole');
+      if (con) con.innerHTML = '<p class="text-slate-500 italic">> Consola curățată.</p>';
     }
 
     function displayCurrentDate() {
@@ -431,15 +471,19 @@
       });
     }
 
-    // PRELUARE DATE LIVE PRIN JSONP
-    function fetchDataFromSheet(showToast = false) {
+    // SINCRONIZARE HIBRIDĂ (JSONP + Direct Fetch)
+    function fetchDataFromSheet(showFeedback = false) {
       const icon = document.getElementById('syncIcon');
       if (icon) icon.classList.add('animate-spin');
-      logDiagnostic("Pornire fetch live către Google Sheets...");
+      logDiagnostic("Pornire sincronizare live...");
 
       const callbackName = 'handleGoogleData_' + Date.now();
+      let handled = false;
+
       window[callbackName] = function(data) {
-        logDiagnostic("Date primite live:", {
+        if (handled) return;
+        handled = true;
+        logDiagnostic("Date primite live cu succes:", {
           peopleCount: data.pomelnic ? data.pomelnic.length : 0,
           shopCount: data.cumparaturi ? data.cumparaturi.length : 0,
           gandCount: data.ganduri ? data.ganduri.length : 0
@@ -460,14 +504,24 @@
 
         renderAll();
         if (icon) icon.classList.remove('animate-spin');
+        if (showFeedback) showToast("Sincronizare reușită!");
         delete window[callbackName];
       };
 
+      // Metoda 1: Script JSONP (funcționează pe mobil)
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getAllData&callback=${callbackName}`;
       script.onerror = function() {
-        if (icon) icon.classList.remove('animate-spin');
-        logDiagnostic("Eroare script fetch. Folosim memoria cache.");
+        // Fallback: încercare fetch direct (pentru laptop corporativ)
+        fetch(`${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getAllData`)
+          .then(res => res.json())
+          .then(data => {
+            if (!handled) window[callbackName](data);
+          })
+          .catch(err => {
+            if (icon) icon.classList.remove('animate-spin');
+            logDiagnostic("Eroare rețea pe laptop/telefon. Folosim memoria locală.");
+          });
       };
       document.body.appendChild(script);
     }
@@ -548,7 +602,7 @@
       const today = new Date();
       const currentYear = today.getFullYear();
 
-      // Filtrăm direct toți cei cu famCheck === true (Coloana C activă)
+      // Toți cei cu TRUE în Coloana C
       const eligiblePeople = allPeople.filter(p => p.famCheck === true);
 
       const container = document.getElementById('dailyPomelnicList');
@@ -643,7 +697,7 @@
               <div class="flex items-center space-x-2">
                 <span class="text-sm font-semibold text-white">${p.prenume} ${p.nume}</span>
                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${icon} ${p.stare}</span>
-                ${p.famCheck ? '<span class="text-[9px] bg-cyan-950 border border-cyan-800 text-cyan-300 px-1 py-0.2 rounded font-bold">📿 Pomelnic</span>' : ''}
+                ${p.famCheck ? '<span class="text-[9px] bg-cyan-950 border border-cyan-800 text-cyan-300 px-1 py-0.2 rounded font-bold">📿 Pomenire</span>' : ''}
               </div>
               <p class="text-[11px] text-slate-400">${dateInfo || 'Fără date calendaristice'}</p>
               ${p.grad ? `<p class="text-[10px] text-slate-500">${p.grad}</p>` : ''}
@@ -669,21 +723,22 @@
       }
     }
 
-    // SALVARE GÂND (Instant UI + Salvare Google Sheets)
+    // SALVARE GÂND (Direct & Rapid)
     function saveGandToSheet() {
       const gand = document.getElementById('gandInput').value.trim();
       const sursa = document.getElementById('gandSursa').value.trim() || 'Personal';
       if (!gand) return;
 
-      // Adăugare instantă pe ecran
+      // Optimistic UI Update (Apare pe ecran sub 0.1 secunde)
       allGanduri.unshift({ gand, sursa, data: new Date().toLocaleDateString('ro-RO') });
       localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
       renderGanduriList();
+      showToast("Gând salvat!");
 
       document.getElementById('gandInput').value = '';
       document.getElementById('gandSursa').value = '';
 
-      // Salvare în fundal
+      // Salvare în fundal în Google Sheets
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&callback=void`;
       document.body.appendChild(script);
@@ -693,9 +748,15 @@
       allGanduri.splice(index, 1);
       localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
       renderGanduriList();
+      showToast("Gând șters!");
+
+      // Ștergere în fundal în Google Sheets
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteGand&index=${index}&callback=void`;
+      document.body.appendChild(script);
     }
 
-    // SHARE NATIV PENTRU GÂNDURI
+    // SHARE NATIV
     function shareGand(index) {
       const g = allGanduri[index];
       if (!g) return;
@@ -708,7 +769,7 @@
         }).catch(() => {});
       } else {
         navigator.clipboard.writeText(shareText);
-        alert("Textul gândului a fost copiat în clipboard!");
+        showToast("Text copiat în clipboard!");
       }
     }
 
@@ -751,16 +812,16 @@
       }
     }
 
-    // SALVARE CUMPĂRĂTURI
     function addShoppingItem() {
       const magazin = document.getElementById('shopMagazin').value.trim() || 'General';
       const produs = document.getElementById('shopProdus').value.trim();
       const cantitate = document.getElementById('shopCantitate').value.trim() || '1';
       if (!produs) return;
 
-      allShopping.push({ id: Date.now(), magazin, produs, cantitate });
+      allShopping.push({ id: allShopping.length + 2, magazin, produs, cantitate });
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       renderShoppingList();
+      showToast("Produs adăugat!");
 
       document.getElementById('shopProdus').value = '';
       document.getElementById('shopCantitate').value = '';
@@ -770,10 +831,20 @@
       document.body.appendChild(script);
     }
 
+    // AUTO-ȘTERGERE LA BIFARE CUMPĂRĂTURĂ
     function removeShoppingItem(index) {
+      const item = allShopping[index];
+      const rowIdInSheet = item ? item.id : (index + 2);
+
       allShopping.splice(index, 1);
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       renderShoppingList();
+      showToast("Produs cumpărat și șters!");
+
+      // Ștergere reală din Google Sheet
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteCumparaturi&rowId=${rowIdInSheet}&callback=void`;
+      document.body.appendChild(script);
     }
 
     function renderShoppingList() {
@@ -783,7 +854,7 @@
         return;
       }
       container.innerHTML = allShopping.map((item, idx) => `
-        <div class="p-2.5 bg-cardbg border border-bordercol rounded-xl flex items-center justify-between text-xs">
+        <div class="p-2.5 bg-cardbg border border-bordercol rounded-xl flex items-center justify-between text-xs transition">
           <div>
             <span class="font-semibold text-white">${item.produs}</span>
             <span class="text-slate-400 text-[11px] block">${item.magazin} • Cantitate: ${item.cantitate}</span>
@@ -809,10 +880,15 @@
     }
 
     function triggerTestNotification() {
-      if (!("Notification" in window) || Notification.permission !== "granted") {
-        return alert("Apasă mai întâi pe «Permite Notificări».");
+      if (!("Notification" in window)) return alert("Dispozitivul nu suportă notificări.");
+      if (Notification.permission !== "granted") {
+        Notification.requestPermission().then(p => {
+          if (p === "granted") triggerNotification("Test DIiH Hub", "Notificarea de test funcționează perfect!");
+          else alert("Permisiunea a fost refuzată.");
+        });
+      } else {
+        triggerNotification("Test DIiH Hub", "Notificarea de test funcționează perfect!");
       }
-      triggerNotification("Test DIiH Hub", "Notificarea de test funcționează perfect!");
     }
 
     function triggerNotification(title, body) {
@@ -846,7 +922,7 @@
       };
 
       localStorage.setItem('diih_notifications_config', JSON.stringify(settings));
-      alert("Setările de notificare au fost salvate!");
+      showToast("Setări de notificare salvate!");
     }
 
     function startNotificationScheduler() {
@@ -874,7 +950,7 @@
     // DIAGNOSTIC LOG
     function copyLogToClipboard() {
       const logText = systemDiagnosticsLog.join("\n");
-      navigator.clipboard.writeText(logText).then(() => alert("Logul a fost copiat în clipboard!"));
+      navigator.clipboard.writeText(logText).then(() => showToast("Log copiat în clipboard!"));
     }
 
     function downloadLogFile() {
@@ -946,7 +1022,6 @@
       const info = document.getElementById('editInfo').value.trim();
       const stare = document.getElementById('editStare').value;
 
-      // Actualizare instantă în memoria locală
       selectedPersonForEdit.prenume = prenume;
       selectedPersonForEdit.nume = nume;
       selectedPersonForEdit.grad = grad;
@@ -956,8 +1031,8 @@
       localStorage.setItem('diih_people', JSON.stringify(allPeople));
       renderAll();
       closePersonModal();
+      showToast("Persoană actualizată!");
 
-      // Salvare în Google Sheets
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&callback=void`;
       document.body.appendChild(script);
@@ -969,7 +1044,9 @@
 
     function registerServiceWorker() {
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW fail:', err));
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+          reg.update(); // Forțează verificarea versiunilor noi pe GitHub
+        }).catch(err => console.log('SW fail:', err));
       }
     }
   </script>
