@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title id="htmlAppTitle">DIiH Mobile Hub v11</title>
+  <title id="htmlAppTitle">DIiH Hub v12</title>
   
   <link rel="manifest" href="./manifest.json">
+  <link id="appFavicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
   <meta name="theme-color" content="#090d16">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -31,7 +32,6 @@
     ::-webkit-scrollbar-track { background: #090d16; }
     ::-webkit-scrollbar-thumb { background: #232f48; border-radius: 4px; }
 
-    /* STIL PENTRU TIPAR / SALVARE PDF Bisericesc */
     @media print {
       body * { visibility: hidden; }
       #printablePomelnicArea, #printablePomelnicArea * { visibility: visible; }
@@ -51,7 +51,6 @@
 </head>
 <body class="bg-darkbg text-slate-100 font-sans pb-28 antialiased selection:bg-cyan-800" onclick="closeContextMenu()">
 
-  <!-- ZONĂ INVIZIBILĂ DEDICATĂ TIPĂRIRII / SALVĂRII PDF -->
   <div id="printablePomelnicArea" class="hidden"></div>
 
   <!-- TOAST DISCRET -->
@@ -60,7 +59,7 @@
     <span id="toastMsg">Salvat</span>
   </div>
 
-  <!-- CONTEXT MENU CLICK DREAPTA (Laptop) -->
+  <!-- CONTEXT MENU CLICK DREAPTA -->
   <div id="laptopContextMenu" class="hidden fixed z-50 bg-[#162035] border border-slate-700 shadow-2xl rounded-xl py-1 text-xs text-slate-200 min-w-[210px]">
     <div class="px-3 py-1.5 border-b border-slate-700/60 font-semibold text-white truncate" id="ctxMenuPersonName">Persoană</div>
     <button onclick="ctxToggleAtentie()" id="ctxToggleAtentieBtn" class="w-full text-left px-3 py-2 hover:bg-slate-800 flex items-center space-x-2 transition">
@@ -108,7 +107,7 @@
         <p id="psaltireStari" class="text-xs text-slate-300 mt-1 font-mono"></p>
       </div>
 
-      <!-- Biblia Anania -->
+      <!-- Biblia Bartolomeu Anania -->
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">📜 Biblia — Ediția Bartolomeu Anania</span>
@@ -138,7 +137,7 @@
         <div id="anniversaryList" class="space-y-2"></div>
       </div>
 
-      <!-- Pomelnicul de Astăzi (Calup configurabil cu buton de Tipar PDF) -->
+      <!-- Pomelnicul de Astăzi (ÎMPĂRȚIT EGAL VII ȘI ADORMIȚI) -->
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <div>
@@ -149,18 +148,33 @@
                 <span>PDF</span>
               </button>
             </div>
-            <p class="text-[10px] text-slate-400">Pomenire ciclică din lista celor activi (Coloana C)</p>
+            <p class="text-[10px] text-slate-400">Pomenire împărțită egal (Vii și Adormiți) din cei activi (Col. C)</p>
           </div>
           <span id="pomelnicBatchBadge" class="bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs px-2 py-0.5 rounded-full font-mono">0 de rând</span>
         </div>
-        <div id="dailyPomelnicList" class="space-y-1.5 divide-y divide-bordercol/30">
-          <p class="text-xs text-slate-400 italic py-2 text-center">Se calculează pomelnicul...</p>
+
+        <!-- Secțiune Vii -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between text-xs font-bold text-emerald-400 border-b border-emerald-950 pb-1">
+            <span>🌱 PENTRU CEI VII</span>
+            <span id="countViiBadge" class="text-[10px] font-mono bg-emerald-950 px-1.5 py-0.2 rounded">0</span>
+          </div>
+          <div id="dailyPomelnicListVii" class="space-y-1 divide-y divide-bordercol/30"></div>
+        </div>
+
+        <!-- Secțiune Adormiți -->
+        <div class="space-y-1.5 pt-2">
+          <div class="flex items-center justify-between text-xs font-bold text-amber-400 border-b border-amber-950 pb-1">
+            <span>† PENTRU CEI ADORMIȚI</span>
+            <span id="countAdormitiBadge" class="text-[10px] font-mono bg-amber-950 px-1.5 py-0.2 rounded">0</span>
+          </div>
+          <div id="dailyPomelnicListAdormiti" class="space-y-1 divide-y divide-bordercol/30"></div>
         </div>
       </div>
 
     </section>
 
-    <!-- TAB 2: POMELNIC COMPLET (Cu Meniu Categorie, Filtre, Batch & Export PDF) -->
+    <!-- TAB 2: POMELNIC COMPLET -->
     <section id="tab-pomelnic" class="tab-content hidden space-y-3">
       <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
@@ -170,7 +184,7 @@
         <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">✕</button>
       </div>
 
-      <!-- Filtru Dropdown Categorie / Grad (Discret și Curat) -->
+      <!-- Filtru Dropdown Categorie -->
       <div class="flex items-center space-x-2 bg-cardbg p-2 rounded-xl border border-bordercol">
         <span class="text-[11px] text-slate-400 whitespace-nowrap">📂 Categorie:</span>
         <select id="categoryDropdown" onchange="handleSearch()" class="bg-darkbg text-white border border-bordercol rounded-lg px-2 py-1 text-xs flex-1 focus:outline-none focus:border-cyan-500">
@@ -187,7 +201,7 @@
         <button onclick="toggleSelectMode()" id="toggleSelectModeBtn" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white font-medium whitespace-nowrap">☑️ Selectează</button>
       </div>
 
-      <!-- Bara flotantă de acțiuni multiple (Apare la selecție) -->
+      <!-- Bara flotantă de acțiuni multiple -->
       <div id="batchActionBar" class="hidden sticky top-14 z-30 bg-slate-900/95 border border-cyan-700/60 p-2.5 rounded-2xl shadow-2xl flex items-center justify-between text-xs space-x-2">
         <span class="text-cyan-300 font-bold pl-1"><span id="batchCount">0</span> selectați</span>
         <div class="flex items-center space-x-1.5 overflow-x-auto">
@@ -201,7 +215,101 @@
       <div id="peopleListContainer" class="space-y-2"></div>
     </section>
 
-    <!-- TAB 3: GÂNDURI -->
+    <!-- TAB 3: CALENDAR ACTIVITĂȚI ȘI ȘCOALĂ (SHIFTER) -->
+    <section id="tab-calendar" class="tab-content hidden space-y-4">
+      
+      <!-- Antet Navigare Lună -->
+      <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <button onclick="changeSchoolMonth(-1)" class="p-2 bg-darkbg rounded-xl border border-bordercol hover:text-cyan-400 text-xs">◀ Luna Trecută</button>
+          <h2 id="calendarMonthTitle" class="text-sm font-bold text-white uppercase tracking-wider"></h2>
+          <button onclick="changeSchoolMonth(1)" class="p-2 bg-darkbg rounded-xl border border-bordercol hover:text-cyan-400 text-xs">Luna Viitoare ▶</button>
+        </div>
+
+        <!-- Sumar Financiar & Ore -->
+        <div class="grid grid-cols-3 gap-2 text-center text-xs pt-1 border-t border-bordercol">
+          <div class="p-2 rounded-xl bg-darkbg border border-bordercol">
+            <span class="text-[10px] text-slate-400 block uppercase">Total Ore</span>
+            <span id="sumTotalHours" class="text-base font-bold text-cyan-400">0 h</span>
+          </div>
+          <div class="p-2 rounded-xl bg-darkbg border border-bordercol">
+            <span class="text-[10px] text-slate-400 block uppercase">Total Sumă</span>
+            <span id="sumTotalAmount" class="text-base font-bold text-emerald-400">0 Lei</span>
+          </div>
+          <div class="p-2 rounded-xl bg-darkbg border border-bordercol">
+            <span class="text-[10px] text-slate-400 block uppercase">Restanță</span>
+            <span id="sumUnpaidAmount" class="text-base font-bold text-amber-400">0 Lei</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grilă Zile Calendar -->
+      <div class="bg-cardbg border border-bordercol rounded-2xl p-3 shadow-sm space-y-2">
+        <div class="grid grid-cols-7 text-center text-[11px] font-bold text-slate-400 pb-1 border-b border-bordercol">
+          <span>Lu</span><span>Ma</span><span>Mi</span><span>Jo</span><span>Vi</span><span class="text-rose-400">Sâ</span><span class="text-rose-400">Du</span>
+        </div>
+        <div id="schoolCalendarGrid" class="grid grid-cols-7 gap-1"></div>
+      </div>
+
+      <!-- Formular Configurare Activitate pe Zilele Selectate (Stil Shifter) -->
+      <div id="schoolConfigBox" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-bordercol pb-2">
+          <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">⚙️ Configurare Zile (<span id="selectedDaysCount">0</span> selectate)</span>
+          <button onclick="clearSelectedSchoolDays()" class="text-[11px] text-slate-400 hover:text-white">Deselectează</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Activitate:</label>
+            <input type="text" id="schoolActTitle" placeholder="Ex: Meditații / Curs" value="Școală / Curs" class="w-full bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Ore:</label>
+            <input type="number" step="0.5" id="schoolActHours" value="2" oninput="calcSchoolTotal()" class="w-full bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white text-center">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Tarif oră (Lei):</label>
+            <input type="number" id="schoolActRate" value="100" oninput="calcSchoolTotal()" class="w-full bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white text-center">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Total calculat:</label>
+            <div id="schoolActCalculatedTotal" class="w-full bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-emerald-400 font-bold text-center">200 Lei</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Stare plată:</label>
+            <select id="schoolActStatus" class="w-full bg-darkbg border border-bordercol rounded-lg px-2 py-1.5 text-white">
+              <option value="Achitat">Achitat (Verde)</option>
+              <option value="Neachitat">Neachitat (Portocaliu)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-1">Culoare etichetă:</label>
+            <select id="schoolActColor" class="w-full bg-darkbg border border-bordercol rounded-lg px-2 py-1.5 text-white">
+              <option value="#0284c7">Albastru</option>
+              <option value="#059669">Verde</option>
+              <option value="#d97706">Portocaliu</option>
+              <option value="#7c3aed">Violet</option>
+              <option value="#e11d48">Roșu</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex space-x-2 pt-1">
+          <button onclick="applySchoolActivityToSelected()" class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-white font-medium text-xs py-2.5 rounded-xl active:scale-95 transition">
+            💾 Aplică pe Zilele Selectate
+          </button>
+          <button onclick="removeSchoolActivityFromSelected()" class="bg-rose-950 border border-rose-800 text-rose-300 font-medium text-xs px-3 py-2.5 rounded-xl hover:bg-rose-900 transition">
+            Șterge
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 4: GÂNDURI -->
     <section id="tab-ganduri" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-3 shadow-sm">
         <h3 class="text-xs font-semibold text-amber-300 uppercase tracking-wider">✍️ Notează Gândul Zilei</h3>
@@ -220,7 +328,7 @@
       </div>
     </section>
 
-    <!-- TAB 4: CUMPĂRĂTURI -->
+    <!-- TAB 5: CUMPĂRĂTURI -->
     <section id="tab-cumparaturi" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-3 shadow-sm">
         <h3 class="text-xs font-semibold text-emerald-300 uppercase tracking-wider">🛒 Adaugă Produs</h3>
@@ -241,11 +349,11 @@
       </div>
     </section>
 
-    <!-- TAB 5: SETĂRI & ADMINISTRARE APLICAȚIE -->
+    <!-- TAB 6: SETĂRI -->
     <section id="tab-setari" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-4 shadow-sm">
         
-        <!-- SECȚIUNEA 1: CURĂȚARE CACHE & RESETARE FĂRĂ DEVTOOLS -->
+        <!-- RESETARE CACHE CU UN CLICK -->
         <div class="border-b border-bordercol pb-3 space-y-2">
           <h3 class="text-xs font-bold text-rose-400 uppercase tracking-wider">🧹 Curățare Date & Resetare Versiune Nouă</h3>
           <p class="text-[11px] text-slate-400 leading-relaxed">
@@ -256,7 +364,7 @@
           </button>
         </div>
 
-        <!-- SECȚIUNEA 2: PERSONALIZARE TITLU, LOGO ȘI DIMENSIUNE POMELNIC (Sincronizate Cloud) -->
+        <!-- PERSONALIZARE BRAND & LOGO (SINCRONIZAT CLOUD) -->
         <div class="border-b border-bordercol pb-3 space-y-3 text-xs">
           <h3 class="font-bold text-white uppercase tracking-wider">🎨 Personalizare Aplicație (Sincronizat Cloud)</h3>
           
@@ -266,7 +374,7 @@
               <input type="text" id="settingAppTitle" value="DIiH Hub" class="w-full bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white">
             </div>
             <div>
-              <label class="text-[10px] text-slate-400 block mb-1">Logo (Emoji):</label>
+              <label class="text-[10px] text-slate-400 block mb-1">Logo / Favicon:</label>
               <input type="text" id="settingAppLogo" value="🧭" class="w-full bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white text-center">
             </div>
           </div>
@@ -274,8 +382,8 @@
           <div>
             <label class="text-[10px] text-slate-400 block mb-1">Număr persoane de rând la Pomelnicul Zilnic:</label>
             <div class="flex items-center space-x-2">
-              <input type="number" id="settingPomelnicBatchSize" min="5" max="100" value="20" class="w-24 bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white text-center font-bold">
-              <span class="text-[11px] text-slate-400">persoane pe zi (rotație ciclică completă)</span>
+              <input type="number" id="settingPomelnicBatchSize" min="4" max="100" value="20" class="w-24 bg-darkbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white text-center font-bold">
+              <span class="text-[11px] text-slate-400">persoane (împărțite egal: Vii & Adormiți)</span>
             </div>
           </div>
 
@@ -284,16 +392,15 @@
           </button>
         </div>
 
-        <!-- SECȚIUNEA 3: BACKUP LOCAL JSON -->
+        <!-- BACKUP LOCAL JSON -->
         <div class="border-b border-bordercol pb-3 space-y-2">
           <h3 class="text-xs font-bold text-white uppercase tracking-wider">💾 Salvare Backup Local (Fără Net)</h3>
-          <p class="text-[11px] text-slate-400">Descarcă toate persoanele, cumpărăturile și gândurile într-un fișier local securizat.</p>
           <button onclick="downloadJsonBackup()" class="w-full bg-slate-800 hover:bg-slate-700 border border-bordercol text-slate-200 text-xs py-2.5 rounded-xl font-medium active:scale-95 transition">
             📥 Descarcă Fișier Backup (.json)
           </button>
         </div>
 
-        <!-- SECȚIUNEA 4: NOTIFICĂRI -->
+        <!-- NOTIFICĂRI NATIVE -->
         <div class="border-b border-bordercol pb-3 space-y-3">
           <h3 class="text-xs font-bold text-white uppercase tracking-wider">🔔 Notificări</h3>
           <div class="flex space-x-2">
@@ -318,9 +425,9 @@
 
   </main>
 
-  <!-- BARA DE NAVIGARE DE JOS -->
+  <!-- BARA DE NAVIGARE DE JOS (6 Tab-uri) -->
   <nav class="fixed bottom-0 inset-x-0 bg-darkbg/95 backdrop-blur-md border-t border-bordercol z-40 py-2">
-    <div class="max-w-lg mx-auto grid grid-cols-5 text-center text-[10px] font-medium text-slate-400">
+    <div class="max-w-lg mx-auto grid grid-cols-6 text-center text-[9px] font-medium text-slate-400">
       <button onclick="switchTab('today')" id="nav-today" class="flex flex-col items-center space-y-1 text-cyan-400 font-bold">
         <span class="text-base">📅</span>
         <span>Astăzi</span>
@@ -328,6 +435,10 @@
       <button onclick="switchTab('pomelnic')" id="nav-pomelnic" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
         <span class="text-base">📜</span>
         <span>Pomelnic</span>
+      </button>
+      <button onclick="switchTab('calendar')" id="nav-calendar" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
+        <span class="text-base">🗓️</span>
+        <span>Școală</span>
       </button>
       <button onclick="switchTab('ganduri')" id="nav-ganduri" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
         <span class="text-base">✍️</span>
@@ -372,7 +483,7 @@
     </div>
   </div>
 
-  <!-- MODAL PERSOANĂ & EDITARE -->
+  <!-- MODAL EDITARE PERSOANĂ -->
   <div id="personModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity">
     <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[85vh] overflow-y-auto space-y-3">
       <div class="flex items-start justify-between border-b border-bordercol pb-3">
@@ -388,7 +499,6 @@
       
       <div id="modalDetails" class="text-xs space-y-2.5 text-slate-200 divide-y divide-bordercol/40"></div>
 
-      <!-- Formular Editare -->
       <div id="editPersonForm" class="hidden space-y-2.5 pt-2 border-t border-bordercol text-xs">
         <div class="grid grid-cols-2 gap-2">
           <input type="text" id="editPrenume" placeholder="Prenume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
@@ -421,7 +531,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v11";
+    const APP_VERSION = "v12";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -451,27 +561,29 @@
     let allPeople = [];
     let allShopping = [];
     let allGanduri = [];
+    let schoolActivities = [];
     let currentFilter = 'ALL';
     let currentCatismaNum = 1;
     let selectedPersonForEdit = null;
     let systemDiagnosticsLog = [];
 
-    // SETĂRI GLOBALE SINCRONIZABILE
+    // SETĂRI GLOBALE
     let appTitle = localStorage.getItem('diih_app_title') || "DIiH Hub";
     let appLogo = localStorage.getItem('diih_app_logo') || "🧭";
     let pomelnicBatchSize = parseInt(localStorage.getItem('diih_batch_size') || "20", 10);
 
-    // STARE SELECTARE MULTIPLĂ
+    // STĂRI SELECTARE
     let isSelectModeActive = false;
     let selectedRowIds = new Set();
     let contextMenuTargetPerson = null;
 
+    // CALENDAR ȘCOALĂ (SHIFTER)
+    let currentSchoolDate = new Date();
+    let selectedSchoolDays = new Set();
+
     // METADATE DISPOZITIV
-    let deviceId = localStorage.getItem('diih_device_id');
-    if (!deviceId) {
-      deviceId = 'DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase();
-      localStorage.setItem('diih_device_id', deviceId);
-    }
+    let deviceId = localStorage.getItem('diih_device_id') || ('DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase());
+    localStorage.setItem('diih_device_id', deviceId);
     let deviceName = localStorage.getItem('diih_device_name') || (navigator.userAgent.includes('Android') ? 'Bogdan S24 Ultra' : 'Bogdan Laptop Siemens');
     const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
     const deviceType = isMobile ? 'Mobile' : 'Desktop';
@@ -482,16 +594,22 @@
       displayCurrentDate();
       calculateTodayPsaltire();
       loadStoredData();
+      renderSchoolCalendar();
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'Aplicația pornită v11');
+      calcSchoolTotal();
+      logEventToCloud('app_start', 'session', deviceId, 'Aplicația pornită v12');
     });
 
     function applyAppBrandUI() {
       document.getElementById('headerAppTitle').textContent = appTitle;
-      document.getElementById('htmlAppTitle').textContent = `${appTitle} ${APP_VERSION}`;
+      document.getElementById('htmlAppTitle').textContent = `${appTitle} v12`;
       document.getElementById('headerAppLogo').textContent = appLogo;
+      document.title = `${appTitle} v12`;
+
+      // Setare Favicon dinamic cu emoji-ul ales
+      updateDynamicFavicon(appLogo);
 
       const titleInput = document.getElementById('settingAppTitle');
       if (titleInput) titleInput.value = appTitle;
@@ -499,6 +617,14 @@
       if (logoInput) logoInput.value = appLogo;
       const batchInput = document.getElementById('settingPomelnicBatchSize');
       if (batchInput) batchInput.value = pomelnicBatchSize;
+    }
+
+    function updateDynamicFavicon(emoji) {
+      const link = document.getElementById('appFavicon') || document.createElement('link');
+      link.id = 'appFavicon';
+      link.rel = 'icon';
+      link.href = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${emoji}</text></svg>`;
+      document.head.appendChild(link);
     }
 
     function saveGlobalCustomSettings() {
@@ -516,20 +642,18 @@
 
       applyAppBrandUI();
       renderDailyPomelnic20();
-      showToast("Setări salvate și trimise în Cloud!");
+      showToast("Setări salvate și sincronizate!");
 
       logEventToCloud('update_settings', 'settings', 'global', `Setări noi: ${appTitle} | ${appLogo} | ${pomelnicBatchSize} pe zi`);
 
-      // Salvare directă în Google Sheets (foaia Setari)
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&appTitle=${encodeURIComponent(appTitle)}&appLogo=${encodeURIComponent(appLogo)}&pomelnicBatchSize=${pomelnicBatchSize}&callback=void`;
       document.body.appendChild(script);
     }
 
-    // CURĂȚARE CACHE & REFRESH FĂRĂ DEVTOOLS
     async function forceCleanStorageAndReload() {
       showToast("Se curăță cache-ul...");
-      logEventToCloud('clean_cache', 'system', deviceId, 'Curățare automată cache & service worker inițiată');
+      logEventToCloud('clean_cache', 'system', deviceId, 'Curățare cache inițiată');
 
       try {
         if ('caches' in window) {
@@ -541,17 +665,12 @@
           await Promise.all(regs.map(r => r.unregister()));
         }
         sessionStorage.clear();
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) {}
 
       showToast("Resetare completă!");
-      setTimeout(() => {
-        window.location.reload(true);
-      }, 700);
+      setTimeout(() => { window.location.reload(true); }, 600);
     }
 
-    // DETECȚIE ONLINE / OFFLINE
     function setupOnlineOfflineHandlers() {
       const ind = document.getElementById('onlineIndicator');
       function updateStatus() {
@@ -560,8 +679,8 @@
           ind.title = "Online";
         } else {
           ind.className = "w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse";
-          ind.title = "Offline (Funcționează din date locale)";
-          showToast("Aplicație offline - folosește memoria locală");
+          ind.title = "Offline (Local)";
+          showToast("Aplicație offline");
         }
       }
       window.addEventListener('online', () => { updateStatus(); fetchDataFromSheet(true); });
@@ -663,7 +782,7 @@
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById(`tab-${tabId}`).classList.remove('hidden');
 
-      const tabs = ['today', 'pomelnic', 'ganduri', 'cumparaturi', 'setari'];
+      const tabs = ['today', 'pomelnic', 'calendar', 'ganduri', 'cumparaturi', 'setari'];
       tabs.forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
         if (t === tabId) {
@@ -672,10 +791,11 @@
           btn.className = "flex flex-col items-center space-y-1 text-slate-400 hover:text-white";
         }
       });
+      if (tabId === 'calendar') renderSchoolCalendar();
       logEventToCloud('switch_tab', 'navigation', tabId, `Navigare în tabul ${tabId}`);
     }
 
-    // SINCRONIZARE LIVE
+    // SINCRONIZARE LIVE CU GOOGLE SHEETS
     function fetchDataFromSheet(showFeedback = false) {
       const icon = document.getElementById('syncIcon');
       if (icon) icon.classList.add('animate-spin');
@@ -711,12 +831,17 @@
           allGanduri = data.ganduri;
           localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         }
+        if (data.schoolActivities) {
+          schoolActivities = data.schoolActivities;
+          localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+        }
 
         populateCategoryDropdown();
         renderAll();
+        renderSchoolCalendar();
         if (icon) icon.classList.remove('animate-spin');
         if (showFeedback) showToast("Sincronizat!");
-        logEventToCloud('sync_success', 'database', 'all', `Descărcat: ${allPeople.length} pers, ${allShopping.length} shop`, 'SUCCESS', dur);
+        logEventToCloud('sync_success', 'database', 'all', `Descărcat: ${allPeople.length} pers`, 'SUCCESS', dur);
         delete window[callbackName];
       };
 
@@ -724,7 +849,7 @@
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getAllData&_rnd=${Date.now()}&callback=${callbackName}`;
       script.onerror = function() {
         if (icon) icon.classList.remove('animate-spin');
-        logEventToCloud('sync_error', 'database', 'all', 'Eroare la descărcare date (rețea)', 'ERROR');
+        logEventToCloud('sync_error', 'database', 'all', 'Eroare rețea', 'ERROR');
       };
       document.body.appendChild(script);
     }
@@ -733,6 +858,7 @@
       allPeople = JSON.parse(localStorage.getItem('diih_people') || '[]');
       allShopping = JSON.parse(localStorage.getItem('diih_shopping') || '[]');
       allGanduri = JSON.parse(localStorage.getItem('diih_ganduri') || '[]');
+      schoolActivities = JSON.parse(localStorage.getItem('diih_school_activities') || '[]');
       populateCategoryDropdown();
       renderAll();
     }
@@ -804,54 +930,301 @@
       }).join('');
     }
 
-    // 2. POMELNICUL ZILNIC (Dimensiune Configurabilă & Rotație Ciclică Completă)
-    let currentDailyPomelnicList = [];
+    // 2. POMELNICUL ZILNIC: ÎMPĂRȚIT EGAL VII ȘI ADORMIȚI (ROTAȚIE CICLICĂ INDEPENDENTĂ)
+    let currentDailyPomelnicVii = [];
+    let currentDailyPomelnicAdormiti = [];
 
     function renderDailyPomelnic20() {
       const today = new Date();
       today.setHours(0,0,0,0);
       const base = new Date(BASE_DATE.getTime());
       base.setHours(0,0,0,0);
-
-      const eligiblePeople = allPeople.filter(p => p.famCheck === true);
-      const container = document.getElementById('dailyPomelnicList');
-
-      if (eligiblePeople.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">Nicio persoană bifată activ în Coloana C.</p>`;
-        document.getElementById('pomelnicBatchBadge').textContent = `0 de rând`;
-        currentDailyPomelnicList = [];
-        return;
-      }
-
       const diffDays = Math.max(0, Math.round((today.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)));
-      const count = Math.min(pomelnicBatchSize, eligiblePeople.length);
-      const startIndex = (diffDays * count) % eligiblePeople.length;
 
-      let selected = [];
-      for (let i = 0; i < count; i++) {
-        selected.push(eligiblePeople[(startIndex + i) % eligiblePeople.length]);
+      const totalBatch = pomelnicBatchSize || 20;
+      const targetVii = Math.ceil(totalBatch / 2);
+      const targetAdormiti = Math.floor(totalBatch / 2);
+
+      // Separăm toți cei activi (Coloana C) pe stări
+      const allActiveVii = allPeople.filter(p => p.famCheck === true && p.stare !== 'Adormit');
+      const allActiveAdormiti = allPeople.filter(p => p.famCheck === true && p.stare === 'Adormit');
+
+      // 1. Rotație ciclică Vii
+      currentDailyPomelnicVii = [];
+      if (allActiveVii.length > 0) {
+        const countV = Math.min(targetVii, allActiveVii.length);
+        const startV = (diffDays * countV) % allActiveVii.length;
+        for (let i = 0; i < countV; i++) {
+          currentDailyPomelnicVii.push(allActiveVii[(startV + i) % allActiveVii.length]);
+        }
       }
 
-      currentDailyPomelnicList = selected;
-      document.getElementById('pomelnicBatchBadge').textContent = `${selected.length} de rând`;
+      // 2. Rotație ciclică Adormiți
+      currentDailyPomelnicAdormiti = [];
+      if (allActiveAdormiti.length > 0) {
+        const countA = Math.min(targetAdormiti, allActiveAdormiti.length);
+        const startA = (diffDays * countA) % allActiveAdormiti.length;
+        for (let i = 0; i < countA; i++) {
+          currentDailyPomelnicAdormiti.push(allActiveAdormiti[(startA + i) % allActiveAdormiti.length]);
+        }
+      }
 
-      container.innerHTML = selected.map(p => {
-        const isViu = p.stare === 'Viu';
-        const color = isViu ? 'text-emerald-300' : 'text-amber-300';
-        const icon = isViu ? '🌱' : '†';
+      const totalDisplayCount = currentDailyPomelnicVii.length + currentDailyPomelnicAdormiti.length;
+      document.getElementById('pomelnicBatchBadge').textContent = `${totalDisplayCount} de rând (${currentDailyPomelnicVii.length} Vii • ${currentDailyPomelnicAdormiti.length} Adormiți)`;
+      document.getElementById('countViiBadge').textContent = currentDailyPomelnicVii.length;
+      document.getElementById('countAdormitiBadge').textContent = currentDailyPomelnicAdormiti.length;
 
-        return `
-          <div onclick="openPersonModal(${p.rowId})" class="py-1.5 flex items-center justify-between cursor-pointer hover:bg-slate-800/40 rounded px-1 transition">
+      // Randare Vii
+      const containerVii = document.getElementById('dailyPomelnicListVii');
+      if (currentDailyPomelnicVii.length === 0) {
+        containerVii.innerHTML = `<p class="text-[11px] text-slate-500 italic py-1">Nicio persoană vie activă în Coloana C.</p>`;
+      } else {
+        containerVii.innerHTML = currentDailyPomelnicVii.map(p => `
+          <div onclick="openPersonModal(${p.rowId})" class="py-1 flex items-center justify-between cursor-pointer hover:bg-slate-800/40 rounded px-1 transition">
             <div class="flex items-center space-x-2">
-              <span class="${color} text-xs font-bold">${icon}</span>
+              <span class="text-emerald-400 text-xs font-bold">🌱</span>
               <span class="text-xs text-white font-medium">${p.prenume} ${p.nume}</span>
             </div>
-            <span class="text-[10px] text-slate-400">${p.grad || 'De rând'}</span>
-          </div>`;
-      }).join('');
+            <span class="text-[10px] text-slate-400">${p.grad || 'Viu'}</span>
+          </div>
+        `).join('');
+      }
+
+      // Randare Adormiți
+      const containerAdormiti = document.getElementById('dailyPomelnicListAdormiti');
+      if (currentDailyPomelnicAdormiti.length === 0) {
+        containerAdormiti.innerHTML = `<p class="text-[11px] text-slate-500 italic py-1">Nicio persoană adormită activă în Coloana C.</p>`;
+      } else {
+        containerAdormiti.innerHTML = currentDailyPomelnicAdormiti.map(p => `
+          <div onclick="openPersonModal(${p.rowId})" class="py-1 flex items-center justify-between cursor-pointer hover:bg-slate-800/40 rounded px-1 transition">
+            <div class="flex items-center space-x-2">
+              <span class="text-amber-400 text-xs font-bold">†</span>
+              <span class="text-xs text-white font-medium">${p.prenume} ${p.nume}</span>
+            </div>
+            <span class="text-[10px] text-slate-400">${p.grad || 'Adormit'}</span>
+          </div>
+        `).join('');
+      }
     }
 
-    // 3. POPULARE DROPDOWN CATEGORII (GRAD)
+    // 3. CALENDAR ACTIVITĂȚI ȘI ȘCOALĂ (SHIFTER)
+    function changeSchoolMonth(delta) {
+      currentSchoolDate.setMonth(currentSchoolDate.getMonth() + delta);
+      selectedSchoolDays.clear();
+      renderSchoolCalendar();
+    }
+
+    function renderSchoolCalendar() {
+      const year = currentSchoolDate.getFullYear();
+      const month = currentSchoolDate.getMonth();
+      const monthNames = ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"];
+      
+      const titleEl = document.getElementById('calendarMonthTitle');
+      if (titleEl) titleEl.textContent = `${monthNames[month]} ${year}`;
+
+      const gridEl = document.getElementById('schoolCalendarGrid');
+      if (!gridEl) return;
+
+      const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 este duminică
+      const startOffset = (firstDayOfMonth === 0 ? 7 : firstDayOfMonth) - 1; // 0 pentru luni
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      let html = '';
+
+      // Zile goale înainte de începutul lunii
+      for (let i = 0; i < startOffset; i++) {
+        html += `<div class="h-16 bg-slate-900/30 rounded-lg border border-slate-900/50"></div>`;
+      }
+
+      let totalHours = 0;
+      let totalAmount = 0;
+      let unpaidAmount = 0;
+
+      // Zilele lunii
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const isSelected = selectedSchoolDays.has(dateStr);
+        const act = schoolActivities.find(a => a.date === dateStr);
+
+        let actHtml = '';
+        let dayBorder = isSelected ? 'border-2 border-cyan-400 bg-slate-800' : 'border border-bordercol bg-darkbg';
+
+        if (act) {
+          totalHours += act.hours || 0;
+          totalAmount += act.total || 0;
+          if (act.status === 'Neachitat') unpaidAmount += act.total || 0;
+
+          const statusColor = act.status === 'Achitat' ? 'text-emerald-400' : 'text-amber-400';
+          actHtml = `
+            <div style="background-color: ${act.color}25; border-left: 2px solid ${act.color};" class="p-0.5 rounded text-[9px] mt-0.5 truncate text-white leading-tight">
+              <span class="block font-bold truncate">${act.title}</span>
+              <span class="${statusColor}">${act.hours}h • ${act.total}L</span>
+            </div>
+          `;
+        }
+
+        html += `
+          <div onclick="toggleSchoolDaySelection('${dateStr}')" class="h-16 p-1 rounded-xl ${dayBorder} cursor-pointer hover:border-slate-500 transition flex flex-col justify-between overflow-hidden">
+            <span class="text-[10px] font-bold ${isSelected ? 'text-cyan-300' : 'text-slate-300'}">${d}</span>
+            <div class="flex-1 overflow-hidden">${actHtml}</div>
+          </div>
+        `;
+      }
+
+      gridEl.innerHTML = html;
+
+      // Actualizare Sumar Financiar
+      document.getElementById('sumTotalHours').textContent = `${totalHours} h`;
+      document.getElementById('sumTotalAmount').textContent = `${totalAmount} Lei`;
+      document.getElementById('sumUnpaidAmount').textContent = `${unpaidAmount} Lei`;
+      document.getElementById('selectedDaysCount').textContent = selectedSchoolDays.size;
+    }
+
+    function toggleSchoolDaySelection(dateStr) {
+      if (selectedSchoolDays.has(dateStr)) selectedSchoolDays.delete(dateStr);
+      else selectedSchoolDays.add(dateStr);
+      renderSchoolCalendar();
+    }
+
+    function clearSelectedSchoolDays() {
+      selectedSchoolDays.clear();
+      renderSchoolCalendar();
+    }
+
+    function calcSchoolTotal() {
+      const h = parseFloat(document.getElementById('schoolActHours').value) || 0;
+      const r = parseFloat(document.getElementById('schoolActRate').value) || 0;
+      document.getElementById('schoolActCalculatedTotal').textContent = `${(h * r).toFixed(0)} Lei`;
+    }
+
+    function applySchoolActivityToSelected() {
+      if (selectedSchoolDays.size === 0) return showToast("Selectează cel puțin o zi din calendar.");
+
+      const title = document.getElementById('schoolActTitle').value.trim() || "Școală / Curs";
+      const hours = parseFloat(document.getElementById('schoolActHours').value) || 0;
+      const rate = parseFloat(document.getElementById('schoolActRate').value) || 0;
+      const total = hours * rate;
+      const status = document.getElementById('schoolActStatus').value;
+      const color = document.getElementById('schoolActColor').value;
+
+      const payload = [];
+      selectedSchoolDays.forEach(dateStr => {
+        const item = {
+          id: 'ACT-' + dateStr,
+          date: dateStr,
+          title: title,
+          hours: hours,
+          rate: rate,
+          total: total,
+          status: status,
+          color: color
+        };
+        // Actualizăm local
+        schoolActivities = schoolActivities.filter(a => a.date !== dateStr);
+        schoolActivities.push(item);
+        payload.push(item);
+      });
+
+      localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+      showToast(`Activitate aplicată pe ${payload.length} zile!`);
+      logEventToCloud('save_school_act', 'calendar', `${payload.length}_zile`, `Salvat activitate ${title} (${total} Lei)`);
+
+      // Trimitere către Google Sheets
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(payload))}&callback=void`;
+      document.body.appendChild(script);
+
+      selectedSchoolDays.clear();
+      renderSchoolCalendar();
+    }
+
+    function removeSchoolActivityFromSelected() {
+      if (selectedSchoolDays.size === 0) return;
+      selectedSchoolDays.forEach(d => {
+        schoolActivities = schoolActivities.filter(a => a.date !== d);
+      });
+      localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+      showToast("Activități șterse!");
+      selectedSchoolDays.clear();
+      renderSchoolCalendar();
+    }
+
+    // 4. TIPAR / SALVARE PDF POMELNIC
+    function printDailyPomelnicPDF() {
+      const combined = [...currentDailyPomelnicVii, ...currentDailyPomelnicAdormiti];
+      if (combined.length === 0) return showToast("Nicio persoană în pomelnicul de astăzi.");
+      generateAndPrintPDF(combined, "POMELNIC DE RÂND");
+    }
+
+    function printSelectedPomelnicPDF() {
+      if (selectedRowIds.size === 0) return showToast("Selectează cel puțin o persoană.");
+      const list = allPeople.filter(p => selectedRowIds.has(p.rowId));
+      generateAndPrintPDF(list, "POMELNIC");
+    }
+
+    function generateAndPrintPDF(peopleList, mainHeaderTitle) {
+      const vii = peopleList.filter(p => p.stare !== 'Adormit');
+      const adormiti = peopleList.filter(p => p.stare === 'Adormit');
+      const printContainer = document.getElementById('printablePomelnicArea');
+
+      let html = `
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 18px;">
+          <h1 style="font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 2px;">${mainHeaderTitle}</h1>
+          <p style="font-size: 12px; margin: 4px 0 0 0; font-style: italic;">Data pomenirii: ${new Date().toLocaleDateString('ro-RO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+      `;
+
+      if (vii.length > 0 && adormiti.length > 0) {
+        html += `
+          <div style="display: flex; justify-content: space-between; gap: 30px;">
+            <div style="flex: 1;">
+              <h2 style="font-size: 16px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 10px; text-align: center;">PENTRU CEI VII (🌱)</h2>
+              <ol style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+                ${vii.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 10px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
+              </ol>
+            </div>
+
+            <div style="flex: 1;">
+              <h2 style="font-size: 16px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 10px; text-align: center;">PENTRU CEI ADORMIȚI (†)</h2>
+              <ol style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+                ${adormiti.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 10px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
+              </ol>
+            </div>
+          </div>
+        `;
+      } else if (vii.length > 0) {
+        html += `
+          <div style="max-width: 500px; margin: 0 auto;">
+            <h2 style="font-size: 18px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 12px; text-align: center;">PENTRU CEI VII (🌱)</h2>
+            <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 2;">
+              ${vii.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 11px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
+            </ol>
+          </div>
+        `;
+      } else if (adormiti.length > 0) {
+        html += `
+          <div style="max-width: 500px; margin: 0 auto;">
+            <h2 style="font-size: 18px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 4px; margin-bottom: 12px; text-align: center;">PENTRU CEI ADORMIȚI (†)</h2>
+            <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 2;">
+              ${adormiti.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 11px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
+            </ol>
+          </div>
+        `;
+      }
+
+      printContainer.innerHTML = html;
+      printContainer.classList.remove('hidden');
+
+      logEventToCloud('export_pdf_pomelnic', 'pomelnic', 'print', `Export PDF generat pentru ${peopleList.length} persoane`);
+      window.print();
+
+      setTimeout(() => {
+        printContainer.classList.add('hidden');
+        printContainer.innerHTML = '';
+      }, 1000);
+    }
+
+    // 5. REGISTRU POMELNIC & DROPDOWN CATEGORII
     function populateCategoryDropdown() {
       const dd = document.getElementById('categoryDropdown');
       if (!dd) return;
@@ -872,7 +1245,6 @@
       dd.value = currentVal || "ALL";
     }
 
-    // 4. FILTRARE & REGISTRU POMELNIC
     function filterPomelnic(type) {
       currentFilter = type;
       ['filterAll', 'filterAtentie', 'filterViu', 'filterAdormit'].forEach(id => {
@@ -933,7 +1305,6 @@
 
         return `
           <div oncontextmenu="handleLaptopContextMenu(event, ${p.rowId})" onclick="handlePersonCardClick(event, ${p.rowId})" class="p-3 bg-cardbg border ${isChecked ? 'border-cyan-500 bg-slate-800/80' : 'border-bordercol'} rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-600 active:scale-98 transition shadow-sm relative">
-            
             <div class="flex items-center space-x-2.5 overflow-hidden">
               ${isSelectModeActive ? `
                 <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleRowSelection(${p.rowId})" class="w-4 h-4 rounded text-cyan-500 focus:ring-0">
@@ -971,111 +1342,7 @@
       }
     }
 
-    // 5. MOTOR TIPĂRIRE / SALVARE PDF PENTRU POMELNIC
-    function printDailyPomelnicPDF() {
-      if (!currentDailyPomelnicList || currentDailyPomelnicList.length === 0) {
-        return showToast("Nicio persoană în pomelnicul de astăzi.");
-      }
-      generateAndPrintPDF(currentDailyPomelnicList, "POMELNIC DE RÂND");
-    }
-
-    function printSelectedPomelnicPDF() {
-      if (selectedRowIds.size === 0) return showToast("Selectează cel puțin o persoană.");
-      const list = allPeople.filter(p => selectedRowIds.has(p.rowId));
-      generateAndPrintPDF(list, "POMELNIC");
-    }
-
-    function generateAndPrintPDF(peopleList, mainHeaderTitle) {
-      const vii = peopleList.filter(p => p.stare !== 'Adormit');
-      const adormiti = peopleList.filter(p => p.stare === 'Adormit');
-      const printContainer = document.getElementById('printablePomelnicArea');
-
-      let html = `
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
-          <h1 style="font-size: 26px; font-weight: bold; margin: 0; letter-spacing: 2px;">${mainHeaderTitle}</h1>
-          <p style="font-size: 13px; margin: 5px 0 0 0; font-style: italic;">Data pomenirii: ${new Date().toLocaleDateString('ro-RO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
-      `;
-
-      if (vii.length > 0 && adormiti.length > 0) {
-        // DOUĂ COLOANE PARALELE (Vii în stânga | Adormiți în dreapta)
-        html += `
-          <div style="display: flex; justify-content: space-between; gap: 40px;">
-            <div style="flex: 1;">
-              <h2 style="font-size: 18px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 12px; text-align: center;">PENTRU CEI VII (🌱)</h2>
-              <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.8;">
-                ${vii.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 11px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
-              </ol>
-            </div>
-
-            <div style="flex: 1;">
-              <h2 style="font-size: 18px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 12px; text-align: center;">PENTRU CEI ADORMIȚI (†)</h2>
-              <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.8;">
-                ${adormiti.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 11px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
-              </ol>
-            </div>
-          </div>
-        `;
-      } else if (vii.length > 0) {
-        // DOAR VII
-        html += `
-          <div style="max-width: 600px; margin: 0 auto;">
-            <h2 style="font-size: 20px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 15px; text-align: center;">PENTRU CEI VII (🌱)</h2>
-            <ol style="margin: 0; padding-left: 25px; font-size: 15px; line-height: 2;">
-              ${vii.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 12px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
-            </ol>
-          </div>
-        `;
-      } else if (adormiti.length > 0) {
-        // DOAR ADORMIȚI
-        html += `
-          <div style="max-width: 600px; margin: 0 auto;">
-            <h2 style="font-size: 20px; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 15px; text-align: center;">PENTRU CEI ADORMIȚI (†)</h2>
-            <ol style="margin: 0; padding-left: 25px; font-size: 15px; line-height: 2;">
-              ${adormiti.map(p => `<li><strong>${p.prenume}</strong> ${p.nume || ''} ${p.grad ? `<span style="font-size: 12px; color: #555;">(${p.grad})</span>` : ''}</li>`).join('')}
-            </ol>
-          </div>
-        `;
-      }
-
-      printContainer.innerHTML = html;
-      printContainer.classList.remove('hidden');
-
-      logEventToCloud('export_pdf_pomelnic', 'pomelnic', 'print', `Export PDF generat pentru ${peopleList.length} persoane`);
-
-      // Deschide direct caseta de dialog nativă de Print/Save as PDF
-      window.print();
-
-      setTimeout(() => {
-        printContainer.classList.add('hidden');
-        printContainer.innerHTML = '';
-      }, 1000);
-    }
-
-    // 6. BACKUP LOCAL JSON
-    function downloadJsonBackup() {
-      const backupData = {
-        appVersion: APP_VERSION,
-        exportedAt: new Date().toISOString(),
-        settings: { appTitle, appLogo, pomelnicBatchSize },
-        people: allPeople,
-        shopping: allShopping,
-        ganduri: allGanduri
-      };
-
-      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `diih_backup_${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      showToast("Backup local descărcat!");
-      logEventToCloud('download_backup_json', 'backup', 'local', 'Backup JSON descărcat cu succes');
-    }
-
-    // 7. SELECȚIE MULTIPLĂ & CLICK DREAPTA
+    // 6. SELECȚIE MULTIPLĂ & CLICK DREAPTA
     function toggleSelectMode() {
       isSelectModeActive = !isSelectModeActive;
       const btn = document.getElementById('toggleSelectModeBtn');
@@ -1137,7 +1404,7 @@
 
       localStorage.setItem('diih_people', JSON.stringify(allPeople));
       showToast(`${idsArray.length} persoane actualizate!`);
-      logEventToCloud('batch_update_atentie', 'pomelnic', idsArray.join(','), `Batch Atenție setat la ${flagValue}`);
+      logEventToCloud('batch_update_atentie', 'pomelnic', idsArray.join(','), `Batch Atenție: ${flagValue}`);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateAtentie&rowIds=${idsArray.join(',')}&necesitaAtentie=${flagValue}&callback=void`;
@@ -1191,14 +1458,14 @@
       renderAll();
       showToast(p.necesitaAtentie ? "Setat: Necesită Atenție!" : "Scos din Atenție!");
 
-      logEventToCloud('quick_toggle_atentie', 'pomelnic', rowId, `Comutat Atenție la ${p.necesitaAtentie} pentru ${p.prenume}`);
+      logEventToCloud('quick_toggle_atentie', 'pomelnic', rowId, `Comutat Atenție la ${p.necesitaAtentie}`);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${rowId}&necesitaAtentie=${p.necesitaAtentie}&callback=void`;
       document.body.appendChild(script);
     }
 
-    // 8. GÂNDURI CU ID UNIC
+    // 7. GÂNDURI CU ID UNIC
     function handleGandKeyDown(e) {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -1222,7 +1489,7 @@
       document.getElementById('gandInput').value = '';
       document.getElementById('gandSursa').value = '';
 
-      logEventToCloud('add_gand', 'ganduri', newId, `Adăugat gând: "${gand.substring(0, 30)}..."`);
+      logEventToCloud('add_gand', 'ganduri', newId, `Gând: "${gand.substring(0, 30)}..."`);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addGand&id=${encodeURIComponent(newId)}&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&callback=void`;
@@ -1256,7 +1523,6 @@
         navigator.clipboard.writeText(shareText);
         showToast("Text copiat!");
       }
-      logEventToCloud('share_gand', 'ganduri', g.id, `Partajat gând: "${g.gand.substring(0, 20)}..."`);
     }
 
     function sendGandViaEmail() {
@@ -1287,7 +1553,7 @@
       `).join('');
     }
 
-    // 9. CUMPĂRĂTURI CU ID UNIC
+    // 8. CUMPĂRĂTURI CU ID UNIC
     function handleShopKeyDown(e) {
       if (e.key === 'Enter') {
         e.preventDefault();
@@ -1310,7 +1576,7 @@
       document.getElementById('shopProdus').value = '';
       document.getElementById('shopCantitate').value = '';
 
-      logEventToCloud('add_shopping', 'shopping', newId, `Adăugat: ${produs} (${cantitate})`);
+      logEventToCloud('add_shopping', 'shopping', newId, `Adăugat: ${produs}`);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&id=${encodeURIComponent(newId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&callback=void`;
@@ -1326,7 +1592,7 @@
       renderShoppingList();
       showToast("Produs cumpărat și șters!");
 
-      logEventToCloud('delete_shopping', 'shopping', item.id, `Cumpărat și șters: ${item.produs}`);
+      logEventToCloud('delete_shopping', 'shopping', item.id, `Cumpărat: ${item.produs}`);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteCumparaturi&id=${encodeURIComponent(item.id)}&callback=void`;
@@ -1353,7 +1619,31 @@
       `).join('');
     }
 
-    // 10. NOTIFICĂRI NATIVE
+    // 9. BACKUP LOCAL JSON
+    function downloadJsonBackup() {
+      const backupData = {
+        appVersion: APP_VERSION,
+        exportedAt: new Date().toISOString(),
+        settings: { appTitle, appLogo, pomelnicBatchSize },
+        people: allPeople,
+        shopping: allShopping,
+        ganduri: allGanduri,
+        schoolActivities: schoolActivities
+      };
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `diih_backup_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      showToast("Backup local descărcat!");
+      logEventToCloud('download_backup_json', 'backup', 'local', 'Backup JSON descărcat');
+    }
+
+    // 10. NOTIFICĂRI
     function requestNotificationPermission() {
       if (!("Notification" in window)) return showToast("Notificările nu sunt suportate.");
       Notification.requestPermission().then(p => {
@@ -1393,10 +1683,7 @@
           }
         });
       } else if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(title, {
-          body: body,
-          icon: "https://cdn-icons-png.flaticon.com/512/3004/3004458.png"
-        });
+        new Notification(title, { body: body, icon: "https://cdn-icons-png.flaticon.com/512/3004/3004458.png" });
       }
     }
 
@@ -1433,7 +1720,7 @@
       document.getElementById('modalDetails').classList.remove('hidden');
       document.getElementById('personModal').classList.remove('hidden');
 
-      logEventToCloud('view_person', 'pomelnic', p.rowId, `Deschis fișa: ${p.prenume} ${p.nume}`);
+      logEventToCloud('view_person', 'pomelnic', p.rowId, `Deschis: ${p.prenume} ${p.nume}`);
     }
 
     function toggleEditMode() {
@@ -1479,7 +1766,7 @@
       closePersonModal();
       showToast("Modificări salvate!");
 
-      logEventToCloud('update_person', 'pomelnic', selectedPersonForEdit.rowId, `Actualizat ${prenume} ${nume} | Atenție: ${necesitaAtentie}`);
+      logEventToCloud('update_person', 'pomelnic', selectedPersonForEdit.rowId, `Actualizat ${prenume} ${nume}`);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&callback=void`;

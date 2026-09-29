@@ -1,11 +1,11 @@
 {
-  "name": "DIiH - Pomelnic & Psaltire",
+  "name": "DIiH",
   "short_name": "DIiH",
-  "description": "Aplicație privată de pomenire și rânduială liturgică",
+  "description": "Aplicație privată de pomenire și rânduială duhovnicească",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#1e293b",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
   "orientation": "portrait",
   "icons": [
     {
