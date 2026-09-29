@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diih-cache-v6';
+const CACHE_NAME = 'diih-cache-v7';
 const ASSETS = [
   './index.html',
   './manifest.json'
