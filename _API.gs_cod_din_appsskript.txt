@@ -1,0 +1,395 @@
+/**
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v13
+ * Autor: Bogdan Murar (Z003FU5C)
+ * Noutăți: Școală extinsă (ore, tip plată, remindere), Psaltire Grup (437 înreg.), Editare Gânduri, Setări Globale
+ */
+
+const API_SECURITY_TOKEN = "diih_secret_2026_bm";
+const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
+
+function getSpreadsheet() {
+  try {
+    return SpreadsheetApp.openById(SPREADSHEET_ID);
+  } catch (e) {
+    return SpreadsheetApp.getActiveSpreadsheet();
+  }
+}
+
+function doGet(e) {
+  const token = e.parameter.token;
+  if (token !== API_SECURITY_TOKEN) {
+    return ContentService.createTextOutput(JSON.stringify({ error: "Acces neautorizat!" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const ss = getSpreadsheet();
+  const action = e.parameter.action;
+
+  // 1. AUDIT CLOUD LOG_app
+  if (action === "logEvent") {
+    logToAppSheet(ss, e.parameter);
+    return returnResponse(e, { success: true });
+  }
+
+  // 2. SETĂRI GLOBALE
+  if (action === "updateGlobalSettings") {
+    let sh = ss.getSheetByName("Setari");
+    if (!sh) {
+      sh = ss.insertSheet("Setari");
+      sh.appendRow(["Cheie", "Valoare", "UltimaModificare"]);
+    }
+    setSettingValue(sh, "app_title", e.parameter.appTitle);
+    setSettingValue(sh, "app_logo", e.parameter.appLogo);
+    setSettingValue(sh, "pomelnic_batch_size", e.parameter.pomelnicBatchSize);
+    return returnResponse(e, { success: true });
+  }
+
+  // 3. SALVARE ACTIVITĂȚI ȘCOALĂ (FOAIA Scoala_Activitati)
+  if (action === "saveSchoolActivities") {
+    let sh = ss.getSheetByName("Scoala_Activitati");
+    if (!sh) {
+      sh = ss.insertSheet("Scoala_Activitati");
+      sh.appendRow(["ID", "Data", "Institutie", "Titlu_Activitate", "Ora_Inceput", "Ora_Sfarsit", "Tip_Plata", "Suma", "Status_Plata", "Termen_Limita_Plata", "Mesaj_Zi", "Reminder_Pickup_Minute", "Culoare", "DataCreare"]);
+      sh.getRange("A1:N1").setFontWeight("bold");
+    }
+    const activities = JSON.parse(e.parameter.data || "[]");
+    const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+
+    activities.forEach(item => {
+      deleteRowById(sh, item.id, 1);
+      sh.appendRow([
+        item.id, item.date, item.institution || "-", item.title,
+        item.startHour || "08:00", item.endHour || "16:00",
+        item.paymentType || "Card", item.amount || 0,
+        item.paymentStatus || "În așteptare", item.deadline || "-",
+        item.dayMessage || "", item.pickupReminders || "60,30,10",
+        item.color || "#0284c7", dataCreare
+      ]);
+    });
+    return returnResponse(e, { success: true });
+  }
+
+  // 4. ȘTERGERE ACTIVITATE ȘCOALĂ DUPĂ ID
+  if (action === "deleteSchoolActivity") {
+    let sh = ss.getSheetByName("Scoala_Activitati");
+    if (sh && e.parameter.id) deleteRowById(sh, e.parameter.id, 1);
+    return returnResponse(e, { success: true });
+  }
+
+  // 5. SALVARE GÂND NOU
+  if (action === "addGand") {
+    let sh = ss.getSheetByName("Ganduri");
+    if (!sh) {
+      sh = ss.insertSheet("Ganduri");
+      sh.appendRow(["ID", "Gand", "Sursa", "DataCreare"]);
+    }
+    const id = e.parameter.id || ("GAND-" + Date.now());
+    const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+    sh.appendRow([id, e.parameter.gand, e.parameter.sursa, dataCreare]);
+    return returnResponse(e, { success: true, id: id });
+  }
+
+  // 6. EDITARE/ACTUALIZARE GÂND EXISTENT
+  if (action === "updateGand") {
+    let sh = ss.getSheetByName("Ganduri");
+    const targetId = e.parameter.id;
+    if (sh && targetId) {
+      const maxRows = sh.getLastRow();
+      if (maxRows >= 2) {
+        const ids = sh.getRange(2, 1, maxRows - 1, 1).getValues();
+        for (let i = 0; i < ids.length; i++) {
+          if (ids[i][0] && ids[i][0].toString().trim() === targetId.toString().trim()) {
+            sh.getRange(i + 2, 2).setValue(e.parameter.gand);
+            sh.getRange(i + 2, 3).setValue(e.parameter.sursa);
+            break;
+          }
+        }
+      }
+    }
+    return returnResponse(e, { success: true });
+  }
+
+  // 7. ȘTERGERE GÂND
+  if (action === "deleteGand") {
+    let sh = ss.getSheetByName("Ganduri");
+    if (sh && e.parameter.id) deleteRowById(sh, e.parameter.id, 1);
+    return returnResponse(e, { success: true });
+  }
+
+  // 8. SALVARE CUMPĂRĂTURĂ
+  if (action === "addCumparaturi") {
+    let sh = ss.getSheetByName("lista_cumparaturi");
+    if (!sh) {
+      sh = ss.insertSheet("lista_cumparaturi");
+      sh.appendRow(["ID", "Magazin", "Produs", "Cantitate", "DataCreare"]);
+    }
+    const id = e.parameter.id || ("SHOP-" + Date.now());
+    const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+    sh.appendRow([id, e.parameter.magazin, e.parameter.produs, e.parameter.cantitate, dataCreare]);
+    return returnResponse(e, { success: true, id: id });
+  }
+
+  // 9. ȘTERGERE CUMPĂRĂTURI (INDIVIDUAL SAU TOT MAGAZINUL)
+  if (action === "deleteCumparaturi") {
+    let sh = ss.getSheetByName("lista_cumparaturi");
+    if (sh && e.parameter.id) deleteRowById(sh, e.parameter.id, 1);
+    return returnResponse(e, { success: true });
+  }
+
+  if (action === "deleteMagazinCumparaturi") {
+    let sh = ss.getSheetByName("lista_cumparaturi");
+    const magazin = e.parameter.magazin;
+    if (sh && magazin) {
+      const maxRows = sh.getLastRow();
+      if (maxRows >= 2) {
+        const vals = sh.getRange(2, 2, maxRows - 1, 1).getValues();
+        for (let i = vals.length - 1; i >= 0; i--) {
+          if (vals[i][0] && vals[i][0].toString().trim() === magazin.toString().trim()) {
+            sh.deleteRow(i + 2);
+          }
+        }
+      }
+    }
+    return returnResponse(e, { success: true });
+  }
+
+  // 10. EDITARE PERSOANĂ INDIVIDUALĂ
+  if (action === "updatePerson") {
+    let sh = ss.getSheetByName("Pomelnic");
+    let rowId = parseInt(e.parameter.rowId, 10);
+    if (sh && rowId >= 2 && rowId <= sh.getLastRow()) {
+      if (e.parameter.prenume !== undefined) sh.getRange(rowId, 5).setValue(e.parameter.prenume);
+      if (e.parameter.nume !== undefined) sh.getRange(rowId, 6).setValue(e.parameter.nume);
+      if (e.parameter.info !== undefined) sh.getRange(rowId, 7).setValue(e.parameter.info);
+      if (e.parameter.stare !== undefined) sh.getRange(rowId, 14).setValue(e.parameter.stare);
+      if (e.parameter.grad !== undefined) sh.getRange(rowId, 15).setValue(e.parameter.grad);
+      if (e.parameter.necesitaAtentie !== undefined) {
+        const valBool = (e.parameter.necesitaAtentie === "true" || e.parameter.necesitaAtentie === true);
+        sh.getRange(rowId, 22).setValue(valBool);
+      }
+      return returnResponse(e, { success: true });
+    }
+  }
+
+  // 11. BATCH UPDATE ATENȚIE
+  if (action === "batchUpdateAtentie") {
+    let sh = ss.getSheetByName("Pomelnic");
+    const rawRows = e.parameter.rowIds || "";
+    const valBool = (e.parameter.necesitaAtentie === "true" || e.parameter.necesitaAtentie === true);
+    const rowList = rawRows.split(",").map(x => parseInt(x, 10)).filter(x => !isNaN(x) && x >= 2);
+
+    if (sh && rowList.length > 0) {
+      rowList.forEach(r => {
+        if (r <= sh.getLastRow()) sh.getRange(r, 22).setValue(valBool);
+      });
+      return returnResponse(e, { success: true, updatedCount: rowList.length });
+    }
+  }
+
+  // 12. PRELUARE COMPLETĂ DATE
+  const responseData = {
+    settings: getSettingsData(ss),
+    pomelnic: getPomelnicData(ss),
+    cumparaturi: getCumparaturiData(ss),
+    ganduri: getGanduriData(ss),
+    noteAnania: getNoteAnaniaData(ss),
+    schoolActivities: getSchoolActivitiesData(ss),
+    psaltireGrup: getPsaltireGrupData(ss)
+  };
+
+  return returnResponse(e, responseData);
+}
+
+function returnResponse(e, data) {
+  const callback = e.parameter.callback;
+  if (callback && callback !== "void") {
+    return ContentService.createTextOutput(`${callback}(${JSON.stringify(data)})`)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function getSettingsData(ss) {
+  let sh = ss.getSheetByName("Setari");
+  let cfg = { appTitle: "DIiH Hub", appLogo: "🧭", pomelnicBatchSize: 20 };
+  if (!sh || sh.getLastRow() < 2) return cfg;
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
+  rows.forEach(r => {
+    let k = (r[0] || "").toString().trim();
+    let v = r[1];
+    if (k === "app_title" && v) cfg.appTitle = v.toString();
+    if (k === "app_logo" && v) cfg.appLogo = v.toString();
+    if (k === "pomelnic_batch_size" && v) cfg.pomelnicBatchSize = parseInt(v, 10) || 20;
+  });
+  return cfg;
+}
+
+function setSettingValue(sheet, key, value) {
+  if (value === undefined || value === null) return;
+  const maxRows = sheet.getLastRow();
+  const timestamp = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+  if (maxRows >= 2) {
+    const keys = sheet.getRange(2, 1, maxRows - 1, 1).getValues();
+    for (let i = 0; i < keys.length; i++) {
+      if (keys[i][0] && keys[i][0].toString().trim() === key) {
+        sheet.getRange(i + 2, 2, 1, 2).setValues([[value, timestamp]]);
+        return;
+      }
+    }
+  }
+  sheet.appendRow([key, value, timestamp]);
+}
+
+function getSchoolActivitiesData(ss) {
+  let sh = ss.getSheetByName("Scoala_Activitati");
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 14).getValues();
+  return rows.map(r => ({
+    id: r[0],
+    date: r[1],
+    institution: r[2],
+    title: r[3],
+    startHour: r[4],
+    endHour: r[5],
+    paymentType: r[6],
+    amount: parseFloat(r[7]) || 0,
+    paymentStatus: r[8] || "În așteptare",
+    deadline: r[9],
+    dayMessage: r[10],
+    pickupReminders: r[11],
+    color: r[12] || "#0284c7"
+  }));
+}
+
+function getPsaltireGrupData(ss) {
+  let sh = ss.getSheetByName("Psaltire_Grup");
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 6).getValues();
+  return rows.map((r, i) => ({
+    rowId: i + 2,
+    sectiune: r[0],
+    subgrupColoana: r[1],
+    numarRand: r[2],
+    catisma: r[3],
+    persoanaRaw: r[4],
+    exclusLaPomenire: (r[5] || "").toString().trim().toUpperCase() === "DA"
+  }));
+}
+
+function getPomelnicData(ss) {
+  const sh = ss.getSheetByName("Pomelnic");
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 22).getValues();
+  let list = [];
+
+  rows.forEach((r, idx) => {
+    let prenume = (r[4] || "").toString().trim();
+    let nume = (r[5] || "").toString().trim();
+    if (!prenume && !nume) return;
+
+    let valC = r[2];
+    let isBifat = (valC === true || valC === "TRUE" || valC === "true" || valC === 1 || valC === "1");
+    let valV = r[21];
+    let necesitaAtentie = (valV === true || valV === "TRUE" || valV === "true" || valV === 1 || valV === "1");
+
+    list.push({
+      rowId: idx + 2,
+      famCheck: isBifat,
+      necesitaAtentie: necesitaAtentie,
+      prenume: prenume,
+      nume: nume,
+      info: (r[6] || "").toString().trim(),
+      dn: parseDateToText(r[8]),
+      da: parseDateToText(r[10]),
+      stare: (r[13] || "Viu").toString().trim(),
+      grad: (r[14] || "").toString().trim(),
+      copii: (r[15] || "").toString().trim(),
+      sot: (r[16] || "").toString().trim(),
+      parinti: (r[17] || "").toString().trim(),
+      apropiati: (r[18] || "").toString().trim()
+    });
+  });
+  return list;
+}
+
+function getCumparaturiData(ss) {
+  const sh = ss.getSheetByName("lista_cumparaturi");
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 5).getValues();
+  return rows.map(r => ({
+    id: r[0] ? r[0].toString() : ("SHOP-" + Math.random()),
+    magazin: r[1] || "General",
+    produs: r[2] || "",
+    cantitate: r[3] || "1",
+    dataCreare: r[4] || ""
+  })).filter(x => x.produs);
+}
+
+function getGanduriData(ss) {
+  const sh = ss.getSheetByName("Ganduri");
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 4).getValues();
+  return rows.map(r => ({
+    id: r[0] ? r[0].toString() : ("GAND-" + Math.random()),
+    gand: r[1] || "",
+    sursa: r[2] || "Personal",
+    data: r[3] ? parseDateToText(r[3]) : ""
+  })).filter(x => x.gand);
+}
+
+function getNoteAnaniaData(ss) {
+  const sh = ss.getSheetByName("noteBIBLIA_Anania");
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 4).getValues();
+  return rows.map(r => ({ cartea: r[0], versetul: r[1], indice: r[2], explicatie: r[3] })).filter(x => x.cartea);
+}
+
+function deleteRowById(sheet, targetVal, colIndex) {
+  const maxRows = sheet.getLastRow();
+  if (maxRows < 2) return;
+  const values = sheet.getRange(2, colIndex, maxRows - 1, 1).getValues();
+  for (let i = values.length - 1; i >= 0; i--) {
+    if (values[i][0] && values[i][0].toString().trim() === targetVal.toString().trim()) {
+      sheet.deleteRow(i + 2);
+    }
+  }
+}
+
+function logToAppSheet(ss, p) {
+  let sh = ss.getSheetByName("LOG_app");
+  if (!sh) {
+    sh = ss.insertSheet("LOG_app");
+    sh.appendRow(["Timestamp", "DeviceId", "DeviceName", "DeviceType", "Browser", "AppVersion", "Action", "Entity", "EntityId", "Direction", "Status", "HttpStatus", "DurationMs", "Message", "Online"]);
+    sh.getRange("A1:O1").setFontWeight("bold");
+  }
+
+  const timestamp = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+  sh.appendRow([
+    timestamp,
+    p.deviceId || "-",
+    p.deviceName || "-",
+    p.deviceType || "-",
+    p.browser || "-",
+    p.appVersion || "v13",
+    p.appAction || "-",
+    p.entity || "-",
+    p.entityId || "-",
+    p.direction || "OUT",
+    p.status || "INFO",
+    p.httpStatus || 200,
+    p.durationMs || 0,
+    p.message || "",
+    p.online !== undefined ? p.online : true
+  ]);
+
+  if (sh.getLastRow() > 1000) sh.deleteRows(2, 200);
+}
+
+function parseDateToText(val) {
+  if (!val) return "";
+  if (Object.prototype.toString.call(val) === '[object Date]') {
+    return Utilities.formatDate(val, "Europe/Bucharest", "dd.MM.yyyy");
+  }
+  return val.toString().trim();
+}
