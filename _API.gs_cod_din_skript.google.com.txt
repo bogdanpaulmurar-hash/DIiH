@@ -1,7 +1,7 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v14
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v15
  * Autor: Bogdan Murar (Z003FU5C)
- * Noutăți: CRUD complet Psaltire_Grup, Școală extinsă (plată orară/fixă/ședință), Notificări 3 praguri, LOG_app
+ * Noutăți: Sincronizare stabilă Psaltire_Grup, Scoala_Activitati, Notificări multi-prag, Pomelnic & LOG_app
  */
 
 const API_SECURITY_TOKEN = "diih_secret_2026_bm";
@@ -31,7 +31,7 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
-  // 2. SETĂRI GLOBALE
+  // 2. SETĂRI GLOBALE (Nume, Logo, Dimensiune Pomelnic)
   if (action === "updateGlobalSettings") {
     let sh = ss.getSheetByName("Setari");
     if (!sh) {
@@ -211,7 +211,7 @@ function doGet(e) {
     }
   }
 
-  // 9. SALVARE NOTIFICĂRI MULTI-PRAG ÎN FOAIA Setari
+  // 9. SALVARE NOTIFICĂRI MULTI-PRAG ÎN Setari
   if (action === "saveNotificationConfigs") {
     let sh = ss.getSheetByName("Setari");
     if (!sh) {
@@ -328,8 +328,13 @@ function getPomelnicData(ss) {
     let prenume = (r[4] || "").toString().trim();
     let nume = (r[5] || "").toString().trim();
     if (!prenume && !nume) return;
-    let isBifat = (r[2] === true || r[2] === "TRUE" || r[2] === 1 || r[2] === "1");
-    let necesitaAtentie = (r[21] === true || r[21] === "TRUE" || r[21] === 1 || r[21] === "1");
+    
+    // Normalizare robustă: TRUE boolean sau string sau 1
+    let valC = r[2];
+    let isBifat = (valC === true || valC === "TRUE" || valC === "true" || valC === 1 || valC === "1");
+    
+    let valV = r[21];
+    let necesitaAtentie = (valV === true || valV === "TRUE" || valV === "true" || valV === 1 || valV === "1");
 
     list.push({
       rowId: idx + 2,
@@ -400,7 +405,7 @@ function logToAppSheet(ss, p) {
   const timestamp = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
   sh.appendRow([
     timestamp, p.deviceId || "-", p.deviceName || "-", p.deviceType || "-",
-    p.browser || "-", p.appVersion || "v14", p.appAction || "-",
+    p.browser || "-", p.appVersion || "v15", p.appAction || "-",
     p.entity || "-", p.entityId || "-", p.direction || "OUT",
     p.status || "INFO", p.httpStatus || 200, p.durationMs || 0,
     p.message || "", p.online !== undefined ? p.online : true

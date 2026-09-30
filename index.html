@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title id="htmlAppTitle">DIiH Hub v14</title>
+  <title id="htmlAppTitle">DIiH Hub v15</title>
   
   <link rel="manifest" href="./manifest.json">
   <link id="appFavicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
@@ -83,7 +83,7 @@
       </div>
       <div class="flex items-center space-x-2">
         <span id="onlineIndicator" class="w-2.5 h-2.5 rounded-full bg-emerald-500" title="Online"></span>
-        <button onclick="fetchDataFromSheet(true)" class="p-2 rounded-xl bg-cardbg border border-bordercol hover:bg-slate-800 text-slate-300 active:scale-95 transition" title="Sincronizare live">
+        <button onclick="fetchDataFromSheet(true)" class="p-2 rounded-xl bg-cardbg border border-bordercol hover:bg-slate-800 text-slate-300 active:scale-95 transition" title="Sincronizare live completă">
           <svg id="syncIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
         </button>
       </div>
@@ -96,11 +96,11 @@
     <!-- TAB 1: ASTĂZI -->
     <section id="tab-today" class="tab-content space-y-4">
       
-      <!-- Catisma Zilei -->
+      <!-- Catisma Zilei (Click: Detalii Rânduială & Pomelnic Grup Psaltire) -->
       <div onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
         <div class="flex items-center justify-between text-xs font-semibold text-rose-300 uppercase tracking-wider mb-2">
           <span>📖 Citirea Psaltirii</span>
-          <span class="bg-rose-950/80 border border-rose-800 text-rose-200 px-2 py-0.5 rounded-full">Rânduială Canonică</span>
+          <span class="bg-rose-950/80 border border-rose-800 text-rose-200 px-2 py-0.5 rounded-full">Rânduială & Pomelnic Grup</span>
         </div>
         <h2 id="psaltireTitle" class="text-base font-bold text-white leading-snug">Se calculează...</h2>
         <p id="psaltireStari" class="text-xs text-slate-300 mt-1 font-mono"></p>
@@ -136,18 +136,17 @@
         <div id="anniversaryList" class="space-y-2"></div>
       </div>
 
-      <!-- Pomelnicul de Astăzi (DESIGN CURAT REPOZIȚIONAT) -->
+      <!-- Pomelnicul de Astăzi (DESIGN REPOZIȚIONAT CURAT) -->
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <div>
             <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider">📿 Pomelnicul de Astăzi</span>
             <p class="text-[10px] text-slate-400">Pomenire împărțită egal din Coloana C</p>
           </div>
-          <!-- BADGE COMPACT CURAT -->
+          <!-- BADGE COMPACT -->
           <span id="pomelnicBatchBadge" class="bg-emerald-950 border border-emerald-800 text-emerald-300 text-[11px] px-2.5 py-1 rounded-full font-mono font-bold">10 Vii • 10 Adormiți</span>
         </div>
 
-        <!-- Butoane Acțiuni Export Altar / Familie -->
         <div class="flex space-x-2">
           <button onclick="printPomelnicAltar(currentDailyPomelnicVii, currentDailyPomelnicAdormiti)" class="flex-1 bg-amber-950 hover:bg-amber-900 border border-amber-700 text-amber-200 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-1 transition">
             <span>⛪</span>
@@ -158,7 +157,7 @@
           </button>
         </div>
 
-        <!-- Secțiune Vii -->
+        <!-- Vii -->
         <div class="space-y-1 pt-1">
           <div class="flex items-center justify-between text-xs font-bold text-emerald-400 border-b border-emerald-950/60 pb-1">
             <span>🌱 PENTRU CEI VII</span>
@@ -167,7 +166,7 @@
           <div id="dailyPomelnicListVii" class="space-y-1 divide-y divide-bordercol/30"></div>
         </div>
 
-        <!-- Secțiune Adormiți -->
+        <!-- Adormiți -->
         <div class="space-y-1 pt-2">
           <div class="flex items-center justify-between text-xs font-bold text-amber-400 border-b border-amber-950/60 pb-1">
             <span>† PENTRU CEI ADORMIȚI</span>
@@ -221,7 +220,6 @@
     <section id="tab-calendar" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         
-        <!-- Comutator View: Lună / Săptămână / Listă -->
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <div class="flex space-x-1">
             <button onclick="setSchoolView('month')" id="btnViewMonth" class="px-2.5 py-1 text-xs rounded-lg bg-cyan-900 text-cyan-200 font-bold">Lună</button>
@@ -257,7 +255,7 @@
       <!-- Container Dinamic Calendar / Săptămână / Listă -->
       <div id="schoolDisplayContainer"></div>
 
-      <!-- Panou Detalii Zi & Formular Activitate -->
+      <!-- Detalii Zi & Formular Activitate -->
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3 text-xs">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <span class="font-bold text-cyan-300 uppercase tracking-wider">📋 Activități pe Zilele Selectate (<span id="selectedDaysBadge">0</span>)</span>
@@ -313,13 +311,12 @@
 
           <input type="text" id="schoolDayMessage" placeholder="Mesaj / Observație afișat în această zi" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
 
-          <!-- Remindere Ridicare Copil (3 Praguri) -->
           <div class="p-2.5 bg-darkbg rounded-xl border border-bordercol space-y-1.5">
             <span class="font-bold text-amber-300 block text-[11px]">🔔 Remindere Ridicare Copil (minute înainte):</span>
             <div class="grid grid-cols-3 gap-2">
-              <input type="number" id="schoolRem1" value="60" class="bg-cardbg border border-bordercol rounded p-1 text-white text-center text-xs" title="Pragul 1 (ex: 60 min)">
-              <input type="number" id="schoolRem2" value="30" class="bg-cardbg border border-bordercol rounded p-1 text-white text-center text-xs" title="Pragul 2 (ex: 30 min)">
-              <input type="number" id="schoolRem3" value="10" class="bg-cardbg border border-bordercol rounded p-1 text-white text-center text-xs" title="Pragul 3 (ex: 10 min)">
+              <input type="number" id="schoolRem1" value="60" class="bg-cardbg border border-bordercol rounded p-1 text-white text-center text-xs" title="Pragul 1">
+              <input type="number" id="schoolRem2" value="30" class="bg-cardbg border border-bordercol rounded p-1 text-white text-center text-xs" title="Pragul 2">
+              <input type="number" id="schoolRem3" value="10" class="bg-cardbg border border-bordercol rounded p-1 text-white text-center text-xs" title="Pragul 3">
             </div>
           </div>
 
@@ -403,7 +400,7 @@
         </div>
       </div>
 
-      <!-- SUB-TAB 1: POMELNICUL GRUPULUI DE PSALTIRE (CU ADĂUGARE, EDITARE, ȘTERGERE) -->
+      <!-- SUB-TAB 1: POMELNICUL GRUPULUI DE PSALTIRE -->
       <div id="subtab-psaltire-grup" class="subtab-content space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
           <div class="flex items-center justify-between border-b border-bordercol pb-2">
@@ -419,10 +416,9 @@
             <p id="psaltireGrupTodayTitle" class="text-xs text-white font-bold"></p>
           </div>
 
-          <!-- Filtru Secțiune + Buton Adaugă Persoană Nouă -->
           <div class="flex items-center space-x-2">
             <select id="psaltireGrupSectionFilter" onchange="renderPsaltireGrupList()" class="bg-darkbg text-white border border-bordercol rounded-lg px-2 py-1 text-xs flex-1">
-              <option value="ALL">Toate Secțiunile (437)</option>
+              <option value="ALL">Toate Secțiunile</option>
               <option value="Parinti Duhovnici">Părinți Duhovnici</option>
               <option value="Grup Psaltire">Grupul celor 20 Catisme</option>
               <option value="Copii bolnavi / alte nevoi">Copii bolnavi / alte nevoi</option>
@@ -435,7 +431,7 @@
         </div>
       </div>
 
-      <!-- SUB-TAB 2: NOTIFICĂRI CENTRALIZATE CU 3 PRAGURI ȘI MESAJE PERSONALIZABILE -->
+      <!-- SUB-TAB 2: NOTIFICĂRI CENTRALIZATE MULTI-PRAG CU MESAJE PERSONALIZATE -->
       <div id="subtab-notificari" class="subtab-content hidden space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           <div class="border-b border-bordercol pb-2 flex items-center justify-between">
@@ -445,7 +441,7 @@
 
           <!-- 1. Catisme -->
           <div class="p-3 bg-darkbg rounded-xl border border-bordercol space-y-2">
-            <span class="font-bold text-rose-300 block">📖 Citirea Psaltirii (Până la 3 Alerte)</span>
+            <span class="font-bold text-rose-300 block">📖 Citirea Psaltirii (3 Alerte)</span>
             <div id="notifPsaltireRows" class="space-y-1.5"></div>
           </div>
 
@@ -515,7 +511,7 @@
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-1">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v14.0 (Build 2026-09-30)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v15.0 (Build 2026-09-30)</span>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID Spreadsheet: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
           </div>
 
@@ -552,7 +548,7 @@
 
   </main>
 
-  <!-- BARA DE NAVIGARE INFERIOARĂ (5 Sloturi Principale + ⋯ Mai multe) -->
+  <!-- BARA DE NAVIGARE INFERIOARĂ -->
   <nav class="fixed bottom-0 inset-x-0 bg-darkbg/95 backdrop-blur-md border-t border-bordercol z-40 py-2">
     <div class="max-w-lg mx-auto grid grid-cols-6 text-center text-[9px] font-medium text-slate-400">
       <button onclick="switchTab('today')" id="nav-today" class="flex flex-col items-center space-y-1 text-cyan-400 font-bold">
@@ -582,9 +578,9 @@
     </div>
   </nav>
 
-  <!-- MODAL RÂNDUIALĂ PSALTIRE -->
+  <!-- MODAL RÂNDUIALĂ PSALTIRE CU POMELNICUL GRUPULUI INTEGRAT -->
   <div id="psaltireIframeModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
-    <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden mx-auto p-5 space-y-4">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg max-h-[90vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden mx-auto p-5 space-y-4">
       <div class="flex items-center justify-between border-b border-bordercol pb-3">
         <div>
           <span class="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-full font-bold uppercase">Rânduială Psaltire</span>
@@ -593,11 +589,21 @@
         <button onclick="closePsaltireIframeModal()" class="text-slate-400 hover:text-white p-2 text-lg">✕</button>
       </div>
       
-      <div class="space-y-3 text-xs text-slate-300">
+      <div class="space-y-3 text-xs text-slate-300 overflow-y-auto pr-1">
         <div class="p-3 bg-darkbg border border-bordercol rounded-xl space-y-1">
           <span class="text-rose-400 font-bold block">Structura Catismei de astăzi:</span>
           <p id="modalPsaltireDetails" class="font-mono text-slate-200"></p>
         </div>
+
+        <!-- POMELNICUL GRUPULUI PENTRU CATISMA ZILEI (ECHILIBRAT CLER + GRUP + BOLNAVI) -->
+        <div class="p-3 bg-darkbg border border-bordercol rounded-xl space-y-2">
+          <div class="flex items-center justify-between border-b border-bordercol pb-1">
+            <span class="font-bold text-emerald-400 uppercase text-[11px]">📿 Pomenirea Grupului pentru Catisma Zilei:</span>
+            <button onclick="printPsaltireGrupAltarPDF()" class="text-[10px] bg-amber-950 border border-amber-800 text-amber-200 px-2 py-0.5 rounded font-bold">⛪ Tipar Altar</button>
+          </div>
+          <div id="modalPsaltireDailyRoster" class="space-y-1 max-h-48 overflow-y-auto divide-y divide-bordercol/30 pr-1 text-[11px]"></div>
+        </div>
+
         <a id="externalDoxologiaBtn" href="#" target="_blank" class="w-full bg-rose-900 hover:bg-rose-800 border border-rose-700 text-white font-medium text-xs py-3 rounded-xl flex items-center justify-center space-x-2 transition">
           <span>📖 Deschide Textul Liturgic pe Doxologia.ro</span>
           <span>↗</span>
@@ -688,7 +694,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v14.0";
+    const APP_VERSION = "v15.0";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -725,27 +731,22 @@
     let selectedPersonForEdit = null;
     let systemDiagnosticsLog = [];
 
-    // GRUPĂRI
     let isShoppingGrouped = true;
     let isGanduriGrouped = true;
     let editingGandId = null;
 
-    // SETĂRI
     let appTitle = localStorage.getItem('diih_app_title') || "DIiH Hub";
     let appLogo = localStorage.getItem('diih_app_logo') || "🧭";
     let pomelnicBatchSize = parseInt(localStorage.getItem('diih_batch_size') || "20", 10);
 
-    // SELECȚII POMELNIC
     let isSelectModeActive = false;
     let selectedRowIds = new Set();
     let contextMenuTargetPerson = null;
 
-    // ȘCOALĂ EXTINSĂ
-    let schoolCurrentView = 'month'; // 'month' | 'week' | 'list'
+    let schoolCurrentView = 'month';
     let currentSchoolDate = new Date();
     let selectedSchoolDays = new Set();
 
-    // PSALTIRE GRUP MODAL
     let editingPsaltireRowId = null;
 
     let deviceId = localStorage.getItem('diih_device_id') || ('DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase());
@@ -765,14 +766,14 @@
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'DIiH Hub v14 pornit');
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH Hub v15 pornit');
     });
 
     function applyAppBrandUI() {
       document.getElementById('headerAppTitle').textContent = appTitle;
-      document.getElementById('htmlAppTitle').textContent = `${appTitle} v14`;
+      document.getElementById('htmlAppTitle').textContent = `${appTitle} v15`;
       document.getElementById('headerAppLogo').textContent = appLogo;
-      document.title = `${appTitle} v14`;
+      document.title = `${appTitle} v15`;
       updateDynamicFavicon(appLogo);
 
       const titleInput = document.getElementById('settingAppTitle');
@@ -926,6 +927,8 @@
       
       const widgetCatisma = document.getElementById('widgetCatismaText');
       if (widgetCatisma) widgetCatisma.textContent = `Catisma ${info.roman} [Ps. ${info.display}]`;
+
+      renderModalPsaltireDailyRoster();
     }
 
     function openPsaltireIframeModal() {
@@ -933,6 +936,7 @@
       document.getElementById('modalIframeTitle').textContent = `Catisma ${info.roman} (${currentCatismaNum})`;
       document.getElementById('modalPsaltireDetails').textContent = `Psalmii rânduiți: ${info.display}`;
       document.getElementById('externalDoxologiaBtn').href = `https://doxologia.ro/${info.slug}`;
+      renderModalPsaltireDailyRoster();
       document.getElementById('psaltireIframeModal').classList.remove('hidden');
     }
 
@@ -963,9 +967,10 @@
       document.getElementById(`subtab-${subId}`).classList.remove('hidden');
       if (subId === 'psaltire-grup') renderPsaltireGrupList();
       if (subId === 'widget') updateTodayWidgetView();
+      if (subId === 'notificari') initNotificationInputs();
     }
 
-    // SINCRONIZARE DATE LIVE CU FALLBACK
+    // SINCRONIZARE LIVE CU STANDARDIZARE ROBUSTĂ
     function fetchDataFromSheet(showFeedback = false) {
       const icon = document.getElementById('syncIcon');
       if (icon) icon.classList.add('animate-spin');
@@ -982,30 +987,30 @@
         if (data.settings) {
           if (data.settings.appTitle) appTitle = data.settings.appTitle;
           if (data.settings.appLogo) appLogo = data.settings.appLogo;
-          if (data.settings.pomelnicBatchSize) pomelnicBatchSize = data.settings.pomelnicBatchSize;
+          if (data.settings.pomelnicBatchSize) pomelnicBatchSize = parseInt(data.settings.pomelnicBatchSize, 10) || 20;
           localStorage.setItem('diih_app_title', appTitle);
           localStorage.setItem('diih_app_logo', appLogo);
           localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
           applyAppBrandUI();
         }
 
-        if (data.pomelnic) {
+        if (data.pomelnic && Array.isArray(data.pomelnic)) {
           allPeople = data.pomelnic;
           localStorage.setItem('diih_people', JSON.stringify(allPeople));
         }
-        if (data.cumparaturi) {
+        if (data.cumparaturi && Array.isArray(data.cumparaturi)) {
           allShopping = data.cumparaturi;
           localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
         }
-        if (data.ganduri) {
+        if (data.ganduri && Array.isArray(data.ganduri)) {
           allGanduri = data.ganduri;
           localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         }
-        if (data.schoolActivities) {
+        if (data.schoolActivities && Array.isArray(data.schoolActivities)) {
           schoolActivities = data.schoolActivities;
           localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
         }
-        if (data.psaltireGrup) {
+        if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
           psaltireGrupData = data.psaltireGrup;
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
         }
@@ -1110,7 +1115,7 @@
       }).join('');
     }
 
-    // 2. POMELNICUL ZILNIC (CURAT REPOZIȚIONAT)
+    // 2. POMELNICUL ZILNIC (STANDARDIZAT PENTRU BOOLEAN/STRING/NUMERIC)
     let currentDailyPomelnicVii = [];
     let currentDailyPomelnicAdormiti = [];
 
@@ -1125,8 +1130,9 @@
       const targetVii = Math.ceil(totalBatch / 2);
       const targetAdormiti = Math.floor(totalBatch / 2);
 
-      const allActiveVii = allPeople.filter(p => p.famCheck === true && p.stare !== 'Adormit');
-      const allActiveAdormiti = allPeople.filter(p => p.famCheck === true && p.stare === 'Adormit');
+      // Verificare robustă pentru Coloana C (famCheck)
+      const allActiveVii = allPeople.filter(p => (p.famCheck === true || p.famCheck === "TRUE" || p.famCheck === 1 || p.famCheck === "1") && p.stare !== 'Adormit');
+      const allActiveAdormiti = allPeople.filter(p => (p.famCheck === true || p.famCheck === "TRUE" || p.famCheck === 1 || p.famCheck === "1") && p.stare === 'Adormit');
 
       currentDailyPomelnicVii = [];
       if (allActiveVii.length > 0) {
@@ -1146,7 +1152,6 @@
         }
       }
 
-      // BADGE CURAT
       document.getElementById('pomelnicBatchBadge').textContent = `${currentDailyPomelnicVii.length} Vii • ${currentDailyPomelnicAdormiti.length} Adormiți`;
       document.getElementById('countViiBadge').textContent = currentDailyPomelnicVii.length;
       document.getElementById('countAdormitiBadge').textContent = currentDailyPomelnicAdormiti.length;
@@ -1182,7 +1187,7 @@
       }
     }
 
-    // 3. TIPAR PDF ALTAR (DOAR PRENUME, DOUĂ COLOANE, FĂRĂ EMOJI)
+    // 3. TIPAR PDF ALTAR
     function printPomelnicAltar(listVii, listAdormiti) {
       const vii = listVii || [];
       const adormiti = listAdormiti || [];
@@ -1257,7 +1262,48 @@
       setTimeout(() => { printContainer.classList.add('hidden'); printContainer.innerHTML = ''; }, 1000);
     }
 
-    // 4. CRUD PENTRU FOAIA Psaltire_Grup (437 Înregistrări)
+    // 4. POMELNICUL GRUPULUI DE PSALTIRE (INTEGRAT ÎN MODAL & DRAWER)
+    function renderModalPsaltireDailyRoster() {
+      const cont = document.getElementById('modalPsaltireDailyRoster');
+      if (!cont) return;
+
+      if (!psaltireGrupData || psaltireGrupData.length === 0) {
+        cont.innerHTML = `<p class="text-slate-500 italic py-2 text-center text-xs">Foaia Psaltire_Grup nu conține date sau nu a fost sincronizată.</p>`;
+        return;
+      }
+
+      // 1. Cler (Părinți Duhovnici) - Căutăm primii 5 de rând
+      const cler = psaltireGrupData.filter(x => x.sectiune === 'Parinti Duhovnici' && !x.exclusLaPomenire);
+      // 2. Membri grup pentru Catisma Zilei (ex: Catisma 14)
+      const grupCatisma = psaltireGrupData.filter(x => x.sectiune === 'Grup Psaltire' && !x.exclusLaPomenire && (x.catisma.includes(currentCatismaNum.toString()) || x.subgrupColoana.includes(currentCatismaNum.toString())));
+      // 3. Copii bolnavi (TOȚI DEODATĂ)
+      const bolnavi = psaltireGrupData.filter(x => x.sectiune === 'Copii bolnavi / alte nevoi' && !x.exclusLaPomenire);
+
+      let html = '';
+
+      if (cler.length > 0) {
+        html += `<div class="font-bold text-amber-300 py-1">Părinți Duhovnici (Cler):</div>`;
+        html += cler.slice(0, 5).map(c => `<div class="py-0.5 text-slate-200">• ${c.persoanaRaw}</div>`).join('');
+      }
+
+      if (grupCatisma.length > 0) {
+        html += `<div class="font-bold text-emerald-300 pt-2 pb-1">Membrii Grupului (Catisma ${currentCatismaNum}):</div>`;
+        html += grupCatisma.map(m => `<div class="py-0.5 text-slate-200">• ${m.persoanaRaw} <span class="text-[9px] text-slate-500">(${m.subgrupColoana})</span></div>`).join('');
+      } else {
+        // Fallback dacă nu avem coloană specifică
+        const membriGeneral = psaltireGrupData.filter(x => x.sectiune === 'Grup Psaltire' && !x.exclusLaPomenire).slice(0, 15);
+        html += `<div class="font-bold text-emerald-300 pt-2 pb-1">Membrii Grupului de rând:</div>`;
+        html += membriGeneral.map(m => `<div class="py-0.5 text-slate-200">• ${m.persoanaRaw}</div>`).join('');
+      }
+
+      if (bolnavi.length > 0) {
+        html += `<div class="font-bold text-rose-300 pt-2 pb-1">Copii bolnavi / alte nevoi (Toți deodată):</div>`;
+        html += bolnavi.map(b => `<div class="py-0.5 text-slate-300">• ${b.persoanaRaw}</div>`).join('');
+      }
+
+      cont.innerHTML = html;
+    }
+
     function renderPsaltireGrupList() {
       const container = document.getElementById('psaltireGrupListContainer');
       if (!container) return;
@@ -1425,11 +1471,7 @@
       const type = document.getElementById('schoolPaymentType').value;
       const hours = parseFloat(document.getElementById('schoolHours').value) || 0;
       const rate = parseFloat(document.getElementById('schoolRate').value) || 0;
-      let total = 0;
-
-      if (type === 'Pe oră') total = hours * rate;
-      else total = rate; // Sumă fixă, pe ședință sau abonament
-
+      let total = (type === 'Pe oră') ? (hours * rate) : rate;
       document.getElementById('schoolTotalCalculatedDisplay').textContent = `${total.toFixed(0)} Lei`;
     }
 
@@ -1458,7 +1500,6 @@
       document.getElementById('selectedDaysBadge').textContent = `${selectedSchoolDays.size} zile`;
 
       if (schoolCurrentView === 'month') {
-        // VIZUALIZARE LUNARĂ
         const firstDay = new Date(year, month, 1).getDay();
         const startOffset = (firstDay === 0 ? 7 : firstDay) - 1;
         const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1498,7 +1539,6 @@
         container.innerHTML = html;
 
       } else if (schoolCurrentView === 'week') {
-        // VIZUALIZARE SĂPTĂMÂNALĂ
         const curr = new Date(currentSchoolDate);
         const day = curr.getDay();
         const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
@@ -1533,7 +1573,6 @@
         container.innerHTML = html;
 
       } else {
-        // VIZUALIZARE LISTĂ CRONOLOGICĂ
         if (schoolActivities.length === 0) {
           container.innerHTML = `<div class="bg-cardbg border border-bordercol rounded-xl p-4 text-center text-xs text-slate-500 italic">Nicio activitate înregistrată.</div>`;
         } else {
@@ -1624,7 +1663,7 @@
       const deadline = document.getElementById('schoolDeadline').value || "-";
       const dayMessage = document.getElementById('schoolDayMessage').value.trim();
 
-      let total = paymentType === 'Pe oră' ? (hours * rate) : rate;
+      let total = (paymentType === 'Pe oră') ? (hours * rate) : rate;
 
       const r1 = parseInt(document.getElementById('schoolRem1').value, 10) || 60;
       const r2 = parseInt(document.getElementById('schoolRem2').value, 10) || 30;
@@ -2276,7 +2315,7 @@
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `diih_backup_v14_${Date.now()}.json`;
+      a.download = `diih_backup_v15_${Date.now()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
