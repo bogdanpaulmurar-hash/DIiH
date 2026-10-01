@@ -1,7 +1,10 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v17
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v18
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
+ * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
+ * în editorul Google Apps Script (script.google.com) de către utilizator. Nu există acces
+ * direct la Apps Script din acest mediu.
  */
 
 const API_SECURITY_TOKEN = "diih_secret_2026_bm";
@@ -41,7 +44,7 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
-  // 2. SETĂRI GLOBALE (Inclusiv Număr Persoane Pomelnic Zilnic)
+  // 2. SETĂRI GLOBALE (Inclusiv Număr Persoane Pomelnic Zilnic, Iconiță & Configurare Partajare)
   if (action === "updateGlobalSettings") {
     let sh = ss.getSheetByName("Setari");
     if (!sh) {
@@ -51,12 +54,14 @@ function doGet(e) {
     }
     if (e.parameter.appTitle) setSettingValue(sh, "app_title", e.parameter.appTitle);
     if (e.parameter.appLogo) setSettingValue(sh, "app_logo", e.parameter.appLogo);
+    if (e.parameter.appIconPath) setSettingValue(sh, "app_icon_path", e.parameter.appIconPath);
     if (e.parameter.pomelnicBatchSize) setSettingValue(sh, "pomelnic_batch_size", e.parameter.pomelnicBatchSize);
     if (e.parameter.psaltireBatchSize) setSettingValue(sh, "psaltire_batch_size", e.parameter.psaltireBatchSize);
+    if (e.parameter.sharingConfigJson) setSettingValue(sh, "sharing_config_json", e.parameter.sharingConfigJson);
     return returnResponse(e, { success: true });
   }
 
-  // 3. SALVARE ACTIVITĂȚI ȘCOALĂ (Păstrează structura de 14 coloane a foii existente)
+  // 3. SALVARE ACTIVITĂȚI ȘCOALĂ (Păstrează structura de 14 coloane a foii existente + stocare metadate în Col 13)
   if (action === "saveSchoolActivities") {
     let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
     if (!sh) {
@@ -69,6 +74,15 @@ function doGet(e) {
 
     activities.forEach(item => {
       deleteRowById(sh, item.id, 1);
+      // Păstrăm metadatele extinse (culoare, ore început/sfârșit, autor) în Col 13 (RemindereJson)
+      const metaObj = {
+        reminders: item.reminders || [60, 30, 10],
+        color: item.color || "auto",
+        startHour: item.startHour || "08:00",
+        endHour: item.endHour || "16:00",
+        author: item.author || "Bogdan"
+      };
+
       sh.appendRow([
         item.id,
         item.date,
@@ -82,7 +96,7 @@ function doGet(e) {
         item.paymentStatus || "În așteptare",
         item.deadline || "-",
         item.dayMessage || "",
-        JSON.stringify(item.reminders || []),
+        JSON.stringify(metaObj),
         dataCreare
       ]);
     });
@@ -204,7 +218,7 @@ function doGet(e) {
     }
   }
 
-  // 6. CUMPĂRĂTURI (Structură suportată: cu ID pe Col 1 sau direct Magazin pe Col 1)
+  // 6. CUMPĂRĂTURI (Structură suportată: cu ID pe Col 1 sau direct Magazin pe Col 1; suport autor)
   if (action === "addCumparaturi") {
     let sh = ss.getSheetByName("lista_cumparaturi");
     if (!sh) {
@@ -214,19 +228,21 @@ function doGet(e) {
     }
     const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
     const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+    const author = e.parameter.author ? ` (${e.parameter.author})` : "";
+    const produsComplet = (e.parameter.produs || "") + author;
     if (header === "ID") {
       const shopId = e.parameter.id || ("SHOP-" + Date.now());
       sh.appendRow([
         shopId,
         e.parameter.magazin || "General",
-        e.parameter.produs,
+        produsComplet,
         e.parameter.cantitate || "1",
         dataCreare
       ]);
     } else {
       sh.appendRow([
         e.parameter.magazin || "General",
-        e.parameter.produs,
+        produsComplet,
         e.parameter.cantitate || "1"
       ]);
     }
@@ -258,7 +274,46 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
-  // 7. EDITARE PERSOANĂ POMELNIC
+  // 7. CRUD COMPLET PERSOANĂ POMELNIC (Adăugare pe ultimul rând & Editare completă)
+  if (action === "addPerson") {
+    let sh = ss.getSheetByName("Pomelnic");
+    if (!sh) {
+      return returnResponse(e, { error: "Foaia Pomelnic nu a fost găsită" });
+    }
+    const newRowId = sh.getLastRow() + 1;
+    const isActiv = (e.parameter.isActivPomelnic === "true" || e.parameter.isActivPomelnic === true || e.parameter.isActivPomelnic === "1" || e.parameter.isActivPomelnic === 1);
+    const stare = (e.parameter.stare || "Viu").toString().trim();
+    const van = (stare === "Adormit") ? "A" : "V";
+    const necesitaAtentie = (e.parameter.necesitaAtentie === "true" || e.parameter.necesitaAtentie === true);
+    const bolnav = (e.parameter.bolnav === "true" || e.parameter.bolnav === true);
+
+    sh.appendRow([
+      newRowId,                                       // Col 1: RowID
+      van,                                            // Col 2: (F) V/A/N
+      isActiv,                                        // Col 3: (F) Activ_Inactiv/calcul_pomelnic
+      e.parameter.pomelnicCalendar || "-",            // Col 4: Pomelnic_calendar
+      (e.parameter.prenume || "").trim(),             // Col 5: Prenume
+      (e.parameter.nume || "").trim(),                // Col 6: Nume
+      (e.parameter.info || "").trim(),                // Col 7: Informatii
+      (e.parameter.istoricMedical || "").trim(),      // Col 8: Istoric medical
+      (e.parameter.dn || "").trim(),                  // Col 9: Data nasterii
+      "",                                             // Col 10: DataNasterii_aproximata
+      (e.parameter.da || "").trim(),                  // Col 11: Data adormirii
+      "",                                             // Col 12: DataAdormirii_aproximata
+      bolnav,                                         // Col 13: Bolnav
+      stare,                                          // Col 14: Starea sufleteasca
+      (e.parameter.grad || "").trim(),                // Col 15: Grad
+      (e.parameter.copii || "-").trim(),              // Col 16: Copil
+      (e.parameter.sot || "-").trim(),                // Col 17: Sot/Sotie
+      (e.parameter.parinti || "-").trim(),            // Col 18: Parinti
+      (e.parameter.apropiati || "-").trim(),          // Col 19: Frati, bunici, apropiati
+      "09:00",                                        // Col 20: StartTime
+      "10:00",                                        // Col 21: EndTime
+      necesitaAtentie                                 // Col 22: NECESITA_Atentie!!!
+    ]);
+    return returnResponse(e, { success: true, rowId: newRowId });
+  }
+
   if (action === "updatePerson") {
     let sh = ss.getSheetByName("Pomelnic");
     let rowId = parseInt(e.parameter.rowId, 10);
@@ -266,11 +321,29 @@ function doGet(e) {
       if (e.parameter.prenume !== undefined) sh.getRange(rowId, 5).setValue(e.parameter.prenume);
       if (e.parameter.nume !== undefined) sh.getRange(rowId, 6).setValue(e.parameter.nume);
       if (e.parameter.info !== undefined) sh.getRange(rowId, 7).setValue(e.parameter.info);
-      if (e.parameter.stare !== undefined) sh.getRange(rowId, 14).setValue(e.parameter.stare);
+      if (e.parameter.istoricMedical !== undefined) sh.getRange(rowId, 8).setValue(e.parameter.istoricMedical);
+      if (e.parameter.dn !== undefined) sh.getRange(rowId, 9).setValue(e.parameter.dn);
+      if (e.parameter.da !== undefined) sh.getRange(rowId, 11).setValue(e.parameter.da);
+      if (e.parameter.bolnav !== undefined) {
+        const bVal = (e.parameter.bolnav === "true" || e.parameter.bolnav === true);
+        sh.getRange(rowId, 13).setValue(bVal);
+      }
+      if (e.parameter.stare !== undefined) {
+        sh.getRange(rowId, 14).setValue(e.parameter.stare);
+        sh.getRange(rowId, 2).setValue(e.parameter.stare === "Adormit" ? "A" : "V");
+      }
       if (e.parameter.grad !== undefined) sh.getRange(rowId, 15).setValue(e.parameter.grad);
+      if (e.parameter.copii !== undefined) sh.getRange(rowId, 16).setValue(e.parameter.copii);
+      if (e.parameter.sot !== undefined) sh.getRange(rowId, 17).setValue(e.parameter.sot);
+      if (e.parameter.parinti !== undefined) sh.getRange(rowId, 18).setValue(e.parameter.parinti);
+      if (e.parameter.apropiati !== undefined) sh.getRange(rowId, 19).setValue(e.parameter.apropiati);
       if (e.parameter.necesitaAtentie !== undefined) {
         const valBool = (e.parameter.necesitaAtentie === "true" || e.parameter.necesitaAtentie === true);
         sh.getRange(rowId, 22).setValue(valBool);
+      }
+      if (e.parameter.isActivPomelnic !== undefined) {
+        const valAct = (e.parameter.isActivPomelnic === "true" || e.parameter.isActivPomelnic === true);
+        sh.getRange(rowId, 3).setValue(valAct);
       }
       return returnResponse(e, { success: true });
     }
@@ -303,7 +376,63 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
+  // 8b. CRUD INVENTAR PERSONAL (Obiecte, spații de depozitare, mentenanță)
+  if (action === "getInventoryData") {
+    return returnResponse(e, { inventar: getInventoryData(ss) });
+  }
+
+  if (action === "addInventoryItem" || action === "updateInventoryItem") {
+    let sh = ss.getSheetByName("Inventar");
+    if (!sh) {
+      sh = ss.insertSheet("Inventar");
+      sh.appendRow(["ID", "Denumire", "Categorie", "Spatiu", "Cantitate", "Stare", "Valoare", "DataAchizitie", "UrmatoareaMentenanta", "Observatii", "PozaBase64", "IstoricMutariJson", "DataCreare", "DataModificare"]);
+      sh.getRange("A1:N1").setFontWeight("bold");
+    }
+    const now = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+    const itemId = e.parameter.id || ("INV-" + Date.now());
+
+    if (action === "updateInventoryItem") {
+      deleteRowById(sh, itemId, 1);
+    }
+
+    sh.appendRow([
+      itemId,
+      e.parameter.name || "Obiect",
+      e.parameter.category || "-",
+      e.parameter.space || "-",
+      e.parameter.qty || "1",
+      e.parameter.status || "Funcțional",
+      e.parameter.value || "",
+      e.parameter.purchaseDate || "",
+      e.parameter.nextMaintenance || "",
+      e.parameter.notes || "",
+      e.parameter.photoBase64 || "",
+      e.parameter.historyJson || "[]",
+      action === "addInventoryItem" ? now : (e.parameter.dataCreare || now),
+      now
+    ]);
+    return returnResponse(e, { success: true, id: itemId });
+  }
+
+  if (action === "deleteInventoryItem") {
+    let sh = ss.getSheetByName("Inventar");
+    if (sh && e.parameter.id) deleteRowById(sh, e.parameter.id, 1);
+    return returnResponse(e, { success: true });
+  }
+
   // 9. PRELUARE COMPLETĂ DATE PENTRU APLICAȚIE (RĂSPUNS 1:1)
+  if (action === "getLiveData") {
+    // Sincronizare ușoară/rapidă (fără Pomelnic 990 rânduri și fără Biblia 360) - folosită la polling frecvent
+    const liveData = {
+      settings: getSettingsData(ss),
+      cumparaturi: getCumparaturiData(ss),
+      ganduri: getGanduriData(ss),
+      schoolActivities: getSchoolActivitiesData(ss),
+      psaltireGrup: getPsaltireGrupData(ss)
+    };
+    return returnResponse(e, liveData);
+  }
+
   const responseData = {
     settings: getSettingsData(ss),
     pomelnic: getPomelnicData(ss),
@@ -320,7 +449,11 @@ function doGet(e) {
 
 function returnResponse(e, data) {
   const callback = e.parameter.callback;
-  if (callback && callback !== "void") {
+  if (callback) {
+    if (callback === "void") {
+      return ContentService.createTextOutput("/* void */")
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
     return ContentService.createTextOutput(`${callback}(${JSON.stringify(data)})`)
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
@@ -330,7 +463,15 @@ function returnResponse(e, data) {
 
 function getSettingsData(ss) {
   let sh = ss.getSheetByName("Setari");
-  let cfg = { appTitle: "DIiH Hub", appLogo: "🧭", pomelnicBatchSize: 20, psaltireBatchSize: 20, notificationsJson: "" };
+  let cfg = { 
+    appTitle: "DIiH Hub", 
+    appLogo: "🧭", 
+    appIconPath: "./icons/icon-sigiliu-monograma-hristos.svg",
+    pomelnicBatchSize: 20, 
+    psaltireBatchSize: 20, 
+    notificationsJson: "",
+    sharingConfigJson: ""
+  };
   if (!sh || sh.getLastRow() < 2) return cfg;
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
   rows.forEach(r => {
@@ -338,9 +479,11 @@ function getSettingsData(ss) {
     let v = r[1];
     if (k === "app_title" && v) cfg.appTitle = v.toString();
     if (k === "app_logo" && v) cfg.appLogo = v.toString();
+    if (k === "app_icon_path" && v) cfg.appIconPath = v.toString();
     if (k === "pomelnic_batch_size" && v) cfg.pomelnicBatchSize = parseInt(v, 10) || 20;
     if (k === "psaltire_batch_size" && v) cfg.psaltireBatchSize = parseInt(v, 10) || 20;
     if (k === "notifications_config_json" && v) cfg.notificationsJson = v.toString();
+    if (k === "sharing_config_json" && v) cfg.sharingConfigJson = v.toString();
   });
   return cfg;
 }
@@ -386,6 +529,14 @@ function getSchoolActivitiesData(ss) {
     } else if (typeof dateVal === "string") {
       dateStr = dateVal.substring(0, 10);
     }
+    const meta = parseJsonSafe(r[12]);
+    const isMetaObj = meta && typeof meta === "object" && !Array.isArray(meta);
+    const reminders = isMetaObj ? (meta.reminders || [60, 30, 10]) : (Array.isArray(meta) ? meta : [60, 30, 10]);
+    const color = isMetaObj ? (meta.color || "auto") : "auto";
+    const startHour = isMetaObj ? (meta.startHour || "08:00") : "08:00";
+    const endHour = isMetaObj ? (meta.endHour || "16:00") : "16:00";
+    const author = isMetaObj ? (meta.author || "Bogdan") : "Bogdan";
+
     return {
       id: r[0],
       date: dateStr,
@@ -397,9 +548,13 @@ function getSchoolActivitiesData(ss) {
       rate: parseFloat(r[7]) || 0,
       total: parseFloat(r[8]) || 0,
       paymentStatus: r[9] || "În așteptare",
-      deadline: r[10] || "-",
+      deadline: r[10] ? r[10].toString().substring(0, 10) : "-",
       dayMessage: r[11] || "",
-      reminders: parseJsonSafe(r[12])
+      reminders: reminders,
+      color: color,
+      startHour: startHour,
+      endHour: endHour,
+      author: author
     };
   });
 }
@@ -447,10 +602,16 @@ function getPomelnicData(ss) {
       prenume: prenume,
       nume: nume,
       info: (r[6] || "").toString().trim(),
+      istoricMedical: (r[7] || "").toString().trim(),
       dn: parseDateToText(r[8]),
       da: parseDateToText(r[10]),
+      bolnav: (r[12] === true || r[12] === "TRUE" || r[12] === "true" || r[12] === 1 || r[12] === "1"),
       stare: (r[13] || "Viu").toString().trim(),
-      grad: (r[14] || "").toString().trim()
+      grad: (r[14] || "").toString().trim(),
+      copii: (r[15] || "").toString().trim(),
+      sot: (r[16] || "").toString().trim(),
+      parinti: (r[17] || "").toString().trim(),
+      apropiati: (r[18] || "").toString().trim()
     });
   });
   return list;
@@ -505,6 +666,28 @@ function getNoteAnaniaData(ss) {
   return rows.map(r => ({ cartea: r[0], versetul: r[1], indice: r[2], explicatie: r[3] })).filter(x => x.cartea);
 }
 
+function getInventoryData(ss) {
+  const sh = ss.getSheetByName("Inventar");
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 14).getValues();
+  return rows.map(r => ({
+    id: r[0],
+    name: r[1] || "Obiect",
+    category: r[2] || "-",
+    space: r[3] || "-",
+    qty: r[4] || "1",
+    status: r[5] || "Funcțional",
+    value: r[6] || "",
+    purchaseDate: r[7] ? parseDateToISO(r[7]) : "",
+    nextMaintenance: r[8] ? parseDateToISO(r[8]) : "",
+    notes: r[9] || "",
+    photoBase64: r[10] || "",
+    history: parseJsonSafe(r[11]),
+    dataCreare: r[12] || "",
+    dataModificare: r[13] || ""
+  })).filter(x => x.id);
+}
+
 function deleteRowById(sheet, targetVal, colIndex) {
   const maxRows = sheet.getLastRow();
   if (maxRows < 2) return;
@@ -545,4 +728,12 @@ function parseDateToText(val) {
     return Utilities.formatDate(val, "Europe/Bucharest", "dd.MM.yyyy");
   }
   return val.toString().trim();
+}
+
+function parseDateToISO(val) {
+  if (!val) return "";
+  if (Object.prototype.toString.call(val) === '[object Date]') {
+    return Utilities.formatDate(val, "Europe/Bucharest", "yyyy-MM-dd");
+  }
+  return val.toString().trim().substring(0, 10);
 }

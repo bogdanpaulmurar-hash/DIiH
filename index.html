@@ -90,7 +90,11 @@
 
     <!-- TAB 1: ASTĂZI -->
     <section id="tab-today" class="tab-content space-y-4">
-      
+
+      <!-- SUMAR ASTĂZI PENTRU APLICAȚIA PARTAJATĂ (generat din modulele permise) -->
+      <div id="todaySharedSummary" class="hidden space-y-4"></div>
+
+      <div id="todayOwnerContent" class="space-y-4">
       <!-- Catisma Zilei (Click: Deschide Rânduiala & Pomelnicul Grupului de Psaltire) -->
       <div onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
         <div class="flex items-center justify-between text-xs font-semibold text-rose-300 uppercase tracking-wider mb-2">
@@ -171,6 +175,7 @@
           <div id="dailyPomelnicListAdormiti" class="space-y-1 divide-y divide-bordercol/30"></div>
         </div>
       </div>
+      </div>
 
     </section>
 
@@ -184,19 +189,24 @@
         <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-white">✕</button>
       </div>
 
-      <div class="flex items-center space-x-2 bg-cardbg p-2 rounded-xl border border-bordercol">
-        <span class="text-[11px] text-slate-400 whitespace-nowrap">📂 Categorie:</span>
-        <select id="categoryDropdown" onchange="handleSearch()" class="bg-darkbg text-white border border-bordercol rounded-lg px-2 py-1 text-xs flex-1 focus:outline-none focus:border-cyan-500">
-          <option value="ALL">Toate Categoriile</option>
-        </select>
-        <span class="text-[11px] text-slate-400 whitespace-nowrap pl-1 border-l border-bordercol">📿 Pomenire/zi:</span>
-        <select id="pomelnicBatchSelect" onchange="handlePomelnicBatchChange(this.value)" class="bg-darkbg text-cyan-300 font-bold border border-cyan-800 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-cyan-500">
-          <option value="10">10 / zi</option>
-          <option value="20">20 / zi</option>
-          <option value="30">30 / zi</option>
-          <option value="40">40 / zi</option>
-          <option value="50">50 / zi</option>
-        </select>
+      <div class="space-y-2 bg-cardbg p-2 rounded-xl border border-bordercol">
+        <div class="flex items-center space-x-2">
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">📂 Categorie:</span>
+          <select id="categoryDropdown" onchange="handleSearch()" class="bg-darkbg text-white border border-bordercol rounded-lg px-2 py-1 text-xs flex-1 min-w-0 focus:outline-none focus:border-cyan-500">
+            <option value="ALL">Toate Categoriile</option>
+          </select>
+          <button onclick="openAddPersonModal()" class="shrink-0 w-8 h-8 flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-base active:scale-95 transition" title="Adaugă persoană nouă">➕</button>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="text-[11px] text-slate-400 whitespace-nowrap">📿 Pomenire/zi:</span>
+          <select id="pomelnicBatchSelect" onchange="handlePomelnicBatchChange(this.value)" class="bg-darkbg text-cyan-300 font-bold border border-cyan-800 rounded-lg px-2 py-1 text-xs flex-1 min-w-0 focus:outline-none focus:border-cyan-500">
+            <option value="10">10 / zi</option>
+            <option value="20">20 / zi</option>
+            <option value="30">30 / zi</option>
+            <option value="40">40 / zi</option>
+            <option value="50">50 / zi</option>
+          </select>
+        </div>
       </div>
 
       <div class="flex items-center justify-between px-1 pt-1 overflow-x-auto space-x-1 pb-1">
@@ -232,6 +242,9 @@
           </div>
           <button onclick="fetchDataFromSheet(true)" class="text-[10px] bg-darkbg border border-cyan-800 text-cyan-300 px-2 py-1 rounded-lg">🔄 Importă din Sheet</button>
         </div>
+
+        <button onclick="openSchoolReportModal()" class="w-full text-[11px] bg-violet-950 border border-violet-700 text-violet-200 px-2 py-1.5 rounded-lg font-bold hover:bg-violet-900 transition">📊 Raport Detaliat pe Perioadă</button>
+
 
         <div class="flex items-center justify-between">
           <button onclick="changeSchoolPeriod(-1)" class="p-2 bg-darkbg rounded-xl border border-bordercol hover:text-cyan-400 text-xs">◀ Înapoi</button>
@@ -318,17 +331,28 @@
           </div>
 
           <div class="grid grid-cols-3 gap-2">
-            <select id="schoolPaymentType" onchange="calcSchoolAutoTotal()" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
-              <option value="Pe oră">Pe oră</option>
-              <option value="Sumă Fixă">Sumă Fixă</option>
-              <option value="Pe ședință">Pe ședință</option>
-              <option value="Abonament lunar">Abonament lunar</option>
-            </select>
-            <select id="schoolPaymentStatus" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
-              <option value="În așteptare">În așteptare</option>
-              <option value="Achitat">Achitat</option>
-            </select>
-            <input type="date" id="schoolDeadline" class="bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs" title="Termen Limită Plată">
+            <div>
+              <label class="text-[9px] text-slate-400 block">Tip Plată:</label>
+              <select id="schoolPaymentType" onchange="calcSchoolAutoTotal()" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+                <option value="Pe oră">Pe oră</option>
+                <option value="Sumă Fixă">Sumă Fixă</option>
+                <option value="Pe ședință">Pe ședință</option>
+                <option value="Abonament lunar">Abonament lunar</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-400 block">Status Plată:</label>
+              <select id="schoolPaymentStatus" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+                <option value="În așteptare">În așteptare</option>
+                <option value="Achitat">Achitat</option>
+                <option value="Fără plată">Fără plată</option>
+                <option value="Abonament">Abonament</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-400 block">Termen Limită:</label>
+              <input type="date" id="schoolDeadline" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs" title="Termen Limită Plată">
+            </div>
           </div>
 
           <div class="flex items-center justify-between p-2 bg-darkbg rounded-lg border border-bordercol">
@@ -417,7 +441,7 @@
     <section id="tab-more" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-bordercol pb-2">⋯ Meniu Extins</h3>
-        <div class="grid grid-cols-4 gap-2">
+        <div class="grid grid-cols-3 gap-2">
           <button onclick="switchSubTab('psaltire-grup')" id="btnSubPsaltire" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
             <span class="text-lg">📿</span>
             <span class="text-[9px] font-bold">Psaltire</span>
@@ -430,15 +454,23 @@
             <span class="text-lg">📱</span>
             <span class="text-[9px] font-bold">Widget</span>
           </button>
+          <button onclick="switchSubTab('inventar')" id="btnSubInventar" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">📦</span>
+            <span class="text-[9px] font-bold">Inventar</span>
+          </button>
           <button onclick="switchSubTab('setari')" id="btnSubSetari" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
             <span class="text-lg">⚙️</span>
             <span class="text-[9px] font-bold">Setări</span>
+          </button>
+          <button onclick="switchSubTab('admin')" id="btnSubAdmin" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">🛡️</span>
+            <span class="text-[9px] font-bold">Admin</span>
           </button>
         </div>
       </div>
 
       <!-- SUB-TAB 1: POMELNICUL GRUPULUI DE PSALTIRE -->
-      <div id="subtab-psaltire-grup" class="subtab-content space-y-3">
+      <div id="subtab-psaltire-grup" class="subtab-content hidden space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
           <div class="flex items-center justify-between border-b border-bordercol pb-2">
             <div>
@@ -509,6 +541,18 @@
             <div id="notifDeathRows" class="space-y-1.5"></div>
           </div>
 
+          <div class="p-3 bg-darkbg rounded-xl border border-violet-800 space-y-2">
+            <span class="font-bold text-violet-300 block">🎉📢 Notificare Individuală pe Persoană</span>
+            <p class="text-[10px] text-slate-500">La ora aleasă, primești câte o notificare SEPARATĂ pentru fiecare persoană care are aniversare de naștere sau pomenire de adormire astăzi, cu numele ei și vârsta calculată automat (identic cu lista de Aniversări din Astăzi).</p>
+            <div class="flex items-center space-x-2">
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer whitespace-nowrap">
+                <input type="checkbox" id="individualAnniversaryEnabled" class="rounded text-violet-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">Activează</span>
+              </label>
+              <input type="time" id="individualAnniversaryTime" value="09:00" class="bg-cardbg border border-bordercol rounded-lg p-2 text-white text-xs flex-1">
+            </div>
+          </div>
+
           <div class="p-3 bg-darkbg rounded-xl border border-bordercol space-y-2">
             <span class="font-bold text-cyan-300 block">🎓 Școală, Plăți & Ridicare Copil</span>
             <div id="notifSchoolRows" class="space-y-1.5"></div>
@@ -557,12 +601,18 @@
       </div>
 
       <!-- SUB-TAB 4: SETĂRI SISTEM -->
-      <div id="subtab-setari" class="subtab-content hidden space-y-3">
+      <div id="subtab-setari" class="subtab-content space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           
-          <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-1">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v17.0 (Build 2026-10-01)</span>
+          <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v18.0 (Build 2026-10-01)</span>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
+            <a href="https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit" target="_blank" rel="noopener" class="w-full flex items-center justify-center space-x-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 py-2 rounded-xl font-bold hover:bg-emerald-900 transition">
+              <span>📑</span>
+              <span>Deschide Registrul Google Sheets</span>
+              <span>↗</span>
+            </a>
+            <p class="text-[9px] text-slate-500">Pe telefon se deschide direct în aplicația Google Sheets (dacă e instalată); pe laptop, în browser.</p>
           </div>
 
           <div class="border-b border-bordercol pb-3 space-y-2">
@@ -575,7 +625,14 @@
           <!-- Pictograme Noi Propuse (Vectoriale SVG) -->
           <div class="border-b border-bordercol pb-3 space-y-2">
             <h4 class="font-bold text-amber-300 uppercase tracking-wider text-xs">🎨 Pictograme Propuse pentru Aplicație</h4>
-            <p class="text-[10px] text-slate-400">Apasă pe oricare emblemă pentru a o testa instantaneu pe favicon și header (inclusiv variantele brâncovenești):</p>
+            <div class="p-2 bg-darkbg border border-cyan-800 rounded-xl flex items-center space-x-2">
+              <img id="activeIconPreview" src="./icons/icon-sigiliu-monograma-hristos.svg" class="w-9 h-9 rounded-lg border border-cyan-700">
+              <div>
+                <span class="text-[10px] text-cyan-300 font-bold block">Emblemă activă acum (salvată în Cloud)</span>
+                <span class="text-[9px] text-slate-400">Se aplică automat pe toate dispozitivele sincronizate</span>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-400">Apasă pe oricare emblemă pentru a o salva INSTANT și automat în Cloud (inclusiv variantele brâncovenești):</p>
             
             <div class="space-y-1.5 pt-1">
               <span class="text-[10px] text-amber-400 font-bold block uppercase tracking-wider">☦️ Variante Brâncovenești & Sigilii Tradiționale:</span>
@@ -626,6 +683,16 @@
                 </button>
               </div>
             </div>
+
+            <div class="p-2.5 bg-darkbg border border-bordercol rounded-xl space-y-1.5">
+              <span class="font-bold text-cyan-300 block text-[11px]">📸 Cum creezi/cauți alte pictograme?</span>
+              <p class="text-[10px] text-slate-400 leading-relaxed">
+                1. Deschide orice chat AI capabil să genereze imagini (ex: ChatGPT/DALL-E, Gemini, Copilot Designer) și descrie stilul dorit (ex: "icănă rotundă stil brâncovenesc, auriu pe roșu carmin, cu monograma lui Hristos și Rugăciunea lui Iisus scrisă circular").<br>
+                2. Salvează fișierul descoperit ca <strong>.svg</strong> (ideal, vectorial) sau <strong>.png</strong> pătrat, minim 512x512px.<br>
+                3. Trimite-mi fișierul aici în conversație (sau pune-l direct în folderul <code class="text-cyan-300">/icons</code> din proiect) și îți adaug automat butonul de selecție în această listă.<br>
+                4. Alternativ, poți atașa poza direct în foaia <strong>Setari</strong> din Google Sheets (ca link public Google Drive) și mi-o semnalezi să o preiau în cod.
+              </p>
+            </div>
           </div>
 
           <div class="border-b border-bordercol pb-3 space-y-2">
@@ -647,6 +714,129 @@
             <span class="text-[10px] font-bold text-slate-400 uppercase block">Consolă Diagnostic:</span>
             <div id="liveLogConsole" class="bg-black/90 border border-slate-800 rounded-xl p-2.5 font-mono text-[9px] text-emerald-400 max-h-36 overflow-y-auto space-y-1"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 5: ADMIN & PARTAJARE ACCES -->
+      <div id="subtab-admin" class="subtab-content hidden space-y-3">
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
+          <div class="border-b border-bordercol pb-2">
+            <h3 class="font-bold text-white uppercase tracking-wider">🛡️ Admin — Partajare Acces</h3>
+            <p class="text-[10px] text-slate-400 mt-1">Oferă acces limitat (ex: soției tale) la module selectate, cu nume și emblemă proprii pentru aplicație.</p>
+          </div>
+
+          <div class="p-3 bg-amber-950/30 border border-amber-800 rounded-xl space-y-1">
+            <span class="font-bold text-amber-300 block text-[11px]">⚠️ Important de știut:</span>
+            <p class="text-[10px] text-amber-100 leading-relaxed">
+              Acest link de partajare este o metodă simplă, bazată pe un <strong>cod secret personal</strong> (nu pe autentificare reală cu cont Google), deoarece aplicația rulează ca fișier static + Google Apps Script. Oricine are link-ul poate accesa modulele activate mai jos. Nu partaja link-ul public. Pentru autentificare Google reală (OAuth, cu control per-cont), ar fi nevoie de o găzduire server dedicată — pot ajuta la implementarea acesteia dacă dorești să mergem mai departe pe acel plan.
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <span class="font-bold text-cyan-300 block text-[11px] uppercase">👤 Identitatea aplicației pentru persoana partajată:</span>
+            <div class="grid grid-cols-3 gap-2">
+              <input type="text" id="adminSharedTitle" placeholder="Nume aplicație (ex: Agenda Familiei)" class="col-span-2 bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+              <input type="text" id="adminSharedLogo" placeholder="🏡" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-center">
+            </div>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button onclick="setSharedIconChoice('./icons/icon-orthodox-cross.svg')" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400"><img src="./icons/icon-orthodox-cross.svg" class="w-7 h-7 mx-auto rounded"></button>
+              <button onclick="setSharedIconChoice('./icons/icon-monogram-diih.svg')" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400"><img src="./icons/icon-monogram-diih.svg" class="w-7 h-7 mx-auto rounded"></button>
+              <button onclick="setSharedIconChoice('./icons/icon-heart-cross.svg')" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400"><img src="./icons/icon-heart-cross.svg" class="w-7 h-7 mx-auto rounded"></button>
+              <button onclick="setSharedIconChoice('./icons/icon-psaltire-candle.svg')" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400"><img src="./icons/icon-psaltire-candle.svg" class="w-7 h-7 mx-auto rounded"></button>
+            </div>
+            <input type="hidden" id="adminSharedIconPath" value="./icons/icon-heart-cross.svg">
+          </div>
+
+          <div class="space-y-1.5">
+            <span class="font-bold text-emerald-300 block text-[11px] uppercase">✅ Module vizibile persoanei partajate:</span>
+            <p class="text-[9px] text-slate-500">Bara de navigare de jos a aplicației partajate va afișa DOAR modulele bifate mai jos. Tabul ⚙️ Setări (și Admin) nu este niciodată inclus — acelea rămân exclusiv la tine.</p>
+            <div class="grid grid-cols-2 gap-1.5">
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminModuleToday" class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">🏠 Astăzi</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminModuleCalendar" checked class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">🎓 Școală</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminModuleCumparaturi" checked class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">🛒 Cumpărături</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminModuleGanduri" class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">💡 Gânduri</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminModulePomelnic" onchange="toggleAdminPomelnicCategoriesBox()" class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📜 Pomelnic</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminModuleInventar" class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📦 Inventar</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="adminPomelnicCategoriesBox" class="hidden space-y-1.5 p-3 bg-rose-950/20 border border-rose-900 rounded-xl">
+            <span class="font-bold text-rose-300 block text-[11px] uppercase">📜 Categorii Pomelnic partajate:</span>
+            <p class="text-[9px] text-slate-500">Nu se partajează tot Pomelnicul — bifează DOAR categoriile (Grad) pe care vrei să le poată vedea persoana partajată. Necompletat = nimic nu se arată.</p>
+            <div class="flex space-x-1.5 pb-1">
+              <button onclick="setAllAdminPomelnicCategories(true)" class="text-[10px] px-2 py-1 bg-darkbg border border-bordercol rounded-lg text-slate-300 hover:text-white">Bifează tot</button>
+              <button onclick="setAllAdminPomelnicCategories(false)" class="text-[10px] px-2 py-1 bg-darkbg border border-bordercol rounded-lg text-slate-300 hover:text-white">Debifează tot</button>
+            </div>
+            <div id="adminPomelnicCategoriesList" class="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto"></div>
+          </div>
+
+          <div class="space-y-1.5">
+            <span class="font-bold text-violet-300 block text-[11px] uppercase">✍️ Nume afișat pentru înregistrări (autor):</span>
+            <input type="text" id="adminSharedAuthorName" placeholder="ex: Soția" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+            <p class="text-[9px] text-slate-500">Orice produs sau activitate adăugată de pe link-ul partajat va fi marcată cu acest nume, ca să știi cine a scris-o.</p>
+          </div>
+
+          <button onclick="saveAdminSharingConfig()" class="w-full bg-cyan-900 border border-cyan-700 text-cyan-100 py-2.5 rounded-xl font-bold">💾 Salvează Configurația de Partajare</button>
+
+          <div id="adminShareLinkBox" class="hidden p-3 bg-emerald-950/40 border border-emerald-700 rounded-xl space-y-2">
+            <span class="font-bold text-emerald-300 block text-[11px]">🔗 Link de partajare generat:</span>
+            <input type="text" id="adminShareLinkOutput" readonly class="w-full bg-darkbg border border-emerald-800 rounded-lg p-2 text-emerald-200 text-[10px] font-mono">
+            <button onclick="copyShareLink()" class="w-full bg-emerald-800 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold text-[11px]">📋 Copiază Link-ul</button>
+            <p class="text-[10px] text-emerald-100/80">Trimite acest link soției tale pe iPhone. În Safari: deschide link-ul → apasă Share → <strong>"Add to Home Screen"</strong> pentru acces rapid ca o aplicație.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 6: INVENTAR PERSONAL (Spații de depozitare, poze, mentenanță) -->
+      <div id="subtab-inventar" class="subtab-content hidden space-y-3">
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b border-bordercol pb-2">
+            <div>
+              <span class="text-xs font-bold text-violet-300 uppercase tracking-wider">📦 Inventar Personal</span>
+              <p class="text-[10px] text-slate-400">Obiecte, spații de depozitare & mentenanță</p>
+            </div>
+            <span id="inventoryCountBadge" class="bg-violet-950 border border-violet-800 text-violet-300 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">0</span>
+          </div>
+
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">🔍</span>
+            <input type="text" id="inventorySearchInput" oninput="renderInventoryList()" placeholder="Caută obiect, categorie, spațiu..." class="w-full bg-darkbg border border-bordercol rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <select id="inventorySpaceFilter" onchange="renderInventoryList()" class="bg-darkbg text-white border border-bordercol rounded-lg px-2 py-1.5 text-xs">
+              <option value="ALL">Toate Spațiile</option>
+            </select>
+            <select id="inventoryStatusFilter" onchange="renderInventoryList()" class="bg-darkbg text-white border border-bordercol rounded-lg px-2 py-1.5 text-xs">
+              <option value="ALL">Toate Stările</option>
+              <option value="Funcțional">Funcțional</option>
+              <option value="Necesită reparație">Necesită reparație</option>
+              <option value="În service/mentenanță">În service/mentenanță</option>
+              <option value="Defect/Casat">Defect/Casat</option>
+            </select>
+          </div>
+
+          <button onclick="openInventoryItemModal(null)" class="w-full bg-violet-800 hover:bg-violet-700 text-white font-bold py-2.5 rounded-xl transition">➕ Adaugă Obiect Nou</button>
+
+          <div id="inventoryListContainer" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
         </div>
       </div>
 
@@ -690,7 +880,7 @@
 
   <!-- BARA DE NAVIGARE INFERIOARĂ -->
   <nav class="fixed bottom-0 inset-x-0 bg-darkbg/95 backdrop-blur-md border-t border-bordercol z-40 py-2">
-    <div class="max-w-lg mx-auto grid grid-cols-6 text-center text-[9px] font-medium text-slate-400">
+    <div id="bottomNavBar" class="max-w-lg mx-auto grid grid-cols-6 text-center text-[9px] font-medium text-slate-400">
       <button onclick="switchTab('today')" id="nav-today" class="flex flex-col items-center space-y-1 text-cyan-400 font-bold">
         <span class="text-base">🏠</span>
         <span>Astăzi</span>
@@ -827,9 +1017,9 @@
           <input type="text" id="editPrenume" placeholder="Prenume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
           <input type="text" id="editNume" placeholder="Nume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
         </div>
-        <input type="text" id="editGrad" placeholder="Grad / Cler / Rudenie" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <input type="text" id="editGrad" list="gradOptionsList" placeholder="Grad / Cler / Rudenie" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
         <textarea id="editInfo" rows="2" placeholder="Informații suplimentare" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
-        
+
         <div class="grid grid-cols-2 gap-2">
           <select id="editStare" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
             <option value="Viu">Viu</option>
@@ -841,12 +1031,233 @@
           </label>
         </div>
 
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <span class="text-[10px] text-slate-400 block mb-0.5">Data nașterii:</span>
+            <input type="text" id="editDN" placeholder="ex: 12.05.1980" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+          </div>
+          <div>
+            <span class="text-[10px] text-slate-400 block mb-0.5">Data adormirii:</span>
+            <input type="text" id="editDA" placeholder="ex: 03.11.2020" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+          </div>
+        </div>
+
+        <textarea id="editIstoricMedical" rows="2" placeholder="Istoric medical" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
+
+        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+          <input type="checkbox" id="editBolnav" class="rounded text-amber-600 focus:ring-0">
+          <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
+        </label>
+
+        <input type="text" id="editCopii" placeholder="Copii" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <input type="text" id="editSot" placeholder="Soț / Soție" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <input type="text" id="editParinti" placeholder="Părinți" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <input type="text" id="editApropiati" placeholder="Frați / Bunici / Apropiați" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+
         <button onclick="savePersonEdit()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl text-white font-medium active:scale-95 transition">💾 Salvează în Sheet</button>
       </div>
 
       <div class="pt-3 flex space-x-2">
         <button id="toggleEditBtn" onclick="toggleEditMode()" class="flex-1 bg-cyan-900 border border-cyan-700 py-2.5 rounded-xl font-medium text-xs text-cyan-200">✏️ Editează Persoană</button>
         <button onclick="closePersonModal()" class="flex-1 bg-slate-800 border border-bordercol py-2.5 rounded-xl font-medium text-xs text-white">Închide</button>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="gradOptionsList">
+    <option value="1. Cler">
+    <option value="1. Cler (D)">
+    <option value="1.2. Cler">
+    <option value="1.3. Cler">
+    <option value="1.4. Cler">
+    <option value="1.5. Cler">
+    <option value="2. Familie">
+    <option value="2.1. Familie">
+    <option value="2.2. Familie">
+    <option value="2.3. Familie">
+    <option value="2.4. Familie">
+    <option value="3. Nași">
+    <option value="4. Fini">
+    <option value="4.1. Fini din parinti si bunici">
+    <option value="5. Mătusi / Unchi">
+    <option value="6. Verișori">
+    <option value="7. Nepoți de verisori">
+    <option value="8. Alte rude">
+    <option value="9. Prieteni, apropiați, cunoscuti">
+    <option value="9.1. Colegi munca">
+    <option value="9.2. Vecini">
+    <option value="9.3. Colegi școala, liceu și facultate">
+    <option value="9.4. Profesori, invatatori">
+    <option value="9.5. Cunoscuți și alte suflete întâlnite">
+    <option value="9.6. Pomelnic de suflet">
+    <option value="9.7 Categorii">
+  </datalist>
+
+  <!-- MODAL ADAUGĂ PERSOANĂ NOUĂ ÎN POMELNIC -->
+  <div id="addPersonModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-2.5 text-xs">
+      <div class="flex items-center justify-between border-b border-bordercol pb-2">
+        <h3 class="font-bold text-emerald-300 uppercase">➕ Persoană Nouă</h3>
+        <button onclick="closeAddPersonModal()" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <input type="text" id="newPrenume" placeholder="Prenume *" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <input type="text" id="newNume" placeholder="Nume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+      </div>
+      <input type="text" id="newGrad" list="gradOptionsList" placeholder="Grad / Cler / Rudenie" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+      <textarea id="newInfo" rows="2" placeholder="Informații suplimentare" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
+
+      <div class="grid grid-cols-2 gap-2">
+        <select id="newStare" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+          <option value="Viu">Viu</option>
+          <option value="Adormit">Adormit</option>
+        </select>
+        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+          <input type="checkbox" id="newNecesitaAtentie" class="rounded text-rose-600 focus:ring-0">
+          <span class="text-[11px] text-rose-300 font-medium">⚠️ Atenție</span>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <span class="text-[10px] text-slate-400 block mb-0.5">Data nașterii:</span>
+          <input type="text" id="newDN" placeholder="ex: 12.05.1980" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-400 block mb-0.5">Data adormirii:</span>
+          <input type="text" id="newDA" placeholder="ex: 03.11.2020" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        </div>
+      </div>
+
+      <textarea id="newIstoricMedical" rows="2" placeholder="Istoric medical" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
+
+      <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+        <input type="checkbox" id="newBolnav" class="rounded text-amber-600 focus:ring-0">
+        <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
+      </label>
+
+      <input type="text" id="newCopii" placeholder="Copii" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+      <input type="text" id="newSot" placeholder="Soț / Soție" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+      <input type="text" id="newParinti" placeholder="Părinți" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+      <input type="text" id="newApropiati" placeholder="Frați / Bunici / Apropiați" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+
+      <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+        <input type="checkbox" id="newIsActivPomelnic" checked class="rounded text-emerald-600 focus:ring-0">
+        <span class="text-[11px] text-emerald-300 font-medium">✅ Activ în rotația de pomenire</span>
+      </label>
+
+      <button onclick="saveNewPerson()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl text-white font-medium active:scale-95 transition">💾 Adaugă în Pomelnic</button>
+    </div>
+  </div>
+
+  <!-- MODAL RAPORT DETALIAT ȘCOALĂ -->
+  <div id="schoolReportModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-3 text-xs">
+      <div class="flex items-center justify-between border-b border-bordercol pb-2">
+        <h3 class="font-bold text-violet-300 uppercase">📊 Raport Detaliat</h3>
+        <button onclick="closeSchoolReportModal()" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="flex flex-wrap gap-1.5" id="reportPeriodButtons">
+        <button onclick="setSchoolReportPeriod('month')" data-period="month" class="report-period-btn px-2.5 py-1 rounded-lg bg-violet-900 text-violet-200 border border-violet-700 font-medium">Luna aceasta</button>
+        <button onclick="setSchoolReportPeriod('lastMonth')" data-period="lastMonth" class="report-period-btn px-2.5 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Luna trecută</button>
+        <button onclick="setSchoolReportPeriod('last30')" data-period="last30" class="report-period-btn px-2.5 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Ultimele 30 zile</button>
+        <button onclick="setSchoolReportPeriod('year')" data-period="year" class="report-period-btn px-2.5 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Anul acesta</button>
+        <button onclick="setSchoolReportPeriod('custom')" data-period="custom" class="report-period-btn px-2.5 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Interval custom</button>
+      </div>
+
+      <div id="reportCustomRange" class="hidden grid grid-cols-2 gap-2">
+        <div>
+          <span class="text-[10px] text-slate-400 block mb-0.5">De la:</span>
+          <input type="date" id="reportCustomFrom" onchange="renderSchoolReport()" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        </div>
+        <div>
+          <span class="text-[10px] text-slate-400 block mb-0.5">Până la:</span>
+          <input type="date" id="reportCustomTo" onchange="renderSchoolReport()" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        </div>
+      </div>
+
+      <div id="schoolReportContent" class="space-y-3 pt-2"></div>
+    </div>
+  </div>
+
+
+  <div id="inventoryItemModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-3 text-xs">
+      <div class="flex items-center justify-between border-b border-bordercol pb-2">
+        <h3 id="inventoryModalTitle" class="font-bold text-violet-300 uppercase">Adaugă Obiect Nou</h3>
+        <button onclick="closeInventoryItemModal()" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <img id="inventoryPhotoPreview" src="" class="hidden w-20 h-20 rounded-xl object-cover border border-bordercol">
+        <div id="inventoryPhotoPlaceholder" class="w-20 h-20 rounded-xl border border-dashed border-bordercol flex items-center justify-center text-2xl text-slate-600">📷</div>
+        <div class="flex-1 space-y-1">
+          <label class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-center text-slate-300 cursor-pointer block hover:border-violet-500">
+            📸 Alege / Fă o poză
+            <input type="file" id="inventoryPhotoInput" accept="image/*" capture="environment" onchange="handleInventoryPhotoSelect(event)" class="hidden">
+          </label>
+          <button onclick="clearInventoryPhoto()" class="w-full text-[10px] text-rose-400 hover:text-rose-300">Șterge poza</button>
+        </div>
+      </div>
+
+      <input type="text" id="inventoryItemName" placeholder="Denumire obiect (ex: Bormaşină Bosch)" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+
+      <div class="grid grid-cols-2 gap-2">
+        <input type="text" id="inventoryItemCategory" list="inventoryCategoryList" placeholder="Categorie (ex: Scule)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <datalist id="inventoryCategoryList"></datalist>
+        <input type="text" id="inventoryItemSpace" list="inventorySpaceList" placeholder="Spațiu (ex: Garaj - Raft 2)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <datalist id="inventorySpaceList"></datalist>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <input type="number" id="inventoryItemQty" placeholder="Cantitate" value="1" min="1" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <input type="number" id="inventoryItemValue" placeholder="Valoare (Lei)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-[9px] text-slate-400 block">Dată achiziție:</label>
+          <input type="date" id="inventoryItemPurchaseDate" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+        </div>
+        <div>
+          <label class="text-[9px] text-slate-400 block">Următoarea mentenanță:</label>
+          <input type="date" id="inventoryItemNextMaintenance" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+        </div>
+      </div>
+
+      <select id="inventoryItemStatus" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <option value="Funcțional">Funcțional</option>
+        <option value="Necesită reparație">Necesită reparație</option>
+        <option value="În service/mentenanță">În service/mentenanță</option>
+        <option value="Defect/Casat">Defect/Casat</option>
+      </select>
+
+      <textarea id="inventoryItemNotes" rows="2" placeholder="Observații" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
+
+      <div id="inventoryHistoryBox" class="hidden p-2 bg-darkbg border border-bordercol rounded-lg space-y-1">
+        <span class="font-bold text-slate-400 block text-[10px] uppercase">Istoric mutări:</span>
+        <div id="inventoryHistoryList" class="text-[10px] text-slate-300 space-y-0.5"></div>
+      </div>
+
+      <div class="pt-2 flex space-x-2">
+        <button onclick="saveInventoryItem()" class="flex-1 bg-violet-700 hover:bg-violet-600 text-white font-bold py-2.5 rounded-xl">💾 Salvează</button>
+        <button id="btnDeleteInventoryItem" onclick="deleteInventoryItem()" class="hidden bg-rose-950 border border-rose-700 text-rose-200 px-3 py-2.5 rounded-xl">🗑️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL MUTARE OBIECT ÎNTRE SPAȚII -->
+  <div id="inventoryMoveModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-cardbg border border-bordercol w-full max-w-sm rounded-t-3xl sm:rounded-2xl p-5 space-y-3 text-xs">
+      <h3 class="font-bold text-violet-300 uppercase">📦 Mută în alt spațiu</h3>
+      <p id="inventoryMoveItemName" class="text-white font-bold"></p>
+      <p class="text-slate-400">Spațiu curent: <span id="inventoryMoveCurrentSpace" class="text-violet-300 font-bold"></span></p>
+      <input type="text" id="inventoryMoveNewSpace" list="inventorySpaceList" placeholder="Spațiu nou" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+      <div class="flex space-x-2 pt-1">
+        <button onclick="confirmMoveInventoryItem()" class="flex-1 bg-violet-700 hover:bg-violet-600 text-white font-bold py-2 rounded-xl">✔ Confirmă Mutarea</button>
+        <button onclick="closeInventoryMoveModal()" class="bg-slate-800 text-slate-300 px-3 py-2 rounded-xl">Anulează</button>
       </div>
     </div>
   </div>
@@ -900,8 +1311,19 @@
 
     let appTitle = localStorage.getItem('diih_app_title') || "DIiH Hub";
     let appLogo = localStorage.getItem('diih_app_logo') || "🧭";
+    let appIconPath = localStorage.getItem('diih_app_icon_path') || './icons/icon-sigiliu-monograma-hristos.svg';
     let pomelnicBatchSize = parseInt(localStorage.getItem('diih_batch_size') || "20", 10);
     let psaltireBatchSize = parseInt(localStorage.getItem('diih_psaltire_batch_size') || "20", 10);
+    let sharingConfig = JSON.parse(localStorage.getItem('diih_sharing_config') || '{}');
+    const SHEET_DIRECT_URL = "https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit";
+    const urlParams = new URLSearchParams(window.location.search);
+    const sharedModeToken = urlParams.get('share');
+
+    let allInventory = JSON.parse(localStorage.getItem('diih_inventar') || '[]');
+    let inventoryLoaded = false;
+    let editingInventoryId = null;
+    let inventoryPendingPhotoBase64 = null;
+    let inventoryMoveTargetId = null;
 
     let isSelectModeActive = false;
     let selectedRowIds = new Set();
@@ -933,12 +1355,21 @@
       setupOnlineOfflineHandlers();
       logEventToCloud('app_start', 'session', deviceId, 'DIiH Hub v17 pornit');
 
-      // Sincronizare periodică în fundal (la fiecare 30 secunde) pentru consecvență 1:1 între dispozitive
+      applySharedModeIfNeeded();
+
+      // Sincronizare rapidă/ușoară (fără Pomelnic & Biblia) la fiecare 20 secunde
+      setInterval(() => {
+        if (navigator.onLine && !document.hidden) {
+          fetchLiveData(false);
+        }
+      }, 20000);
+
+      // Sincronizare completă (inclusiv Pomelnic 990 rânduri) la fiecare 3 minute
       setInterval(() => {
         if (navigator.onLine && !document.hidden) {
           fetchDataFromSheet(false);
         }
-      }, 30000);
+      }, 180000);
 
       // Verificator recurent pentru notificări programate (la fiecare 45 secunde)
       setInterval(() => {
@@ -952,7 +1383,7 @@
       document.getElementById('htmlAppTitle').textContent = `${appTitle} v17`;
       document.getElementById('headerAppLogo').textContent = appLogo;
       document.title = `${appTitle} v17`;
-      updateDynamicFavicon(appLogo);
+      updateDynamicFavicon(appLogo, appIconPath);
 
       const titleInput = document.getElementById('settingAppTitle');
       if (titleInput) titleInput.value = appTitle;
@@ -962,6 +1393,8 @@
       if (batchInput) batchInput.value = pomelnicBatchSize;
       const batchSelect = document.getElementById('pomelnicBatchSelect');
       if (batchSelect) batchSelect.value = pomelnicBatchSize.toString();
+      const activeIconCard = document.getElementById('activeIconPreview');
+      if (activeIconCard) activeIconCard.src = appIconPath;
     }
 
     function handlePomelnicBatchChange(val) {
@@ -990,21 +1423,25 @@
       document.head.appendChild(link);
     }
 
-    function saveGlobalCustomSettings() {
-      appTitle = document.getElementById('settingAppTitle').value.trim() || "DIiH Hub";
-      appLogo = document.getElementById('settingAppLogo').value.trim() || "🧭";
-      pomelnicBatchSize = parseInt(document.getElementById('settingPomelnicBatchSize').value, 10) || 20;
+    function saveGlobalCustomSettings(skipFormRead = false) {
+      if (!skipFormRead) {
+        appTitle = document.getElementById('settingAppTitle').value.trim() || "DIiH Hub";
+        appLogo = document.getElementById('settingAppLogo').value.trim() || "🧭";
+        pomelnicBatchSize = parseInt(document.getElementById('settingPomelnicBatchSize').value, 10) || 20;
+      }
 
       localStorage.setItem('diih_app_title', appTitle);
       localStorage.setItem('diih_app_logo', appLogo);
+      localStorage.setItem('diih_app_icon_path', appIconPath);
       localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
 
       applyAppBrandUI();
       renderDailyPomelnic20();
-      showToast("Setări salvate și trimise în Cloud!");
+      if (!skipFormRead) showToast("Setări salvate și trimise în Cloud!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&appTitle=${encodeURIComponent(appTitle)}&appLogo=${encodeURIComponent(appLogo)}&pomelnicBatchSize=${pomelnicBatchSize}&psaltireBatchSize=${psaltireBatchSize}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&appTitle=${encodeURIComponent(appTitle)}&appLogo=${encodeURIComponent(appLogo)}&appIconPath=${encodeURIComponent(appIconPath)}&pomelnicBatchSize=${pomelnicBatchSize}&psaltireBatchSize=${psaltireBatchSize}&callback=void`;
+      script.onerror = () => showToast("Eroare rețea la salvare! Verifică conexiunea.");
       document.body.appendChild(script);
     }
 
@@ -1149,11 +1586,13 @@
       const tabs = ['today', 'pomelnic', 'calendar', 'ganduri', 'cumparaturi', 'more'];
       tabs.forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
+        const wasHidden = btn.classList.contains('hidden');
         if (t === tabId) {
           btn.className = "flex flex-col items-center space-y-1 text-cyan-400 font-bold";
         } else {
           btn.className = "flex flex-col items-center space-y-1 text-slate-400 hover:text-white";
         }
+        if (wasHidden) btn.classList.add('hidden');
       });
       if (tabId === 'calendar') {
         const todayStr = new Date().toISOString().split('T')[0];
@@ -1162,7 +1601,7 @@
         }
         renderSchoolDisplay();
       }
-      if (tabId === 'more') renderPsaltireGrupList();
+      if (tabId === 'more') switchSubTab(isInActiveSharedMode() ? 'inventar' : 'setari');
       // Spam switch_tab eliminat conform cerintelor v17
     }
 
@@ -1176,6 +1615,7 @@
     }
 
     function setAppCustomIcon(iconPath, emoji) {
+      appIconPath = iconPath;
       localStorage.setItem('diih_app_icon_path', iconPath);
       updateDynamicFavicon(emoji, iconPath);
       appLogo = emoji;
@@ -1183,7 +1623,9 @@
       const logoInput = document.getElementById('settingAppLogo');
       if (logoInput) logoInput.value = emoji;
       localStorage.setItem('diih_app_logo', emoji);
-      showToast(`Emblemă setată: ${emoji}! Apasă Salvează în Cloud.`);
+      // Trimitem imediat în Cloud, fără să mai fie nevoie de un pas suplimentar de salvare
+      saveGlobalCustomSettings(true);
+      showToast(`Emblemă setată: ${emoji} și salvată automat în Cloud!`);
       logEventToCloud('update_icon', 'branding', emoji, `Emblemă actualizată: ${emoji} (${iconPath})`);
     }
 
@@ -1193,9 +1635,69 @@
       if (subId === 'psaltire-grup') renderPsaltireGrupList();
       if (subId === 'widget') updateTodayWidgetView();
       if (subId === 'notificari') initNotificationInputs();
+      if (subId === 'admin') renderAdminSharingForm();
+      if (subId === 'inventar') loadInventoryIfNeeded();
     }
 
     // SINCRONIZARE LIVE 1:1 CU GOOGLE SHEETS
+    function isInActiveSharedMode() {
+      return !!(sharedModeToken && sharingConfig && sharingConfig.shareToken === sharedModeToken);
+    }
+
+    // Pomelnicul NU se partajează niciodată integral — doar categoriile (Grad) bifate explicit în Admin
+    function getSharedAllowedPomelnicCategories() {
+      if (!isInActiveSharedMode()) return null;
+      return (sharingConfig.pomelnicCategories && sharingConfig.pomelnicCategories.length > 0) ? sharingConfig.pomelnicCategories : [];
+    }
+
+    function getVisiblePeople() {
+      const allowed = getSharedAllowedPomelnicCategories();
+      if (allowed === null) return allPeople;
+      return allPeople.filter(p => p.grad && allowed.includes(p.grad.trim()));
+    }
+
+    function applyCloudSettings(settings) {
+      if (!settings) return;
+      const inActiveSharedMode = isInActiveSharedMode();
+      if (!inActiveSharedMode) {
+        if (settings.appTitle) appTitle = settings.appTitle;
+        if (settings.appLogo) appLogo = settings.appLogo;
+        if (settings.appIconPath) appIconPath = settings.appIconPath;
+      }
+      if (settings.pomelnicBatchSize) pomelnicBatchSize = parseInt(settings.pomelnicBatchSize, 10) || 20;
+      if (settings.psaltireBatchSize) psaltireBatchSize = parseInt(settings.psaltireBatchSize, 10) || 20;
+      if (!inActiveSharedMode) {
+        localStorage.setItem('diih_app_title', appTitle);
+        localStorage.setItem('diih_app_logo', appLogo);
+        localStorage.setItem('diih_app_icon_path', appIconPath);
+      }
+      localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
+      localStorage.setItem('diih_psaltire_batch_size', psaltireBatchSize.toString());
+      applyAppBrandUI();
+
+      if (settings.notificationsJson) {
+        try {
+          const cloudNotifs = JSON.parse(settings.notificationsJson);
+          if (cloudNotifs && typeof cloudNotifs === 'object') {
+            localStorage.setItem('diih_notifications_multi', JSON.stringify(cloudNotifs));
+            initNotificationInputs();
+          }
+        } catch (e) {}
+      }
+
+      if (settings.sharingConfigJson) {
+        try {
+          const cloudSharing = JSON.parse(settings.sharingConfigJson);
+          if (cloudSharing && typeof cloudSharing === 'object') {
+            sharingConfig = cloudSharing;
+            localStorage.setItem('diih_sharing_config', JSON.stringify(sharingConfig));
+            renderAdminSharingForm();
+            applySharedModeIfNeeded();
+          }
+        } catch (e) {}
+      }
+    }
+
     function fetchDataFromSheet(showFeedback = false) {
       const icon = document.getElementById('syncIcon');
       if (icon) icon.classList.add('animate-spin');
@@ -1209,17 +1711,7 @@
         handled = true;
         const dur = Date.now() - startT;
 
-        if (data.settings) {
-          if (data.settings.appTitle) appTitle = data.settings.appTitle;
-          if (data.settings.appLogo) appLogo = data.settings.appLogo;
-          if (data.settings.pomelnicBatchSize) pomelnicBatchSize = parseInt(data.settings.pomelnicBatchSize, 10) || 20;
-          if (data.settings.psaltireBatchSize) psaltireBatchSize = parseInt(data.settings.psaltireBatchSize, 10) || 20;
-          localStorage.setItem('diih_app_title', appTitle);
-          localStorage.setItem('diih_app_logo', appLogo);
-          localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
-          localStorage.setItem('diih_psaltire_batch_size', psaltireBatchSize.toString());
-          applyAppBrandUI();
-        }
+        applyCloudSettings(data.settings);
 
         if (data.pomelnic && Array.isArray(data.pomelnic)) {
           allPeople = data.pomelnic;
@@ -1251,17 +1743,6 @@
           updateBibliaQuoteDisplay();
         }
 
-        // Sincronizare setări notificări din cloud dacă sunt prezente
-        if (data.settings && data.settings.notificationsJson) {
-          try {
-            const cloudNotifs = JSON.parse(data.settings.notificationsJson);
-            if (cloudNotifs && typeof cloudNotifs === 'object') {
-              localStorage.setItem('diih_notifications_multi', JSON.stringify(cloudNotifs));
-              initNotificationInputs();
-            }
-          } catch (e) {}
-        }
-
         populateCategoryDropdown();
         renderAll();
         renderSchoolDisplay();
@@ -1283,6 +1764,59 @@
       document.body.appendChild(script);
     }
 
+    // Sincronizare rapidă/ușoară (fără Pomelnic 990 rânduri și fără Biblia 360), pentru polling frecvent
+    function fetchLiveData(showFeedback = false) {
+      const startT = Date.now();
+      const callbackName = 'handleLiveData_' + Date.now();
+      let handled = false;
+
+      window[callbackName] = function(data) {
+        if (handled) return;
+        handled = true;
+        const dur = Date.now() - startT;
+
+        applyCloudSettings(data.settings);
+
+        if (data.cumparaturi && Array.isArray(data.cumparaturi)) {
+          allShopping = data.cumparaturi;
+          localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
+        }
+        if (data.ganduri && Array.isArray(data.ganduri)) {
+          allGanduri = data.ganduri;
+          localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
+        }
+        if (data.schoolActivities && Array.isArray(data.schoolActivities)) {
+          schoolActivities = data.schoolActivities.map(a => {
+            let dStr = a.date || "";
+            if (dStr.length > 10) dStr = dStr.substring(0, 10);
+            return { ...a, date: dStr };
+          });
+          localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+        }
+        if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
+          psaltireGrupData = data.psaltireGrup;
+          localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
+        }
+
+        renderShoppingList();
+        renderGanduriList();
+        renderSchoolDisplay();
+        renderPsaltireGrupList();
+        updateTodayWidgetView();
+
+        if (showFeedback) showToast("Sincronizare rapidă finalizată!");
+        logEventToCloud('SYNC_LIVE', 'database', 'live', `Live: ${allGanduri.length} gânduri, ${allShopping.length} produse, ${schoolActivities.length} activități`, 'SUCCESS', dur);
+        delete window[callbackName];
+      };
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getLiveData&_rnd=${Date.now()}&callback=${callbackName}`;
+      script.onerror = function() {
+        logEventToCloud('sync_error', 'database', 'live', 'Eroare sincronizare rapidă', 'ERROR');
+      };
+      document.body.appendChild(script);
+    }
+
     function loadStoredData() {
       allPeople = JSON.parse(localStorage.getItem('diih_people') || '[]');
       allShopping = JSON.parse(localStorage.getItem('diih_shopping') || '[]');
@@ -1295,9 +1829,10 @@
       updateBibliaQuoteDisplay();
     }
 
+
     function renderAll() {
-      document.getElementById('totalCount').textContent = allPeople.length;
-      const countAtentie = allPeople.filter(p => p.necesitaAtentie === true).length;
+      document.getElementById('totalCount').textContent = getVisiblePeople().length;
+      const countAtentie = getVisiblePeople().filter(p => p.necesitaAtentie === true).length;
       document.getElementById('atentieCount').textContent = countAtentie;
 
       renderAnniversariesToday();
@@ -1325,29 +1860,46 @@
     }
 
     // 1. ANIVERSĂRI
-    function renderAnniversariesToday() {
+    function computeTodaysAnniversaries(peopleList) {
       const now = new Date();
       const currentDay = now.getDate();
       const currentMonth = now.getMonth() + 1;
       const currentYear = now.getFullYear();
 
-      const container = document.getElementById('anniversaryList');
       const matches = [];
-
-      allPeople.forEach(p => {
+      (peopleList || []).forEach(p => {
         if (p.dn) {
           const parts = p.dn.split(/[\.\/\-]/);
           if (parts.length === 3 && parseInt(parts[0], 10) === currentDay && parseInt(parts[1], 10) === currentMonth) {
-            matches.push({ type: 'BIRTH', person: p, age: currentYear - parseInt(parts[2], 10) });
+            const birthYear = parseInt(parts[2], 10);
+            if (p.stare === 'Adormit' && p.da) {
+              const dParts = p.da.split(/[\.\/\-]/);
+              const deathYear = (dParts.length === 3) ? parseInt(dParts[2], 10) : null;
+              matches.push({ type: 'BIRTH_DECEASED', person: p, ageWouldBe: currentYear - birthYear, yearsSinceDeath: deathYear ? (currentYear - deathYear) : null });
+            } else {
+              matches.push({ type: 'BIRTH', person: p, age: currentYear - birthYear });
+            }
           }
         }
         if (p.da && p.stare === 'Adormit') {
           const parts = p.da.split(/[\.\/\-]/);
           if (parts.length === 3 && parseInt(parts[0], 10) === currentDay && parseInt(parts[1], 10) === currentMonth) {
-            matches.push({ type: 'DEATH', person: p, years: currentYear - parseInt(parts[2], 10) });
+            const deathYear = parseInt(parts[2], 10);
+            let ageAtDeath = null;
+            if (p.dn) {
+              const bParts = p.dn.split(/[\.\/\-]/);
+              if (bParts.length === 3) ageAtDeath = deathYear - parseInt(bParts[2], 10);
+            }
+            matches.push({ type: 'DEATH', person: p, years: currentYear - deathYear, ageAtDeath });
           }
         }
       });
+      return matches;
+    }
+
+    function renderAnniversariesToday() {
+      const container = document.getElementById('anniversaryList');
+      const matches = computeTodaysAnniversaries(allPeople);
 
       document.getElementById('anniversaryBadge').textContent = matches.length;
 
@@ -1366,12 +1918,21 @@
               </div>
               <span class="text-xs text-slate-500">›</span>
             </div>`;
+        } else if (m.type === 'BIRTH_DECEASED') {
+          return `
+            <div onclick="openPersonModal(${m.person.rowId})" class="p-2.5 rounded-xl bg-slate-900/80 border border-amber-900/50 flex items-center justify-between cursor-pointer active:scale-98 transition">
+              <div>
+                <span class="text-xs font-bold text-amber-300">🕯️ Naștere: ${m.person.prenume} ${m.person.nume}</span>
+                <p class="text-[11px] text-slate-400">Ar fi împlinit ${m.ageWouldBe} ani${m.yearsSinceDeath !== null ? ` • adormit de ${m.yearsSinceDeath} ani` : ''}</p>
+              </div>
+              <span class="text-xs text-slate-500">›</span>
+            </div>`;
         } else {
           return `
             <div onclick="openPersonModal(${m.person.rowId})" class="p-2.5 rounded-xl bg-slate-900/80 border border-amber-900/50 flex items-center justify-between cursor-pointer active:scale-98 transition">
               <div>
                 <span class="text-xs font-bold text-amber-300">† Pomenire: ${m.person.prenume} ${m.person.nume}</span>
-                <p class="text-[11px] text-slate-400">Adormit de ${m.years} ani</p>
+                <p class="text-[11px] text-slate-400">Adormit de ${m.years} ani${m.ageAtDeath !== null ? ` • adormit la ${m.ageAtDeath} ani` : ''}</p>
               </div>
               <span class="text-xs text-slate-500">›</span>
             </div>`;
@@ -1395,8 +1956,9 @@
       const targetAdormiti = Math.floor(totalBatch / 2);
 
       // Verificăm strict boolean, text sau numeric
-      const allActiveVii = allPeople.filter(p => (p.isActivPomelnic === true || p.isActivPomelnic === "TRUE" || p.isActivPomelnic === 1) && p.stare !== 'Adormit');
-      const allActiveAdormiti = allPeople.filter(p => (p.isActivPomelnic === true || p.isActivPomelnic === "TRUE" || p.isActivPomelnic === 1) && p.stare === 'Adormit');
+      const basePeople = getVisiblePeople();
+      const allActiveVii = basePeople.filter(p => (p.isActivPomelnic === true || p.isActivPomelnic === "TRUE" || p.isActivPomelnic === 1) && p.stare !== 'Adormit');
+      const allActiveAdormiti = basePeople.filter(p => (p.isActivPomelnic === true || p.isActivPomelnic === "TRUE" || p.isActivPomelnic === 1) && p.stare === 'Adormit');
 
       currentDailyPomelnicVii = [];
       if (allActiveVii.length > 0) {
@@ -1827,6 +2389,11 @@
       return palette[Math.abs(hash) % palette.length];
     }
 
+    // Statusuri care NU reprezintă o restanță (sumă deja rezolvată / nedatorată)
+    function isActivitySettled(status) {
+      return status === 'Achitat' || status === 'Fără plată' || status === 'Abonament';
+    }
+
     let currentDrillDownFilter = 'all';
     let currentDrillDownActivities = [];
     let selectedDrillDownIds = new Set();
@@ -1857,7 +2424,7 @@
 
       if (filterType === 'unpaid') {
         title = "⚠️ Activități Restante (Neachitate)";
-        currentDrillDownActivities = periodFiltered.filter(a => a.paymentStatus !== 'Achitat');
+        currentDrillDownActivities = periodFiltered.filter(a => !isActivitySettled(a.paymentStatus));
       } else if (filterType === 'hours') {
         title = "⏱️ Activități după Ore Lucrate";
         currentDrillDownActivities = periodFiltered;
@@ -1893,24 +2460,26 @@
       container.innerHTML = currentDrillDownActivities.map(a => {
         totalSum += (a.total || 0);
         totalH += (a.hours || 0);
-        const isPaid = a.paymentStatus === 'Achitat';
+        const isPaid = isActivitySettled(a.paymentStatus);
         const isChecked = selectedDrillDownIds.has(a.id);
         const color = getSchoolActivityColor(a);
+        const startH = a.startHour || '08:00';
+        const endH = a.endHour || '16:00';
 
         return `
-          <div class="py-2 flex items-center justify-between text-xs hover:bg-darkbg/60 p-1.5 rounded-lg transition" style="border-left: 3px solid ${color}; padding-left: 8px;">
+          <div class="py-2 flex items-center justify-between text-xs hover:bg-darkbg/60 p-1.5 rounded-lg transition ${isPaid ? 'opacity-60' : ''}" style="border-left: 3px solid ${color}; padding-left: 8px;">
             <div class="flex items-center space-x-2 overflow-hidden">
-              <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleDrillDownItem('${a.id}')" class="rounded text-cyan-500 focus:ring-0 w-4 h-4">
+              <input type="checkbox" ${isChecked ? 'checked' : ''} ${isPaid ? 'disabled' : ''} onchange="toggleDrillDownItem('${a.id}')" class="rounded text-cyan-500 focus:ring-0 w-4 h-4 disabled:opacity-30">
               <div class="truncate">
                 <span class="font-bold text-white block truncate">${a.date}: ${a.title} (${a.child} - ${a.institution})</span>
-                <p class="text-[10px] text-slate-400">${a.hours}h • ${a.paymentType} • ${a.startHour}-${a.endHour}</p>
+                <p class="text-[10px] text-slate-400">${a.hours}h • ${a.paymentType} • ${startH}-${endH}</p>
                 ${a.deadline && a.deadline !== '-' ? `<p class="text-[9px] text-rose-300">Termen plată: ${a.deadline}</p>` : ''}
               </div>
             </div>
             <div class="text-right shrink-0 pl-2">
               <span class="font-bold block ${isPaid ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
               <button onclick="toggleSingleActivityPaid('${a.id}')" class="text-[10px] px-2 py-0.5 rounded border mt-1 ${isPaid ? 'border-emerald-800 bg-emerald-950 text-emerald-300' : 'border-amber-700 bg-amber-950 text-amber-200'}">
-                ${isPaid ? '✔ Achitat' : 'Marchează Achitat'}
+                ${isPaid ? `✔ ${a.paymentStatus}` : 'Marchează Achitat'}
               </button>
             </div>
           </div>
@@ -1927,7 +2496,7 @@
 
     function toggleSelectAllDrillDown(checked) {
       if (checked) {
-        currentDrillDownActivities.forEach(a => selectedDrillDownIds.add(a.id));
+        currentDrillDownActivities.filter(a => !isActivitySettled(a.paymentStatus)).forEach(a => selectedDrillDownIds.add(a.id));
       } else {
         selectedDrillDownIds.clear();
       }
@@ -2000,7 +2569,7 @@
         if (match) {
           totalHours += a.hours || 0;
           totalAmount += a.total || 0;
-          if (a.paymentStatus !== 'Achitat') unpaidAmount += a.total || 0;
+          if (!isActivitySettled(a.paymentStatus)) unpaidAmount += a.total || 0;
         }
       });
 
@@ -2033,7 +2602,7 @@
 
           let actsHtml = acts.map(a => {
             const actColor = getSchoolActivityColor(a);
-            const isPaid = (a.paymentStatus === 'Achitat');
+            const isPaid = isActivitySettled(a.paymentStatus);
             return `
               <div class="p-0.5 rounded text-[8px] truncate text-white flex items-center justify-between space-x-1" style="background-color: ${actColor}25; border-left: 2px solid ${actColor};">
                 <span class="font-bold truncate">${a.title}</span>
@@ -2090,7 +2659,7 @@
                   return `
                     <div class="flex items-center justify-between text-xs p-1.5 rounded bg-darkbg" style="border-left: 3px solid ${actColor};">
                       <span>${a.title} (${a.child}) - ${a.hours}h</span>
-                      <span class="font-bold ${a.paymentStatus === 'Achitat' ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
+                      <span class="font-bold ${isActivitySettled(a.paymentStatus) ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
                     </div>
                   `;
                 }).join('')}
@@ -2114,11 +2683,11 @@
                   <div class="pt-2 flex items-center justify-between text-xs p-1 rounded" style="border-left: 3px solid ${actColor}; padding-left: 6px;">
                     <div>
                       <span class="font-bold text-white block">${a.date}: ${a.title} (${a.child})</span>
-                      <p class="text-[10px] text-slate-400">${a.institution} • ${a.startHour}-${a.endHour} • ${a.paymentType}</p>
+                      <p class="text-[10px] text-slate-400">${a.institution} • ${a.startHour || '08:00'}-${a.endHour || '16:00'} • ${a.paymentType}</p>
                       ${a.deadline !== '-' ? `<p class="text-[9px] text-rose-300">Termen plată: ${a.deadline}</p>` : ''}
                     </div>
                     <div class="text-right">
-                      <span class="font-bold block ${a.paymentStatus === 'Achitat' ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
+                      <span class="font-bold block ${isActivitySettled(a.paymentStatus) ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
                       <button onclick="deleteSchoolActivity('${a.id}')" class="text-rose-400 text-xs p-1">🗑️</button>
                     </div>
                   </div>
@@ -2325,6 +2894,7 @@
           targetAct.dayMessage = dayMessage;
           targetAct.color = chosenColor;
           targetAct.reminders = pickupReminders;
+          targetAct.author = targetAct.author || deviceName;
         }
         localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
         showToast("Activitate modificată cu succes!");
@@ -2357,7 +2927,8 @@
           deadline: deadline,
           dayMessage: dayMessage,
           color: chosenColor,
-          reminders: pickupReminders
+          reminders: pickupReminders,
+          author: deviceName
         };
         schoolActivities.push(item);
         payload.push(item);
@@ -2602,7 +3173,7 @@
       document.getElementById('shopProdus').focus(); // Cursorul revine automat!
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&author=${encodeURIComponent(deviceName)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -2711,6 +3282,12 @@
         }
         cont.innerHTML = html;
       });
+
+      const indivConfig = savedConfig.individualAnniversary || { enabled: false, time: '09:00' };
+      const indivEnabledEl = document.getElementById('individualAnniversaryEnabled');
+      const indivTimeEl = document.getElementById('individualAnniversaryTime');
+      if (indivEnabledEl) indivEnabledEl.checked = !!indivConfig.enabled;
+      if (indivTimeEl) indivTimeEl.value = indivConfig.time || '09:00';
     }
 
     function saveAdvancedNotificationConfigs() {
@@ -2723,6 +3300,11 @@
           config[cat.id].push({ t, m });
         }
       });
+
+      config.individualAnniversary = {
+        enabled: document.getElementById('individualAnniversaryEnabled').checked,
+        time: document.getElementById('individualAnniversaryTime').value || '09:00'
+      };
 
       localStorage.setItem('diih_notifications_multi', JSON.stringify(config));
       showToast("Toate notificările au fost salvate!");
@@ -2757,6 +3339,7 @@
       if (!savedConfig || Object.keys(savedConfig).length === 0) return;
 
       Object.keys(savedConfig).forEach(catId => {
+        if (catId === 'individualAnniversary') return; // tratat separat mai jos, nu e un array de praguri
         const slots = savedConfig[catId] || [];
         slots.forEach((slot, idx) => {
           if (!slot.t || slot.t !== currentTimeStr) return;
@@ -2782,6 +3365,33 @@
           logEventToCloud('NOTIF_DUE', 'notification', catId, `Notificare declanșată: ${title} - ${msg}`);
         });
       });
+
+      // Notificare individuală per persoană (nume + vârstă) pentru fiecare aniversare/pomenire de astăzi
+      const indivConfig = savedConfig.individualAnniversary;
+      if (indivConfig && indivConfig.enabled && indivConfig.time === currentTimeStr) {
+        const matches = computeTodaysAnniversaries(allPeople);
+        matches.forEach(m => {
+          const key = `${todayDateStr}_indiv_${m.person.rowId}_${m.type}_${currentTimeStr}`;
+          if (lastNotifiedMinuteMap[key]) return;
+          lastNotifiedMinuteMap[key] = true;
+
+          const numeComplet = `${m.person.prenume} ${m.person.nume}`.trim();
+          let title, msg;
+          if (m.type === 'BIRTH') {
+            title = `🎂 La mulți ani, ${numeComplet}!`;
+            msg = `Împlinește ${m.age} ani astăzi.`;
+          } else if (m.type === 'BIRTH_DECEASED') {
+            title = `🕯️ ${numeComplet}`;
+            msg = `Ar fi împlinit ${m.ageWouldBe} ani astăzi${m.yearsSinceDeath !== null ? ` • adormit de ${m.yearsSinceDeath} ani` : ''}.`;
+          } else {
+            title = `† Veșnica pomenire, ${numeComplet}`;
+            msg = `Adormit de ${m.years} ani${m.ageAtDeath !== null ? ` • adormit la ${m.ageAtDeath} ani` : ''}.`;
+          }
+
+          triggerNotification(title, msg);
+          logEventToCloud('NOTIF_DUE', 'notification', 'individualAnniversary', `Notificare individuală: ${title} - ${msg}`);
+        });
+      }
     }
 
     async function triggerNotification(title, body) {
@@ -2878,7 +3488,7 @@
         const todayStr = new Date().toISOString().split('T')[0];
         const acts = schoolActivities.filter(a => a.date === todayStr);
         if (acts.length === 0) widgetSchool.textContent = "Nicio activitate școlară astăzi.";
-        else widgetSchool.textContent = acts.map(a => `${a.title} (${a.startHour}-${a.endHour})`).join(' • ');
+        else widgetSchool.textContent = acts.map(a => `${a.title} (${a.startHour || '08:00'}-${a.endHour || '16:00'})`).join(' • ');
       }
 
       const widgetShop = document.getElementById('widgetShopText');
@@ -2894,7 +3504,7 @@
       if (!dd) return;
       const currentVal = dd.value;
       const categories = new Set();
-      allPeople.forEach(p => { if (p.grad && p.grad.trim()) categories.add(p.grad.trim()); });
+      getVisiblePeople().forEach(p => { if (p.grad && p.grad.trim()) categories.add(p.grad.trim()); });
       let html = `<option value="ALL">Toate Categoriile</option>`;
       Array.from(categories).sort().forEach(c => { html += `<option value="${encodeURIComponent(c)}">${c}</option>`; });
       dd.innerHTML = html;
@@ -2918,7 +3528,7 @@
       const catDd = document.getElementById('categoryDropdown');
       const selectedCategory = catDd ? decodeURIComponent(catDd.value) : 'ALL';
 
-      const filtered = allPeople.filter(p => {
+      const filtered = getVisiblePeople().filter(p => {
         if (currentFilter === 'ATENTIE' && p.necesitaAtentie !== true) return false;
         if (currentFilter === 'VIU' && p.stare !== 'Viu') return false;
         if (currentFilter === 'ADORMIT' && p.stare !== 'Adormit') return false;
@@ -3088,6 +3698,12 @@
         ${p.da ? `<div class="py-1"><span class="text-slate-400 block text-[10px]">Data adormirii</span><span class="text-white">${p.da}</span></div>` : ''}
         ${p.grad ? `<div class="py-1"><span class="text-slate-400 block text-[10px]">Grad / Cler</span><span class="text-white">${p.grad}</span></div>` : ''}
         ${p.info ? `<div class="py-1"><span class="text-slate-400 block text-[10px]">Informații</span><span class="text-slate-300">${p.info}</span></div>` : ''}
+        ${p.istoricMedical ? `<div class="py-1"><span class="text-slate-400 block text-[10px]">Istoric medical</span><span class="text-slate-300">${p.istoricMedical}</span></div>` : ''}
+        ${p.bolnav ? `<div class="py-1"><span class="text-amber-300 font-medium">🏥 Bolnav</span></div>` : ''}
+        ${p.copii && p.copii !== '-' ? `<div class="py-1"><span class="text-slate-400 block text-[10px]">Copii</span><span class="text-slate-300">${p.copii}</span></div>` : ''}
+        ${p.sot && p.sot !== '-' ? `<div class="py-1"><span class="text-slate-400 block text-[10px]">Soț / Soție</span><span class="text-slate-300">${p.sot}</span></div>` : ''}
+        ${p.parinti && p.parinti !== '-' ? `<div class="py-1"><span class="text-slate-400 block text-[10px]">Părinți</span><span class="text-slate-300">${p.parinti}</span></div>` : ''}
+        ${p.apropiati && p.apropiati !== '-' ? `<div class="py-1"><span class="text-slate-400 block text-[10px]">Frați / Bunici / Apropiați</span><span class="text-slate-300">${p.apropiati}</span></div>` : ''}
       `;
 
       document.getElementById('editPersonForm').classList.add('hidden');
@@ -3106,6 +3722,14 @@
         document.getElementById('editInfo').value = selectedPersonForEdit.info;
         document.getElementById('editStare').value = selectedPersonForEdit.stare;
         document.getElementById('editNecesitaAtentie').checked = (selectedPersonForEdit.necesitaAtentie === true);
+        document.getElementById('editDN').value = selectedPersonForEdit.dn || '';
+        document.getElementById('editDA').value = selectedPersonForEdit.da || '';
+        document.getElementById('editIstoricMedical').value = selectedPersonForEdit.istoricMedical || '';
+        document.getElementById('editBolnav').checked = (selectedPersonForEdit.bolnav === true);
+        document.getElementById('editCopii').value = (selectedPersonForEdit.copii && selectedPersonForEdit.copii !== '-') ? selectedPersonForEdit.copii : '';
+        document.getElementById('editSot').value = (selectedPersonForEdit.sot && selectedPersonForEdit.sot !== '-') ? selectedPersonForEdit.sot : '';
+        document.getElementById('editParinti').value = (selectedPersonForEdit.parinti && selectedPersonForEdit.parinti !== '-') ? selectedPersonForEdit.parinti : '';
+        document.getElementById('editApropiati').value = (selectedPersonForEdit.apropiati && selectedPersonForEdit.apropiati !== '-') ? selectedPersonForEdit.apropiati : '';
         form.classList.remove('hidden');
         details.classList.add('hidden');
       } else {
@@ -3122,6 +3746,14 @@
       selectedPersonForEdit.info = document.getElementById('editInfo').value.trim();
       selectedPersonForEdit.stare = document.getElementById('editStare').value;
       selectedPersonForEdit.necesitaAtentie = document.getElementById('editNecesitaAtentie').checked;
+      selectedPersonForEdit.dn = document.getElementById('editDN').value.trim();
+      selectedPersonForEdit.da = document.getElementById('editDA').value.trim();
+      selectedPersonForEdit.istoricMedical = document.getElementById('editIstoricMedical').value.trim();
+      selectedPersonForEdit.bolnav = document.getElementById('editBolnav').checked;
+      selectedPersonForEdit.copii = document.getElementById('editCopii').value.trim() || '-';
+      selectedPersonForEdit.sot = document.getElementById('editSot').value.trim() || '-';
+      selectedPersonForEdit.parinti = document.getElementById('editParinti').value.trim() || '-';
+      selectedPersonForEdit.apropiati = document.getElementById('editApropiati').value.trim() || '-';
 
       localStorage.setItem('diih_people', JSON.stringify(allPeople));
       renderAll();
@@ -3129,12 +3761,59 @@
       showToast("Modificări salvate!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(selectedPersonForEdit.prenume)}&nume=${encodeURIComponent(selectedPersonForEdit.nume)}&grad=${encodeURIComponent(selectedPersonForEdit.grad)}&info=${encodeURIComponent(selectedPersonForEdit.info)}&stare=${encodeURIComponent(selectedPersonForEdit.stare)}&necesitaAtentie=${selectedPersonForEdit.necesitaAtentie}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(selectedPersonForEdit.prenume)}&nume=${encodeURIComponent(selectedPersonForEdit.nume)}&grad=${encodeURIComponent(selectedPersonForEdit.grad)}&info=${encodeURIComponent(selectedPersonForEdit.info)}&stare=${encodeURIComponent(selectedPersonForEdit.stare)}&necesitaAtentie=${selectedPersonForEdit.necesitaAtentie}&dn=${encodeURIComponent(selectedPersonForEdit.dn)}&da=${encodeURIComponent(selectedPersonForEdit.da)}&istoricMedical=${encodeURIComponent(selectedPersonForEdit.istoricMedical)}&bolnav=${selectedPersonForEdit.bolnav}&copii=${encodeURIComponent(selectedPersonForEdit.copii)}&sot=${encodeURIComponent(selectedPersonForEdit.sot)}&parinti=${encodeURIComponent(selectedPersonForEdit.parinti)}&apropiati=${encodeURIComponent(selectedPersonForEdit.apropiati)}&callback=void`;
       document.body.appendChild(script);
     }
 
     function closePersonModal() {
       document.getElementById('personModal').classList.add('hidden');
+    }
+
+    function openAddPersonModal() {
+      ['newPrenume','newNume','newGrad','newInfo','newDN','newDA','newIstoricMedical','newCopii','newSot','newParinti','newApropiati'].forEach(id => { document.getElementById(id).value = ''; });
+      document.getElementById('newStare').value = 'Viu';
+      document.getElementById('newNecesitaAtentie').checked = false;
+      document.getElementById('newBolnav').checked = false;
+      document.getElementById('newIsActivPomelnic').checked = true;
+      document.getElementById('addPersonModal').classList.remove('hidden');
+    }
+
+    function closeAddPersonModal() {
+      document.getElementById('addPersonModal').classList.add('hidden');
+    }
+
+    function saveNewPerson() {
+      const prenume = document.getElementById('newPrenume').value.trim();
+      if (!prenume) { showToast("Prenumele este obligatoriu!"); return; }
+      const nume = document.getElementById('newNume').value.trim();
+      const grad = document.getElementById('newGrad').value.trim();
+      const info = document.getElementById('newInfo').value.trim();
+      const stare = document.getElementById('newStare').value;
+      const necesitaAtentie = document.getElementById('newNecesitaAtentie').checked;
+      const dn = document.getElementById('newDN').value.trim();
+      const da = document.getElementById('newDA').value.trim();
+      const istoricMedical = document.getElementById('newIstoricMedical').value.trim();
+      const bolnav = document.getElementById('newBolnav').checked;
+      const copii = document.getElementById('newCopii').value.trim() || '-';
+      const sot = document.getElementById('newSot').value.trim() || '-';
+      const parinti = document.getElementById('newParinti').value.trim() || '-';
+      const apropiati = document.getElementById('newApropiati').value.trim() || '-';
+      const isActivPomelnic = document.getElementById('newIsActivPomelnic').checked;
+
+      const newRowId = allPeople.length + 2;
+      allPeople.push({
+        rowId: newRowId, prenume, nume, info, istoricMedical, dn, da, bolnav,
+        stare, grad, copii, sot, parinti, apropiati, necesitaAtentie, isActivPomelnic
+      });
+
+      localStorage.setItem('diih_people', JSON.stringify(allPeople));
+      renderAll();
+      closeAddPersonModal();
+      showToast("Persoană adăugată în Pomelnic!");
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addPerson&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&dn=${encodeURIComponent(dn)}&da=${encodeURIComponent(da)}&istoricMedical=${encodeURIComponent(istoricMedical)}&bolnav=${bolnav}&copii=${encodeURIComponent(copii)}&sot=${encodeURIComponent(sot)}&parinti=${encodeURIComponent(parinti)}&apropiati=${encodeURIComponent(apropiati)}&isActivPomelnic=${isActivPomelnic}&callback=void`;
+      document.body.appendChild(script);
     }
 
     // 11. BACKUP LOCAL JSON
@@ -3163,6 +3842,578 @@
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').then(reg => reg.update()).catch(err => console.log('SW fail:', err));
       }
+    }
+
+    // 13. INVENTAR PERSONAL (Spații de depozitare, poze, mentenanță)
+    function loadInventoryIfNeeded() {
+      populateInventoryDatalists();
+      renderInventoryList();
+      if (!inventoryLoaded) fetchInventoryData();
+    }
+
+    function fetchInventoryData() {
+      const callbackName = 'handleInventoryData_' + Date.now();
+      let handled = false;
+      window[callbackName] = function(data) {
+        if (handled) return;
+        handled = true;
+        inventoryLoaded = true;
+        if (data.inventar && Array.isArray(data.inventar)) {
+          allInventory = data.inventar;
+          localStorage.setItem('diih_inventar', JSON.stringify(allInventory));
+          populateInventoryDatalists();
+          renderInventoryList();
+        }
+        delete window[callbackName];
+      };
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getInventoryData&_rnd=${Date.now()}&callback=${callbackName}`;
+      script.onerror = () => showToast("Eroare la încărcarea inventarului.");
+      document.body.appendChild(script);
+    }
+
+    function populateInventoryDatalists() {
+      const spaces = new Set();
+      const categories = new Set();
+      allInventory.forEach(it => {
+        if (it.space && it.space !== '-') spaces.add(it.space);
+        if (it.category && it.category !== '-') categories.add(it.category);
+      });
+
+      const spaceList = document.getElementById('inventorySpaceList');
+      if (spaceList) spaceList.innerHTML = Array.from(spaces).sort().map(s => `<option value="${s}">`).join('');
+
+      const catList = document.getElementById('inventoryCategoryList');
+      if (catList) catList.innerHTML = Array.from(categories).sort().map(c => `<option value="${c}">`).join('');
+
+      const spaceFilter = document.getElementById('inventorySpaceFilter');
+      if (spaceFilter) {
+        const currentVal = spaceFilter.value;
+        spaceFilter.innerHTML = `<option value="ALL">Toate Spațiile</option>` + Array.from(spaces).sort().map(s => `<option value="${s}">${s}</option>`).join('');
+        spaceFilter.value = currentVal || 'ALL';
+      }
+    }
+
+    function isMaintenanceOverdue(item) {
+      if (!item.nextMaintenance) return false;
+      const d = new Date(item.nextMaintenance);
+      if (isNaN(d.getTime())) return false;
+      const today = new Date(); today.setHours(0,0,0,0);
+      return d < today;
+    }
+
+    function renderInventoryList() {
+      const container = document.getElementById('inventoryListContainer');
+      if (!container) return;
+
+      const q = (document.getElementById('inventorySearchInput').value || '').toLowerCase().trim();
+      const spaceFilter = document.getElementById('inventorySpaceFilter').value;
+      const statusFilter = document.getElementById('inventoryStatusFilter').value;
+
+      let filtered = allInventory.filter(it => {
+        if (spaceFilter !== 'ALL' && it.space !== spaceFilter) return false;
+        if (statusFilter !== 'ALL' && it.status !== statusFilter) return false;
+        if (q === '') return true;
+        return `${it.name} ${it.category} ${it.space} ${it.notes}`.toLowerCase().includes(q);
+      });
+
+      document.getElementById('inventoryCountBadge').textContent = allInventory.length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-center py-8 text-slate-500 text-xs">Niciun obiect găsit. Apasă "Adaugă Obiect Nou" pentru a începe inventarul.</p>`;
+        return;
+      }
+
+      const statusColors = {
+        'Funcțional': 'bg-emerald-950 border-emerald-800 text-emerald-300',
+        'Necesită reparație': 'bg-amber-950 border-amber-800 text-amber-300',
+        'În service/mentenanță': 'bg-cyan-950 border-cyan-800 text-cyan-300',
+        'Defect/Casat': 'bg-rose-950 border-rose-800 text-rose-300'
+      };
+
+      container.innerHTML = filtered.map(it => {
+        const overdue = isMaintenanceOverdue(it);
+        const statusClass = statusColors[it.status] || 'bg-slate-800 border-slate-700 text-slate-300';
+        const photoHtml = it.photoBase64
+          ? `<img src="${it.photoBase64}" class="w-14 h-14 rounded-lg object-cover border border-bordercol shrink-0">`
+          : `<div class="w-14 h-14 rounded-lg border border-dashed border-bordercol flex items-center justify-center text-xl text-slate-600 shrink-0">📦</div>`;
+
+        return `
+          <div class="p-3 bg-cardbg border border-bordercol rounded-2xl flex items-start space-x-3">
+            ${photoHtml}
+            <div class="flex-1 overflow-hidden">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-white text-sm truncate">${it.name}</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${statusClass} whitespace-nowrap ml-1">${it.status}</span>
+              </div>
+              <p class="text-[11px] text-slate-400 truncate">${it.category} • Cant: ${it.qty}</p>
+              <p class="text-[11px] text-violet-300 truncate">📍 ${it.space}</p>
+              ${overdue ? `<p class="text-[10px] text-rose-400 font-bold">⚠️ Mentenanță depășită (${it.nextMaintenance})</p>` : ''}
+              <div class="flex items-center space-x-1.5 pt-1.5">
+                <button onclick="openInventoryItemModal('${it.id}')" class="text-[10px] px-2 py-1 bg-darkbg border border-bordercol rounded-lg text-slate-300 hover:text-white">✏️ Editează</button>
+                <button onclick="openInventoryMoveModal('${it.id}')" class="text-[10px] px-2 py-1 bg-darkbg border border-violet-800 rounded-lg text-violet-300 hover:text-white">📦 Mută</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openInventoryItemModal(id) {
+      editingInventoryId = id;
+      inventoryPendingPhotoBase64 = null;
+      const modal = document.getElementById('inventoryItemModal');
+      const title = document.getElementById('inventoryModalTitle');
+      const deleteBtn = document.getElementById('btnDeleteInventoryItem');
+      const historyBox = document.getElementById('inventoryHistoryBox');
+      const photoPreview = document.getElementById('inventoryPhotoPreview');
+      const photoPlaceholder = document.getElementById('inventoryPhotoPlaceholder');
+
+      if (id) {
+        const item = allInventory.find(x => x.id === id);
+        if (!item) return;
+        title.textContent = "Editează Obiect";
+        document.getElementById('inventoryItemName').value = item.name || '';
+        document.getElementById('inventoryItemCategory').value = item.category || '';
+        document.getElementById('inventoryItemSpace').value = item.space || '';
+        document.getElementById('inventoryItemQty').value = item.qty || 1;
+        document.getElementById('inventoryItemValue').value = item.value || '';
+        document.getElementById('inventoryItemPurchaseDate').value = item.purchaseDate || '';
+        document.getElementById('inventoryItemNextMaintenance').value = item.nextMaintenance || '';
+        document.getElementById('inventoryItemStatus').value = item.status || 'Funcțional';
+        document.getElementById('inventoryItemNotes').value = item.notes || '';
+        deleteBtn.classList.remove('hidden');
+
+        if (item.photoBase64) {
+          photoPreview.src = item.photoBase64;
+          photoPreview.classList.remove('hidden');
+          photoPlaceholder.classList.add('hidden');
+        } else {
+          photoPreview.classList.add('hidden');
+          photoPlaceholder.classList.remove('hidden');
+        }
+
+        const history = item.history || [];
+        if (history.length > 0) {
+          document.getElementById('inventoryHistoryList').innerHTML = history.map(h => `<div>• ${h.date}: ${h.from} → ${h.to}</div>`).join('');
+          historyBox.classList.remove('hidden');
+        } else {
+          historyBox.classList.add('hidden');
+        }
+      } else {
+        title.textContent = "Adaugă Obiect Nou";
+        document.getElementById('inventoryItemName').value = '';
+        document.getElementById('inventoryItemCategory').value = '';
+        document.getElementById('inventoryItemSpace').value = '';
+        document.getElementById('inventoryItemQty').value = 1;
+        document.getElementById('inventoryItemValue').value = '';
+        document.getElementById('inventoryItemPurchaseDate').value = '';
+        document.getElementById('inventoryItemNextMaintenance').value = '';
+        document.getElementById('inventoryItemStatus').value = 'Funcțional';
+        document.getElementById('inventoryItemNotes').value = '';
+        deleteBtn.classList.add('hidden');
+        historyBox.classList.add('hidden');
+        photoPreview.classList.add('hidden');
+        photoPlaceholder.classList.remove('hidden');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeInventoryItemModal() {
+      document.getElementById('inventoryItemModal').classList.add('hidden');
+    }
+
+    function handleInventoryPhotoSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const maxW = 160;
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.45);
+          inventoryPendingPhotoBase64 = dataUrl;
+
+          const preview = document.getElementById('inventoryPhotoPreview');
+          preview.src = dataUrl;
+          preview.classList.remove('hidden');
+          document.getElementById('inventoryPhotoPlaceholder').classList.add('hidden');
+
+          if (dataUrl.length > 15000) {
+            showToast("Atenție: poza este destul de mare, s-ar putea să nu se salveze corect.");
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearInventoryPhoto() {
+      inventoryPendingPhotoBase64 = '';
+      document.getElementById('inventoryPhotoPreview').classList.add('hidden');
+      document.getElementById('inventoryPhotoPlaceholder').classList.remove('hidden');
+      document.getElementById('inventoryPhotoInput').value = '';
+    }
+
+    function saveInventoryItem() {
+      const name = document.getElementById('inventoryItemName').value.trim();
+      if (!name) return showToast("Introdu o denumire pentru obiect.");
+
+      const category = document.getElementById('inventoryItemCategory').value.trim() || '-';
+      const space = document.getElementById('inventoryItemSpace').value.trim() || '-';
+      const qty = document.getElementById('inventoryItemQty').value || '1';
+      const value = document.getElementById('inventoryItemValue').value || '';
+      const purchaseDate = document.getElementById('inventoryItemPurchaseDate').value || '';
+      const nextMaintenance = document.getElementById('inventoryItemNextMaintenance').value || '';
+      const status = document.getElementById('inventoryItemStatus').value;
+      const notes = document.getElementById('inventoryItemNotes').value.trim();
+
+      let photoBase64 = inventoryPendingPhotoBase64;
+      let history = [];
+      let action = 'addInventoryItem';
+      let itemId = 'INV-' + Date.now();
+
+      if (editingInventoryId) {
+        const existing = allInventory.find(x => x.id === editingInventoryId);
+        itemId = editingInventoryId;
+        action = 'updateInventoryItem';
+        history = existing ? (existing.history || []) : [];
+        if (photoBase64 === null) photoBase64 = existing ? existing.photoBase64 : '';
+        if (existing && existing.space !== space) {
+          history.push({ date: new Date().toISOString().split('T')[0], from: existing.space, to: space });
+        }
+      } else {
+        photoBase64 = photoBase64 || '';
+      }
+
+      const newItem = { id: itemId, name, category, space, qty, value, purchaseDate, nextMaintenance, status, notes, photoBase64, history };
+
+      const idx = allInventory.findIndex(x => x.id === itemId);
+      if (idx >= 0) allInventory[idx] = newItem; else allInventory.push(newItem);
+      localStorage.setItem('diih_inventar', JSON.stringify(allInventory));
+
+      populateInventoryDatalists();
+      renderInventoryList();
+      closeInventoryItemModal();
+      showToast(editingInventoryId ? "Obiect actualizat!" : "Obiect adăugat în inventar!");
+
+      const params = new URLSearchParams({
+        token: API_TOKEN, action, id: itemId, name, category, space, qty, status, value,
+        purchaseDate, nextMaintenance, notes, photoBase64, historyJson: JSON.stringify(history), callback: 'void'
+      });
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${params.toString()}`;
+      document.body.appendChild(script);
+    }
+
+    function deleteInventoryItem() {
+      if (!editingInventoryId) return;
+      allInventory = allInventory.filter(x => x.id !== editingInventoryId);
+      localStorage.setItem('diih_inventar', JSON.stringify(allInventory));
+      renderInventoryList();
+      closeInventoryItemModal();
+      showToast("Obiect șters din inventar!");
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteInventoryItem&id=${encodeURIComponent(editingInventoryId)}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    function openInventoryMoveModal(id) {
+      const item = allInventory.find(x => x.id === id);
+      if (!item) return;
+      inventoryMoveTargetId = id;
+      document.getElementById('inventoryMoveItemName').textContent = item.name;
+      document.getElementById('inventoryMoveCurrentSpace').textContent = item.space;
+      document.getElementById('inventoryMoveNewSpace').value = '';
+      document.getElementById('inventoryMoveModal').classList.remove('hidden');
+    }
+
+    function closeInventoryMoveModal() {
+      document.getElementById('inventoryMoveModal').classList.add('hidden');
+    }
+
+    function confirmMoveInventoryItem() {
+      const newSpace = document.getElementById('inventoryMoveNewSpace').value.trim();
+      if (!newSpace) return showToast("Introdu spațiul nou.");
+
+      const item = allInventory.find(x => x.id === inventoryMoveTargetId);
+      if (!item) return;
+
+      const history = item.history || [];
+      history.push({ date: new Date().toISOString().split('T')[0], from: item.space, to: newSpace });
+      item.space = newSpace;
+      item.history = history;
+
+      localStorage.setItem('diih_inventar', JSON.stringify(allInventory));
+      populateInventoryDatalists();
+      renderInventoryList();
+      closeInventoryMoveModal();
+      showToast(`Obiect mutat în: ${newSpace}`);
+
+      const params = new URLSearchParams({
+        token: API_TOKEN, action: 'updateInventoryItem', id: item.id, name: item.name, category: item.category,
+        space: newSpace, qty: item.qty, status: item.status, value: item.value, purchaseDate: item.purchaseDate,
+        nextMaintenance: item.nextMaintenance, notes: item.notes, photoBase64: item.photoBase64 || '',
+        historyJson: JSON.stringify(history), callback: 'void'
+      });
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${params.toString()}`;
+      document.body.appendChild(script);
+    }
+
+    // 12. ADMIN & PARTAJARE ACCES (Mod convenabil pe bază de link + cod, nu autentificare Google reală)
+    function setSharedIconChoice(path) {
+      document.getElementById('adminSharedIconPath').value = path;
+      document.querySelectorAll('#subtab-admin .grid-cols-4 button').forEach(b => b.classList.remove('border-cyan-400'));
+      event.currentTarget.classList.add('border-cyan-400');
+    }
+
+    function renderAdminSharingForm() {
+      if (!sharingConfig || Object.keys(sharingConfig).length === 0) return;
+      const titleEl = document.getElementById('adminSharedTitle');
+      const logoEl = document.getElementById('adminSharedLogo');
+      const iconEl = document.getElementById('adminSharedIconPath');
+      const authorEl = document.getElementById('adminSharedAuthorName');
+      if (titleEl) titleEl.value = sharingConfig.sharedAppTitle || '';
+      if (logoEl) logoEl.value = sharingConfig.sharedAppLogo || '';
+      if (iconEl) iconEl.value = sharingConfig.sharedAppIconPath || './icons/icon-heart-cross.svg';
+      if (authorEl) authorEl.value = sharingConfig.authorName || '';
+      const modules = sharingConfig.enabledModules || ['calendar', 'cumparaturi'];
+      const map = { today: 'adminModuleToday', calendar: 'adminModuleCalendar', cumparaturi: 'adminModuleCumparaturi', ganduri: 'adminModuleGanduri', pomelnic: 'adminModulePomelnic', inventar: 'adminModuleInventar' };
+      Object.keys(map).forEach(k => {
+        const cb = document.getElementById(map[k]);
+        if (cb) cb.checked = modules.includes(k);
+      });
+      if (sharingConfig.shareToken) {
+        const link = `${window.location.origin}${window.location.pathname}?share=${sharingConfig.shareToken}`;
+        document.getElementById('adminShareLinkOutput').value = link;
+        document.getElementById('adminShareLinkBox').classList.remove('hidden');
+      }
+      toggleAdminPomelnicCategoriesBox();
+      populateAdminPomelnicCategoriesList(sharingConfig.pomelnicCategories || []);
+    }
+
+    function toggleAdminPomelnicCategoriesBox() {
+      const box = document.getElementById('adminPomelnicCategoriesBox');
+      const checked = document.getElementById('adminModulePomelnic').checked;
+      if (!box) return;
+      if (checked) {
+        box.classList.remove('hidden');
+        populateAdminPomelnicCategoriesList((sharingConfig && sharingConfig.pomelnicCategories) || []);
+      } else {
+        box.classList.add('hidden');
+      }
+    }
+
+    function populateAdminPomelnicCategoriesList(checkedCategories) {
+      const list = document.getElementById('adminPomelnicCategoriesList');
+      if (!list) return;
+      const categories = new Set();
+      allPeople.forEach(p => { if (p.grad && p.grad.trim()) categories.add(p.grad.trim()); });
+      list.innerHTML = Array.from(categories).sort().map(c => `
+        <label class="flex items-center space-x-1.5 p-1.5 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+          <input type="checkbox" class="admin-pomelnic-cat-cb rounded text-rose-500 focus:ring-0" value="${c.replace(/"/g, '&quot;')}" ${checkedCategories.includes(c) ? 'checked' : ''}>
+          <span class="text-[10px] text-slate-200 truncate">${c}</span>
+        </label>
+      `).join('') || `<p class="text-[10px] text-slate-500 col-span-2">Niciun Pomelnic încărcat încă.</p>`;
+    }
+
+    function setAllAdminPomelnicCategories(state) {
+      document.querySelectorAll('.admin-pomelnic-cat-cb').forEach(cb => { cb.checked = state; });
+    }
+
+    function saveAdminSharingConfig() {
+      const modules = [];
+      if (document.getElementById('adminModuleToday').checked) modules.push('today');
+      if (document.getElementById('adminModuleCalendar').checked) modules.push('calendar');
+      if (document.getElementById('adminModuleCumparaturi').checked) modules.push('cumparaturi');
+      if (document.getElementById('adminModuleGanduri').checked) modules.push('ganduri');
+      if (document.getElementById('adminModulePomelnic').checked) modules.push('pomelnic');
+      if (document.getElementById('adminModuleInventar').checked) modules.push('inventar');
+
+      const pomelnicCategories = Array.from(document.querySelectorAll('.admin-pomelnic-cat-cb:checked')).map(cb => cb.value);
+
+      const existingToken = sharingConfig.shareToken || ('diih-' + Math.random().toString(36).substring(2, 10));
+
+      sharingConfig = {
+        sharedAppTitle: document.getElementById('adminSharedTitle').value.trim() || 'Agenda Familiei',
+        sharedAppLogo: document.getElementById('adminSharedLogo').value.trim() || '🏡',
+        sharedAppIconPath: document.getElementById('adminSharedIconPath').value || './icons/icon-heart-cross.svg',
+        authorName: document.getElementById('adminSharedAuthorName').value.trim() || 'Membru familie',
+        enabledModules: modules,
+        pomelnicCategories: pomelnicCategories,
+        shareToken: existingToken
+      };
+
+      localStorage.setItem('diih_sharing_config', JSON.stringify(sharingConfig));
+      renderAdminSharingForm();
+      showToast("Configurație de partajare salvată!");
+      logEventToCloud('admin_sharing_update', 'admin', existingToken, `Partajare actualizată: module [${modules.join(', ')}]`);
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&sharingConfigJson=${encodeURIComponent(JSON.stringify(sharingConfig))}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    function copyShareLink() {
+      const input = document.getElementById('adminShareLinkOutput');
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => showToast("Link copiat în clipboard!")).catch(() => showToast("Nu s-a putut copia automat, selectează manual."));
+    }
+
+    let sharedModeInitialized = false;
+
+    function applySharedModeIfNeeded() {
+      if (!sharedModeToken) return;
+      if (!sharingConfig || sharingConfig.shareToken !== sharedModeToken) return;
+
+      // Rebrand aplicației pentru persoana partajată
+      appTitle = sharingConfig.sharedAppTitle || appTitle;
+      appLogo = sharingConfig.sharedAppLogo || appLogo;
+      appIconPath = sharingConfig.sharedAppIconPath || appIconPath;
+      deviceName = sharingConfig.authorName || deviceName;
+      applyAppBrandUI();
+
+      // Bara de jos afișează EXCLUSIV modulele bifate de admin; Setări/Admin nu apar niciodată
+      const allowedModules = sharingConfig.enabledModules && sharingConfig.enabledModules.length > 0 ? sharingConfig.enabledModules : ['calendar', 'cumparaturi'];
+      const navMap = { today: 'nav-today', pomelnic: 'nav-pomelnic', calendar: 'nav-calendar', ganduri: 'nav-ganduri', cumparaturi: 'nav-cumparaturi' };
+      let visibleCount = 0;
+      Object.keys(navMap).forEach(mod => {
+        const btn = document.getElementById(navMap[mod]);
+        if (!btn) return;
+        if (allowedModules.includes(mod)) {
+          btn.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          btn.classList.add('hidden');
+        }
+      });
+      // "Mai multe" apare DOAR dacă Inventarul e permis, și arată EXCLUSIV subtab-ul Inventar (Psaltire/Notificări/Widget/Setări/Admin rămân ascunse)
+      const moreBtn = document.getElementById('nav-more');
+      const sharedOnlyShowsInventar = allowedModules.includes('inventar');
+      ['btnSubPsaltire', 'btnSubNotif', 'btnSubWidget', 'btnSubSetari', 'btnSubAdmin'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) b.classList.add('hidden');
+      });
+      const invBtn = document.getElementById('btnSubInventar');
+      if (sharedOnlyShowsInventar) {
+        moreBtn.classList.remove('hidden');
+        visibleCount++;
+        if (invBtn) invBtn.classList.remove('hidden');
+      } else {
+        moreBtn.classList.add('hidden');
+        if (invBtn) invBtn.classList.add('hidden');
+      }
+
+      const navBar = document.getElementById('bottomNavBar');
+      if (navBar) navBar.className = `max-w-lg mx-auto grid grid-cols-${Math.max(visibleCount, 1)} text-center text-[9px] font-medium text-slate-400`;
+
+      // Tabul "Astăzi" devine un sumar al noutăților din modulele permise, nu conținutul complet al proprietarului
+      const todayOwner = document.getElementById('todayOwnerContent');
+      const todayShared = document.getElementById('todaySharedSummary');
+      if (allowedModules.includes('today')) {
+        if (todayOwner) todayOwner.classList.add('hidden');
+        if (todayShared) todayShared.classList.remove('hidden');
+        renderSharedTodaySummary(allowedModules);
+      }
+
+      // Prima inițializare: comutăm pe primul modul permis și afișăm mesajul de bun venit
+      if (!sharedModeInitialized) {
+        sharedModeInitialized = true;
+        const firstNavModule = allowedModules.find(m => m !== 'inventar') || (sharedOnlyShowsInventar ? 'more' : allowedModules[0]);
+        switchTab(firstNavModule);
+        showToast(`Bine ai venit, ${deviceName}!`);
+      }
+    }
+
+    function renderSharedTodaySummary(allowedModules) {
+      const container = document.getElementById('todaySharedSummary');
+      if (!container) return;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      let html = `<div class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">📋 Noutățile de astăzi</div>`;
+
+      if (allowedModules.includes('calendar')) {
+        const todaysActs = schoolActivities.filter(a => a.date === todayStr);
+        const monthStr = todayStr.substring(0, 7);
+        const monthActs = schoolActivities.filter(a => a.date.startsWith(monthStr));
+        const unpaid = monthActs.filter(a => !isActivitySettled(a.paymentStatus));
+        const unpaidSum = unpaid.reduce((s, a) => s + (a.total || 0), 0);
+        html += `
+          <div onclick="switchTab('calendar')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-cyan-600/60 active:scale-98 transition space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-cyan-300 uppercase tracking-wider">
+              <span>🎓 Școală</span>
+              <span class="bg-cyan-950 border border-cyan-800 px-2 py-0.5 rounded-full">${todaysActs.length} azi</span>
+            </div>
+            ${todaysActs.length === 0 ? '<p class="text-xs text-slate-400 italic">Nicio activitate programată astăzi.</p>' : todaysActs.map(a => `<p class="text-xs text-slate-200">• ${a.title} (${a.child}) • ${a.startHour || '08:00'}-${a.endHour || '16:00'}</p>`).join('')}
+            ${unpaid.length > 0 ? `<p class="text-[11px] text-amber-300 pt-1 border-t border-bordercol/40">⚠️ Restanță lună curentă: ${unpaidSum} Lei (${unpaid.length} activități)</p>` : ''}
+          </div>
+        `;
+      }
+
+      if (allowedModules.includes('cumparaturi')) {
+        const recent = [...allShopping].slice(-3).reverse();
+        html += `
+          <div onclick="switchTab('cumparaturi')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-emerald-600/60 active:scale-98 transition space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-emerald-300 uppercase tracking-wider">
+              <span>🛒 Cumpărături</span>
+              <span class="bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded-full">${allShopping.length} de luat</span>
+            </div>
+            ${recent.length === 0 ? '<p class="text-xs text-slate-400 italic">Lista este goală.</p>' : recent.map(x => `<p class="text-xs text-slate-200">• ${x.produs} <span class="text-slate-500">(${x.magazin})</span></p>`).join('')}
+          </div>
+        `;
+      }
+
+      if (allowedModules.includes('ganduri')) {
+        const latest = allGanduri[0];
+        html += `
+          <div onclick="switchTab('ganduri')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-600/60 active:scale-98 transition space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
+              <span>💡 Gânduri</span>
+              <span class="bg-amber-950 border border-amber-800 px-2 py-0.5 rounded-full">${allGanduri.length} total</span>
+            </div>
+            ${latest ? `<p class="text-xs text-slate-200 italic">"${latest.gand}"</p><p class="text-[10px] text-amber-400">— ${latest.sursa || 'Personal'}</p>` : '<p class="text-xs text-slate-400 italic">Niciun gând notat încă.</p>'}
+          </div>
+        `;
+      }
+
+      if (allowedModules.includes('pomelnic')) {
+        const todaysBirthdays = computeTodaysAnniversaries(getVisiblePeople());
+        html += `
+          <div onclick="switchTab('pomelnic')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-rose-600/60 active:scale-98 transition space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-rose-300 uppercase tracking-wider">
+              <span>📜 Pomelnic de Astăzi</span>
+              <span class="bg-rose-950 border border-rose-800 px-2 py-0.5 rounded-full">${currentDailyPomelnicVii.length + currentDailyPomelnicAdormiti.length} persoane</span>
+            </div>
+            <p class="text-xs text-slate-200">🌱 ${currentDailyPomelnicVii.length} Vii • † ${currentDailyPomelnicAdormiti.length} Adormiți</p>
+            ${todaysBirthdays.length > 0 ? `<p class="text-[11px] text-amber-300 pt-1 border-t border-bordercol/40">🎉 ${todaysBirthdays.length} aniversare(ri) astăzi</p>` : ''}
+          </div>
+        `;
+      }
+
+      if (allowedModules.includes('inventar')) {
+        const overdueItems = allInventory.filter(it => isMaintenanceOverdue(it));
+        html += `
+          <div onclick="switchTab('more'); switchSubTab('inventar');" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-violet-600/60 active:scale-98 transition space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-violet-300 uppercase tracking-wider">
+              <span>📦 Inventar</span>
+              <span class="bg-violet-950 border border-violet-800 px-2 py-0.5 rounded-full">${allInventory.length} obiecte</span>
+            </div>
+            ${overdueItems.length > 0 ? `<p class="text-[11px] text-rose-400 font-bold">⚠️ ${overdueItems.length} obiecte cu mentenanță depășită</p>` : '<p class="text-xs text-slate-400 italic">Nicio mentenanță restantă.</p>'}
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
     }
   </script>
 </body>

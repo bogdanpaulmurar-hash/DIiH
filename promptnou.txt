@@ -1,0 +1,38 @@
+lucreaza sa imbunatatesti utrmatoarele
+
+1. Setari: 
+a. Sincronizare durează mult sau nu se salveaza
+b. Poza aplicatiei nu rămâne salvata - oricum fac ca sa incerc sa salvez, sterg aplicatia o reinstalez si asa mai departe, nu merge. nu ramane schimbata din setari, chiar si daca apas butonul de salvare in cloud cum mi se indica. as vrea din setari cea cu denumirea Sigiliu Monastic Auriu  - Rotund - Rugaciunea lui lisus insa nu o am va fisier ca sa o schimb in sw.js. ttotusi daca e functie in setari in aplicatie, sa se poata shcimba, si am deja cateva optiuni, fa functionala sectiunea. si spune-mi cum pot sa caut sau sa fac eu alte imagini cu alt chat in alt AI de ce sa tin cont si cum sa pun in fisier sau in ce fisier sa includ pozele. sau in registrul de pe google sheets?
+c. Inserezi o legătură directa spre registrul din google sheets din setari si sa mi se deschida fie in browser pe laptop fie in aplicatia sheets de pe telefon. 
+
+2.Pomelnic
+
+a. Persoanele din pomelnic dacă le editez nu pot adauga data nașterii sau adormirii. Adauga mai multe câmpuri ca in sheet. Tot ce am acolo și pot edita ca sa apara in aplicatie, permite-mi sa adaug și de aici din modul de editare din aplicatie
+
+b. In pomenire pe zi, poza atasata, si acel dropvown sa fie repozitionat sub categorie in bucla intreaga mai lunga, pentru ca pe telefon se strica afisajul si merge pagina mai in dreapta si arata urat. eventual pe acea bucla, ca ramane loc poti regandi si acele filtre. 
+
+c. adauga buton de plus, prin care creez un nou rand in excel cu o noua persoana putand completa toate casutele relevante din excel. In excel va ajunge persoana pe ultimul rand. te rog sa ai in vedere ca in excel sunt cateva campuri cu dropdown si sa incluzi si ce anume se gaseste in casuta corespunzatoare ca valori de alegere din acel dropdown complet. 
+
+
+3. scoala
+
+a. Culoarea balonului inserat nu ramane ca cea setata. se salveaza initial cu culoarea din panou, apare in calendar cu culoarea setata iar dupa cateva secunde se schimba pe auto. 
+b. cand intru pe acele 3 sectiuni din sumar financiar vad inregistrarile pe care le pot selecta si sa le marchez ca achitate. cele cre deja sunt achitate ar trebui sa nu mai poata fi selectate, din moment ce sunt achitate. imi mai apare un text pe care nu il inteleg din acea sectiune si am atasat imaginea. 4h - pe ore- undefined-undefined.
+c. mai am o sectiune mai jos cu adauga editeaza activitate unde pe randul 4 nu sunt denumite campurile. ce reprezinta fiecare. in campul cu in asteptare si achitat mai introdu si fara plata, abonament, 
+d. insereaza posibilitatea de a face un raport detaliat pe o perioada predefinita sau fixa (cateva selectii la alegere) care sa include tot ce a fost inregistrat frumos explicat in diagrame sau tabele cu toate detaliile si cu cu sumar frumos ca in aplicatie. 
+
+4. mi se pare ca inca este un delay de singronizare si as vrea sa mai verifici aceasta, poate mai poti imbunatati situatia. 
+
+5. cand apas pe butonul mai multe, sa sara direct pe setari, nu pe psaltire. 
+
+6. pot sa ofer acces unui utilizator cu cont goole in aplicatie? putem sub tabul de mai multe sa includem inca un tab cu Admin unde sa includem treptat niste setari avansate. in prima faza vreau sa gandim si sa implementam o modalitate de a putea sa o autorizez pe sotia mea, care are cont google pe aceasta aplicatie, insa as vrea sa la ea sa apara doar ce selectez eu. vreau ca acea sectioned e admin sa imi permita sa gestionez accesul, ce anume sa se vada, ce anume sa poata face, cum sa se numeasca aplicatia pentru persoanele cu care partajez, ce poza sa aiba aplicatia, si de asemenea unde va avea acces si va realiza inregistrari, sa se stie cine a scris aceasta lista de cumparaturi de exemplu. in principiu atat as vrea sa partajez, scoala si lista de cumparaturi care sa fie in mod live la ea pe telefon sau in browser pe laptop. ea are iphine, deci trebuie sa gandim sa se potriveasca vizual totul si acolo.
+
+7. Tab nou in setari care sa se numeasca Inventar si in care sa dezvoltam un tool prin care pot tine evidenta lucrurilor personale cu poze si cu locatie avand mai multe spatii de depozitare. lista sa fie searchable si sa fie cu functii elaborate de inregistrare. mentenanta, mutare produse dintr-un spatiu in altul si tot ce ar mai fi nevoie pentur o aplicatie de inventariere care poate fi folosita in acest tip de aplicatie. 
+
+
+----
+prompt nou
+
+1. In aplicatia partajata, daca aleg sa partajez pomenlic, deschide in admin o sectiune pentru pomelnic cu categoriile de persoane care le pot partaja. nu vreau sa partajez tot, numai ce aleg eu. ar fi mai bine sa creem un sheet nou pentru acest scenariu? pentru ca as putea copia usor persoanele care trebuie. din datele de nastere sau adormire faci identic ca la mine in astazi lista de aniversari unde apar toti. lista de aniversari poate trimite notificare pe device cu numele persoanei care are aniversatre si cu varsta in lume sau daca e adormit cu varsta care ar fi putut sa o aiba daca mai e in viata + de cati ani a adormit? cred ca functia si calculul pentru a arata varsta la adormiti e deja descrisa la mine. sau in _Cod.gs_cod_din_skript.google.com.txt. vreau sa includem un sistem de notificare pentru aniversari cu nume celui aniversat  si notificari individuale pentru fiecare aniversare la o anumita ora din zi pe care o setez din setarea pe care imi spui unde o introduci. (notificari ar fi mai logic)
+
+
