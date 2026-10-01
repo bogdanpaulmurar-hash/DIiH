@@ -235,7 +235,13 @@
 
         <div class="flex items-center justify-between">
           <button onclick="changeSchoolPeriod(-1)" class="p-2 bg-darkbg rounded-xl border border-bordercol hover:text-cyan-400 text-xs">◀ Înapoi</button>
-          <h2 id="calendarMonthTitle" class="text-xs font-bold text-white uppercase tracking-wider"></h2>
+          <div class="flex items-center space-x-2">
+            <h2 id="calendarMonthTitle" class="text-xs font-bold text-white uppercase tracking-wider"></h2>
+            <button onclick="jumpToCurrentSchoolMonth()" class="text-[10px] bg-amber-950 border border-amber-600 text-amber-200 px-2 py-0.5 rounded-lg hover:bg-amber-900 font-bold transition flex items-center space-x-1" title="Mergi direct la luna și ziua curentă">
+              <span>📅</span>
+              <span>Astăzi</span>
+            </button>
+          </div>
           <button onclick="changeSchoolPeriod(1)" class="p-2 bg-darkbg rounded-xl border border-bordercol hover:text-cyan-400 text-xs">Înainte ▶</button>
         </div>
 
@@ -272,11 +278,19 @@
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3 text-xs">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <span class="font-bold text-cyan-300 uppercase tracking-wider">📋 Activități pe Zilele Selectate (<span id="selectedDaysBadge">0</span>)</span>
+          <button onclick="clearSelectedSchoolDays()" class="text-[10px] text-slate-400 hover:text-white border border-slate-700 px-2 py-0.5 rounded">Deselectează tot</button>
         </div>
 
+        <!-- Zonă activități comune la calup și listă pe zile -->
+        <div id="schoolCommonActivitiesBar" class="hidden p-2.5 bg-darkbg border border-cyan-800 rounded-xl space-y-2"></div>
         <div id="selectedDayActivitiesList" class="space-y-1.5 divide-y divide-bordercol/40"></div>
 
         <div class="pt-2 border-t border-bordercol space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 id="schoolFormTitle" class="font-bold text-cyan-300 uppercase text-xs">➕ Adaugă / Editează Activitate</h3>
+            <span id="schoolEditModeBadge" class="hidden text-[10px] bg-amber-950 border border-amber-700 text-amber-200 px-2 py-0.5 rounded-full font-bold">Mod Editare</span>
+          </div>
+          <div id="schoolEditInfoBanner" class="hidden p-2 bg-amber-950/40 border border-amber-800 rounded-lg text-[11px] text-amber-200"></div>
           <div class="grid grid-cols-2 gap-2">
             <input type="text" id="schoolChild" placeholder="Copil (ex: Paul / Maria)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
             <input type="text" id="schoolInstitution" placeholder="Instituție (ex: Școala 11 / Meditații)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
@@ -347,9 +361,12 @@
             </div>
           </div>
 
-          <div class="flex space-x-2 pt-1">
-            <button onclick="saveSchoolActivity()" class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-white font-medium py-2.5 rounded-xl transition">💾 Salvează Activitate</button>
-            <button onclick="clearSelectedSchoolDays()" class="bg-slate-800 text-slate-400 px-3 py-2.5 rounded-xl">Anulează</button>
+          <div class="space-y-2 pt-1">
+            <div class="flex space-x-2">
+              <button id="btnSaveSchoolAct" onclick="saveSchoolActivity()" class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-white font-medium py-2.5 rounded-xl transition">💾 Salvează Activitate</button>
+              <button id="btnCancelSchoolEdit" onclick="cancelSchoolActivityEdit()" class="hidden bg-slate-800 text-slate-300 px-3 py-2.5 rounded-xl">Anulează Editarea</button>
+            </div>
+            <button id="btnBulkApplySchoolAct" onclick="saveSchoolActivityBulk()" class="hidden w-full bg-amber-700 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl transition text-xs">🔁 Aplică Modificarea pe TOATE Zilele Selectate care au această activitate</button>
           </div>
         </div>
       </div>
@@ -546,6 +563,42 @@
             </button>
           </div>
 
+          <!-- Pictograme Noi Propuse (Vectoriale SVG) -->
+          <div class="border-b border-bordercol pb-3 space-y-2">
+            <h4 class="font-bold text-amber-300 uppercase tracking-wider text-xs">🎨 Pictograme Propuse pentru Aplicație</h4>
+            <p class="text-[10px] text-slate-400">Apasă pe oricare emblemă pentru a o testa instantaneu pe favicon și header:</p>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <button onclick="setAppCustomIcon('./icons/icon-orthodox-cross.svg', '☦️')" class="p-2 bg-darkbg border border-bordercol hover:border-amber-400 rounded-lg flex items-center space-x-2 text-left transition">
+                <img src="./icons/icon-orthodox-cross.svg" class="w-7 h-7 rounded-md">
+                <div class="truncate">
+                  <span class="font-bold text-white block text-[11px] truncate">Cruce Ortodoxă</span>
+                  <span class="text-[9px] text-slate-400">Bizantină aurie</span>
+                </div>
+              </button>
+              <button onclick="setAppCustomIcon('./icons/icon-monogram-diih.svg', '🧭')" class="p-2 bg-darkbg border border-bordercol hover:border-cyan-400 rounded-lg flex items-center space-x-2 text-left transition">
+                <img src="./icons/icon-monogram-diih.svg" class="w-7 h-7 rounded-md">
+                <div class="truncate">
+                  <span class="font-bold text-white block text-[11px] truncate">Monogramă DIiH</span>
+                  <span class="text-[9px] text-slate-400">Busolă cerească</span>
+                </div>
+              </button>
+              <button onclick="setAppCustomIcon('./icons/icon-psaltire-candle.svg', '🕯️')" class="p-2 bg-darkbg border border-bordercol hover:border-rose-400 rounded-lg flex items-center space-x-2 text-left transition">
+                <img src="./icons/icon-psaltire-candle.svg" class="w-7 h-7 rounded-md">
+                <div class="truncate">
+                  <span class="font-bold text-white block text-[11px] truncate">Candelă Psaltire</span>
+                  <span class="text-[9px] text-slate-400">Flacără rugăciune</span>
+                </div>
+              </button>
+              <button onclick="setAppCustomIcon('./icons/icon-heart-cross.svg', '🤍')" class="p-2 bg-darkbg border border-bordercol hover:border-pink-400 rounded-lg flex items-center space-x-2 text-left transition">
+                <img src="./icons/icon-heart-cross.svg" class="w-7 h-7 rounded-md">
+                <div class="truncate">
+                  <span class="font-bold text-white block text-[11px] truncate">Inimă & Cruce</span>
+                  <span class="text-[9px] text-slate-400">Dragoste pomenire</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <div class="border-b border-bordercol pb-3 space-y-2">
             <h4 class="font-bold text-white uppercase tracking-wider">🎨 Personalizare Brand (Cloud)</h4>
             <div class="grid grid-cols-3 gap-2">
@@ -658,6 +711,22 @@
           <div class="flex items-center justify-between border-b border-bordercol pb-1">
             <span class="font-bold text-emerald-400 uppercase text-[11px]">📿 Pomenirea Grupului pentru Catisma Zilei:</span>
             <button onclick="printPsaltireGrupAltarPDF()" class="text-[10px] bg-amber-950 border border-amber-800 text-amber-200 px-2 py-0.5 rounded font-bold">⛪ Tipar Altar</button>
+          </div>
+
+          <!-- Selector Pomenire Grup Psaltire (Rotație zilnică) -->
+          <div class="flex items-center justify-between bg-darkbg p-2 rounded-xl border border-bordercol">
+            <div class="flex items-center space-x-1.5">
+              <span class="text-[11px] text-rose-300 font-bold whitespace-nowrap">📿 Pomenire grup:</span>
+              <select id="modalPsaltireBatchSelect" onchange="handlePsaltireBatchChange(this.value)" class="bg-cardbg text-rose-300 font-bold border border-rose-800 rounded px-2 py-1 text-xs">
+                <option value="10">10 / zi</option>
+                <option value="15">15 / zi</option>
+                <option value="20">20 / zi</option>
+                <option value="30">30 / zi</option>
+                <option value="50">50 / zi</option>
+                <option value="ALL">Toți (Grup complet)</option>
+              </select>
+            </div>
+            <span id="modalPsaltireRosterStats" class="text-[10px] text-slate-400 font-mono"></span>
           </div>
 
           <!-- Bară de căutare dedicată în modalul Catismei -->
@@ -1052,9 +1121,35 @@
           btn.className = "flex flex-col items-center space-y-1 text-slate-400 hover:text-white";
         }
       });
-      if (tabId === 'calendar') renderSchoolDisplay();
+      if (tabId === 'calendar') {
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (selectedSchoolDays.size === 0) {
+          selectedSchoolDays.add(todayStr);
+        }
+        renderSchoolDisplay();
+      }
       if (tabId === 'more') renderPsaltireGrupList();
       // Spam switch_tab eliminat conform cerintelor v17
+    }
+
+    function jumpToCurrentSchoolMonth() {
+      currentSchoolDate = new Date();
+      const todayStr = new Date().toISOString().split('T')[0];
+      selectedSchoolDays.clear();
+      selectedSchoolDays.add(todayStr);
+      renderSchoolDisplay();
+      showToast("Calendar centrat pe ziua curentă!");
+    }
+
+    function setAppCustomIcon(iconPath, emoji) {
+      updateDynamicFavicon(emoji);
+      appLogo = emoji;
+      document.getElementById('headerAppLogo').textContent = emoji;
+      const logoInput = document.getElementById('settingAppLogo');
+      if (logoInput) logoInput.value = emoji;
+      localStorage.setItem('diih_app_logo', emoji);
+      showToast(`Emblemă setată: ${emoji}! Apasă Salvează în Cloud.`);
+      logEventToCloud('update_icon', 'branding', emoji, `Emblemă actualizată la ${emoji}`);
     }
 
     function switchSubTab(subId) {
@@ -1396,7 +1491,19 @@
       setTimeout(() => { printContainer.classList.add('hidden'); printContainer.innerHTML = ''; }, 1000);
     }
 
-    // 4. POMELNICUL GRUPULUI DE PSALTIRE (INTEGRAT ÎN CATISMĂ, BALANȚĂ CLER / GRUP, BOLNAVI TOȚI)
+    // 4. POMELNICUL GRUPULUI DE PSALTIRE (INTEGRAT ÎN CATISMĂ CU ROTAȚIE ZILNICĂ & SELECTOR BATCH)
+    function handlePsaltireBatchChange(val) {
+      psaltireBatchSize = (val === 'ALL') ? 'ALL' : (parseInt(val, 10) || 20);
+      localStorage.setItem('diih_psaltire_batch_size', psaltireBatchSize.toString());
+      renderModalPsaltireDailyRoster();
+      showToast(`Pomenire Psaltire: ${val} persoane/zi (ciclu rotativ)`);
+      logEventToCloud('update_psaltire_batch', 'psaltire', 'batchSize', `Număr pomenire psaltire setat la ${val}`);
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&psaltireBatchSize=${encodeURIComponent(psaltireBatchSize)}&callback=void`;
+      document.body.appendChild(script);
+    }
+
     function renderModalPsaltireDailyRoster() {
       const cont = document.getElementById('modalPsaltireDailyRoster');
       if (!cont) return;
@@ -1408,35 +1515,73 @@
 
       const q = document.getElementById('modalPsaltireSearchInput') ? document.getElementById('modalPsaltireSearchInput').value.toLowerCase().trim() : '';
 
-      // Filtrare
+      // Filtrare persoane neexcluse
       let filtered = psaltireGrupData.filter(x => !x.exclusLaPomenire);
       if (q !== '') {
-        filtered = filtered.filter(x => x.persoanaRaw.toLowerCase().includes(q) || x.sectiune.toLowerCase().includes(q));
+        filtered = filtered.filter(x => (x.persoanaRaw || '').toLowerCase().includes(q) || (x.sectiune || '').toLowerCase().includes(q));
       }
 
-      const cler = filtered.filter(x => x.sectiune === 'Parinti Duhovnici');
-      const grup = filtered.filter(x => x.sectiune === 'Grup Psaltire');
-      const bolnavi = filtered.filter(x => x.sectiune === 'Copii bolnavi / alte nevoi');
+      // Potrivire robustă indiferent de diacritice sau majuscule
+      const cler = filtered.filter(x => {
+        const s = (x.sectiune || '').toLowerCase();
+        return s.includes('parinti') || s.includes('duhovnici') || s.includes('cler');
+      });
+      const grup = filtered.filter(x => {
+        const s = (x.sectiune || '').toLowerCase();
+        return s.includes('grup') || s.includes('psaltir');
+      });
+      const bolnavi = filtered.filter(x => {
+        const s = (x.sectiune || '').toLowerCase();
+        return s.includes('bolnav') || s.includes('nevoi');
+      });
+
+      // Calcul ciclu rotativ pe baza datei
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const base = new Date(BASE_DATE.getTime());
+      base.setHours(0,0,0,0);
+      const diffDays = Math.max(0, Math.round((today.getTime() - base.getTime()) / (1000 * 60 * 60 * 24)));
+
+      // 1. Cler (Rotație câte 5 pe zi prin cei 108 clerici)
+      const clerBatch = 5;
+      const startCler = cler.length > 0 ? ((diffDays * clerBatch) % cler.length) : 0;
+      const displayCler = [];
+      for (let i = 0; i < Math.min(clerBatch, cler.length); i++) {
+        displayCler.push(cler[(startCler + i) % cler.length]);
+      }
+
+      // 2. Grup Psaltire (Rotație ciclică după selectorul de batch)
+      const batchGrup = (psaltireBatchSize === 'ALL') ? grup.length : (parseInt(psaltireBatchSize, 10) || 20);
+      const startGrup = grup.length > 0 ? ((diffDays * batchGrup) % grup.length) : 0;
+      const displayGrup = [];
+      for (let i = 0; i < Math.min(batchGrup, grup.length); i++) {
+        displayGrup.push(grup[(startGrup + i) % grup.length]);
+      }
+      const ciclulNum = grup.length > 0 ? (Math.floor((diffDays * batchGrup) / grup.length) + 1) : 1;
+
+      // Actualizare selector și etichetă stats
+      const batchSel = document.getElementById('modalPsaltireBatchSelect');
+      if (batchSel) batchSel.value = psaltireBatchSize.toString();
+      const statsEl = document.getElementById('modalPsaltireRosterStats');
+      if (statsEl) statsEl.textContent = `${displayGrup.length}/${grup.length} pers. (Ciclul ${ciclulNum})`;
 
       let html = '';
 
-      // 1. Cler (Calcul ciclic pe baza datei)
-      if (cler.length > 0) {
-        html += `<div class="font-bold text-amber-300 py-1">Părinți Duhovnici (Cler):</div>`;
-        html += cler.slice(0, 5).map(c => `<div class="py-0.5 text-slate-200 pl-2">• ${c.persoanaRaw}</div>`).join('');
+      // Afișare Cler
+      if (displayCler.length > 0) {
+        html += `<div class="font-bold text-amber-300 py-1 flex items-center justify-between"><span>Părinți Duhovnici (${displayCler.length} pomeniți azi din ${cler.length}):</span></div>`;
+        html += displayCler.map(c => `<div class="py-0.5 text-slate-200 pl-2">• ${c.persoanaRaw} <span class="text-[9px] text-slate-500">(${c.subgrupColoana || 'Coloana'})</span></div>`).join('');
       }
 
-      // 2. Membri de rând ai Catismei
-      if (grup.length > 0) {
-        html += `<div class="font-bold text-emerald-300 pt-2 pb-1">Membrii Grupului de rând (Catisma ${currentCatismaNum}):</div>`;
-        const catismaSpecific = grup.filter(x => x.catisma.includes(currentCatismaNum.toString()) || x.subgrupColoana.includes(currentCatismaNum.toString()));
-        const displayGrup = catismaSpecific.length > 0 ? catismaSpecific : grup.slice(0, 15);
-        html += displayGrup.map(m => `<div class="py-0.5 text-slate-200 pl-2">• ${m.persoanaRaw} <span class="text-[9px] text-slate-500">(${m.subgrupColoana})</span></div>`).join('');
+      // Afișare Membri de rând ai Catismei cu rotație
+      if (displayGrup.length > 0) {
+        html += `<div class="font-bold text-emerald-300 pt-2 pb-1 flex items-center justify-between"><span>Membrii Grupului de rând (${displayGrup.length} pomeniți azi din ${grup.length}):</span></div>`;
+        html += displayGrup.map(m => `<div class="py-0.5 text-slate-200 pl-2">• ${m.persoanaRaw} <span class="text-[9px] text-slate-500">(${m.subgrupColoana || 'Grup'})</span></div>`).join('');
       }
 
-      // 3. Copii bolnavi / alte nevoi (TOȚI DEODATĂ)
+      // Afișare Copii bolnavi / alte nevoi (Toți)
       if (bolnavi.length > 0) {
-        html += `<div class="font-bold text-rose-300 pt-2 pb-1">Copii bolnavi / alte nevoi (Toți deodată):</div>`;
+        html += `<div class="font-bold text-rose-300 pt-2 pb-1">Copii bolnavi / alte nevoi (${bolnavi.length} persoane):</div>`;
         html += bolnavi.map(b => `<div class="py-0.5 text-slate-300 pl-2">• ${b.persoanaRaw}</div>`).join('');
       }
 
@@ -1862,9 +2007,20 @@
             `;
           }).join('');
 
+          const isToday = (dateStr === todayStr);
+          let cardClasses = 'border border-bordercol bg-darkbg';
+          if (isSelected) {
+            cardClasses = 'border-2 border-cyan-400 bg-slate-800';
+          } else if (isToday) {
+            cardClasses = 'border-2 border-amber-400/90 bg-amber-950/25 shadow-[0_0_12px_rgba(251,191,36,0.25)]';
+          }
+
           html += `
-            <div onclick="toggleSchoolDaySelection('${dateStr}')" class="h-16 p-1 rounded-xl ${isSelected ? 'border-2 border-cyan-400 bg-slate-800' : 'border border-bordercol bg-darkbg'} cursor-pointer hover:border-slate-500 transition flex flex-col justify-between overflow-hidden">
-              <span class="text-[10px] font-bold ${isSelected ? 'text-cyan-300' : 'text-slate-300'}">${d}</span>
+            <div onclick="toggleSchoolDaySelection('${dateStr}')" class="h-16 p-1 rounded-xl ${cardClasses} cursor-pointer hover:border-slate-400 transition flex flex-col justify-between overflow-hidden relative">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-bold ${isSelected ? 'text-cyan-300' : (isToday ? 'text-amber-300' : 'text-slate-300')}">${d}</span>
+                ${isToday ? '<span class="bg-amber-400 text-slate-950 text-[7px] font-black px-1 rounded uppercase tracking-tighter">AZI</span>' : ''}
+              </div>
               <div class="flex-1 overflow-hidden space-y-0.5">${actsHtml}</div>
             </div>
           `;
@@ -1952,18 +2108,63 @@
       renderSchoolDisplay();
     }
 
+    let editingSchoolActivity = null;
+
     function renderSelectedDayActivitiesList() {
       const container = document.getElementById('selectedDayActivitiesList');
+      const commonBar = document.getElementById('schoolCommonActivitiesBar');
       if (!container) return;
 
       if (selectedSchoolDays.size === 0) {
         container.innerHTML = `<p class="text-slate-500 italic py-1 text-center text-[11px]">Selectează zile din calendar pentru a adăuga sau vizualiza activități.</p>`;
+        if (commonBar) commonBar.classList.add('hidden');
         return;
       }
 
-      const activeDays = Array.from(selectedSchoolDays);
-      let html = '';
+      const activeDays = Array.from(selectedSchoolDays).sort();
 
+      // Identificare activități comune pe zilele selectate
+      const actsInSelection = schoolActivities.filter(a => selectedSchoolDays.has(a.date));
+      const activityGroups = {};
+      actsInSelection.forEach(a => {
+        const key = `${a.title}||${a.child}||${a.institution}`;
+        if (!activityGroups[key]) {
+          activityGroups[key] = { sample: a, dates: new Set(), ids: [] };
+        }
+        activityGroups[key].dates.add(a.date);
+        activityGroups[key].ids.push(a.id);
+      });
+
+      // Bară activități comune dacă sunt mai multe zile selectate
+      if (commonBar) {
+        const commonKeys = Object.keys(activityGroups);
+        if (activeDays.length > 1 && commonKeys.length > 0) {
+          let commonHtml = `<div class="font-bold text-cyan-300 text-[11px] pb-1 border-b border-bordercol/40">🔁 Activități comune în selecție (${activeDays.length} zile):</div><div class="space-y-1 pt-1">`;
+          commonKeys.forEach(key => {
+            const grp = activityGroups[key];
+            const smp = grp.sample;
+            const actColor = getSchoolActivityColor(smp);
+            commonHtml += `
+              <div class="p-2 bg-cardbg rounded-lg border border-bordercol flex items-center justify-between text-xs" style="border-left: 3px solid ${actColor};">
+                <div>
+                  <span class="font-bold text-white block">${smp.title} (${smp.child} - ${smp.institution})</span>
+                  <span class="text-[10px] text-slate-400">Prezentă în <strong>${grp.dates.size}</strong> din cele ${activeDays.length} zile selectate • ${smp.hours}h • ${smp.total} Lei [${smp.paymentStatus}]</span>
+                </div>
+                <button onclick="startEditSchoolActivity('${smp.id}', true)" class="px-2.5 py-1 bg-amber-900 border border-amber-700 text-amber-200 rounded text-[11px] font-bold hover:bg-amber-800 transition whitespace-nowrap">
+                  ✏️ Editează la calup
+                </button>
+              </div>
+            `;
+          });
+          commonHtml += `</div>`;
+          commonBar.innerHTML = commonHtml;
+          commonBar.classList.remove('hidden');
+        } else {
+          commonBar.classList.add('hidden');
+        }
+      }
+
+      let html = '';
       activeDays.forEach(d => {
         const acts = schoolActivities.filter(a => a.date === d);
         html += `<div class="py-1"><span class="font-bold text-cyan-300 block text-[11px]">${d}</span>`;
@@ -1972,14 +2173,18 @@
         } else {
           acts.forEach(a => {
             const actColor = getSchoolActivityColor(a);
+            const timeStr = (a.startHour && a.endHour && a.startHour !== 'undefined' && a.endHour !== 'undefined') ? `${a.startHour} - ${a.endHour} • ` : '';
             html += `
               <div class="flex items-center justify-between p-2 rounded-lg bg-darkbg border border-bordercol mt-1" style="border-left: 3px solid ${actColor};">
-                <div>
-                  <span class="font-bold text-white text-[11px]">${a.title} (${a.child} - ${a.institution})</span>
-                  <p class="text-[10px] text-slate-400">${a.startHour} - ${a.endHour} • ${a.hours}h • ${a.total} Lei [${a.paymentStatus}]</p>
+                <div class="overflow-hidden pr-2">
+                  <span class="font-bold text-white text-[11px] block truncate">${a.title} (${a.child} - ${a.institution})</span>
+                  <p class="text-[10px] text-slate-400">${timeStr}${a.hours || 1}h • ${a.total} Lei [${a.paymentStatus}]</p>
                   ${a.dayMessage ? `<p class="text-[9px] text-amber-300 italic">💬 ${a.dayMessage}</p>` : ''}
                 </div>
-                <button onclick="deleteSchoolActivity('${a.id}')" class="text-rose-400 p-1 hover:text-rose-300 text-xs">🗑️</button>
+                <div class="flex items-center space-x-1 shrink-0">
+                  <button onclick="startEditSchoolActivity('${a.id}', false)" class="text-cyan-400 p-1 hover:text-cyan-300 text-xs" title="Editează această activitate">✏️</button>
+                  <button onclick="deleteSchoolActivity('${a.id}')" class="text-rose-400 p-1 hover:text-rose-300 text-xs" title="Șterge">🗑️</button>
+                </div>
               </div>
             `;
           });
@@ -1988,6 +2193,62 @@
       });
 
       container.innerHTML = html;
+    }
+
+    function startEditSchoolActivity(actId, isBulk) {
+      const act = schoolActivities.find(a => a.id === actId);
+      if (!act) return;
+
+      editingSchoolActivity = { ...act, isBulk: isBulk };
+
+      document.getElementById('schoolChild').value = act.child || '';
+      document.getElementById('schoolInstitution').value = act.institution || '';
+      document.getElementById('schoolActTitle').value = act.title || '';
+      document.getElementById('schoolHours').value = act.hours || 1;
+      document.getElementById('schoolRate').value = act.rate || 0;
+      document.getElementById('schoolPaymentType').value = act.paymentType || 'Pe oră';
+      document.getElementById('schoolPaymentStatus').value = act.paymentStatus || 'În așteptare';
+      document.getElementById('schoolDeadline').value = (act.deadline && act.deadline !== '-') ? act.deadline.substring(0, 10) : '';
+      document.getElementById('schoolDayMessage').value = act.dayMessage || '';
+      if (document.getElementById('schoolColorSelect')) {
+        document.getElementById('schoolColorSelect').value = act.color || 'auto';
+      }
+
+      calcSchoolAutoTotal();
+
+      const badge = document.getElementById('schoolEditModeBadge');
+      if (badge) badge.classList.remove('hidden');
+
+      const banner = document.getElementById('schoolEditInfoBanner');
+      if (banner) {
+        const matchingDays = schoolActivities.filter(x => selectedSchoolDays.has(x.date) && x.title === act.title && x.child === act.child).length;
+        banner.innerHTML = `Se modifică activitatea: <strong>${act.title}</strong> (${act.child}). Modul: <strong>${isBulk ? 'La calup (' + matchingDays + ' zile)' : 'Individual pe ' + act.date}</strong>`;
+        banner.classList.remove('hidden');
+      }
+
+      document.getElementById('btnSaveSchoolAct').textContent = `💾 Salvează pe această zi (${act.date})`;
+      document.getElementById('btnCancelSchoolEdit').classList.remove('hidden');
+
+      const bulkBtn = document.getElementById('btnBulkApplySchoolAct');
+      if (bulkBtn && selectedSchoolDays.size > 1) {
+        bulkBtn.classList.remove('hidden');
+      }
+
+      document.getElementById('schoolFormTitle').textContent = "✏️ Editează Activitate";
+      showToast(`Activitatea ${act.title} încărcată pentru editare!`);
+    }
+
+    function cancelSchoolActivityEdit() {
+      editingSchoolActivity = null;
+      document.getElementById('schoolEditModeBadge').classList.add('hidden');
+      document.getElementById('schoolEditInfoBanner').classList.add('hidden');
+      document.getElementById('btnCancelSchoolEdit').classList.add('hidden');
+      document.getElementById('btnBulkApplySchoolAct').classList.add('hidden');
+      document.getElementById('btnSaveSchoolAct').textContent = "💾 Salvează Activitate";
+      document.getElementById('schoolFormTitle').textContent = "➕ Adaugă / Editează Activitate";
+      document.getElementById('schoolActTitle').value = '';
+      document.getElementById('schoolDayMessage').value = '';
+      calcSchoolAutoTotal();
     }
 
     function saveSchoolActivity() {
@@ -2014,6 +2275,38 @@
       const r3 = parseInt(document.getElementById('schoolRem3').value, 10) || 10;
       const pickupReminders = [r1, r2, r3];
 
+      // Dacă suntem în mod editare pe o activitate specifică
+      if (editingSchoolActivity) {
+        const targetAct = schoolActivities.find(a => a.id === editingSchoolActivity.id);
+        if (targetAct) {
+          targetAct.child = child;
+          targetAct.institution = institution;
+          targetAct.title = title;
+          targetAct.startHour = startHour;
+          targetAct.endHour = endHour;
+          targetAct.hours = hours;
+          targetAct.rate = rate;
+          targetAct.total = total;
+          targetAct.paymentType = paymentType;
+          targetAct.paymentStatus = paymentStatus;
+          targetAct.deadline = deadline;
+          targetAct.dayMessage = dayMessage;
+          targetAct.color = chosenColor;
+          targetAct.reminders = pickupReminders;
+        }
+        localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+        showToast("Activitate modificată cu succes!");
+
+        const script = document.createElement('script');
+        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify([targetAct]))}&callback=void`;
+        document.body.appendChild(script);
+
+        cancelSchoolActivityEdit();
+        renderSchoolDisplay();
+        return;
+      }
+
+      // Adăugare nouă pe zilele selectate
       const payload = [];
       selectedSchoolDays.forEach(dateStr => {
         const item = {
@@ -2045,6 +2338,50 @@
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(payload))}&callback=void`;
       document.body.appendChild(script);
 
+      renderSchoolDisplay();
+    }
+
+    function saveSchoolActivityBulk() {
+      if (!editingSchoolActivity) return;
+      const child = document.getElementById('schoolChild').value.trim() || "Copil";
+      const institution = document.getElementById('schoolInstitution').value.trim() || "-";
+      const title = document.getElementById('schoolActTitle').value.trim() || "Activitate";
+      const startHour = document.getElementById('schoolStartHour').value;
+      const endHour = document.getElementById('schoolEndHour').value;
+      const hours = parseFloat(document.getElementById('schoolHours').value) || 1;
+      const rate = parseFloat(document.getElementById('schoolRate').value) || 0;
+      const paymentType = document.getElementById('schoolPaymentType').value;
+      const paymentStatus = document.getElementById('schoolPaymentStatus').value;
+      const deadline = document.getElementById('schoolDeadline').value || "-";
+      const dayMessage = document.getElementById('schoolDayMessage').value.trim();
+      const colorSelect = document.getElementById('schoolColorSelect');
+      const chosenColor = colorSelect ? colorSelect.value : 'auto';
+      let total = (paymentType === 'Pe oră') ? (hours * rate) : rate;
+
+      const updatedPayload = [];
+      schoolActivities.forEach(a => {
+        if (selectedSchoolDays.has(a.date) && a.title === editingSchoolActivity.title && a.child === editingSchoolActivity.child) {
+          a.institution = institution;
+          a.hours = hours;
+          a.rate = rate;
+          a.total = total;
+          a.paymentType = paymentType;
+          a.paymentStatus = paymentStatus;
+          a.deadline = deadline;
+          a.dayMessage = dayMessage;
+          a.color = chosenColor;
+          updatedPayload.push(a);
+        }
+      });
+
+      localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+      showToast(`${updatedPayload.length} activități actualizate la calup!`);
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(updatedPayload))}&callback=void`;
+      document.body.appendChild(script);
+
+      cancelSchoolActivityEdit();
       renderSchoolDisplay();
     }
 
