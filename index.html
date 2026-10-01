@@ -605,7 +605,7 @@
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v18.0 (Build 2026-10-01)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v19.0 (Build 2026-10-01)</span>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
             <a href="https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit" target="_blank" rel="noopener" class="w-full flex items-center justify-center space-x-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 py-2 rounded-xl font-bold hover:bg-emerald-900 transition">
               <span>📑</span>
@@ -1282,7 +1282,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v18.0";
+    const APP_VERSION = "v19.0";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -1370,7 +1370,7 @@
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'DIiH v18 pornit');
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH 19 pornit');
 
       applySharedModeIfNeeded();
 
@@ -1626,7 +1626,7 @@
           switchSubTab(sharedAllowsInventar ? 'inventar' : 'notificari');
         }
       }
-      // Spam switch_tab eliminat conform cerintelor v18
+      // Spam switch_tab eliminat conform cerintelor v19
     }
 
     function jumpToCurrentSchoolMonth() {
@@ -3866,7 +3866,7 @@
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `diih_backup_v18_${Date.now()}.json`;
+      a.download = `diih_backup_v19_${Date.now()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
