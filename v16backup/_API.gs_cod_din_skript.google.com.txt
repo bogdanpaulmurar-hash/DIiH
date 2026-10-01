@@ -1,7 +1,7 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v17
- * Autor: Bogdan Murar (Z003FU5C) & DevPilot
- * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v16
+ * Autor: Bogdan Murar (Z003FU5C)
+ * Noutăți: LOG_Sistem Unificat, Suport Coloana C (isActivPomelnic), CRUD Psaltire Grup, Scoala Multi-View & Biblia 360
  */
 
 const API_SECURITY_TOKEN = "diih_secret_2026_bm";
@@ -25,11 +25,10 @@ function doGet(e) {
   const ss = getSpreadsheet();
   const action = e.parameter.action;
 
-  // 1. AUDIT AVANSAT ÎN LOG_Sistem
+  // 1. AUDIT CENTRALIZAT ÎN FOAIA UNICĂ LOG_Sistem
   if (action === "logEvent") {
     logToSystemSheet(ss, {
-      categorie: e.parameter.category || "AUDIT_APP",
-      runId: e.parameter.runId || "-",
+      categorie: "AUDIT_APP",
       sursa: e.parameter.deviceName || e.parameter.deviceId || "App",
       modul: e.parameter.entity || "General",
       actiune: e.parameter.appAction || "-",
@@ -41,26 +40,25 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
-  // 2. SETĂRI GLOBALE (Inclusiv Număr Persoane Pomelnic Zilnic)
+  // 2. SETĂRI GLOBALE
   if (action === "updateGlobalSettings") {
     let sh = ss.getSheetByName("Setari");
     if (!sh) {
       sh = ss.insertSheet("Setari");
       sh.appendRow(["Cheie", "Valoare", "UltimaModificare"]);
-      sh.getRange("A1:C1").setFontWeight("bold");
     }
-    if (e.parameter.appTitle) setSettingValue(sh, "app_title", e.parameter.appTitle);
-    if (e.parameter.appLogo) setSettingValue(sh, "app_logo", e.parameter.appLogo);
-    if (e.parameter.pomelnicBatchSize) setSettingValue(sh, "pomelnic_batch_size", e.parameter.pomelnicBatchSize);
-    if (e.parameter.psaltireBatchSize) setSettingValue(sh, "psaltire_batch_size", e.parameter.psaltireBatchSize);
+    setSettingValue(sh, "app_title", e.parameter.appTitle);
+    setSettingValue(sh, "app_logo", e.parameter.appLogo);
+    setSettingValue(sh, "pomelnic_batch_size", e.parameter.pomelnicBatchSize);
+    setSettingValue(sh, "psaltire_batch_size", e.parameter.psaltireBatchSize);
     return returnResponse(e, { success: true });
   }
 
-  // 3. SALVARE ACTIVITĂȚI ȘCOALĂ (Păstrează structura de 14 coloane a foii existente)
+  // 3. SALVARE ACTIVITĂȚI ȘCOALĂ
   if (action === "saveSchoolActivities") {
     let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
     if (!sh) {
-      sh = ss.insertSheet("Activitati_Scoala");
+      sh = ss.insertSheet("Scoala_Activitati");
       sh.appendRow(["ID", "Data", "Copil", "Institutie", "Titlu", "TipPlata", "Ore", "TarifOra", "TotalPlata", "StatusPlata", "TermenPlata", "MesajZi", "RemindereJson", "DataCreare"]);
       sh.getRange("A1:N1").setFontWeight("bold");
     }
@@ -70,47 +68,18 @@ function doGet(e) {
     activities.forEach(item => {
       deleteRowById(sh, item.id, 1);
       sh.appendRow([
-        item.id,
-        item.date,
-        item.child || "Copil",
-        item.institution || "-",
-        item.title,
-        item.paymentType || "Pe oră",
-        item.hours || 1,
-        item.rate || 0,
-        item.total || 0,
-        item.paymentStatus || "În așteptare",
-        item.deadline || "-",
-        item.dayMessage || "",
-        JSON.stringify(item.reminders || []),
-        dataCreare
+        item.id, item.date, item.child || "Copil", item.institution || "-", item.title,
+        item.paymentType || "Pe oră", item.hours || 1, item.rate || 0, item.total || 0,
+        item.paymentStatus || "În așteptare", item.deadline || "-", item.dayMessage || "",
+        JSON.stringify(item.reminders || []), dataCreare
       ]);
     });
-    return returnResponse(e, { success: true, count: activities.length });
+    return returnResponse(e, { success: true });
   }
 
   if (action === "deleteSchoolActivity") {
     let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
     if (sh && e.parameter.id) deleteRowById(sh, e.parameter.id, 1);
-    return returnResponse(e, { success: true });
-  }
-
-  // Actualizare în calup status plată (pentru restanțe rezolvate direct din sumar)
-  if (action === "batchUpdateSchoolStatus") {
-    let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
-    const ids = JSON.parse(e.parameter.ids || "[]");
-    const newStatus = e.parameter.status || "Achitat";
-    if (sh && ids.length > 0) {
-      const maxRows = sh.getLastRow();
-      if (maxRows >= 2) {
-        const idCol = sh.getRange(2, 1, maxRows - 1, 1).getValues();
-        for (let i = 0; i < idCol.length; i++) {
-          if (ids.indexOf(String(idCol[i][0]).trim()) !== -1) {
-            sh.getRange(i + 2, 10).setValue(newStatus); // Col J = StatusPlata
-          }
-        }
-      }
-    }
     return returnResponse(e, { success: true });
   }
 
@@ -120,12 +89,11 @@ function doGet(e) {
     if (!sh) {
       sh = ss.insertSheet("Psaltire_Grup");
       sh.appendRow(["Sectiune", "Subgrup_Coloana", "Numar_Rand", "Catisma", "Persoana_Raw", "Exclus_La_Pomenire"]);
-      sh.getRange("A1:F1").setFontWeight("bold");
     }
     sh.appendRow([
       e.parameter.sectiune || "Grup Psaltire",
       e.parameter.subgrup || "Coloana 1",
-      parseInt(e.parameter.numarRand, 10) || sh.getLastRow(),
+      parseInt(e.parameter.numarRand, 10) || (sh.getLastRow()),
       e.parameter.catisma || "",
       e.parameter.nume,
       e.parameter.exclus === "true" ? "DA" : "NU"
@@ -161,13 +129,8 @@ function doGet(e) {
     if (!sh) {
       sh = ss.insertSheet("Ganduri");
       sh.appendRow(["Gand", "Sursa", "Data"]);
-      sh.getRange("A1:C1").setFontWeight("bold");
     }
-    sh.appendRow([
-      e.parameter.gand,
-      e.parameter.sursa || "Personal",
-      Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss")
-    ]);
+    sh.appendRow([e.parameter.gand, e.parameter.sursa, Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss")]);
     return returnResponse(e, { success: true });
   }
 
@@ -196,9 +159,8 @@ function doGet(e) {
     if (!sh) {
       sh = ss.insertSheet("lista_cumparaturi");
       sh.appendRow(["Magazin", "Produs", "Cantitate"]);
-      sh.getRange("A1:C1").setFontWeight("bold");
     }
-    sh.appendRow([e.parameter.magazin || "General", e.parameter.produs, e.parameter.cantitate || "1"]);
+    sh.appendRow([e.parameter.magazin, e.parameter.produs, e.parameter.cantitate]);
     return returnResponse(e, { success: true });
   }
 
@@ -243,7 +205,18 @@ function doGet(e) {
     }
   }
 
-  // 8. SALVARE CONFIGURĂRI NOTIFICĂRI ÎN SHEET
+  if (action === "batchUpdateAtentie") {
+    let sh = ss.getSheetByName("Pomelnic");
+    const rawRows = e.parameter.rowIds || "";
+    const valBool = (e.parameter.necesitaAtentie === "true" || e.parameter.necesitaAtentie === true);
+    const rowList = rawRows.split(",").map(x => parseInt(x, 10)).filter(x => !isNaN(x) && x >= 2);
+    if (sh && rowList.length > 0) {
+      rowList.forEach(r => { if (r <= sh.getLastRow()) sh.getRange(r, 22).setValue(valBool); });
+      return returnResponse(e, { success: true, updatedCount: rowList.length });
+    }
+  }
+
+  // 8. SALVARE CONFIGURĂRI NOTIFICĂRI
   if (action === "saveNotificationConfigs") {
     let sh = ss.getSheetByName("Setari");
     if (!sh) {
@@ -254,7 +227,7 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
-  // 9. PRELUARE COMPLETĂ DATE PENTRU APLICAȚIE (RĂSPUNS 1:1)
+  // 9. PRELUARE COMPLETĂ DATE PENTRU APLICAȚIE
   const responseData = {
     settings: getSettingsData(ss),
     pomelnic: getPomelnicData(ss),
@@ -328,7 +301,7 @@ function getBiblia360Data(ss) {
 function getSchoolActivitiesData(ss) {
   let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
   if (!sh || sh.getLastRow() < 2) return [];
-  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 14).getValues();
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 13).getValues();
   return rows.map(r => ({
     id: r[0],
     date: r[1],
@@ -376,9 +349,11 @@ function getPomelnicData(ss) {
     let nume = (r[5] || "").toString().trim();
     if (!prenume && !nume) return;
     
+    // Normalizare Coloana C: (F) Activ_Inactiv/calcul_pomelnic
     let valC = r[2];
     let isActivPomelnic = (valC === true || valC === "TRUE" || valC === "true" || valC === 1 || valC === "1");
     
+    // Coloana V: NECESITA_Atentie!!!
     let valV = r[21];
     let necesitaAtentie = (valV === true || valV === "TRUE" || valV === "true" || valV === 1 || valV === "1");
 
@@ -440,6 +415,9 @@ function deleteRowById(sheet, targetVal, colIndex) {
   }
 }
 
+/**
+ * FOAIA UNIFICATĂ DE LOGURI SISTEM (Înlocuiește cele 4 foi vechi)
+ */
 function logToSystemSheet(ss, d) {
   let sh = ss.getSheetByName("LOG_Sistem");
   if (!sh) {
