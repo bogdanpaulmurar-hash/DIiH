@@ -1,7 +1,11 @@
-const CACHE_NAME = 'diih-cache-v17';
+const CACHE_NAME = 'diih-cache-v18';
 const ASSETS = [
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icons/icon-monograma-hristos-brancoveneasca.svg',
+  './icons/icon-sigiliu-monograma-hristos.svg',
+  './icons/icon-sigiliu-gravura-monograma.svg',
+  './icons/icon-orthodox-cross.svg'
 ];
 
 self.addEventListener('install', (e) => {
@@ -47,4 +51,16 @@ self.addEventListener('message', (event) => {
     const { title, options } = event.data;
     self.registration.showNotification(title, options);
   }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow('./index.html');
+    })
+  );
 });

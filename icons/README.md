@@ -1,26 +1,38 @@
 # Propuneri și Ghid Schimbare Pictograme (Icons) — DIiH Hub
 
-În acest folder sunt generate 4 variante de pictograme vectoriale SVG de înaltă rezoluție (scalabile la orice dimensiune fără pierderi de calitate), create special pentru profilul duhovnicesc și personal al aplicației DIiH:
+În acest folder sunt generate variante de pictograme vectoriale SVG de înaltă rezoluție (scalabile la orice dimensiune fără pierderi de calitate), create special pentru profilul duhovnicesc și personal al aplicației DIiH:
 
 ---
 
-## Variantele create:
+## ☦️ Variantele Brâncovenești și Tradiționale (Create conform imaginilor transmise):
 
-1. **`icon-orthodox-cross.svg` (Crucea Ortodoxă Bizantină & Raze)**
+1. **`icon-monograma-hristos-brancoveneasca.svg` (Placă Pictată în Stil Brâncovenesc)**
+   - **Simbol:** Inspirată 1:1 din icoana pictată pe lemn: câmp carmin-teracotă cald, bordură perlată brâncovenească (șirag de mărgăritare), colțuri și rozete florale tradiționale, inel circular cu Rugăciunea lui Iisus („DOAMNE IISUSE HRISTOASE, FIUL LUI DUMNEZEU, MILUIEȘTE-MĂ PE MINE PĂCĂTOSUL †”) și medalion central cu Monograma lui Hristos (Chi-Rho / ☧ cu capete înmugurite, Alfa și Omega).
+   - **Recomandare:** Emblema principală, autentică și caldă pentru aplicație.
+
+2. **`icon-sigiliu-monograma-hristos.svg` (Sigiliu Monastic Bizantin Auriu)**
+   - **Simbol:** Sigiliu rotund monastic pe fundal închis cu bordură gravată dublă, Rugăciunea lui Iisus scrisă circular și Monograma Hristică (Chi-Rho, Alfa, Omega) cu finisaj auriu.
+   - **Recomandare:** Variantă solemnă, perfectă ca emblemă rotundă pe telefon și laptop.
+
+3. **`icon-sigiliu-gravura-monograma.svg` (Gravură Tradițională Alb-Negru)**
+   - **Simbol:** Sigiliul gravat autentic alb-negru / tuș tradițional (identic cu prima schiță atașată).
+   - **Recomandare:** Contrast maxim, stil xilogravură mănăstirească veche.
+
+---
+
+## Alte Variante Disponibile:
+
+4. **`icon-orthodox-cross.svg` (Crucea Ortodoxă Bizantină & Raze)**
    - **Simbol:** Cruce aurie bizantină pe fundal profund albastru-noapte (`#090d16` -> `#1e293b`), cu nimb de lumină caldă.
-   - **Recomandare:** Varianta clasică, solemnă, ideală pentru Psaltire și Pomelnic.
 
-2. **`icon-monogram-diih.svg` (Monograma Stil DIiH — Hristos Monogram IC-XC / Cale & Busolă)**
-   - **Simbol:** Monograma aurie `DIiH` înscrisă într-un cerc de lumină și navigație duhovnicească (busolă cerească).
-   - **Recomandare:** Identitate de brand personalizată, modernă și discretă.
+5. **`icon-monogram-diih.svg` (Monograma Stil DIiH — Busolă Cerească)**
+   - **Simbol:** Monograma aurie `DIiH` înscrisă într-un cerc de lumină și navigație duhovnicească.
 
-3. **`icon-psaltire-candle.svg` (Candela Aprinsă & Cartea Deschisă)**
+6. **`icon-psaltire-candle.svg` (Candela Aprinsă & Cartea Deschisă)**
    - **Simbol:** Candelă aprinsă cu flacără aurie deasupra Psaltirii deschise.
-   - **Recomandare:** Pentru rugăciune, pravilă și veghere duhovnicească.
 
-4. **`icon-heart-cross.svg` (Inima Pomenirii & Crucea Duhovnicească)**
+7. **`icon-heart-cross.svg` (Inima Pomenirii & Crucea Duhovnicească)**
    - **Simbol:** O inimă purpurie caldă îmbrățișată de o cruce aurie discretă, cu raze celeste.
-   - **Recomandare:** Păstrează ideea inimii (dragostea pentru cei vii și cei adormiți), însă cu elevație grafică duhovnicească.
 
 ---
 

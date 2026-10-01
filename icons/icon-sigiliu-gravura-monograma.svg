@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <path id="engravingPrayerPath" d="M 256,92 A 164,164 0 1,1 255.9,92" fill="none"/>
+  </defs>
+
+  <!-- White background circle with subtle cream tone -->
+  <circle cx="256" cy="256" r="248" fill="#ffffff" stroke="#111827" stroke-width="7"/>
+
+  <!-- Thick Outer Border -->
+  <circle cx="256" cy="256" r="236" fill="none" stroke="#111827" stroke-width="3"/>
+  <circle cx="256" cy="256" r="226" fill="none" stroke="#111827" stroke-width="2" stroke-dasharray="4,5"/>
+
+  <!-- Inner Inscription Border -->
+  <circle cx="256" cy="256" r="148" fill="none" stroke="#111827" stroke-width="3.5"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#111827" stroke-width="2" stroke-dasharray="4,5"/>
+
+  <!-- Center Circle -->
+  <circle cx="256" cy="256" r="134" fill="#fafaf9" stroke="#111827" stroke-width="2"/>
+
+  <!-- Circular Romanian Jesus Prayer in Engraved Style -->
+  <text fill="#111827" font-family="'Times New Roman', Georgia, serif" font-size="18.5" font-weight="900" letter-spacing="3.2">
+    <textPath href="#engravingPrayerPath" startOffset="50%" text-anchor="middle">
+      DOAMNE IISUSE HRISTOASE, FIUL LUI DUMNEZEU, MILUIEȘTE-MĂ PE MINE PĂCĂTOSUL †
+    </textPath>
+  </text>
+
+  <!-- Central Chi-Rho (☧) with Alpha & Omega in Black Engraving Style -->
+  <g stroke="#111827" fill="#111827">
+    <!-- Vertical Staff -->
+    <line x1="256" y1="156" x2="256" y2="356" stroke-width="12" stroke-linecap="round"/>
+    
+    <!-- Rho Loop -->
+    <path d="M 256,156 C 304,156 304,222 256,222" fill="none" stroke-width="11" stroke-linecap="round"/>
+
+    <!-- Diagonal X Arms -->
+    <line x1="184" y1="184" x2="328" y2="328" stroke-width="11" stroke-linecap="round"/>
+    <line x1="184" y1="328" x2="328" y2="184" stroke-width="11" stroke-linecap="round"/>
+
+    <!-- Terminal Buds -->
+    <circle cx="256" cy="150" r="7.5"/>
+    <circle cx="256" cy="362" r="7.5"/>
+    <circle cx="178" cy="178" r="7"/>
+    <circle cx="334" cy="334" r="7"/>
+    <circle cx="178" cy="334" r="7"/>
+    <circle cx="334" cy="178" r="7"/>
+
+    <!-- Central Crossing Ring -->
+    <circle cx="256" cy="256" r="11" fill="#ffffff" stroke="#111827" stroke-width="3"/>
+
+    <!-- Alpha (A) -->
+    <text x="202" y="272" font-family="'Times New Roman', Georgia, serif" font-size="46" font-weight="bold" text-anchor="middle" stroke="none">A</text>
+
+    <!-- Omega (Ω) -->
+    <text x="310" y="272" font-family="'Times New Roman', Georgia, serif" font-size="44" font-weight="bold" text-anchor="middle" stroke="none">Ω</text>
+  </g>
+</svg>
