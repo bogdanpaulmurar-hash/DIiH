@@ -72,7 +72,7 @@
       <div class="flex items-center space-x-2">
         <span id="headerAppLogo" class="text-xl">🧭</span>
         <div>
-          <h1 id="headerAppTitle" class="font-bold text-base tracking-wide text-white leading-tight">DIiH Hub</h1>
+          <h1 id="headerAppTitle" class="font-bold text-base tracking-wide text-white leading-tight">DIiH</h1>
           <p id="todayDateLabel" class="text-xs text-slate-400 font-medium"></p>
         </div>
       </div>
@@ -667,19 +667,35 @@
                 </button>
               </div>
 
-              <span class="text-[10px] text-slate-400 font-bold block uppercase tracking-wider pt-1">Alte Simboluri:</span>
-              <div class="grid grid-cols-3 gap-2 text-xs">
-                <button onclick="setAppCustomIcon('./icons/icon-monogram-diih.svg', '🧭')" class="p-2 bg-darkbg border border-bordercol hover:border-cyan-400 rounded-lg flex items-center space-x-1.5 text-left transition">
-                  <img src="./icons/icon-monogram-diih.svg" class="w-6 h-6 rounded">
-                  <span class="text-[10px] text-slate-200 truncate">Busolă</span>
+              <span class="text-[10px] text-pink-400 font-bold block uppercase tracking-wider pt-1">👨‍👩‍👧‍👦 Icoane Specifice pentru Familie (max 4 — pentru a nu le confunda):</span>
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <button onclick="setAppCustomIcon('./icons/icon-heart-cross.svg', '🤍')" class="p-2 bg-darkbg border border-bordercol hover:border-pink-400 rounded-xl flex items-center space-x-2 text-left transition">
+                  <img src="./icons/icon-heart-cross.svg" class="w-8 h-8 rounded-lg">
+                  <div class="truncate">
+                    <span class="font-bold text-white block text-[11px] truncate">Inimă & Cruce</span>
+                    <span class="text-[9px] text-pink-300">Iubire & Ocrotire</span>
+                  </div>
                 </button>
-                <button onclick="setAppCustomIcon('./icons/icon-psaltire-candle.svg', '🕯️')" class="p-2 bg-darkbg border border-bordercol hover:border-rose-400 rounded-lg flex items-center space-x-1.5 text-left transition">
-                  <img src="./icons/icon-psaltire-candle.svg" class="w-6 h-6 rounded">
-                  <span class="text-[10px] text-slate-200 truncate">Candelă</span>
+                <button onclick="setAppCustomIcon('./icons/icon-family-home.svg', '🏡')" class="p-2 bg-darkbg border border-bordercol hover:border-amber-400 rounded-xl flex items-center space-x-2 text-left transition">
+                  <img src="./icons/icon-family-home.svg" class="w-8 h-8 rounded-lg">
+                  <div class="truncate">
+                    <span class="font-bold text-white block text-[11px] truncate">Căminul Familiei</span>
+                    <span class="text-[9px] text-amber-300">Pace & Binecuvântare</span>
+                  </div>
                 </button>
-                <button onclick="setAppCustomIcon('./icons/icon-heart-cross.svg', '🤍')" class="p-2 bg-darkbg border border-bordercol hover:border-pink-400 rounded-lg flex items-center space-x-1.5 text-left transition">
-                  <img src="./icons/icon-heart-cross.svg" class="w-6 h-6 rounded">
-                  <span class="text-[10px] text-slate-200 truncate">Inimă</span>
+                <button onclick="setAppCustomIcon('./icons/icon-family-vine.svg', '🌿')" class="p-2 bg-darkbg border border-bordercol hover:border-emerald-400 rounded-xl flex items-center space-x-2 text-left transition">
+                  <img src="./icons/icon-family-vine.svg" class="w-8 h-8 rounded-lg">
+                  <div class="truncate">
+                    <span class="font-bold text-white block text-[11px] truncate">Vița & Măslinul</span>
+                    <span class="text-[9px] text-emerald-300">Familie Roditoare</span>
+                  </div>
+                </button>
+                <button onclick="setAppCustomIcon('./icons/icon-family-anchor.svg', '⚓')" class="p-2 bg-darkbg border border-bordercol hover:border-cyan-400 rounded-xl flex items-center space-x-2 text-left transition">
+                  <img src="./icons/icon-family-anchor.svg" class="w-8 h-8 rounded-lg">
+                  <div class="truncate">
+                    <span class="font-bold text-white block text-[11px] truncate">Ancora Păcii</span>
+                    <span class="text-[9px] text-cyan-300">Nădejde Neclintită</span>
+                  </div>
                 </button>
               </div>
             </div>
@@ -698,7 +714,7 @@
           <div class="border-b border-bordercol pb-3 space-y-2">
             <h4 class="font-bold text-white uppercase tracking-wider">🎨 Personalizare Brand (Cloud)</h4>
             <div class="grid grid-cols-3 gap-2">
-              <input type="text" id="settingAppTitle" value="DIiH Hub" class="col-span-2 bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+              <input type="text" id="settingAppTitle" value="DIiH" class="col-span-2 bg-darkbg border border-bordercol rounded-lg p-2 text-white">
               <input type="text" id="settingAppLogo" value="🧭" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-center">
             </div>
             <div class="flex items-center space-x-2 pt-1">
@@ -738,11 +754,12 @@
               <input type="text" id="adminSharedTitle" placeholder="Nume aplicație (ex: Agenda Familiei)" class="col-span-2 bg-darkbg border border-bordercol rounded-lg p-2 text-white">
               <input type="text" id="adminSharedLogo" placeholder="🏡" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-center">
             </div>
+            <span class="text-[10px] text-slate-400 block">Icoană dedicată familiei (distinctă de DIiH personal):</span>
             <div class="grid grid-cols-4 gap-1.5">
-              <button onclick="setSharedIconChoice('./icons/icon-orthodox-cross.svg')" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400"><img src="./icons/icon-orthodox-cross.svg" class="w-7 h-7 mx-auto rounded"></button>
-              <button onclick="setSharedIconChoice('./icons/icon-monogram-diih.svg')" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400"><img src="./icons/icon-monogram-diih.svg" class="w-7 h-7 mx-auto rounded"></button>
-              <button onclick="setSharedIconChoice('./icons/icon-heart-cross.svg')" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400"><img src="./icons/icon-heart-cross.svg" class="w-7 h-7 mx-auto rounded"></button>
-              <button onclick="setSharedIconChoice('./icons/icon-psaltire-candle.svg')" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400"><img src="./icons/icon-psaltire-candle.svg" class="w-7 h-7 mx-auto rounded"></button>
+              <button onclick="setSharedIconChoice('./icons/icon-heart-cross.svg')" data-icon-path="./icons/icon-heart-cross.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Inimă & Cruce"><img src="./icons/icon-heart-cross.svg" class="w-7 h-7 mx-auto rounded"></button>
+              <button onclick="setSharedIconChoice('./icons/icon-family-home.svg')" data-icon-path="./icons/icon-family-home.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Căminul Familiei"><img src="./icons/icon-family-home.svg" class="w-7 h-7 mx-auto rounded"></button>
+              <button onclick="setSharedIconChoice('./icons/icon-family-vine.svg')" data-icon-path="./icons/icon-family-vine.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Vița Roditoare"><img src="./icons/icon-family-vine.svg" class="w-7 h-7 mx-auto rounded"></button>
+              <button onclick="setSharedIconChoice('./icons/icon-family-anchor.svg')" data-icon-path="./icons/icon-family-anchor.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Ancora Păcii"><img src="./icons/icon-family-anchor.svg" class="w-7 h-7 mx-auto rounded"></button>
             </div>
             <input type="hidden" id="adminSharedIconPath" value="./icons/icon-heart-cross.svg">
           </div>
@@ -1309,7 +1326,7 @@
     let isGanduriGrouped = true;
     let editingGandRowId = null;
 
-    let appTitle = localStorage.getItem('diih_app_title') || "DIiH Hub";
+    let appTitle = localStorage.getItem('diih_app_title') || "DIiH";
     let appLogo = localStorage.getItem('diih_app_logo') || "🧭";
     let appIconPath = localStorage.getItem('diih_app_icon_path') || './icons/icon-sigiliu-monograma-hristos.svg';
     let pomelnicBatchSize = parseInt(localStorage.getItem('diih_batch_size') || "20", 10);
@@ -1353,7 +1370,7 @@
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'DIiH Hub v18 pornit');
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH v18 pornit');
 
       applySharedModeIfNeeded();
 
@@ -1380,9 +1397,9 @@
 
     function applyAppBrandUI() {
       document.getElementById('headerAppTitle').textContent = appTitle;
-      document.getElementById('htmlAppTitle').textContent = `${appTitle} v18`;
+      document.getElementById('htmlAppTitle').textContent = appTitle;
       document.getElementById('headerAppLogo').textContent = appLogo;
-      document.title = `${appTitle} v18`;
+      document.title = appTitle;
       updateDynamicFavicon(appLogo, appIconPath);
 
       const titleInput = document.getElementById('settingAppTitle');
@@ -1425,7 +1442,7 @@
 
     function saveGlobalCustomSettings(skipFormRead = false) {
       if (!skipFormRead) {
-        appTitle = document.getElementById('settingAppTitle').value.trim() || "DIiH Hub";
+        appTitle = document.getElementById('settingAppTitle').value.trim() || "DIiH";
         appLogo = document.getElementById('settingAppLogo').value.trim() || "🧭";
         pomelnicBatchSize = parseInt(document.getElementById('settingPomelnicBatchSize').value, 10) || 20;
       }
@@ -1601,7 +1618,14 @@
         }
         renderSchoolDisplay();
       }
-      if (tabId === 'more') switchSubTab(isInActiveSharedMode() ? 'inventar' : 'setari');
+      if (tabId === 'more') {
+        if (!isInActiveSharedMode()) {
+          switchSubTab('setari');
+        } else {
+          const sharedAllowsInventar = sharingConfig.enabledModules && sharingConfig.enabledModules.includes('inventar');
+          switchSubTab(sharedAllowsInventar ? 'inventar' : 'notificari');
+        }
+      }
       // Spam switch_tab eliminat conform cerintelor v18
     }
 
@@ -1698,6 +1722,25 @@
       }
     }
 
+    // Păstrează color/startHour/endHour locale dacă răspunsul cloud le întoarce goale
+    // (ex: backend neredeployat încă) — altfel culoarea aleasă revine automat pe "auto".
+    function mergeSchoolActivitiesFromCloud(cloudList) {
+      const localById = {};
+      schoolActivities.forEach(a => { localById[a.id] = a; });
+      return cloudList.map(a => {
+        let dStr = a.date || "";
+        if (dStr.length > 10) dStr = dStr.substring(0, 10);
+        const existing = localById[a.id];
+        return {
+          ...a,
+          date: dStr,
+          color: a.color || (existing && existing.color) || 'auto',
+          startHour: a.startHour || (existing && existing.startHour) || '08:00',
+          endHour: a.endHour || (existing && existing.endHour) || '16:00'
+        };
+      });
+    }
+
     function fetchDataFromSheet(showFeedback = false) {
       const icon = document.getElementById('syncIcon');
       if (icon) icon.classList.add('animate-spin');
@@ -1726,11 +1769,7 @@
           localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         }
         if (data.schoolActivities && Array.isArray(data.schoolActivities)) {
-          schoolActivities = data.schoolActivities.map(a => {
-            let dStr = a.date || "";
-            if (dStr.length > 10) dStr = dStr.substring(0, 10);
-            return { ...a, date: dStr };
-          });
+          schoolActivities = mergeSchoolActivitiesFromCloud(data.schoolActivities);
           localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
         }
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
@@ -1786,11 +1825,7 @@
           localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         }
         if (data.schoolActivities && Array.isArray(data.schoolActivities)) {
-          schoolActivities = data.schoolActivities.map(a => {
-            let dStr = a.date || "";
-            if (dStr.length > 10) dStr = dStr.substring(0, 10);
-            return { ...a, date: dStr };
-          });
+          schoolActivities = mergeSchoolActivitiesFromCloud(data.schoolActivities);
           localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
         }
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
@@ -4173,8 +4208,10 @@
     // 12. ADMIN & PARTAJARE ACCES (Mod convenabil pe bază de link + cod, nu autentificare Google reală)
     function setSharedIconChoice(path) {
       document.getElementById('adminSharedIconPath').value = path;
-      document.querySelectorAll('#subtab-admin .grid-cols-4 button').forEach(b => b.classList.remove('border-cyan-400'));
-      event.currentTarget.classList.add('border-cyan-400');
+      document.querySelectorAll('#subtab-admin [data-icon-path]').forEach(b => {
+        if (b.getAttribute('data-icon-path') === path) b.classList.add('border-cyan-400', 'border-2');
+        else b.classList.remove('border-cyan-400', 'border-2');
+      });
     }
 
     function renderAdminSharingForm() {
@@ -4185,7 +4222,9 @@
       const authorEl = document.getElementById('adminSharedAuthorName');
       if (titleEl) titleEl.value = sharingConfig.sharedAppTitle || '';
       if (logoEl) logoEl.value = sharingConfig.sharedAppLogo || '';
-      if (iconEl) iconEl.value = sharingConfig.sharedAppIconPath || './icons/icon-heart-cross.svg';
+      const chosenIcon = sharingConfig.sharedAppIconPath || './icons/icon-heart-cross.svg';
+      if (iconEl) iconEl.value = chosenIcon;
+      setSharedIconChoice(chosenIcon);
       if (authorEl) authorEl.value = sharingConfig.authorName || '';
       const modules = sharingConfig.enabledModules || ['calendar', 'cumparaturi'];
       const map = { today: 'adminModuleToday', calendar: 'adminModuleCalendar', cumparaturi: 'adminModuleCumparaturi', ganduri: 'adminModuleGanduri', pomelnic: 'adminModulePomelnic', inventar: 'adminModuleInventar' };
@@ -4297,22 +4336,24 @@
           btn.classList.add('hidden');
         }
       });
-      // "Mai multe" apare DOAR dacă Inventarul e permis, și arată EXCLUSIV subtab-ul Inventar (Psaltire/Notificări/Widget/Setări/Admin rămân ascunse)
+      // "Mai multe" e mereu accesibil în modul partajat — minim pentru Notificări (ca persoana să-și activeze alertele pe propriul telefon);
+      // Inventar apare suplimentar doar dacă e bifat; Psaltire/Setări/Admin rămân ascunse mereu.
       const moreBtn = document.getElementById('nav-more');
       const sharedOnlyShowsInventar = allowedModules.includes('inventar');
-      ['btnSubPsaltire', 'btnSubNotif', 'btnSubWidget', 'btnSubSetari', 'btnSubAdmin'].forEach(id => {
+      ['btnSubPsaltire', 'btnSubWidget', 'btnSubSetari', 'btnSubAdmin'].forEach(id => {
         const b = document.getElementById(id);
         if (b) b.classList.add('hidden');
       });
+      const notifBtn = document.getElementById('btnSubNotif');
+      if (notifBtn) notifBtn.classList.remove('hidden');
       const invBtn = document.getElementById('btnSubInventar');
       if (sharedOnlyShowsInventar) {
-        moreBtn.classList.remove('hidden');
-        visibleCount++;
         if (invBtn) invBtn.classList.remove('hidden');
       } else {
-        moreBtn.classList.add('hidden');
         if (invBtn) invBtn.classList.add('hidden');
       }
+      moreBtn.classList.remove('hidden');
+      visibleCount++;
 
       const navBar = document.getElementById('bottomNavBar');
       if (navBar) navBar.className = `max-w-lg mx-auto grid grid-cols-${Math.max(visibleCount, 1)} text-center text-[9px] font-medium text-slate-400`;
@@ -4389,13 +4430,27 @@
       if (allowedModules.includes('pomelnic')) {
         const todaysBirthdays = computeTodaysAnniversaries(getVisiblePeople());
         html += `
+          <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-cyan-300 uppercase tracking-wider border-b border-bordercol pb-2">
+              <span>🎉 Aniversările Zilei</span>
+              <span class="bg-slate-800 px-2 py-0.5 rounded-full text-slate-300">${todaysBirthdays.length}</span>
+            </div>
+            ${todaysBirthdays.length === 0 ? '<p class="text-xs text-slate-500 italic py-1 text-center">Nicio aniversare sau comemorare în această zi.</p>' : todaysBirthdays.map(m => {
+              const nume = `${m.person.prenume} ${m.person.nume}`.trim();
+              if (m.type === 'BIRTH') return `<div onclick="openPersonModal(${m.person.rowId})" class="p-2 rounded-xl bg-slate-900/80 border border-emerald-900/50 cursor-pointer active:scale-98 transition"><span class="text-xs font-bold text-emerald-300">🎂 ${nume}</span><p class="text-[11px] text-slate-400">Împlinește ${m.age} ani</p></div>`;
+              if (m.type === 'BIRTH_DECEASED') return `<div onclick="openPersonModal(${m.person.rowId})" class="p-2 rounded-xl bg-slate-900/80 border border-amber-900/50 cursor-pointer active:scale-98 transition"><span class="text-xs font-bold text-amber-300">🕯️ ${nume}</span><p class="text-[11px] text-slate-400">Ar fi împlinit ${m.ageWouldBe} ani${m.yearsSinceDeath !== null ? ` • adormit de ${m.yearsSinceDeath} ani` : ''}</p></div>`;
+              return `<div onclick="openPersonModal(${m.person.rowId})" class="p-2 rounded-xl bg-slate-900/80 border border-amber-900/50 cursor-pointer active:scale-98 transition"><span class="text-xs font-bold text-amber-300">† ${nume}</span><p class="text-[11px] text-slate-400">Adormit de ${m.years} ani${m.ageAtDeath !== null ? ` • adormit la ${m.ageAtDeath} ani` : ''}</p></div>`;
+            }).join('')}
+          </div>
+        `;
+        html += `
           <div onclick="switchTab('pomelnic')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-rose-600/60 active:scale-98 transition space-y-2">
             <div class="flex items-center justify-between text-xs font-bold text-rose-300 uppercase tracking-wider">
               <span>📜 Pomelnic de Astăzi</span>
               <span class="bg-rose-950 border border-rose-800 px-2 py-0.5 rounded-full">${currentDailyPomelnicVii.length + currentDailyPomelnicAdormiti.length} persoane</span>
             </div>
             <p class="text-xs text-slate-200">🌱 ${currentDailyPomelnicVii.length} Vii • † ${currentDailyPomelnicAdormiti.length} Adormiți</p>
-            ${todaysBirthdays.length > 0 ? `<p class="text-[11px] text-amber-300 pt-1 border-t border-bordercol/40">🎉 ${todaysBirthdays.length} aniversare(ri) astăzi</p>` : ''}
+            <p class="text-[10px] text-slate-500">Apasă pentru lista completă →</p>
           </div>
         `;
       }

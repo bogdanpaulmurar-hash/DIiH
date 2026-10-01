@@ -5,7 +5,13 @@ const ASSETS = [
   './icons/icon-monograma-hristos-brancoveneasca.svg',
   './icons/icon-sigiliu-monograma-hristos.svg',
   './icons/icon-sigiliu-gravura-monograma.svg',
-  './icons/icon-orthodox-cross.svg'
+  './icons/icon-orthodox-cross.svg',
+  './icons/icon-heart-cross.svg',
+  './icons/icon-family-home.svg',
+  './icons/icon-family-vine.svg',
+  './icons/icon-family-anchor.svg',
+  './icons/icon-monogram-diih.svg',
+  './icons/icon-psaltire-candle.svg'
 ];
 
 self.addEventListener('install', (e) => {

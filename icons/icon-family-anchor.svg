@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <radialGradient id="anchorBg" cx="50%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#0e3a5a"/>
+      <stop offset="60%" stop-color="#082032"/>
+      <stop offset="100%" stop-color="#020c14"/>
+    </radialGradient>
+    <linearGradient id="goldAnchor" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="45%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="blueLight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <filter id="glowAnchor" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Fundal Card PWA -->
+  <rect width="512" height="512" rx="112" fill="url(#anchorBg)"/>
+  <rect width="496" height="496" x="8" y="8" rx="104" fill="none" stroke="url(#goldAnchor)" stroke-width="2" opacity="0.35"/>
+
+  <!-- Nimb dublu circular -->
+  <circle cx="256" cy="240" r="145" fill="none" stroke="url(#goldAnchor)" stroke-width="2" stroke-dasharray="8,6" opacity="0.45"/>
+  <circle cx="256" cy="240" r="162" fill="none" stroke="url(#goldAnchor)" stroke-width="1" opacity="0.2"/>
+
+  <!-- Inel superior ancoră (simbolul veșniciei) -->
+  <circle cx="256" cy="140" r="28" fill="none" stroke="url(#goldAnchor)" stroke-width="8" filter="url(#glowAnchor)"/>
+  <circle cx="256" cy="140" r="12" fill="none" stroke="url(#goldAnchor)" stroke-width="3" opacity="0.7"/>
+
+  <!-- Cruce bizantină (tija și brațul orizontal) -->
+  <g stroke="url(#goldAnchor)" stroke-linecap="round">
+    <line x1="256" y1="168" x2="256" y2="365" stroke-width="12"/>
+    <line x1="180" y1="210" x2="332" y2="210" stroke-width="10"/>
+    <!-- Terminatori cruce -->
+    <circle cx="178" cy="210" r="5" fill="#fef08a"/>
+    <circle cx="334" cy="210" r="5" fill="#fef08a"/>
+  </g>
+
+  <!-- Arcul ancorei la bază (statornicia căminului) -->
+  <path d="M 140 280 C 145 380 367 380 372 280" fill="none" stroke="url(#goldAnchor)" stroke-width="14" stroke-linecap="round"/>
+  <!-- Gheare ancoră -->
+  <path d="M 125 285 L 140 265 L 155 285 Z" fill="url(#goldAnchor)"/>
+  <path d="M 357 285 L 372 265 L 387 285 Z" fill="url(#goldAnchor)"/>
+
+  <!-- Frânghie/Funie stilizată împletită în jurul crucii -->
+  <path d="M 245 165 Q 275 190 256 220 Q 235 250 268 280 Q 240 310 256 340" fill="none" stroke="url(#blueLight)" stroke-width="4" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- Text la bază -->
+  <text x="256" y="440" font-family="'Times New Roman', serif" font-size="19" font-weight="bold" fill="url(#goldAnchor)" text-anchor="middle" letter-spacing="4" opacity="0.9">ANCORA PĂCII</text>
+  <text x="256" y="462" font-family="'Times New Roman', serif" font-size="12" font-style="italic" fill="#bae6fd" text-anchor="middle" letter-spacing="2" opacity="0.6">Nădejde Neclintită • Evrei 6:19</text>
+</svg>
