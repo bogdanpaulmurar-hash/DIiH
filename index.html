@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title id="htmlAppTitle">DIiH Hub v16</title>
+  <title id="htmlAppTitle">DIiH Hub v17</title>
   
   <link rel="manifest" href="./manifest.json">
   <link id="appFavicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
@@ -189,6 +189,14 @@
         <select id="categoryDropdown" onchange="handleSearch()" class="bg-darkbg text-white border border-bordercol rounded-lg px-2 py-1 text-xs flex-1 focus:outline-none focus:border-cyan-500">
           <option value="ALL">Toate Categoriile</option>
         </select>
+        <span class="text-[11px] text-slate-400 whitespace-nowrap pl-1 border-l border-bordercol">📿 Pomenire/zi:</span>
+        <select id="pomelnicBatchSelect" onchange="handlePomelnicBatchChange(this.value)" class="bg-darkbg text-cyan-300 font-bold border border-cyan-800 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-cyan-500">
+          <option value="10">10 / zi</option>
+          <option value="20">20 / zi</option>
+          <option value="30">30 / zi</option>
+          <option value="40">40 / zi</option>
+          <option value="50">50 / zi</option>
+        </select>
       </div>
 
       <div class="flex items-center justify-between px-1 pt-1 overflow-x-auto space-x-1 pb-1">
@@ -242,16 +250,16 @@
         </div>
 
         <div class="grid grid-cols-3 gap-2 text-center text-xs">
-          <div class="p-2 rounded-xl bg-darkbg border border-bordercol">
-            <span class="text-[10px] text-slate-400 block uppercase">Total Ore</span>
+          <div onclick="openSchoolDrillDownModal('hours')" class="p-2 rounded-xl bg-darkbg border border-bordercol hover:border-cyan-500 cursor-pointer active:scale-95 transition" title="Apasă pentru detalii activități">
+            <span class="text-[10px] text-slate-400 block uppercase">Total Ore 🔍</span>
             <span id="sumTotalHours" class="text-sm font-bold text-cyan-400">0 h</span>
           </div>
-          <div class="p-2 rounded-xl bg-darkbg border border-bordercol">
-            <span class="text-[10px] text-slate-400 block uppercase">Total Sumă</span>
+          <div onclick="openSchoolDrillDownModal('amount')" class="p-2 rounded-xl bg-darkbg border border-bordercol hover:border-emerald-500 cursor-pointer active:scale-95 transition" title="Apasă pentru detalii financiare">
+            <span class="text-[10px] text-slate-400 block uppercase">Total Sumă 🔍</span>
             <span id="sumTotalAmount" class="text-sm font-bold text-emerald-400">0 Lei</span>
           </div>
-          <div class="p-2 rounded-xl bg-darkbg border border-bordercol">
-            <span class="text-[10px] text-slate-400 block uppercase">Restanță</span>
+          <div onclick="openSchoolDrillDownModal('unpaid')" class="p-2 rounded-xl bg-darkbg border border-bordercol hover:border-amber-500 cursor-pointer active:scale-95 transition" title="Apasă pentru lista restanțelor și marcare achitat">
+            <span class="text-[10px] text-slate-400 block uppercase">Restanță ⚠️</span>
             <span id="sumUnpaidAmount" class="text-sm font-bold text-amber-400">0 Lei</span>
           </div>
         </div>
@@ -312,6 +320,20 @@
           <div class="flex items-center justify-between p-2 bg-darkbg rounded-lg border border-bordercol">
             <span class="text-slate-400 text-[11px]">Total calculat:</span>
             <span id="schoolTotalCalculatedDisplay" class="font-bold text-emerald-400 text-sm">0 Lei</span>
+          </div>
+
+          <div class="flex items-center space-x-2 p-2 bg-darkbg rounded-lg border border-bordercol">
+            <span class="text-slate-400 text-[11px] whitespace-nowrap">🎨 Culoare calendar:</span>
+            <select id="schoolColorSelect" class="bg-cardbg text-white border border-bordercol rounded-lg p-1 text-xs flex-1">
+              <option value="auto">Auto (după copil/instituție)</option>
+              <option value="#06b6d4">Cyan (#06b6d4)</option>
+              <option value="#10b981">Smarald (#10b981)</option>
+              <option value="#f59e0b">Chihlimbar (#f59e0b)</option>
+              <option value="#ec4899">Roz (#ec4899)</option>
+              <option value="#8b5cf6">Violet (#8b5cf6)</option>
+              <option value="#3b82f6">Albastru (#3b82f6)</option>
+              <option value="#ef4444">Roșu (#ef4444)</option>
+            </select>
           </div>
 
           <input type="text" id="schoolDayMessage" placeholder="Mesaj / Observație afișat în această zi" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
@@ -513,7 +535,7 @@
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-1">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v16.0 (Build 2026-09-30)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v17.0 (Build 2026-10-01)</span>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
           </div>
 
@@ -547,6 +569,40 @@
       </div>
 
     </section>
+
+  
+  <!-- MODAL DRILL-DOWN SUMAR ȘCOALĂ / RESTANȚE -->
+  <div id="schoolDrillDownModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] flex flex-col space-y-3 text-xs">
+      <div class="flex items-center justify-between border-b border-bordercol pb-2">
+        <div>
+          <h2 id="drillDownModalTitle" class="text-sm font-bold text-white uppercase tracking-wider">📋 Detalii Activități</h2>
+          <p id="drillDownModalSubtitle" class="text-[11px] text-slate-400">Filtru curent</p>
+        </div>
+        <button onclick="closeSchoolDrillDownModal()" class="text-slate-400 hover:text-white p-1 text-lg">✕</button>
+      </div>
+
+      <!-- Quick Action Bar inside Modal -->
+      <div id="drillDownActionBar" class="p-2 bg-darkbg rounded-xl border border-bordercol flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <input type="checkbox" id="drillDownSelectAll" onchange="toggleSelectAllDrillDown(this.checked)" class="rounded text-cyan-500 focus:ring-0 w-4 h-4">
+          <label for="drillDownSelectAll" class="text-[11px] text-slate-300 font-medium cursor-pointer">Selectează tot</label>
+        </div>
+        <button onclick="batchMarkSelectedAsPaid()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition flex items-center space-x-1">
+          <span>✔</span>
+          <span>Marchează ca Achitat</span>
+        </button>
+      </div>
+
+      <!-- Scrollable list of activities -->
+      <div id="drillDownActivitiesList" class="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[60vh] divide-y divide-bordercol/30"></div>
+
+      <div class="pt-2 border-t border-bordercol flex justify-between items-center text-xs">
+        <span id="drillDownSummaryFooter" class="text-slate-300 font-bold">Total: 0 Lei</span>
+        <button onclick="closeSchoolDrillDownModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl">Închide</button>
+      </div>
+    </div>
+  </div>
 
   </main>
 
@@ -700,7 +756,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v16.0";
+    const APP_VERSION = "v17.0";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -777,14 +833,27 @@
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'DIiH Hub v16 pornit');
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH Hub v17 pornit');
+
+      // Sincronizare periodică în fundal (la fiecare 30 secunde) pentru consecvență 1:1 între dispozitive
+      setInterval(() => {
+        if (navigator.onLine && !document.hidden) {
+          fetchDataFromSheet(false);
+        }
+      }, 30000);
+
+      // Verificator recurent pentru notificări programate (la fiecare 45 secunde)
+      setInterval(() => {
+        checkAndTriggerScheduledNotifications();
+      }, 45000);
+      checkAndTriggerScheduledNotifications();
     });
 
     function applyAppBrandUI() {
       document.getElementById('headerAppTitle').textContent = appTitle;
-      document.getElementById('htmlAppTitle').textContent = `${appTitle} v16`;
+      document.getElementById('htmlAppTitle').textContent = `${appTitle} v17`;
       document.getElementById('headerAppLogo').textContent = appLogo;
-      document.title = `${appTitle} v16`;
+      document.title = `${appTitle} v17`;
       updateDynamicFavicon(appLogo);
 
       const titleInput = document.getElementById('settingAppTitle');
@@ -793,6 +862,21 @@
       if (logoInput) logoInput.value = appLogo;
       const batchInput = document.getElementById('settingPomelnicBatchSize');
       if (batchInput) batchInput.value = pomelnicBatchSize;
+      const batchSelect = document.getElementById('pomelnicBatchSelect');
+      if (batchSelect) batchSelect.value = pomelnicBatchSize.toString();
+    }
+
+    function handlePomelnicBatchChange(val) {
+      pomelnicBatchSize = parseInt(val, 10) || 20;
+      localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
+      const batchInput = document.getElementById('settingPomelnicBatchSize');
+      if (batchInput) batchInput.value = pomelnicBatchSize;
+      renderDailyPomelnic20();
+      showToast(`Pomenire setată la ${pomelnicBatchSize} persoane/zi`);
+      logEventToCloud('update_pomelnic_batch', 'pomelnic', 'batchSize', `Număr persoane/zi setat la ${pomelnicBatchSize}`);
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&pomelnicBatchSize=${pomelnicBatchSize}&callback=void`;
+      document.body.appendChild(script);
     }
 
     function updateDynamicFavicon(emoji) {
@@ -970,7 +1054,7 @@
       });
       if (tabId === 'calendar') renderSchoolDisplay();
       if (tabId === 'more') renderPsaltireGrupList();
-      logEventToCloud('switch_tab', 'navigation', tabId, `Navigare în tabul ${tabId}`);
+      // Spam switch_tab eliminat conform cerintelor v17
     }
 
     function switchSubTab(subId) {
@@ -1020,7 +1104,11 @@
           localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         }
         if (data.schoolActivities && Array.isArray(data.schoolActivities)) {
-          schoolActivities = data.schoolActivities;
+          schoolActivities = data.schoolActivities.map(a => {
+            let dStr = a.date || "";
+            if (dStr.length > 10) dStr = dStr.substring(0, 10);
+            return { ...a, date: dStr };
+          });
           localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
         }
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
@@ -1033,6 +1121,17 @@
           updateBibliaQuoteDisplay();
         }
 
+        // Sincronizare setări notificări din cloud dacă sunt prezente
+        if (data.settings && data.settings.notificationsJson) {
+          try {
+            const cloudNotifs = JSON.parse(data.settings.notificationsJson);
+            if (cloudNotifs && typeof cloudNotifs === 'object') {
+              localStorage.setItem('diih_notifications_multi', JSON.stringify(cloudNotifs));
+              initNotificationInputs();
+            }
+          } catch (e) {}
+        }
+
         populateCategoryDropdown();
         renderAll();
         renderSchoolDisplay();
@@ -1041,7 +1140,7 @@
 
         if (icon) icon.classList.remove('animate-spin');
         if (showFeedback) showToast("Sincronizat 1:1!");
-        logEventToCloud('sync_success', 'database', 'all', `Date sincronizate 1:1 în ${dur}ms`, 'SUCCESS', dur);
+        logEventToCloud('SYNC_SUCCESS', 'database', 'all', `Primite: ${allPeople.length} persoane, ${allGanduri.length} gânduri, ${allShopping.length} produse, ${schoolActivities.length} activități școlare`, 'SUCCESS', dur);
         delete window[callbackName];
       };
 
@@ -1073,7 +1172,7 @@
 
       renderAnniversariesToday();
       renderDailyPomelnic20();
-      renderPomelnicList();
+      handleSearch();
       renderShoppingList();
       renderGanduriList();
       renderPsaltireGrupList();
@@ -1518,6 +1617,174 @@
       renderSchoolDisplay();
     }
 
+
+    // Culori distinctive pentru activități în calendar
+    const SCHOOL_COLOR_MAP = {
+      'Luca': '#06b6d4',      // cyan
+      'Maria': '#ec4899',     // roz
+      'Paul': '#8b5cf6',      // violet
+      'David': '#3b82f6',     // albastru
+      'Ana': '#f59e0b',       // chihlimbar
+      'Catering': '#f97316',  // portocaliu
+      'Semi': '#10b981'       // verde smarald
+    };
+
+    function getSchoolActivityColor(activity) {
+      if (activity.color && activity.color !== 'auto') {
+        return activity.color;
+      }
+      if (activity.child && SCHOOL_COLOR_MAP[activity.child]) {
+        return SCHOOL_COLOR_MAP[activity.child];
+      }
+      if (activity.title && SCHOOL_COLOR_MAP[activity.title]) {
+        return SCHOOL_COLOR_MAP[activity.title];
+      }
+      // Determinare deterministă din text copil sau titlu
+      const seed = (activity.child || activity.title || 'Copil');
+      const palette = ['#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#14b8a6'];
+      let hash = 0;
+      for (let i = 0; i < seed.length; i++) hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+      return palette[Math.abs(hash) % palette.length];
+    }
+
+    let currentDrillDownFilter = 'all';
+    let currentDrillDownActivities = [];
+    let selectedDrillDownIds = new Set();
+
+    function openSchoolDrillDownModal(filterType) {
+      currentDrillDownFilter = filterType;
+      selectedDrillDownIds.clear();
+      const selectAllCb = document.getElementById('drillDownSelectAll');
+      if (selectAllCb) selectAllCb.checked = false;
+
+      const year = currentSchoolDate.getFullYear();
+      const month = currentSchoolDate.getMonth();
+      const currentYearStr = year.toString();
+      const currentMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+      const todayStr = new Date().toISOString().split('T')[0];
+
+      // Filtrăm activitățile conform perioadei curente din sumar
+      let periodFiltered = schoolActivities.filter(a => {
+        const dStr = (a.date || "").substring(0, 10);
+        if (schoolSummaryFilter === 'day') return dStr === todayStr;
+        if (schoolSummaryFilter === 'month') return dStr.startsWith(currentMonthStr);
+        if (schoolSummaryFilter === 'year') return dStr.startsWith(currentYearStr);
+        return true;
+      });
+
+      let title = "Toate Activitățile";
+      let subtitle = `Filtru perioadă: ${schoolSummaryFilter.toUpperCase()}`;
+
+      if (filterType === 'unpaid') {
+        title = "⚠️ Activități Restante (Neachitate)";
+        currentDrillDownActivities = periodFiltered.filter(a => a.paymentStatus !== 'Achitat');
+      } else if (filterType === 'hours') {
+        title = "⏱️ Activități după Ore Lucrate";
+        currentDrillDownActivities = periodFiltered;
+      } else {
+        title = "💰 Toate Activitățile din Perioadă";
+        currentDrillDownActivities = periodFiltered;
+      }
+
+      document.getElementById('drillDownModalTitle').textContent = title;
+      document.getElementById('drillDownModalSubtitle').textContent = `${subtitle} • ${currentDrillDownActivities.length} activități`;
+
+      renderDrillDownList();
+      document.getElementById('schoolDrillDownModal').classList.remove('hidden');
+    }
+
+    function closeSchoolDrillDownModal() {
+      document.getElementById('schoolDrillDownModal').classList.add('hidden');
+    }
+
+    function renderDrillDownList() {
+      const container = document.getElementById('drillDownActivitiesList');
+      if (!container) return;
+
+      if (currentDrillDownActivities.length === 0) {
+        container.innerHTML = `<p class="text-slate-500 italic py-6 text-center text-xs">Nicio activitate găsită pentru acest filtru.</p>`;
+        document.getElementById('drillDownSummaryFooter').textContent = "Total: 0 Lei";
+        return;
+      }
+
+      let totalSum = 0;
+      let totalH = 0;
+
+      container.innerHTML = currentDrillDownActivities.map(a => {
+        totalSum += (a.total || 0);
+        totalH += (a.hours || 0);
+        const isPaid = a.paymentStatus === 'Achitat';
+        const isChecked = selectedDrillDownIds.has(a.id);
+        const color = getSchoolActivityColor(a);
+
+        return `
+          <div class="py-2 flex items-center justify-between text-xs hover:bg-darkbg/60 p-1.5 rounded-lg transition" style="border-left: 3px solid ${color}; padding-left: 8px;">
+            <div class="flex items-center space-x-2 overflow-hidden">
+              <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleDrillDownItem('${a.id}')" class="rounded text-cyan-500 focus:ring-0 w-4 h-4">
+              <div class="truncate">
+                <span class="font-bold text-white block truncate">${a.date}: ${a.title} (${a.child} - ${a.institution})</span>
+                <p class="text-[10px] text-slate-400">${a.hours}h • ${a.paymentType} • ${a.startHour}-${a.endHour}</p>
+                ${a.deadline && a.deadline !== '-' ? `<p class="text-[9px] text-rose-300">Termen plată: ${a.deadline}</p>` : ''}
+              </div>
+            </div>
+            <div class="text-right shrink-0 pl-2">
+              <span class="font-bold block ${isPaid ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
+              <button onclick="toggleSingleActivityPaid('${a.id}')" class="text-[10px] px-2 py-0.5 rounded border mt-1 ${isPaid ? 'border-emerald-800 bg-emerald-950 text-emerald-300' : 'border-amber-700 bg-amber-950 text-amber-200'}">
+                ${isPaid ? '✔ Achitat' : 'Marchează Achitat'}
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('drillDownSummaryFooter').textContent = `Total: ${totalH}h • ${totalSum} Lei (${currentDrillDownActivities.length} înregistrări)`;
+    }
+
+    function toggleDrillDownItem(id) {
+      if (selectedDrillDownIds.has(id)) selectedDrillDownIds.delete(id);
+      else selectedDrillDownIds.add(id);
+    }
+
+    function toggleSelectAllDrillDown(checked) {
+      if (checked) {
+        currentDrillDownActivities.forEach(a => selectedDrillDownIds.add(a.id));
+      } else {
+        selectedDrillDownIds.clear();
+      }
+      renderDrillDownList();
+    }
+
+    function toggleSingleActivityPaid(id) {
+      const act = schoolActivities.find(a => a.id === id);
+      if (!act) return;
+      act.paymentStatus = (act.paymentStatus === 'Achitat') ? 'În așteptare' : 'Achitat';
+      localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+      renderSchoolDisplay();
+      renderDrillDownList();
+      showToast(`Status actualizat: ${act.paymentStatus}`);
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify([id]))}&status=${encodeURIComponent(act.paymentStatus)}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    function batchMarkSelectedAsPaid() {
+      if (selectedDrillDownIds.size === 0) return showToast("Selectează cel puțin o activitate.");
+      const ids = Array.from(selectedDrillDownIds);
+      ids.forEach(id => {
+        const act = schoolActivities.find(a => a.id === id);
+        if (act) act.paymentStatus = 'Achitat';
+      });
+      localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+      renderSchoolDisplay();
+      renderDrillDownList();
+      showToast(`${ids.length} activități marcate ca Achitat!`);
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify(ids))}&status=Achitat&callback=void`;
+      document.body.appendChild(script);
+    }
+
     function calcSchoolAutoTotal() {
       const type = document.getElementById('schoolPaymentType').value;
       const hours = parseFloat(document.getElementById('schoolHours').value) || 0;
@@ -1584,11 +1851,16 @@
           const isSelected = selectedSchoolDays.has(dateStr);
           const acts = schoolActivities.filter(a => a.date === dateStr);
 
-          let actsHtml = acts.map(a => `
-            <div class="bg-slate-900/80 p-0.5 rounded text-[8px] truncate text-white border-l-2 ${a.paymentStatus === 'Achitat' ? 'border-emerald-500' : 'border-amber-500'}">
-              <span class="font-bold truncate">${a.title}</span>
-            </div>
-          `).join('');
+          let actsHtml = acts.map(a => {
+            const actColor = getSchoolActivityColor(a);
+            const isPaid = (a.paymentStatus === 'Achitat');
+            return `
+              <div class="p-0.5 rounded text-[8px] truncate text-white flex items-center justify-between space-x-1" style="background-color: ${actColor}25; border-left: 2px solid ${actColor};">
+                <span class="font-bold truncate">${a.title}</span>
+                <span class="text-[7px] ${isPaid ? 'text-emerald-400' : 'text-amber-400'}">${isPaid ? '✔' : '⏳'}</span>
+              </div>
+            `;
+          }).join('');
 
           html += `
             <div onclick="toggleSchoolDaySelection('${dateStr}')" class="h-16 p-1 rounded-xl ${isSelected ? 'border-2 border-cyan-400 bg-slate-800' : 'border border-bordercol bg-darkbg'} cursor-pointer hover:border-slate-500 transition flex flex-col justify-between overflow-hidden">
@@ -1622,12 +1894,15 @@
                 <span class="text-[10px] text-slate-400">${acts.length} activități</span>
               </div>
               <div class="space-y-1 pt-1.5">
-                ${acts.length === 0 ? '<span class="text-[10px] text-slate-500 italic">Liber</span>' : acts.map(a => `
-                  <div class="flex items-center justify-between text-xs p-1 rounded bg-darkbg">
-                    <span>${a.title} (${a.child}) - ${a.hours}h</span>
-                    <span class="font-bold ${a.paymentStatus === 'Achitat' ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
-                  </div>
-                `).join('')}
+                ${acts.length === 0 ? '<span class="text-[10px] text-slate-500 italic">Liber</span>' : acts.map(a => {
+                  const actColor = getSchoolActivityColor(a);
+                  return `
+                    <div class="flex items-center justify-between text-xs p-1.5 rounded bg-darkbg" style="border-left: 3px solid ${actColor};">
+                      <span>${a.title} (${a.child}) - ${a.hours}h</span>
+                      <span class="font-bold ${a.paymentStatus === 'Achitat' ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
+                    </div>
+                  `;
+                }).join('')}
               </div>
             </div>
           `;
@@ -1642,19 +1917,22 @@
           const sorted = [...schoolActivities].sort((a,b) => a.date.localeCompare(b.date));
           container.innerHTML = `
             <div class="bg-cardbg border border-bordercol rounded-2xl p-3 divide-y divide-bordercol/30 space-y-2">
-              ${sorted.map(a => `
-                <div class="pt-2 flex items-center justify-between text-xs">
-                  <div>
-                    <span class="font-bold text-white block">${a.date}: ${a.title} (${a.child})</span>
-                    <p class="text-[10px] text-slate-400">${a.institution} • ${a.startHour}-${a.endHour} • ${a.paymentType}</p>
-                    ${a.deadline !== '-' ? `<p class="text-[9px] text-rose-300">Termen plată: ${a.deadline}</p>` : ''}
+              ${sorted.map(a => {
+                const actColor = getSchoolActivityColor(a);
+                return `
+                  <div class="pt-2 flex items-center justify-between text-xs p-1 rounded" style="border-left: 3px solid ${actColor}; padding-left: 6px;">
+                    <div>
+                      <span class="font-bold text-white block">${a.date}: ${a.title} (${a.child})</span>
+                      <p class="text-[10px] text-slate-400">${a.institution} • ${a.startHour}-${a.endHour} • ${a.paymentType}</p>
+                      ${a.deadline !== '-' ? `<p class="text-[9px] text-rose-300">Termen plată: ${a.deadline}</p>` : ''}
+                    </div>
+                    <div class="text-right">
+                      <span class="font-bold block ${a.paymentStatus === 'Achitat' ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
+                      <button onclick="deleteSchoolActivity('${a.id}')" class="text-rose-400 text-xs p-1">🗑️</button>
+                    </div>
                   </div>
-                  <div class="text-right">
-                    <span class="font-bold block ${a.paymentStatus === 'Achitat' ? 'text-emerald-400' : 'text-amber-400'}">${a.total} Lei</span>
-                    <button onclick="deleteSchoolActivity('${a.id}')" class="text-rose-400 text-xs p-1">🗑️</button>
-                  </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
           `;
         }
@@ -1693,8 +1971,9 @@
           html += `<span class="text-[10px] text-slate-500 italic">Nicio activitate configurată în această zi.</span>`;
         } else {
           acts.forEach(a => {
+            const actColor = getSchoolActivityColor(a);
             html += `
-              <div class="flex items-center justify-between p-2 rounded-lg bg-darkbg border border-bordercol mt-1">
+              <div class="flex items-center justify-between p-2 rounded-lg bg-darkbg border border-bordercol mt-1" style="border-left: 3px solid ${actColor};">
                 <div>
                   <span class="font-bold text-white text-[11px]">${a.title} (${a.child} - ${a.institution})</span>
                   <p class="text-[10px] text-slate-400">${a.startHour} - ${a.endHour} • ${a.hours}h • ${a.total} Lei [${a.paymentStatus}]</p>
@@ -1725,6 +2004,8 @@
       const paymentStatus = document.getElementById('schoolPaymentStatus').value;
       const deadline = document.getElementById('schoolDeadline').value || "-";
       const dayMessage = document.getElementById('schoolDayMessage').value.trim();
+      const colorSelect = document.getElementById('schoolColorSelect');
+      const chosenColor = colorSelect ? colorSelect.value : 'auto';
 
       let total = (paymentType === 'Pe oră') ? (hours * rate) : rate;
 
@@ -1750,6 +2031,7 @@
           paymentStatus: paymentStatus,
           deadline: deadline,
           dayMessage: dayMessage,
+          color: chosenColor,
           reminders: pickupReminders
         };
         schoolActivities.push(item);
@@ -2091,6 +2373,47 @@
       }
     }
 
+
+    let lastNotifiedMinuteMap = {};
+
+    function checkAndTriggerScheduledNotifications() {
+      const now = new Date();
+      const currentHH = String(now.getHours()).padStart(2, '0');
+      const currentMM = String(now.getMinutes()).padStart(2, '0');
+      const currentTimeStr = `${currentHH}:${currentMM}`;
+      const todayDateStr = now.toISOString().split('T')[0];
+
+      const savedConfig = JSON.parse(localStorage.getItem('diih_notifications_multi') || '{}');
+      if (!savedConfig || Object.keys(savedConfig).length === 0) return;
+
+      Object.keys(savedConfig).forEach(catId => {
+        const slots = savedConfig[catId] || [];
+        slots.forEach((slot, idx) => {
+          if (!slot.t || slot.t !== currentTimeStr) return;
+          const key = `${todayDateStr}_${catId}_${idx}_${currentTimeStr}`;
+          if (lastNotifiedMinuteMap[key]) return; // deja declanșat în acest minut
+          lastNotifiedMinuteMap[key] = true;
+
+          let msg = slot.m || 'Alertă programată DIiH';
+          let title = `DIiH [${catId.toUpperCase()}]`;
+
+          // Formatare contextuală pe categorie
+          if (catId === 'psaltire') {
+            const info = CATISME_INFO[currentCatismaNum] || {};
+            title = `DIiH • Catisma ${info.roman || ''}`;
+          } else if (catId === 'school') {
+            const acts = schoolActivities.filter(a => a.date === todayDateStr);
+            if (acts.length > 0) {
+              msg += ` • ${acts.length} activități programate`;
+            }
+          }
+
+          triggerNotification(title, msg);
+          logEventToCloud('NOTIF_DUE', 'notification', catId, `Notificare declanșată: ${title} - ${msg}`);
+        });
+      });
+    }
+
     function triggerNotification(title, body) {
       if (navigator.serviceWorker && navigator.serviceWorker.controller) {
         navigator.serviceWorker.controller.postMessage({
@@ -2394,7 +2717,7 @@
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `diih_backup_v16_${Date.now()}.json`;
+      a.download = `diih_backup_v17_${Date.now()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

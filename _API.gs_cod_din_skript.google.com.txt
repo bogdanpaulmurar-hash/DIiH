@@ -1,6 +1,6 @@
 /**
  * BACKEND API DEFINITIV PENTRU DIiH HUB v17
- * Autor: Bogdan Murar (Z003FU5C) & DevPilot
+ * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  */
 
@@ -60,7 +60,7 @@ function doGet(e) {
   if (action === "saveSchoolActivities") {
     let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
     if (!sh) {
-      sh = ss.insertSheet("Activitati_Scoala");
+      sh = ss.insertSheet("Scoala_Activitati");
       sh.appendRow(["ID", "Data", "Copil", "Institutie", "Titlu", "TipPlata", "Ore", "TarifOra", "TotalPlata", "StatusPlata", "TermenPlata", "MesajZi", "RemindereJson", "DataCreare"]);
       sh.getRange("A1:N1").setFontWeight("bold");
     }
@@ -155,19 +155,31 @@ function doGet(e) {
     }
   }
 
-  // 5. GÂNDURI
+  // 5. GÂNDURI (Structură suportată: cu ID pe Col 1 sau direct Gand pe Col 1)
   if (action === "addGand") {
     let sh = ss.getSheetByName("Ganduri");
     if (!sh) {
       sh = ss.insertSheet("Ganduri");
-      sh.appendRow(["Gand", "Sursa", "Data"]);
-      sh.getRange("A1:C1").setFontWeight("bold");
+      sh.appendRow(["ID", "Gand", "Sursa", "DataCreare"]);
+      sh.getRange("A1:D1").setFontWeight("bold");
     }
-    sh.appendRow([
-      e.parameter.gand,
-      e.parameter.sursa || "Personal",
-      Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss")
-    ]);
+    const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
+    const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+    if (header === "ID") {
+      const gandId = e.parameter.id || ("GAND-" + Date.now());
+      sh.appendRow([
+        gandId,
+        e.parameter.gand,
+        e.parameter.sursa || "Personal",
+        dataCreare
+      ]);
+    } else {
+      sh.appendRow([
+        e.parameter.gand,
+        e.parameter.sursa || "Personal",
+        dataCreare
+      ]);
+    }
     return returnResponse(e, { success: true });
   }
 
@@ -175,8 +187,10 @@ function doGet(e) {
     let sh = ss.getSheetByName("Ganduri");
     let rowId = parseInt(e.parameter.rowId, 10);
     if (sh && rowId >= 2 && rowId <= sh.getLastRow()) {
-      sh.getRange(rowId, 1).setValue(e.parameter.gand);
-      sh.getRange(rowId, 2).setValue(e.parameter.sursa);
+      const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
+      const colOffset = (header === "ID") ? 1 : 0;
+      sh.getRange(rowId, 1 + colOffset).setValue(e.parameter.gand);
+      sh.getRange(rowId, 2 + colOffset).setValue(e.parameter.sursa);
       return returnResponse(e, { success: true });
     }
   }
@@ -190,15 +204,32 @@ function doGet(e) {
     }
   }
 
-  // 6. CUMPĂRĂTURI
+  // 6. CUMPĂRĂTURI (Structură suportată: cu ID pe Col 1 sau direct Magazin pe Col 1)
   if (action === "addCumparaturi") {
     let sh = ss.getSheetByName("lista_cumparaturi");
     if (!sh) {
       sh = ss.insertSheet("lista_cumparaturi");
-      sh.appendRow(["Magazin", "Produs", "Cantitate"]);
-      sh.getRange("A1:C1").setFontWeight("bold");
+      sh.appendRow(["ID", "Magazin", "Produs", "Cantitate", "DataCreare"]);
+      sh.getRange("A1:E1").setFontWeight("bold");
     }
-    sh.appendRow([e.parameter.magazin || "General", e.parameter.produs, e.parameter.cantitate || "1"]);
+    const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
+    const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+    if (header === "ID") {
+      const shopId = e.parameter.id || ("SHOP-" + Date.now());
+      sh.appendRow([
+        shopId,
+        e.parameter.magazin || "General",
+        e.parameter.produs,
+        e.parameter.cantitate || "1",
+        dataCreare
+      ]);
+    } else {
+      sh.appendRow([
+        e.parameter.magazin || "General",
+        e.parameter.produs,
+        e.parameter.cantitate || "1"
+      ]);
+    }
     return returnResponse(e, { success: true });
   }
 
@@ -215,7 +246,9 @@ function doGet(e) {
     let sh = ss.getSheetByName("lista_cumparaturi");
     const magazin = e.parameter.magazin;
     if (sh && magazin && sh.getLastRow() >= 2) {
-      const vals = sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues();
+      const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
+      const magazinCol = (header === "ID") ? 2 : 1;
+      const vals = sh.getRange(2, magazinCol, sh.getLastRow() - 1, 1).getValues();
       for (let i = vals.length - 1; i >= 0; i--) {
         if (vals[i][0] && vals[i][0].toString().trim() === magazin.toString().trim()) {
           sh.deleteRow(i + 2);
@@ -241,6 +274,22 @@ function doGet(e) {
       }
       return returnResponse(e, { success: true });
     }
+  }
+
+  // Actualizare în calup Necesită Atenție (Pomelnic)
+  if (action === "batchUpdateAtentie") {
+    let sh = ss.getSheetByName("Pomelnic");
+    const rowIdsStr = e.parameter.rowIds || "";
+    const flagValue = (e.parameter.necesitaAtentie === "true" || e.parameter.necesitaAtentie === true);
+    if (sh && rowIdsStr) {
+      const ids = rowIdsStr.split(",").map(x => parseInt(x.trim(), 10)).filter(n => !isNaN(n));
+      ids.forEach(rId => {
+        if (rId >= 2 && rId <= sh.getLastRow()) {
+          sh.getRange(rId, 22).setValue(flagValue);
+        }
+      });
+    }
+    return returnResponse(e, { success: true });
   }
 
   // 8. SALVARE CONFIGURĂRI NOTIFICĂRI ÎN SHEET
@@ -329,21 +378,30 @@ function getSchoolActivitiesData(ss) {
   let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
   if (!sh || sh.getLastRow() < 2) return [];
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 14).getValues();
-  return rows.map(r => ({
-    id: r[0],
-    date: r[1],
-    child: r[2] || "Copil",
-    institution: r[3] || "-",
-    title: r[4] || "Activitate",
-    paymentType: r[5] || "Pe oră",
-    hours: parseFloat(r[6]) || 1,
-    rate: parseFloat(r[7]) || 0,
-    total: parseFloat(r[8]) || 0,
-    paymentStatus: r[9] || "În așteptare",
-    deadline: r[10] || "-",
-    dayMessage: r[11] || "",
-    reminders: parseJsonSafe(r[12])
-  }));
+  return rows.map(r => {
+    let dateVal = r[1];
+    let dateStr = "";
+    if (dateVal instanceof Date) {
+      dateStr = Utilities.formatDate(dateVal, "Europe/Bucharest", "yyyy-MM-dd");
+    } else if (typeof dateVal === "string") {
+      dateStr = dateVal.substring(0, 10);
+    }
+    return {
+      id: r[0],
+      date: dateStr,
+      child: r[2] || "Copil",
+      institution: r[3] || "-",
+      title: r[4] || "Activitate",
+      paymentType: r[5] || "Pe oră",
+      hours: parseFloat(r[6]) || 1,
+      rate: parseFloat(r[7]) || 0,
+      total: parseFloat(r[8]) || 0,
+      paymentStatus: r[9] || "În așteptare",
+      deadline: r[10] || "-",
+      dayMessage: r[11] || "",
+      reminders: parseJsonSafe(r[12])
+    };
+  });
 }
 
 function parseJsonSafe(val) {
@@ -401,25 +459,43 @@ function getPomelnicData(ss) {
 function getCumparaturiData(ss) {
   const sh = ss.getSheetByName("lista_cumparaturi");
   if (!sh || sh.getLastRow() < 2) return [];
-  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues();
-  return rows.map((r, i) => ({
-    rowId: i + 2,
-    magazin: r[0] || "General",
-    produs: r[1] || "",
-    cantitate: r[2] || "1"
-  })).filter(x => x.produs);
+  const maxRows = sh.getLastRow();
+  const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
+  const hasIdCol = (header === "ID");
+  const numCols = hasIdCol ? 5 : 3;
+  const rows = sh.getRange(2, 1, maxRows - 1, numCols).getValues();
+  return rows.map((r, i) => {
+    let magazin = hasIdCol ? (r[1] || "General") : (r[0] || "General");
+    let produs = hasIdCol ? (r[2] || "") : (r[1] || "");
+    let cantitate = hasIdCol ? (r[3] || "1") : (r[2] || "1");
+    return {
+      rowId: i + 2,
+      magazin: magazin.toString().trim(),
+      produs: produs.toString().trim(),
+      cantitate: cantitate.toString().trim()
+    };
+  }).filter(x => x.produs !== "");
 }
 
 function getGanduriData(ss) {
   const sh = ss.getSheetByName("Ganduri");
   if (!sh || sh.getLastRow() < 2) return [];
-  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 3).getValues();
-  return rows.map((r, i) => ({
-    rowId: i + 2,
-    gand: r[0] || "",
-    sursa: r[1] || "Personal",
-    data: r[2] ? parseDateToText(r[2]) : ""
-  })).filter(x => x.gand);
+  const maxRows = sh.getLastRow();
+  const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
+  const hasIdCol = (header === "ID");
+  const numCols = hasIdCol ? 4 : 3;
+  const rows = sh.getRange(2, 1, maxRows - 1, numCols).getValues();
+  return rows.map((r, i) => {
+    let gand = hasIdCol ? (r[1] || "") : (r[0] || "");
+    let sursa = hasIdCol ? (r[2] || "Personal") : (r[1] || "Personal");
+    let dataVal = hasIdCol ? r[3] : r[2];
+    return {
+      rowId: i + 2,
+      gand: gand.toString().trim(),
+      sursa: sursa.toString().trim(),
+      data: dataVal ? parseDateToText(dataVal) : ""
+    };
+  }).filter(x => x.gand !== "");
 }
 
 function getNoteAnaniaData(ss) {
