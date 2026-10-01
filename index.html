@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title id="htmlAppTitle">DIiH Hub v17</title>
+  <title id="htmlAppTitle">DIiH</title>
   
   <link rel="manifest" href="./manifest.json">
   <link id="appFavicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
@@ -1265,7 +1265,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v17.0";
+    const APP_VERSION = "v18.0";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -1353,7 +1353,7 @@
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'DIiH Hub v17 pornit');
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH Hub v18 pornit');
 
       applySharedModeIfNeeded();
 
@@ -1380,9 +1380,9 @@
 
     function applyAppBrandUI() {
       document.getElementById('headerAppTitle').textContent = appTitle;
-      document.getElementById('htmlAppTitle').textContent = `${appTitle} v17`;
+      document.getElementById('htmlAppTitle').textContent = `${appTitle} v18`;
       document.getElementById('headerAppLogo').textContent = appLogo;
-      document.title = `${appTitle} v17`;
+      document.title = `${appTitle} v18`;
       updateDynamicFavicon(appLogo, appIconPath);
 
       const titleInput = document.getElementById('settingAppTitle');
@@ -1602,7 +1602,7 @@
         renderSchoolDisplay();
       }
       if (tabId === 'more') switchSubTab(isInActiveSharedMode() ? 'inventar' : 'setari');
-      // Spam switch_tab eliminat conform cerintelor v17
+      // Spam switch_tab eliminat conform cerintelor v18
     }
 
     function jumpToCurrentSchoolMonth() {
@@ -3831,7 +3831,7 @@
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `diih_backup_v17_${Date.now()}.json`;
+      a.download = `diih_backup_v18_${Date.now()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
