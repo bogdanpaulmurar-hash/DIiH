@@ -181,6 +181,13 @@
 
     <!-- TAB 2: POMELNIC COMPLET -->
     <section id="tab-pomelnic" class="tab-content hidden space-y-3">
+      <div id="sharedPomelnicBackNav" class="hidden flex items-center justify-between pb-1">
+        <button onclick="switchTab('today')" class="text-xs text-cyan-300 hover:text-cyan-200 flex items-center space-x-1 font-medium bg-cardbg px-2.5 py-1 rounded-lg border border-bordercol">
+          <span>←</span>
+          <span>Înapoi la Astăzi</span>
+        </button>
+      </div>
+
       <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -465,6 +472,10 @@
           <button onclick="switchSubTab('admin')" id="btnSubAdmin" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
             <span class="text-lg">🛡️</span>
             <span class="text-[9px] font-bold">Admin</span>
+          </button>
+          <button onclick="switchTab('pomelnic')" id="btnSubPomelnic" class="hidden p-2.5 bg-darkbg border border-rose-900/60 rounded-xl flex flex-col items-center space-y-1 text-rose-300 hover:text-white">
+            <span class="text-lg">📜</span>
+            <span class="text-[9px] font-bold">Pomelnic</span>
           </button>
         </div>
       </div>
@@ -1626,6 +1637,14 @@
           switchSubTab(sharedAllowsInventar ? 'inventar' : 'notificari');
         }
       }
+      if (isInActiveSharedMode() && tabId === 'pomelnic') {
+        const moreBtn = document.getElementById('nav-more');
+        if (moreBtn && !moreBtn.classList.contains('hidden')) {
+          moreBtn.className = "flex flex-col items-center space-y-1 text-cyan-400 font-bold";
+        }
+      }
+      const backNav = document.getElementById('sharedPomelnicBackNav');
+      if (backNav) backNav.classList.toggle('hidden', !isInActiveSharedMode());
       // Spam switch_tab eliminat conform cerintelor v19
     }
 
@@ -4322,9 +4341,9 @@
       deviceName = sharingConfig.authorName || deviceName;
       applyAppBrandUI();
 
-      // Bara de jos afișează EXCLUSIV modulele bifate de admin; Setări/Admin nu apar niciodată
+      // Bara de jos afișează EXCLUSIV modulele bifate de admin (fără Pomelnic, care merge în 'Mai multe')
       const allowedModules = sharingConfig.enabledModules && sharingConfig.enabledModules.length > 0 ? sharingConfig.enabledModules : ['calendar', 'cumparaturi'];
-      const navMap = { today: 'nav-today', pomelnic: 'nav-pomelnic', calendar: 'nav-calendar', ganduri: 'nav-ganduri', cumparaturi: 'nav-cumparaturi' };
+      const navMap = { today: 'nav-today', calendar: 'nav-calendar', ganduri: 'nav-ganduri', cumparaturi: 'nav-cumparaturi' };
       let visibleCount = 0;
       Object.keys(navMap).forEach(mod => {
         const btn = document.getElementById(navMap[mod]);
@@ -4336,10 +4355,19 @@
           btn.classList.add('hidden');
         }
       });
-      // "Mai multe" e mereu accesibil în modul partajat — minim pentru Notificări (ca persoana să-și activeze alertele pe propriul telefon);
-      // Inventar apare suplimentar doar dacă e bifat; Psaltire/Setări/Admin rămân ascunse mereu.
+      // Pomelnic e scos de pe bara de jos în modul partajat (mutat în 'Mai multe' și în Aniversările Zilei)
+      const navPomelnic = document.getElementById('nav-pomelnic');
+      if (navPomelnic) navPomelnic.classList.add('hidden');
+
+      // "Mai multe" e mereu accesibil în modul partajat:
+      // - Notificări e mereu vizibil
+      // - Pomelnic apare dacă e permis în sharingConfig
+      // - Inventar apare dacă e permis în sharingConfig
+      // - Psaltire / Widget / Setări / Admin rămân ascunse mereu
       const moreBtn = document.getElementById('nav-more');
-      const sharedOnlyShowsInventar = allowedModules.includes('inventar');
+      const sharedAllowsPomelnic = allowedModules.includes('pomelnic');
+      const sharedAllowsInventar = allowedModules.includes('inventar');
+
       ['btnSubPsaltire', 'btnSubWidget', 'btnSubSetari', 'btnSubAdmin'].forEach(id => {
         const b = document.getElementById(id);
         if (b) b.classList.add('hidden');
@@ -4347,11 +4375,10 @@
       const notifBtn = document.getElementById('btnSubNotif');
       if (notifBtn) notifBtn.classList.remove('hidden');
       const invBtn = document.getElementById('btnSubInventar');
-      if (sharedOnlyShowsInventar) {
-        if (invBtn) invBtn.classList.remove('hidden');
-      } else {
-        if (invBtn) invBtn.classList.add('hidden');
-      }
+      if (invBtn) invBtn.classList.toggle('hidden', !sharedAllowsInventar);
+      const pomBtn = document.getElementById('btnSubPomelnic');
+      if (pomBtn) pomBtn.classList.toggle('hidden', !sharedAllowsPomelnic);
+
       moreBtn.classList.remove('hidden');
       visibleCount++;
 
@@ -4370,7 +4397,7 @@
       // Prima inițializare: comutăm pe primul modul permis și afișăm mesajul de bun venit
       if (!sharedModeInitialized) {
         sharedModeInitialized = true;
-        const firstNavModule = allowedModules.find(m => m !== 'inventar') || (sharedOnlyShowsInventar ? 'more' : allowedModules[0]);
+        const firstNavModule = allowedModules.find(m => m !== 'inventar' && m !== 'pomelnic') || (allowedModules.includes('today') ? 'today' : 'more');
         switchTab(firstNavModule);
         showToast(`Bine ai venit, ${deviceName}!`);
       }
@@ -4432,8 +4459,14 @@
         html += `
           <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-2">
             <div class="flex items-center justify-between text-xs font-bold text-cyan-300 uppercase tracking-wider border-b border-bordercol pb-2">
-              <span>🎉 Aniversările Zilei</span>
-              <span class="bg-slate-800 px-2 py-0.5 rounded-full text-slate-300">${todaysBirthdays.length}</span>
+              <div class="flex items-center space-x-2">
+                <span>🎉 Aniversările Zilei</span>
+                <span class="bg-slate-800 px-2 py-0.5 rounded-full text-slate-300 text-[10px]">${todaysBirthdays.length}</span>
+              </div>
+              <button onclick="switchTab('pomelnic')" class="px-2 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 hover:border-rose-600 text-rose-200 rounded-lg text-[10px] font-bold flex items-center space-x-1.5 transition active:scale-95 shadow-sm" title="Deschide Pomelnicul complet">
+                <span>📜</span>
+                <span>Pomelnic</span>
+              </button>
             </div>
             ${todaysBirthdays.length === 0 ? '<p class="text-xs text-slate-500 italic py-1 text-center">Nicio aniversare sau comemorare în această zi.</p>' : todaysBirthdays.map(m => {
               const nume = `${m.person.prenume} ${m.person.nume}`.trim();
@@ -4441,16 +4474,6 @@
               if (m.type === 'BIRTH_DECEASED') return `<div onclick="openPersonModal(${m.person.rowId})" class="p-2 rounded-xl bg-slate-900/80 border border-amber-900/50 cursor-pointer active:scale-98 transition"><span class="text-xs font-bold text-amber-300">🕯️ ${nume}</span><p class="text-[11px] text-slate-400">Ar fi împlinit ${m.ageWouldBe} ani${m.yearsSinceDeath !== null ? ` • adormit de ${m.yearsSinceDeath} ani` : ''}</p></div>`;
               return `<div onclick="openPersonModal(${m.person.rowId})" class="p-2 rounded-xl bg-slate-900/80 border border-amber-900/50 cursor-pointer active:scale-98 transition"><span class="text-xs font-bold text-amber-300">† ${nume}</span><p class="text-[11px] text-slate-400">Adormit de ${m.years} ani${m.ageAtDeath !== null ? ` • adormit la ${m.ageAtDeath} ani` : ''}</p></div>`;
             }).join('')}
-          </div>
-        `;
-        html += `
-          <div onclick="switchTab('pomelnic')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-rose-600/60 active:scale-98 transition space-y-2">
-            <div class="flex items-center justify-between text-xs font-bold text-rose-300 uppercase tracking-wider">
-              <span>📜 Pomelnic de Astăzi</span>
-              <span class="bg-rose-950 border border-rose-800 px-2 py-0.5 rounded-full">${currentDailyPomelnicVii.length + currentDailyPomelnicAdormiti.length} persoane</span>
-            </div>
-            <p class="text-xs text-slate-200">🌱 ${currentDailyPomelnicVii.length} Vii • † ${currentDailyPomelnicAdormiti.length} Adormiți</p>
-            <p class="text-[10px] text-slate-500">Apasă pentru lista completă →</p>
           </div>
         `;
       }
