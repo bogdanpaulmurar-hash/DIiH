@@ -5,7 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title id="htmlAppTitle">DIiH</title>
   
-  <link rel="manifest" href="./manifest.json">
+  <link id="manifestLink" rel="manifest" href="./manifest.json">
+  <script>
+    // Comutare dinamică manifest PWA: dacă pagina e deschisă prin link de share,
+    // înregistrăm manifest-shared.json ca telefonul să instaleze o aplicație PWA complet SEPARATĂ
+    // cu propriul nume ("Familia Murar"), propriul ID PWA și propria pictogramă (Inimă EKG / Casă),
+    // fără a intra în conflict sau a se confunda cu DIiH personal.
+    (function() {
+      try {
+        var sp = new URLSearchParams(window.location.search);
+        if (sp.has('share')) {
+          var mLink = document.getElementById('manifestLink');
+          if (mLink) mLink.href = './manifest-shared.json';
+        }
+      } catch(e) {}
+    })();
+  </script>
   <link id="appFavicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
   <meta name="theme-color" content="#090d16">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -680,6 +695,20 @@
 
               <span class="text-[10px] text-pink-400 font-bold block uppercase tracking-wider pt-1">👨‍👩‍👧‍👦 Icoane Specifice pentru Familie (max 4 — pentru a nu le confunda):</span>
               <div class="grid grid-cols-2 gap-2 text-xs">
+                <button onclick="setAppCustomIcon('./icons/icon-heart-ekg.png', '❤️')" class="p-2 bg-darkbg border border-bordercol hover:border-pink-400 rounded-xl flex items-center space-x-2 text-left transition">
+                  <img src="./icons/icon-heart-ekg.png" class="w-8 h-8 rounded-lg">
+                  <div class="truncate">
+                    <span class="font-bold text-white block text-[11px] truncate">Inimă EKG</span>
+                    <span class="text-[9px] text-pink-300">Original v16</span>
+                  </div>
+                </button>
+                <button onclick="setAppCustomIcon('./icons/icon-family-home.svg', '🏡')" class="p-2 bg-darkbg border border-bordercol hover:border-amber-400 rounded-xl flex items-center space-x-2 text-left transition">
+                  <img src="./icons/icon-family-home.svg" class="w-8 h-8 rounded-lg">
+                  <div class="truncate">
+                    <span class="font-bold text-white block text-[11px] truncate">Căminul Familiei</span>
+                    <span class="text-[9px] text-amber-300">Casă curată</span>
+                  </div>
+                </button>
                 <button onclick="setAppCustomIcon('./icons/icon-heart-cross.svg', '🤍')" class="p-2 bg-darkbg border border-bordercol hover:border-pink-400 rounded-xl flex items-center space-x-2 text-left transition">
                   <img src="./icons/icon-heart-cross.svg" class="w-8 h-8 rounded-lg">
                   <div class="truncate">
@@ -687,25 +716,11 @@
                     <span class="text-[9px] text-pink-300">Iubire & Ocrotire</span>
                   </div>
                 </button>
-                <button onclick="setAppCustomIcon('./icons/icon-family-home.svg', '🏡')" class="p-2 bg-darkbg border border-bordercol hover:border-amber-400 rounded-xl flex items-center space-x-2 text-left transition">
-                  <img src="./icons/icon-family-home.svg" class="w-8 h-8 rounded-lg">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Căminul Familiei</span>
-                    <span class="text-[9px] text-amber-300">Pace & Binecuvântare</span>
-                  </div>
-                </button>
                 <button onclick="setAppCustomIcon('./icons/icon-family-vine.svg', '🌿')" class="p-2 bg-darkbg border border-bordercol hover:border-emerald-400 rounded-xl flex items-center space-x-2 text-left transition">
                   <img src="./icons/icon-family-vine.svg" class="w-8 h-8 rounded-lg">
                   <div class="truncate">
                     <span class="font-bold text-white block text-[11px] truncate">Vița & Măslinul</span>
                     <span class="text-[9px] text-emerald-300">Familie Roditoare</span>
-                  </div>
-                </button>
-                <button onclick="setAppCustomIcon('./icons/icon-family-anchor.svg', '⚓')" class="p-2 bg-darkbg border border-bordercol hover:border-cyan-400 rounded-xl flex items-center space-x-2 text-left transition">
-                  <img src="./icons/icon-family-anchor.svg" class="w-8 h-8 rounded-lg">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Ancora Păcii</span>
-                    <span class="text-[9px] text-cyan-300">Nădejde Neclintită</span>
                   </div>
                 </button>
               </div>
@@ -765,14 +780,14 @@
               <input type="text" id="adminSharedTitle" placeholder="Nume aplicație (ex: Agenda Familiei)" class="col-span-2 bg-darkbg border border-bordercol rounded-lg p-2 text-white">
               <input type="text" id="adminSharedLogo" placeholder="🏡" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-center">
             </div>
-            <span class="text-[10px] text-slate-400 block">Icoană dedicată familiei (distinctă de DIiH personal):</span>
+            <span class="text-[10px] text-slate-400 block">Icoană dedicată familiei pe ecranul telefonului:</span>
             <div class="grid grid-cols-4 gap-1.5">
+              <button onclick="setSharedIconChoice('./icons/icon-heart-ekg.png')" data-icon-path="./icons/icon-heart-ekg.png" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Inimă EKG (Original v16)"><img src="./icons/icon-heart-ekg.png" class="w-7 h-7 mx-auto rounded"></button>
+              <button onclick="setSharedIconChoice('./icons/icon-family-home.svg')" data-icon-path="./icons/icon-family-home.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Căminul Familiei (Casă)"><img src="./icons/icon-family-home.svg" class="w-7 h-7 mx-auto rounded"></button>
               <button onclick="setSharedIconChoice('./icons/icon-heart-cross.svg')" data-icon-path="./icons/icon-heart-cross.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Inimă & Cruce"><img src="./icons/icon-heart-cross.svg" class="w-7 h-7 mx-auto rounded"></button>
-              <button onclick="setSharedIconChoice('./icons/icon-family-home.svg')" data-icon-path="./icons/icon-family-home.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Căminul Familiei"><img src="./icons/icon-family-home.svg" class="w-7 h-7 mx-auto rounded"></button>
               <button onclick="setSharedIconChoice('./icons/icon-family-vine.svg')" data-icon-path="./icons/icon-family-vine.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Vița Roditoare"><img src="./icons/icon-family-vine.svg" class="w-7 h-7 mx-auto rounded"></button>
-              <button onclick="setSharedIconChoice('./icons/icon-family-anchor.svg')" data-icon-path="./icons/icon-family-anchor.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Ancora Păcii"><img src="./icons/icon-family-anchor.svg" class="w-7 h-7 mx-auto rounded"></button>
             </div>
-            <input type="hidden" id="adminSharedIconPath" value="./icons/icon-heart-cross.svg">
+            <input type="hidden" id="adminSharedIconPath" value="./icons/icon-heart-ekg.png">
           </div>
 
           <div class="space-y-1.5">

@@ -1,19 +1,7 @@
-const CACHE_NAME = 'diih-cache-v20';
+const CACHE_NAME = 'diih-cache-v16';
 const ASSETS = [
   './index.html',
-  './manifest.json',
-  './manifest-shared.json',
-  './icons/icon-heart-ekg.png',
-  './icons/icon-monograma-hristos-brancoveneasca.svg',
-  './icons/icon-sigiliu-monograma-hristos.svg',
-  './icons/icon-sigiliu-gravura-monograma.svg',
-  './icons/icon-orthodox-cross.svg',
-  './icons/icon-heart-cross.svg',
-  './icons/icon-family-home.svg',
-  './icons/icon-family-vine.svg',
-  './icons/icon-family-anchor.svg',
-  './icons/icon-monogram-diih.svg',
-  './icons/icon-psaltire-candle.svg'
+  './manifest.json'
 ];
 
 self.addEventListener('install', (e) => {
@@ -59,16 +47,4 @@ self.addEventListener('message', (event) => {
     const { title, options } = event.data;
     self.registration.showNotification(title, options);
   }
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if ('focus' in client) return client.focus();
-      }
-      if (clients.openWindow) return clients.openWindow('./index.html');
-    })
-  );
 });

@@ -1,0 +1,25 @@
+{
+  "id": "/index.html?share=andreea",
+  "name": "Familia Murar",
+  "short_name": "Familia Murar",
+  "description": "Agenda și rânduiala familiei",
+  "start_url": "./index.html?share=andreea",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icons/icon-heart-ekg.png",
+      "sizes": "512x512 192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-family-home.svg",
+      "sizes": "512x512 192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
