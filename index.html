@@ -7,16 +7,21 @@
   
   <link id="manifestLink" rel="manifest" href="./manifest.json">
   <script>
-    // Comutare dinamică manifest PWA: dacă pagina e deschisă prin link de share,
-    // înregistrăm manifest-shared.json ca telefonul să instaleze o aplicație PWA complet SEPARATĂ
-    // cu propriul nume ("Familia Murar"), propriul ID PWA și propria pictogramă (Inimă EKG / Casă),
-    // fără a intra în conflict sau a se confunda cu DIiH personal.
     (function() {
       try {
         var sp = new URLSearchParams(window.location.search);
+        var mLink = document.getElementById('manifestLink');
         if (sp.has('share')) {
-          var mLink = document.getElementById('manifestLink');
-          if (mLink) mLink.href = './manifest-shared.json';
+          var sc = localStorage.getItem('diih_sharing_config');
+          var iconChoice = '';
+          if (sc) {
+            try { iconChoice = JSON.parse(sc).sharedAppIconPath || ''; } catch(e){}
+          }
+          if (iconChoice.indexOf('home') !== -1) {
+            if (mLink) mLink.href = './manifest-shared-casa.json';
+          } else {
+            if (mLink) mLink.href = './manifest-shared.json';
+          }
         }
       } catch(e) {}
     })();
@@ -111,7 +116,7 @@
 
       <div id="todayOwnerContent" class="space-y-4">
       <!-- Catisma Zilei (Click: Deschide Rânduiala & Pomelnicul Grupului de Psaltire) -->
-      <div onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
+      <div id="ownerWidget_psaltire" onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
         <div class="flex items-center justify-between text-xs font-semibold text-rose-300 uppercase tracking-wider mb-2">
           <span>📖 Citirea Psaltirii</span>
           <span class="bg-rose-950/80 border border-rose-800 text-rose-200 px-2 py-0.5 rounded-full font-bold">Rânduială & Pomelnic Grup</span>
@@ -121,7 +126,7 @@
       </div>
 
       <!-- Biblia Anania (Cu Butoane Precedentul / Următorul) -->
-      <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
+      <div id="ownerWidget_biblia360" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">📜 Biblia — Ediția Bartolomeu Anania</span>
           <div class="flex space-x-1">
@@ -143,8 +148,29 @@
         </div>
       </div>
 
+      <!-- Continuitate Sfânta Scriptură (Click: Deschide Tabul Scripturii) -->
+      <div id="ownerWidget_scriptura" onclick="switchTab('scriptura')" class="bg-cardbg border border-amber-800/80 rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-500 active:scale-98 transition space-y-2">
+        <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
+          <div class="flex items-center space-x-1.5">
+            <span>📑</span>
+            <span>Continuitate Sf. Scriptură</span>
+          </div>
+          <span id="ownerWidgetScripturaBadge" class="bg-amber-950 border border-amber-800 text-amber-200 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0 / 1337 cap.</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="truncate pr-2">
+            <span class="text-[10px] text-slate-400 block">De continuat lectura cu:</span>
+            <span id="ownerWidgetScripturaNext" class="text-xs font-bold text-cyan-300 truncate block">Facerea 1</span>
+          </div>
+          <button onclick="event.stopPropagation(); advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl active:scale-95 transition shadow shrink-0 flex items-center space-x-1">
+            <span>✓</span>
+            <span>Am citit</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Aniversările Zilei -->
-      <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-2">
+      <div id="ownerWidget_anniversaries" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-2">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">🎉 Aniversările Zilei</span>
           <span id="anniversaryBadge" class="bg-slate-800 px-2 py-0.5 rounded-full text-slate-300 text-xs">0</span>
@@ -153,7 +179,7 @@
       </div>
 
       <!-- Pomelnicul de Astăzi (Coloana C: isActivPomelnic) -->
-      <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
+      <div id="ownerWidget_pomelnic" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <div>
             <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider">📿 Pomelnicul de Astăzi</span>
@@ -189,6 +215,42 @@
           </div>
           <div id="dailyPomelnicListAdormiti" class="space-y-1 divide-y divide-bordercol/30"></div>
         </div>
+      </div>
+
+      <!-- Școală & Activități -->
+      <div id="ownerWidget_school" onclick="switchTab('calendar')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-cyan-600/60 active:scale-98 transition space-y-2">
+        <div class="flex items-center justify-between text-xs font-bold text-cyan-300 uppercase tracking-wider">
+          <span>🎓 Școală & Activități</span>
+          <span id="ownerWidgetSchoolBadge" class="bg-cyan-950 border border-cyan-800 px-2 py-0.5 rounded-full text-[10px]">0 azi</span>
+        </div>
+        <div id="ownerWidgetSchoolContent" class="space-y-1 text-xs text-slate-300"></div>
+      </div>
+
+      <!-- Cumpărături Urgente -->
+      <div id="ownerWidget_shopping" onclick="switchTab('cumparaturi')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-emerald-600/60 active:scale-98 transition space-y-2">
+        <div class="flex items-center justify-between text-xs font-bold text-emerald-300 uppercase tracking-wider">
+          <span>🛒 Cumpărături</span>
+          <span id="ownerWidgetShoppingBadge" class="bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded-full text-[10px]">0 de luat</span>
+        </div>
+        <div id="ownerWidgetShoppingContent" class="space-y-1 text-xs text-slate-300"></div>
+      </div>
+
+      <!-- Gândul Zilei -->
+      <div id="ownerWidget_ganduri" onclick="switchTab('ganduri')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-600/60 active:scale-98 transition space-y-2">
+        <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
+          <span>💡 Gândul Zilei</span>
+          <span id="ownerWidgetGanduriBadge" class="bg-amber-950 border border-amber-800 px-2 py-0.5 rounded-full text-[10px]">Recent</span>
+        </div>
+        <div id="ownerWidgetGanduriContent" class="text-xs text-slate-200 italic"></div>
+      </div>
+
+      <!-- Inventar & Mentenanță -->
+      <div id="ownerWidget_inventory" onclick="switchTab('more'); switchSubTab('inventar');" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-violet-600/60 active:scale-98 transition space-y-2">
+        <div class="flex items-center justify-between text-xs font-bold text-violet-300 uppercase tracking-wider">
+          <span>📦 Inventar Personal</span>
+          <span id="ownerWidgetInventoryBadge" class="bg-violet-950 border border-violet-800 px-2 py-0.5 rounded-full text-[10px]">0 obiecte</span>
+        </div>
+        <div id="ownerWidgetInventoryContent" class="text-xs text-slate-300"></div>
       </div>
       </div>
 
@@ -459,6 +521,83 @@
       </div>
     </section>
 
+    <!-- TAB: SFÂNTA SCRIPTURĂ (Canonul complet Bartolomeu Anania, Evidență Capitole & Comasare Biblia 360) -->
+    <section id="tab-scriptura" class="tab-content hidden space-y-4">
+      <div id="sharedScripturaBackNav" class="hidden flex items-center justify-between pb-1">
+        <button onclick="switchTab('today')" class="text-xs text-cyan-300 hover:text-cyan-200 flex items-center space-x-1 font-medium bg-cardbg px-2.5 py-1 rounded-lg border border-bordercol">
+          <span>←</span>
+          <span>Înapoi la Astăzi</span>
+        </button>
+      </div>
+
+      <!-- Card Central Progres & Continuare Lectură -->
+      <div class="bg-cardbg border border-amber-800/80 rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-bordercol pb-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">📖</span>
+            <div>
+              <h3 class="text-xs font-bold text-white uppercase tracking-wider">Sfânta Scriptură</h3>
+              <p class="text-[10px] text-amber-300">Ediția Jubiliară Bartolomeu Valeriu Anania</p>
+            </div>
+          </div>
+          <span id="scripturaTotalProgressBadge" class="bg-amber-950 border border-amber-700 text-amber-200 text-[11px] px-2.5 py-0.5 rounded-full font-mono font-bold">0 / 1337 cap.</span>
+        </div>
+
+        <div class="space-y-1">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-400">Progres General:</span>
+            <span id="scripturaProgressPercent" class="text-emerald-400 font-bold">0.0%</span>
+          </div>
+          <div class="w-full bg-darkbg rounded-full h-2 overflow-hidden border border-bordercol">
+            <div id="scripturaProgressBar" class="bg-gradient-to-r from-emerald-600 to-amber-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Următorul de Citit -->
+        <div class="p-3 bg-darkbg border border-cyan-800/80 rounded-xl flex items-center justify-between space-x-2">
+          <div class="truncate">
+            <span class="text-[10px] text-cyan-300 uppercase font-bold block">Următorul capitol de citit:</span>
+            <span id="scripturaNextChapterTitle" class="text-sm font-bold text-white truncate block">Facerea 1 (Fac, 1)</span>
+          </div>
+          <div class="flex items-center space-x-1.5 shrink-0">
+            <button onclick="advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition shadow-lg flex items-center space-x-1">
+              <span>✓</span>
+              <span>Am citit</span>
+            </button>
+            <a id="scripturaReadOnlineBtn" href="https://www.bibliaortodoxa.ro" target="_blank" rel="noopener" class="bg-slate-800 hover:bg-slate-700 border border-bordercol text-slate-200 text-xs px-2.5 py-2 rounded-xl transition" title="Citește online pe bibliaortodoxa.ro">↗</a>
+          </div>
+        </div>
+
+        <!-- Comasare Biblia 360 & Citatul Zilei Anania -->
+        <div class="pt-2 border-t border-bordercol space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-amber-400 uppercase">📜 Lectura Zilei (Biblia 360):</span>
+            <div class="flex space-x-1">
+              <button onclick="navBiblia(-1)" class="px-2 py-0.5 bg-darkbg border border-bordercol rounded text-[10px] text-slate-300 hover:text-white">◀</button>
+              <button onclick="navBiblia(1)" class="px-2 py-0.5 bg-darkbg border border-bordercol rounded text-[10px] text-slate-300 hover:text-white">▶</button>
+            </div>
+          </div>
+          <p id="scripturaBibliaRef" class="text-xs text-white font-semibold"></p>
+          <p id="scripturaBibliaNote" class="text-[11px] text-slate-300 italic bg-darkbg/60 p-2 rounded-lg border border-bordercol/60 leading-relaxed"></p>
+        </div>
+      </div>
+
+      <!-- Filtre Cărți Scriptură -->
+      <div class="space-y-2">
+        <div class="flex items-center space-x-1 overflow-x-auto pb-1 text-xs">
+          <button onclick="filterScripturaTestament('ALL')" id="btnScripturaFilterAll" class="px-3 py-1.5 rounded-xl bg-cyan-900 text-cyan-200 font-bold whitespace-nowrap">Toate (76)</button>
+          <button onclick="filterScripturaTestament('VT')" id="btnScripturaFilterVT" class="px-3 py-1.5 rounded-xl bg-darkbg border border-bordercol text-slate-400 hover:text-white whitespace-nowrap">Vechiul Testament (49)</button>
+          <button onclick="filterScripturaTestament('NT')" id="btnScripturaFilterNT" class="px-3 py-1.5 rounded-xl bg-darkbg border border-bordercol text-slate-400 hover:text-white whitespace-nowrap">Noul Testament (27)</button>
+        </div>
+        <div class="relative">
+          <input type="text" id="scripturaSearchInput" oninput="renderScripturaBooksList()" placeholder="Caută carte (ex: 3Rg, Regi, Matei, Facerea)..." class="w-full bg-cardbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+        </div>
+      </div>
+
+      <!-- Lista Cărților Canonice cu Capitole Bifa-bile -->
+      <div id="scripturaBooksContainer" class="space-y-2"></div>
+    </section>
+
     <!-- TAB 6: MAI MULTE (Grup Psaltire, Notificări 3 Praguri, Setări, Widget) -->
     <section id="tab-more" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
@@ -488,9 +627,25 @@
             <span class="text-lg">🛡️</span>
             <span class="text-[9px] font-bold">Admin</span>
           </button>
+          <button onclick="switchTab('scriptura')" id="btnSubScriptura" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">📖</span>
+            <span class="text-[9px] font-bold">Scriptură</span>
+          </button>
           <button onclick="switchTab('pomelnic')" id="btnSubPomelnic" class="hidden p-2.5 bg-darkbg border border-rose-900/60 rounded-xl flex flex-col items-center space-y-1 text-rose-300 hover:text-white">
             <span class="text-lg">📜</span>
             <span class="text-[9px] font-bold">Pomelnic</span>
+          </button>
+          <button onclick="switchTab('calendar')" id="btnSubCalendar" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">🎓</span>
+            <span class="text-[9px] font-bold">Școală</span>
+          </button>
+          <button onclick="switchTab('cumparaturi')" id="btnSubCumparaturi" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">🛒</span>
+            <span class="text-[9px] font-bold">Cumpărături</span>
+          </button>
+          <button onclick="switchTab('ganduri')" id="btnSubGanduri" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">💡</span>
+            <span class="text-[9px] font-bold">Gânduri</span>
           </button>
         </div>
       </div>
@@ -593,35 +748,103 @@
         </div>
       </div>
 
-      <!-- SUB-TAB 3: TODAY WIDGET DASHBOARD -->
+      <!-- SUB-TAB 3: CONFIGURARE WIDGET-URI ASTĂZI -->
       <div id="subtab-widget" class="subtab-content hidden space-y-3">
-        <div class="bg-cardbg border border-cyan-800/80 rounded-2xl p-4 shadow-xl space-y-3">
-          <div class="flex items-center justify-between border-b border-bordercol pb-2">
-            <div class="flex items-center space-x-2">
-              <span class="text-xl">📱</span>
-              <span class="text-xs font-bold text-white uppercase tracking-wider">Today Widget View</span>
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
+          <div class="border-b border-bordercol pb-2 flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-white uppercase tracking-wider">📱 Personalizare Widget-uri «Astăzi»</h3>
+              <p class="text-[10px] text-slate-400">Alege ce carduri și funcții dorești să apară pe ecranul principal «Astăzi».</p>
             </div>
-            <span class="text-[10px] bg-cyan-950 border border-cyan-700 text-cyan-300 px-2 py-0.5 rounded-full font-mono">PWA Widget</span>
+            <span class="text-[10px] bg-cyan-950 border border-cyan-700 text-cyan-300 px-2 py-0.5 rounded-full font-bold">Astăzi</span>
           </div>
 
-          <div class="p-2.5 rounded-xl bg-darkbg border border-bordercol space-y-1">
-            <span class="text-[10px] text-rose-400 font-bold block uppercase">Catisma Zilei:</span>
-            <p id="widgetCatismaText" class="text-xs text-white font-semibold">Se calculează...</p>
+          <!-- Secțiunea 1: Aplicația Mea Personală -->
+          <div class="space-y-2 p-3 bg-darkbg rounded-xl border border-bordercol">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-cyan-300 text-[11px] uppercase">🏠 Ecranul Meu «Astăzi» (DIiH Personal):</span>
+              <div class="space-x-1">
+                <button onclick="toggleAllOwnerWidgets(true)" class="text-[9px] px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-slate-300">Toate</button>
+                <button onclick="toggleAllOwnerWidgets(false)" class="text-[9px] px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-slate-300">Niciunul</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtOwner_psaltire" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-slate-200">📖 Citirea Psaltirii</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtOwner_biblia360" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-slate-200">📜 Biblia 360 & Citatul Zilei</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtOwner_scriptura" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-slate-200">📑 Continuitate Sf. Scriptură</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtOwner_anniversaries" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-slate-200">🎉 Aniversările Zilei</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtOwner_pomelnic" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-slate-200">📿 Pomelnicul de Astăzi</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtOwner_school" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-slate-200">🎓 Școală & Activități</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtOwner_shopping" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-slate-200">🛒 Cumpărături</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtOwner_ganduri" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-slate-200">💡 Gândul Zilei</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtOwner_inventory" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-slate-200">📦 Inventar</span>
+              </label>
+            </div>
           </div>
 
-          <div class="p-2.5 rounded-xl bg-darkbg border border-bordercol space-y-1">
-            <span class="text-[10px] text-emerald-400 font-bold block uppercase">Pomelnicul de Rând:</span>
-            <p id="widgetPomelnicText" class="text-xs text-slate-200"></p>
-          </div>
-
-          <div class="p-2.5 rounded-xl bg-darkbg border border-bordercol space-y-1">
-            <span class="text-[10px] text-amber-400 font-bold block uppercase">Școală & Activități:</span>
-            <p id="widgetSchoolText" class="text-xs text-slate-200"></p>
-          </div>
-
-          <div class="p-2.5 rounded-xl bg-darkbg border border-bordercol space-y-1">
-            <span class="text-[10px] text-cyan-400 font-bold block uppercase">De Cumpărat Urgent:</span>
-            <p id="widgetShopText" class="text-xs text-slate-200"></p>
+          <!-- Secțiunea 2: Aplicația Partajată (Familia Murar) -->
+          <div class="space-y-2 p-3 bg-darkbg rounded-xl border border-bordercol">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-emerald-300 text-[11px] uppercase">🏡 Ecranul «Astăzi» Partajat (Familia Murar):</span>
+              <div class="space-x-1">
+                <button onclick="toggleAllSharedWidgets(true)" class="text-[9px] px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-slate-300">Toate</button>
+                <button onclick="toggleAllSharedWidgets(false)" class="text-[9px] px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-slate-300">Niciunul</button>
+              </div>
+            </div>
+            <p class="text-[9px] text-slate-500">Alege ce widget-uri apar pe ecranul de start al soției tale:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtShared_school" checked class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-slate-200">🎓 Școală & Activități</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtShared_shopping" checked class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-slate-200">🛒 Cumpărături</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtShared_anniversaries" checked class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-slate-200">🎉 Aniversările Zilei</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtShared_ganduri" checked class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-slate-200">💡 Gânduri</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtShared_scriptura" checked class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-slate-200">📑 Continuitate Scriptură</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="wgtShared_inventory" checked class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-slate-200">📦 Inventar</span>
+              </label>
+            </div>
+            <button onclick="saveSharedWidgetsConfig()" class="w-full bg-emerald-800 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl transition mt-2">💾 Salvează Configurația Widget-urilor</button>
           </div>
         </div>
       </div>
@@ -767,6 +990,42 @@
             <button onclick="saveGlobalCustomSettings()" class="w-full bg-cyan-900 border border-cyan-700 text-cyan-100 py-2 rounded-xl font-medium">💾 Salvează în Cloud</button>
           </div>
 
+          <!-- Personalizare Meniu Principal Jos (Setări Utilizator) -->
+          <div class="border-b border-bordercol pb-3 space-y-2">
+            <h4 class="font-bold text-cyan-300 uppercase tracking-wider">📌 Personalizare Bară de Meniu (Bara de Jos)</h4>
+            <p class="text-[10px] text-slate-400">Bifează ce taburi dorești direct pe bara de navigare de jos. Modulele debifate se mută automat în meniul «⋯ Mai multe»:</p>
+            <div class="grid grid-cols-2 gap-1.5">
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="navOpt_today" checked disabled class="rounded text-cyan-500 opacity-60">
+                <span class="text-[11px] text-slate-300">🏠 Astăzi (Fix)</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="navOpt_pomelnic" onchange="saveOwnerNavConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📜 Pomelnic</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="navOpt_calendar" onchange="saveOwnerNavConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">🎓 Școală</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="navOpt_ganduri" onchange="saveOwnerNavConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">💡 Gânduri</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="navOpt_cumparaturi" onchange="saveOwnerNavConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">🛒 Cumpărături</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="navOpt_scriptura" onchange="saveOwnerNavConfig()" class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📖 Scriptură</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="navOpt_inventar" onchange="saveOwnerNavConfig()" class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📦 Inventar</span>
+              </label>
+            </div>
+          </div>
+
           <button onclick="downloadJsonBackup()" class="w-full bg-slate-800 border border-bordercol py-2.5 rounded-xl font-medium text-slate-200">📥 Descarcă Backup JSON Local</button>
 
           <div class="space-y-1 pt-1">
@@ -834,6 +1093,45 @@
               <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
                 <input type="checkbox" id="adminModuleInventar" class="rounded text-emerald-500 focus:ring-0">
                 <span class="text-[11px] text-slate-200">📦 Inventar</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminModuleScriptura" class="rounded text-emerald-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📖 Scriptură</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 p-3 bg-darkbg rounded-xl border border-cyan-800">
+            <span class="font-bold text-cyan-300 block text-[11px] uppercase">📌 Bara de jos a Andreei (Meniul Principal):</span>
+            <p class="text-[9px] text-slate-500">Bifează ce să apară DIRECT pe bara de jos a soției. Modulele debifate merg în meniul «⋯ Mai multe»:</p>
+            <div class="grid grid-cols-2 gap-1.5">
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminMainBar_today" checked disabled class="rounded text-cyan-500 opacity-60">
+                <span class="text-[11px] text-slate-300">🏠 Astăzi</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminMainBar_calendar" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">🎓 Școală</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminMainBar_cumparaturi" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">🛒 Cumpărături</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminMainBar_inventar" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-emerald-300 font-bold">📦 Inventar</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminMainBar_pomelnic" class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📜 Pomelnic</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminMainBar_ganduri" class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">💡 Gânduri</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="adminMainBar_scriptura" class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📖 Scriptură</span>
               </label>
             </div>
           </div>
@@ -960,6 +1258,14 @@
       <button onclick="switchTab('cumparaturi')" id="nav-cumparaturi" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
         <span class="text-base">🛒</span>
         <span>Cumpărături</span>
+      </button>
+      <button onclick="switchTab('scriptura')" id="nav-scriptura" class="hidden flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
+        <span class="text-base">📖</span>
+        <span>Scriptură</span>
+      </button>
+      <button onclick="switchTab('inventar')" id="nav-inventar" class="hidden flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
+        <span class="text-base">📦</span>
+        <span>Inventar</span>
       </button>
       <button onclick="switchTab('more')" id="nav-more" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
         <span class="text-base">⋯</span>
@@ -1424,12 +1730,15 @@
       displayCurrentDate();
       calculateTodayPsaltire();
       loadStoredData();
+      applyOwnerNavLayout();
+      applyOwnerWidgetsVisibility();
+      updateScripturaDisplays();
       renderSchoolDisplay();
       initNotificationInputs();
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'DIiH 19 pornit');
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH v20 pornit');
 
       applySharedModeIfNeeded();
 
@@ -1682,12 +1991,20 @@
     }
 
     function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      if (tabId === 'inventar') {
+        switchTab('more');
+        switchSubTab('inventar');
+        return;
+      }
 
-      const tabs = ['today', 'pomelnic', 'calendar', 'ganduri', 'cumparaturi', 'more'];
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      if (targetTab) targetTab.classList.remove('hidden');
+
+      const tabs = ['today', 'pomelnic', 'calendar', 'ganduri', 'cumparaturi', 'scriptura', 'inventar', 'more'];
       tabs.forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
+        if (!btn) return;
         const wasHidden = btn.classList.contains('hidden');
         if (t === tabId) {
           btn.className = "flex flex-col items-center space-y-1 text-cyan-400 font-bold";
@@ -1703,6 +2020,9 @@
         }
         renderSchoolDisplay();
       }
+      if (tabId === 'scriptura') {
+        updateScripturaDisplays();
+      }
       if (tabId === 'more') {
         if (!isInActiveSharedMode()) {
           switchSubTab('setari');
@@ -1711,7 +2031,7 @@
           switchSubTab(sharedAllowsInventar ? 'inventar' : 'notificari');
         }
       }
-      if (isInActiveSharedMode() && tabId === 'pomelnic') {
+      if (isInActiveSharedMode() && (tabId === 'pomelnic' || tabId === 'scriptura')) {
         const moreBtn = document.getElementById('nav-more');
         if (moreBtn && !moreBtn.classList.contains('hidden')) {
           moreBtn.className = "flex flex-col items-center space-y-1 text-cyan-400 font-bold";
@@ -1719,7 +2039,8 @@
       }
       const backNav = document.getElementById('sharedPomelnicBackNav');
       if (backNav) backNav.classList.toggle('hidden', !isInActiveSharedMode());
-      // Spam switch_tab eliminat conform cerintelor v19
+      const scripturaBackNav = document.getElementById('sharedScripturaBackNav');
+      if (scripturaBackNav) scripturaBackNav.classList.toggle('hidden', !isInActiveSharedMode());
     }
 
     function jumpToCurrentSchoolMonth() {
@@ -3663,6 +3984,45 @@
         if (allShopping.length === 0) widgetShop.textContent = "Lista este goală.";
         else widgetShop.textContent = allShopping.slice(0, 3).map(x => `${x.produs} (${x.magazin})`).join(', ') + (allShopping.length > 3 ? '...' : '');
       }
+
+      // Populează noile widget-uri extinse pentru ecranul Astăzi (Owner)
+      const schoolContent = document.getElementById('ownerWidgetSchoolContent');
+      const schoolBadge = document.getElementById('ownerWidgetSchoolBadge');
+      if (schoolContent && schoolBadge) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const acts = schoolActivities.filter(a => a.date === todayStr);
+        schoolBadge.textContent = `${acts.length} azi`;
+        schoolContent.innerHTML = acts.length === 0
+          ? '<p class="text-xs text-slate-400 italic">Nicio activitate programată astăzi.</p>'
+          : acts.map(a => `<p class="text-xs text-slate-200">• ${a.title} (${a.child}) • ${a.startHour || '08:00'}-${a.endHour || '16:00'}</p>`).join('');
+      }
+
+      const shopContent = document.getElementById('ownerWidgetShoppingContent');
+      const shopBadge = document.getElementById('ownerWidgetShoppingBadge');
+      if (shopContent && shopBadge) {
+        shopBadge.textContent = `${allShopping.length} de luat`;
+        shopContent.innerHTML = allShopping.length === 0
+          ? '<p class="text-xs text-slate-400 italic">Lista este goală.</p>'
+          : allShopping.slice(0, 3).map(x => `<p class="text-xs text-slate-200">• ${x.produs} <span class="text-slate-500">(${x.magazin})</span></p>`).join('');
+      }
+
+      const gandContent = document.getElementById('ownerWidgetGanduriContent');
+      if (gandContent) {
+        const latest = allGanduri[0];
+        gandContent.innerHTML = latest ? `"${latest.gand}" <span class="text-amber-400 text-[10px] not-italic block mt-0.5">— ${latest.sursa || 'Personal'}</span>` : '<span class="text-slate-400 not-italic">Niciun gând notat încă.</span>';
+      }
+
+      const invContent = document.getElementById('ownerWidgetInventoryContent');
+      const invBadge = document.getElementById('ownerWidgetInventoryBadge');
+      if (invContent && invBadge) {
+        invBadge.textContent = `${allInventory.length} obiecte`;
+        const overdue = allInventory.filter(it => isMaintenanceOverdue(it));
+        invContent.innerHTML = overdue.length > 0
+          ? `<p class="text-rose-400 font-bold text-[11px]">⚠️ ${overdue.length} obiecte cu mentenanță depășită</p>`
+          : '<p class="text-slate-400 text-xs italic">Toate obiectele sunt în stare bună.</p>';
+      }
+
+      applyOwnerWidgetsVisibility();
     }
 
     // 10. REGISTRU POMELNIC & DROPDOWN
@@ -4003,16 +4363,432 @@
         shopping: allShopping,
         ganduri: allGanduri,
         schoolActivities: schoolActivities,
-        psaltireGrup: psaltireGrupData
+        psaltireGrup: psaltireGrupData,
+        inventory: allInventory,
+        scripturaRead: getScripturaReadMap(),
+        ownerWidgets: getOwnerWidgetsConfig(),
+        ownerNav: getOwnerNavConfig()
       };
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `diih_backup_v19_${Date.now()}.json`;
+      a.download = `diih_backup_v20_${Date.now()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       showToast("Backup local descărcat!");
+    }
+
+    // 14. CANONUL SFINTEI SCRIPTURI (BARTOLOMEU VALERIU ANANIA) & EVIDENȚĂ LECTURĂ
+    const SCRIPTURA_CANON = {
+      vt: [
+        { name: "Facerea", abbr: "Fac", caps: 50 },
+        { name: "Ieșirea", abbr: "Ieș", caps: 40 },
+        { name: "Leviticul", abbr: "Lev", caps: 27 },
+        { name: "Numerele", abbr: "Num", caps: 36 },
+        { name: "Deuteronomul", abbr: "Dt", caps: 34 },
+        { name: "Iisus Navi", abbr: "Ios", caps: 24 },
+        { name: "Judecători", abbr: "Jud", caps: 21 },
+        { name: "Rut", abbr: "Rut", caps: 4 },
+        { name: "1 Regi", abbr: "1Rg", caps: 31 },
+        { name: "2 Regi", abbr: "2Rg", caps: 24 },
+        { name: "3 Regi", abbr: "3Rg", caps: 22 },
+        { name: "4 Regi", abbr: "4Rg", caps: 25 },
+        { name: "1 Paralipomena", abbr: "1Par", caps: 29 },
+        { name: "2 Paralipomena", abbr: "2Par", caps: 36 },
+        { name: "1 Ezdra", abbr: "1Ezd", caps: 10 },
+        { name: "Neemia", abbr: "Neem", caps: 13 },
+        { name: "Tobit", abbr: "Tob", caps: 14 },
+        { name: "Iudita", abbr: "Iud", caps: 16 },
+        { name: "Estera", abbr: "Est", caps: 10 },
+        { name: "1 Macabei", abbr: "1Mac", caps: 16 },
+        { name: "2 Macabei", abbr: "2Mac", caps: 15 },
+        { name: "3 Macabei", abbr: "3Mac", caps: 7 },
+        { name: "Iov", abbr: "Iov", caps: 42 },
+        { name: "Psalmii", abbr: "Ps", caps: 151 },
+        { name: "Rugăciunea lui Manase", abbr: "Man", caps: 1 },
+        { name: "Pildele lui Solomon", abbr: "Pild", caps: 31 },
+        { name: "Ecclesiastul", abbr: "Eccl", caps: 12 },
+        { name: "Cântarea Cântărilor", abbr: "Cânt", caps: 8 },
+        { name: "Înțelepciunea lui Solomon", abbr: "Înț", caps: 19 },
+        { name: "Înțelepciunea lui Iisus Sirah", abbr: "Sir", caps: 51 },
+        { name: "Osea", abbr: "Os", caps: 14 },
+        { name: "Amos", abbr: "Am", caps: 9 },
+        { name: "Miheia", abbr: "Mih", caps: 7 },
+        { name: "Ioil", abbr: "Ioil", caps: 3 },
+        { name: "Avdie", abbr: "Avd", caps: 1 },
+        { name: "Iona", abbr: "Iona", caps: 4 },
+        { name: "Naum", abbr: "Naum", caps: 3 },
+        { name: "Avacum", abbr: "Avac", caps: 3 },
+        { name: "Sofonie", abbr: "Sof", caps: 3 },
+        { name: "Agheu", abbr: "Agh", caps: 2 },
+        { name: "Zaharia", abbr: "Zah", caps: 14 },
+        { name: "Maleahi", abbr: "Mal", caps: 4 },
+        { name: "Isaia", abbr: "Is", caps: 66 },
+        { name: "Ieremia", abbr: "Ir", caps: 52 },
+        { name: "Plângerile lui Ieremia", abbr: "Plâng", caps: 5 },
+        { name: "Scrisoarea lui Ieremia", abbr: "Scris", caps: 1 },
+        { name: "Baruh", abbr: "Bar", caps: 5 },
+        { name: "Iezechiel", abbr: "Iez", caps: 48 },
+        { name: "Daniel", abbr: "Dn", caps: 14 }
+      ],
+      nt: [
+        { name: "Matei", abbr: "Mt", caps: 28 },
+        { name: "Marcu", abbr: "Mc", caps: 16 },
+        { name: "Luca", abbr: "Lc", caps: 24 },
+        { name: "Ioan", abbr: "In", caps: 21 },
+        { name: "Faptele Apostolilor", abbr: "Fap", caps: 28 },
+        { name: "Romani", abbr: "Rom", caps: 16 },
+        { name: "1 Corinteni", abbr: "1Cor", caps: 16 },
+        { name: "2 Corinteni", abbr: "2Cor", caps: 13 },
+        { name: "Galateni", abbr: "Gal", caps: 6 },
+        { name: "Efeseni", abbr: "Ef", caps: 6 },
+        { name: "Filipeni", abbr: "Flp", caps: 4 },
+        { name: "Coloseni", abbr: "Col", caps: 4 },
+        { name: "1 Tesaloniceni", abbr: "1Tes", caps: 5 },
+        { name: "2 Tesaloniceni", abbr: "2Tes", caps: 3 },
+        { name: "1 Timotei", abbr: "1Tim", caps: 6 },
+        { name: "2 Timotei", abbr: "2Tim", caps: 4 },
+        { name: "Tit", abbr: "Tit", caps: 3 },
+        { name: "Filimon", abbr: "Flm", caps: 1 },
+        { name: "Evrei", abbr: "Evr", caps: 13 },
+        { name: "Iacov", abbr: "Iac", caps: 5 },
+        { name: "1 Petru", abbr: "1Ptr", caps: 5 },
+        { name: "2 Petru", abbr: "2Ptr", caps: 3 },
+        { name: "1 Ioan", abbr: "1In", caps: 5 },
+        { name: "2 Ioan", abbr: "2In", caps: 1 },
+        { name: "3 Ioan", abbr: "3In", caps: 1 },
+        { name: "Iuda", abbr: "Iuda", caps: 1 },
+        { name: "Apocalipsa", abbr: "Apoc", caps: 22 }
+      ]
+    };
+
+    let scripturaCurrentTestament = 'ALL';
+    let scripturaExpandedBook = null;
+
+    function getAllScripturaBooks() {
+      const all = [];
+      SCRIPTURA_CANON.vt.forEach(b => all.push({ ...b, testament: 'VT' }));
+      SCRIPTURA_CANON.nt.forEach(b => all.push({ ...b, testament: 'NT' }));
+      return all;
+    }
+
+    function getScripturaReadMap() {
+      try {
+        return JSON.parse(localStorage.getItem('diih_scriptura_read') || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function getNextScripturaChapter() {
+      const books = getAllScripturaBooks();
+      const readMap = getScripturaReadMap();
+      for (const b of books) {
+        for (let c = 1; c <= b.caps; c++) {
+          const key = `${b.abbr}_${c}`;
+          if (!readMap[key]) {
+            return { book: b, cap: c, key: key, completed: false };
+          }
+        }
+      }
+      return { book: books[0], cap: 1, key: `${books[0].abbr}_1`, completed: true };
+    }
+
+    function advanceScripturaProgress() {
+      const next = getNextScripturaChapter();
+      if (next.completed) {
+        showToast("Felicitări! Ai parcurs întreaga Sfântă Scriptură!");
+        return;
+      }
+      const readMap = getScripturaReadMap();
+      readMap[next.key] = true;
+      localStorage.setItem('diih_scriptura_read', JSON.stringify(readMap));
+      const newNext = getNextScripturaChapter();
+      showToast(`✓ Marcat citit: ${next.book.abbr}, ${next.cap}. De continuat: ${newNext.book.abbr}, ${newNext.cap}`);
+      updateScripturaDisplays();
+    }
+
+    function toggleScripturaChapter(bookAbbr, cap) {
+      const readMap = getScripturaReadMap();
+      const key = `${bookAbbr}_${cap}`;
+      if (readMap[key]) {
+        delete readMap[key];
+      } else {
+        readMap[key] = true;
+      }
+      localStorage.setItem('diih_scriptura_read', JSON.stringify(readMap));
+      updateScripturaDisplays();
+    }
+
+    function setBookAllChapters(bookAbbr, caps, state) {
+      const readMap = getScripturaReadMap();
+      for (let c = 1; c <= caps; c++) {
+        const key = `${bookAbbr}_${c}`;
+        if (state) readMap[key] = true;
+        else delete readMap[key];
+      }
+      localStorage.setItem('diih_scriptura_read', JSON.stringify(readMap));
+      updateScripturaDisplays();
+      showToast(state ? `Toate cele ${caps} capitole din ${bookAbbr} marcate citite!` : `Capitolele din ${bookAbbr} resetate.`);
+    }
+
+    function filterScripturaTestament(testament) {
+      scripturaCurrentTestament = testament;
+      ['btnScripturaFilterAll', 'btnScripturaFilterVT', 'btnScripturaFilterNT'].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) b.className = "px-3 py-1.5 rounded-xl bg-darkbg border border-bordercol text-slate-400 hover:text-white whitespace-nowrap";
+      });
+      const activeBtn = document.getElementById(`btnScripturaFilter${testament === 'ALL' ? 'All' : testament}`);
+      if (activeBtn) activeBtn.className = "px-3 py-1.5 rounded-xl bg-cyan-900 text-cyan-200 font-bold whitespace-nowrap";
+      renderScripturaBooksList();
+    }
+
+    function toggleScripturaBookExpand(bookAbbr) {
+      scripturaExpandedBook = (scripturaExpandedBook === bookAbbr) ? null : bookAbbr;
+      renderScripturaBooksList();
+    }
+
+    function updateScripturaDisplays() {
+      const books = getAllScripturaBooks();
+      const readMap = getScripturaReadMap();
+      let totalRead = 0;
+      books.forEach(b => {
+        for (let c = 1; c <= b.caps; c++) {
+          if (readMap[`${b.abbr}_${c}`]) totalRead++;
+        }
+      });
+      const percent = ((totalRead / 1337) * 100).toFixed(1);
+      const next = getNextScripturaChapter();
+
+      const badge = document.getElementById('scripturaTotalProgressBadge');
+      if (badge) badge.textContent = `${totalRead} / 1337 cap.`;
+      const pctEl = document.getElementById('scripturaProgressPercent');
+      if (pctEl) pctEl.textContent = `${percent}%`;
+      const bar = document.getElementById('scripturaProgressBar');
+      if (bar) bar.style.width = `${percent}%`;
+
+      const nextTitle = document.getElementById('scripturaNextChapterTitle');
+      if (nextTitle) {
+        nextTitle.textContent = next.completed ? "Canon Parcurs Integral 🎉" : `${next.book.name} ${next.cap} (${next.book.abbr}, ${next.cap})`;
+      }
+
+      // Owner widget on Astăzi
+      const wgtNext = document.getElementById('ownerWidgetScripturaNext');
+      if (wgtNext) {
+        wgtNext.textContent = next.completed ? "Canon Parcurs Integral 🎉" : `${next.book.abbr}, ${next.cap} (${next.book.name})`;
+      }
+      const wgtBadge = document.getElementById('ownerWidgetScripturaBadge');
+      if (wgtBadge) {
+        wgtBadge.textContent = `${totalRead} / 1337 cap.`;
+      }
+
+      // Biblia 360 quote inside tab-scriptura
+      if (biblia360List && biblia360List.length > 0) {
+        const b = biblia360List[currentBibliaIndex];
+        const refEl = document.getElementById('scripturaBibliaRef');
+        if (refEl) refEl.textContent = `${b.combo || (b.cartea + ' ' + b.capitol)} (Ziua ${b.ziua})`;
+        const noteEl = document.getElementById('scripturaBibliaNote');
+        if (noteEl) noteEl.textContent = `Lectura rânduită: ${b.cartea} ${b.capitol} • ${b.tip} conform ediției Anania.`;
+      }
+
+      renderScripturaBooksList();
+    }
+
+    function renderScripturaBooksList() {
+      const container = document.getElementById('scripturaBooksContainer');
+      if (!container) return;
+
+      const q = (document.getElementById('scripturaSearchInput') ? document.getElementById('scripturaSearchInput').value : '').toLowerCase().trim();
+      const readMap = getScripturaReadMap();
+      const next = getNextScripturaChapter();
+
+      let books = getAllScripturaBooks();
+      if (scripturaCurrentTestament !== 'ALL') {
+        books = books.filter(b => b.testament === scripturaCurrentTestament);
+      }
+      if (q) {
+        books = books.filter(b => b.name.toLowerCase().includes(q) || b.abbr.toLowerCase().includes(q));
+      }
+
+      container.innerHTML = books.map(b => {
+        let bookReadCount = 0;
+        for (let c = 1; c <= b.caps; c++) {
+          if (readMap[`${b.abbr}_${c}`]) bookReadCount++;
+        }
+        const isCompleted = bookReadCount === b.caps;
+        const isExpanded = scripturaExpandedBook === b.abbr;
+        const bookPct = Math.round((bookReadCount / b.caps) * 100);
+
+        let capsHtml = '';
+        if (isExpanded) {
+          const capButtons = [];
+          for (let c = 1; c <= b.caps; c++) {
+            const key = `${b.abbr}_${c}`;
+            const isRead = !!readMap[key];
+            const isNext = (!isRead && next.book.abbr === b.abbr && next.cap === c);
+
+            let capClass = "bg-darkbg text-slate-400 border border-bordercol hover:border-cyan-500";
+            if (isRead) {
+              capClass = "bg-emerald-900 border border-emerald-600 text-emerald-100 font-bold shadow-sm";
+            } else if (isNext) {
+              capClass = "bg-cyan-950 border-2 border-cyan-400 text-cyan-200 font-bold ring-2 ring-cyan-500/40 animate-pulse";
+            }
+
+            capButtons.push(`
+              <button onclick="toggleScripturaChapter('${b.abbr}', ${c})" class="h-8 rounded-lg text-xs flex items-center justify-center transition active:scale-90 ${capClass}" title="${b.name} ${c}">
+                ${c}${isRead ? ' ✓' : ''}
+              </button>
+            `);
+          }
+
+          capsHtml = `
+            <div class="pt-2 border-t border-bordercol/60 space-y-2">
+              <div class="flex items-center justify-between text-[10px]">
+                <span class="text-slate-400">Capitole (${b.caps}):</span>
+                <div class="space-x-1.5">
+                  <button onclick="setBookAllChapters('${b.abbr}', ${b.caps}, true)" class="px-2 py-0.5 bg-darkbg border border-emerald-700 text-emerald-300 rounded hover:bg-emerald-900">✓ Bifează tot</button>
+                  <button onclick="setBookAllChapters('${b.abbr}', ${b.caps}, false)" class="px-2 py-0.5 bg-darkbg border border-bordercol text-slate-400 rounded hover:text-white">✕ Resetează</button>
+                </div>
+              </div>
+              <div class="grid grid-cols-5 sm:grid-cols-8 gap-1.5 max-h-56 overflow-y-auto pr-1">
+                ${capButtons.join('')}
+              </div>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="bg-cardbg border ${isCompleted ? 'border-emerald-800/80' : 'border-bordercol'} rounded-2xl p-3 space-y-1.5 transition">
+            <div onclick="toggleScripturaBookExpand('${b.abbr}')" class="flex items-center justify-between cursor-pointer select-none">
+              <div class="flex items-center space-x-2 truncate">
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${b.testament === 'VT' ? 'bg-amber-950 border border-amber-800 text-amber-300' : 'bg-cyan-950 border border-cyan-800 text-cyan-300'} font-mono">${b.abbr}</span>
+                <span class="text-xs font-bold text-white truncate">${b.name}</span>
+                ${isCompleted ? '<span class="text-[10px] text-emerald-400 font-bold">✓ Încheiat</span>' : ''}
+              </div>
+              <div class="flex items-center space-x-2 shrink-0">
+                <span class="text-[10px] font-mono text-slate-400">${bookReadCount}/${b.caps} cap. (${bookPct}%)</span>
+                <span class="text-slate-400 text-xs font-bold">${isExpanded ? '▲' : '▼'}</span>
+              </div>
+            </div>
+            ${capsHtml}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 15. PERSONALIZARE WIDGET-URI ASTĂZI (OWNER & SHARED)
+    function getOwnerWidgetsConfig() {
+      try {
+        return JSON.parse(localStorage.getItem('diih_owner_widgets') || '["psaltire","biblia360","scriptura","anniversaries","pomelnic","school","shopping","ganduri","inventory"]');
+      } catch (e) {
+        return ["psaltire","biblia360","scriptura","anniversaries","pomelnic","school","shopping","ganduri","inventory"];
+      }
+    }
+
+    function saveOwnerWidgetsConfig() {
+      const list = [];
+      ['psaltire','biblia360','scriptura','anniversaries','pomelnic','school','shopping','ganduri','inventory'].forEach(id => {
+        const el = document.getElementById(`wgtOwner_${id}`);
+        if (el && el.checked) list.push(id);
+      });
+      localStorage.setItem('diih_owner_widgets', JSON.stringify(list));
+      applyOwnerWidgetsVisibility();
+      showToast("Configurația widget-urilor pentru Astăzi a fost salvată!");
+    }
+
+    function toggleAllOwnerWidgets(state) {
+      ['psaltire','biblia360','scriptura','anniversaries','pomelnic','school','shopping','ganduri','inventory'].forEach(id => {
+        const el = document.getElementById(`wgtOwner_${id}`);
+        if (el) el.checked = state;
+      });
+      saveOwnerWidgetsConfig();
+    }
+
+    function applyOwnerWidgetsVisibility() {
+      if (isInActiveSharedMode()) return;
+      const active = getOwnerWidgetsConfig();
+      ['psaltire','biblia360','scriptura','anniversaries','pomelnic','school','shopping','ganduri','inventory'].forEach(id => {
+        const wgt = document.getElementById(`ownerWidget_${id}`);
+        if (wgt) wgt.classList.toggle('hidden', !active.includes(id));
+        const cb = document.getElementById(`wgtOwner_${id}`);
+        if (cb) cb.checked = active.includes(id);
+      });
+    }
+
+    function toggleAllSharedWidgets(state) {
+      ['school','shopping','anniversaries','ganduri','scriptura','inventory'].forEach(id => {
+        const el = document.getElementById(`wgtShared_${id}`);
+        if (el) el.checked = state;
+      });
+    }
+
+    function saveSharedWidgetsConfig() {
+      const list = [];
+      ['school','shopping','anniversaries','ganduri','scriptura','inventory'].forEach(id => {
+        const el = document.getElementById(`wgtShared_${id}`);
+        if (el && el.checked) list.push(id);
+      });
+      sharingConfig.sharedWidgets = list;
+      localStorage.setItem('diih_sharing_config', JSON.stringify(sharingConfig));
+      showToast("Configurația widget-urilor pentru familie salvată!");
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&sharingConfigJson=${encodeURIComponent(JSON.stringify(sharingConfig))}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    // 16. PERSONALIZARE BARĂ DE NAVIGARE JOS (OWNER & SHARED)
+    function getOwnerNavConfig() {
+      try {
+        return JSON.parse(localStorage.getItem('diih_owner_nav') || '["today","pomelnic","calendar","ganduri","cumparaturi"]');
+      } catch (e) {
+        return ["today","pomelnic","calendar","ganduri","cumparaturi"];
+      }
+    }
+
+    function saveOwnerNavConfig() {
+      const list = ['today'];
+      ['pomelnic','calendar','ganduri','cumparaturi','scriptura','inventar'].forEach(id => {
+        const el = document.getElementById(`navOpt_${id}`);
+        if (el && el.checked) list.push(id);
+      });
+      localStorage.setItem('diih_owner_nav', JSON.stringify(list));
+      applyOwnerNavLayout();
+      showToast("Bara de meniu a fost actualizată!");
+    }
+
+    function applyOwnerNavLayout() {
+      if (isInActiveSharedMode()) return;
+      const navList = getOwnerNavConfig();
+      const allMods = ['today','pomelnic','calendar','ganduri','cumparaturi','scriptura','inventar'];
+      let visibleCount = 0;
+      allMods.forEach(m => {
+        const btn = document.getElementById(`nav-${m}`);
+        const onMain = navList.includes(m);
+        if (btn) {
+          btn.classList.toggle('hidden', !onMain);
+          if (onMain) visibleCount++;
+        }
+        // Subtab in 'Mai multe'
+        const subName = m.charAt(0).toUpperCase() + m.slice(1);
+        const subBtn = document.getElementById(`btnSub${subName}`);
+        if (subBtn && m !== 'today') {
+          subBtn.classList.toggle('hidden', onMain);
+        }
+      });
+      const moreBtn = document.getElementById('nav-more');
+      if (moreBtn) {
+        moreBtn.classList.remove('hidden');
+        visibleCount++;
+      }
+      const navBar = document.getElementById('bottomNavBar');
+      if (navBar) {
+        navBar.className = `max-w-lg mx-auto grid grid-cols-${Math.max(visibleCount, 1)} text-center text-[9px] font-medium text-slate-400`;
+      }
+      allMods.forEach(m => {
+        const el = document.getElementById(`navOpt_${m}`);
+        if (el && m !== 'today') el.checked = navList.includes(m);
+      });
     }
 
     function registerServiceWorker() {
@@ -4364,16 +5140,40 @@
       const authorEl = document.getElementById('adminSharedAuthorName');
       if (titleEl) titleEl.value = sharingConfig.sharedAppTitle || '';
       if (logoEl) logoEl.value = sharingConfig.sharedAppLogo || '';
-      const chosenIcon = sharingConfig.sharedAppIconPath || './icons/icon-heart-cross.svg';
+      const chosenIcon = sharingConfig.sharedAppIconPath || './icons/icon-heart-ekg.png';
       if (iconEl) iconEl.value = chosenIcon;
       setSharedIconChoice(chosenIcon);
       if (authorEl) authorEl.value = sharingConfig.authorName || '';
-      const modules = sharingConfig.enabledModules || ['calendar', 'cumparaturi'];
-      const map = { today: 'adminModuleToday', calendar: 'adminModuleCalendar', cumparaturi: 'adminModuleCumparaturi', ganduri: 'adminModuleGanduri', pomelnic: 'adminModulePomelnic', inventar: 'adminModuleInventar' };
+
+      const modules = sharingConfig.enabledModules || ['calendar', 'cumparaturi', 'inventar'];
+      const map = {
+        today: 'adminModuleToday',
+        calendar: 'adminModuleCalendar',
+        cumparaturi: 'adminModuleCumparaturi',
+        ganduri: 'adminModuleGanduri',
+        pomelnic: 'adminModulePomelnic',
+        inventar: 'adminModuleInventar',
+        scriptura: 'adminModuleScriptura'
+      };
       Object.keys(map).forEach(k => {
         const cb = document.getElementById(map[k]);
         if (cb) cb.checked = modules.includes(k);
       });
+
+      // Bifează bara de jos a Andreei
+      const mainBar = sharingConfig.mainNavModules || ['today', 'calendar', 'cumparaturi', 'inventar'];
+      ['today', 'calendar', 'cumparaturi', 'inventar', 'pomelnic', 'ganduri', 'scriptura'].forEach(m => {
+        const el = document.getElementById(`adminMainBar_${m}`);
+        if (el) el.checked = mainBar.includes(m);
+      });
+
+      // Bifează widget-urile din ecranul Astăzi al Andreei
+      const shWidgets = sharingConfig.sharedWidgets || ['school', 'shopping', 'anniversaries', 'ganduri', 'scriptura', 'inventory'];
+      ['school', 'shopping', 'anniversaries', 'ganduri', 'scriptura', 'inventory'].forEach(w => {
+        const el = document.getElementById(`wgtShared_${w}`);
+        if (el) el.checked = shWidgets.includes(w);
+      });
+
       if (sharingConfig.shareToken) {
         const link = `${window.location.origin}${window.location.pathname}?share=${sharingConfig.shareToken}`;
         document.getElementById('adminShareLinkOutput').value = link;
@@ -4385,7 +5185,7 @@
 
     function toggleAdminPomelnicCategoriesBox() {
       const box = document.getElementById('adminPomelnicCategoriesBox');
-      const checked = document.getElementById('adminModulePomelnic').checked;
+      const checked = document.getElementById('adminModulePomelnic') && document.getElementById('adminModulePomelnic').checked;
       if (!box) return;
       if (checked) {
         box.classList.remove('hidden');
@@ -4420,6 +5220,19 @@
       if (document.getElementById('adminModuleGanduri').checked) modules.push('ganduri');
       if (document.getElementById('adminModulePomelnic').checked) modules.push('pomelnic');
       if (document.getElementById('adminModuleInventar').checked) modules.push('inventar');
+      if (document.getElementById('adminModuleScriptura') && document.getElementById('adminModuleScriptura').checked) modules.push('scriptura');
+
+      const mainBarModules = ['today'];
+      ['calendar', 'cumparaturi', 'inventar', 'pomelnic', 'ganduri', 'scriptura'].forEach(m => {
+        const el = document.getElementById(`adminMainBar_${m}`);
+        if (el && el.checked) mainBarModules.push(m);
+      });
+
+      const sharedWidgets = [];
+      ['school', 'shopping', 'anniversaries', 'ganduri', 'scriptura', 'inventory'].forEach(w => {
+        const el = document.getElementById(`wgtShared_${w}`);
+        if (el && el.checked) sharedWidgets.push(w);
+      });
 
       const pomelnicCategories = Array.from(document.querySelectorAll('.admin-pomelnic-cat-cb:checked')).map(cb => cb.value);
 
@@ -4428,9 +5241,11 @@
       sharingConfig = {
         sharedAppTitle: document.getElementById('adminSharedTitle').value.trim() || 'Agenda Familiei',
         sharedAppLogo: document.getElementById('adminSharedLogo').value.trim() || '🏡',
-        sharedAppIconPath: document.getElementById('adminSharedIconPath').value || './icons/icon-heart-cross.svg',
+        sharedAppIconPath: document.getElementById('adminSharedIconPath').value || './icons/icon-heart-ekg.png',
         authorName: document.getElementById('adminSharedAuthorName').value.trim() || 'Membru familie',
         enabledModules: modules,
+        mainNavModules: mainBarModules,
+        sharedWidgets: sharedWidgets,
         pomelnicCategories: pomelnicCategories,
         shareToken: existingToken
       };
@@ -4464,51 +5279,45 @@
       deviceName = sharingConfig.authorName || deviceName;
       applyAppBrandUI();
 
-      // Bara de jos afișează EXCLUSIV modulele bifate de admin (fără Pomelnic, care merge în 'Mai multe')
-      const allowedModules = sharingConfig.enabledModules && sharingConfig.enabledModules.length > 0 ? sharingConfig.enabledModules : ['calendar', 'cumparaturi'];
-      const navMap = { today: 'nav-today', calendar: 'nav-calendar', ganduri: 'nav-ganduri', cumparaturi: 'nav-cumparaturi' };
+      // Bara de jos configurată dinamic pentru Andreea (cu Inventar etc. pe bara principală dacă e bifat)
+      const allowedModules = sharingConfig.enabledModules && sharingConfig.enabledModules.length > 0 ? sharingConfig.enabledModules : ['calendar', 'cumparaturi', 'inventar'];
+      const sharedMainBar = sharingConfig.mainNavModules || ['today', 'calendar', 'cumparaturi', 'inventar'];
+
+      const allSharedMods = ['today', 'calendar', 'cumparaturi', 'inventar', 'pomelnic', 'ganduri', 'scriptura'];
       let visibleCount = 0;
-      Object.keys(navMap).forEach(mod => {
-        const btn = document.getElementById(navMap[mod]);
-        if (!btn) return;
-        if (allowedModules.includes(mod)) {
-          btn.classList.remove('hidden');
-          visibleCount++;
-        } else {
-          btn.classList.add('hidden');
+      allSharedMods.forEach(mod => {
+        const btn = document.getElementById(`nav-${mod}`);
+        const isAllowed = (mod === 'today') ? allowedModules.includes('today') : allowedModules.includes(mod);
+        const onMain = isAllowed && (mod === 'today' || sharedMainBar.includes(mod));
+        if (btn) {
+          btn.classList.toggle('hidden', !onMain);
+          if (onMain) visibleCount++;
+        }
+        const subName = mod.charAt(0).toUpperCase() + mod.slice(1);
+        const subBtn = document.getElementById(`btnSub${subName}`);
+        if (subBtn && mod !== 'today') {
+          subBtn.classList.toggle('hidden', !isAllowed || onMain);
         }
       });
-      // Pomelnic e scos de pe bara de jos în modul partajat (mutat în 'Mai multe' și în Aniversările Zilei)
-      const navPomelnic = document.getElementById('nav-pomelnic');
-      if (navPomelnic) navPomelnic.classList.add('hidden');
 
-      // "Mai multe" e mereu accesibil în modul partajat:
-      // - Notificări e mereu vizibil
-      // - Pomelnic apare dacă e permis în sharingConfig
-      // - Inventar apare dacă e permis în sharingConfig
-      // - Psaltire / Widget / Setări / Admin rămân ascunse mereu
-      const moreBtn = document.getElementById('nav-more');
-      const sharedAllowsPomelnic = allowedModules.includes('pomelnic');
-      const sharedAllowsInventar = allowedModules.includes('inventar');
-
+      // Subtab-uri blocate pentru Andreea (aparțin exclusiv proprietarului)
       ['btnSubPsaltire', 'btnSubWidget', 'btnSubSetari', 'btnSubAdmin'].forEach(id => {
         const b = document.getElementById(id);
         if (b) b.classList.add('hidden');
       });
       const notifBtn = document.getElementById('btnSubNotif');
       if (notifBtn) notifBtn.classList.remove('hidden');
-      const invBtn = document.getElementById('btnSubInventar');
-      if (invBtn) invBtn.classList.toggle('hidden', !sharedAllowsInventar);
-      const pomBtn = document.getElementById('btnSubPomelnic');
-      if (pomBtn) pomBtn.classList.toggle('hidden', !sharedAllowsPomelnic);
 
-      moreBtn.classList.remove('hidden');
-      visibleCount++;
+      const moreBtn = document.getElementById('nav-more');
+      if (moreBtn) {
+        moreBtn.classList.remove('hidden');
+        visibleCount++;
+      }
 
       const navBar = document.getElementById('bottomNavBar');
       if (navBar) navBar.className = `max-w-lg mx-auto grid grid-cols-${Math.max(visibleCount, 1)} text-center text-[9px] font-medium text-slate-400`;
 
-      // Tabul "Astăzi" devine un sumar al noutăților din modulele permise, nu conținutul complet al proprietarului
+      // Tabul "Astăzi" devine un sumar al noutăților din modulele permise
       const todayOwner = document.getElementById('todayOwnerContent');
       const todayShared = document.getElementById('todaySharedSummary');
       if (allowedModules.includes('today')) {
@@ -4520,7 +5329,7 @@
       // Prima inițializare: comutăm pe primul modul permis și afișăm mesajul de bun venit
       if (!sharedModeInitialized) {
         sharedModeInitialized = true;
-        const firstNavModule = allowedModules.find(m => m !== 'inventar' && m !== 'pomelnic') || (allowedModules.includes('today') ? 'today' : 'more');
+        const firstNavModule = allowedModules.find(m => m !== 'pomelnic') || (allowedModules.includes('today') ? 'today' : 'more');
         switchTab(firstNavModule);
         showToast(`Bine ai venit, ${deviceName}!`);
       }
@@ -4530,10 +5339,11 @@
       const container = document.getElementById('todaySharedSummary');
       if (!container) return;
 
+      const shWidgets = sharingConfig.sharedWidgets || ['school', 'shopping', 'anniversaries', 'ganduri', 'scriptura', 'inventory'];
       const todayStr = new Date().toISOString().split('T')[0];
       let html = `<div class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">📋 Noutățile de astăzi</div>`;
 
-      if (allowedModules.includes('calendar')) {
+      if (allowedModules.includes('calendar') && shWidgets.includes('school')) {
         const todaysActs = schoolActivities.filter(a => a.date === todayStr);
         const monthStr = todayStr.substring(0, 7);
         const monthActs = schoolActivities.filter(a => a.date.startsWith(monthStr));
@@ -4551,7 +5361,7 @@
         `;
       }
 
-      if (allowedModules.includes('cumparaturi')) {
+      if (allowedModules.includes('cumparaturi') && shWidgets.includes('shopping')) {
         const recent = [...allShopping].slice(-3).reverse();
         html += `
           <div onclick="switchTab('cumparaturi')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-emerald-600/60 active:scale-98 transition space-y-2">
@@ -4564,7 +5374,7 @@
         `;
       }
 
-      if (allowedModules.includes('ganduri')) {
+      if (allowedModules.includes('ganduri') && shWidgets.includes('ganduri')) {
         const latest = allGanduri[0];
         html += `
           <div onclick="switchTab('ganduri')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-600/60 active:scale-98 transition space-y-2">
@@ -4577,7 +5387,7 @@
         `;
       }
 
-      if (allowedModules.includes('pomelnic')) {
+      if (allowedModules.includes('pomelnic') && shWidgets.includes('anniversaries')) {
         const todaysBirthdays = computeTodaysAnniversaries(getVisiblePeople());
         html += `
           <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-2">
@@ -4601,7 +5411,20 @@
         `;
       }
 
-      if (allowedModules.includes('inventar')) {
+      if (allowedModules.includes('scriptura') && shWidgets.includes('scriptura')) {
+        const next = getNextScripturaChapter();
+        html += `
+          <div onclick="switchTab('scriptura')" class="bg-cardbg border border-amber-800/80 rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-500 active:scale-98 transition space-y-2">
+            <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
+              <span>📖 Sfânta Scriptură</span>
+              <span class="bg-amber-950 border border-amber-800 px-2 py-0.5 rounded-full text-[10px] text-amber-200 font-bold">${next.book.abbr}, ${next.cap}</span>
+            </div>
+            <p class="text-xs text-slate-200">De continuat lectura cu: <strong class="text-white">${next.book.name} ${next.cap}</strong></p>
+          </div>
+        `;
+      }
+
+      if (allowedModules.includes('inventar') && shWidgets.includes('inventory')) {
         const overdueItems = allInventory.filter(it => isMaintenanceOverdue(it));
         html += `
           <div onclick="switchTab('more'); switchSubTab('inventar');" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-violet-600/60 active:scale-98 transition space-y-2">

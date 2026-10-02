@@ -1,8 +1,9 @@
-const CACHE_NAME = 'diih-cache-v20';
+const CACHE_NAME = 'diih-cache-v21';
 const ASSETS = [
   './index.html',
   './manifest.json',
   './manifest-shared.json',
+  './manifest-shared-casa.json',
   './icons/icon-heart-ekg.png',
   './icons/icon-monograma-hristos-brancoveneasca.svg',
   './icons/icon-sigiliu-monograma-hristos.svg',

@@ -1,5 +1,5 @@
 {
-  "id": "familia-murar-shared-pwa",
+  "id": "familia-murar-shared-casa-pwa",
   "name": "Familia Murar",
   "short_name": "Familia Murar",
   "description": "Agenda și rânduiala familiei",
@@ -11,15 +11,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "./icons/icon-heart-ekg.png",
-      "sizes": "512x512 192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
       "src": "./icons/icon-family-home.svg",
       "sizes": "512x512 192x192",
       "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-heart-ekg.png",
+      "sizes": "512x512 192x192",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

@@ -1,22 +1,23 @@
 {
-  "id": "/index.html",
+  "id": "diih-main-pwa",
   "name": "DIiH",
   "short_name": "DIiH",
   "description": "Aplicație privată de pomenire și rânduială duhovnicească",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#090d16",
   "theme_color": "#090d16",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "./icons/icon-monograma-hristos-brancoveneasca.svg",
+      "src": "./icons/icon-sigiliu-monograma-hristos.svg",
       "sizes": "192x192 512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
     },
     {
-      "src": "./icons/icon-sigiliu-monograma-hristos.svg",
+      "src": "./icons/icon-monograma-hristos-brancoveneasca.svg",
       "sizes": "192x192 512x512",
       "type": "image/svg+xml",
       "purpose": "any"
