@@ -631,7 +631,7 @@
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v19.0 (Build 2026-10-01)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v20.0 (Build 2026-10-02)</span>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
             <a href="https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit" target="_blank" rel="noopener" class="w-full flex items-center justify-center space-x-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 py-2 rounded-xl font-bold hover:bg-emerald-900 transition">
               <span>📑</span>
@@ -639,6 +639,23 @@
               <span>↗</span>
             </a>
             <p class="text-[9px] text-slate-500">Pe telefon se deschide direct în aplicația Google Sheets (dacă e instalată); pe laptop, în browser.</p>
+          </div>
+
+          <div class="border-b border-bordercol pb-3 space-y-2">
+            <h4 class="font-bold text-cyan-300 uppercase tracking-wider">📱 Instalare Aplicație pe Telefon / Laptop</h4>
+            <div id="pwaInstallPromptBox" class="p-3 bg-cyan-950/40 border border-cyan-700 rounded-xl space-y-2">
+              <p class="text-[10px] text-slate-300 leading-relaxed">
+                Instalează aplicația ca PWA autonom pe ecranul principal pentru acces rapid și funcționare offline:
+              </p>
+              <button id="btnPwaInstall" onclick="triggerPwaInstallPrompt()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95 transition flex items-center justify-center space-x-2 shadow-lg">
+                <span>📲</span>
+                <span id="btnPwaInstallText">Instalează Aplicația pe Dispozitiv</span>
+              </button>
+              <p class="text-[9px] text-slate-400">
+                Pe Chrome (Android): apasă butonul de mai sus sau meniul Chrome (⋮) → <strong>„Instalează aplicația”</strong>.<br>
+                Pe iPhone (Safari): apasă butonul de Share (pătrat cu săgeată sus) → <strong>„Add to Home Screen”</strong>.
+              </p>
+            </div>
           </div>
 
           <div class="border-b border-bordercol pb-3 space-y-2">
@@ -1078,10 +1095,18 @@
           <div>
             <span class="text-[10px] text-slate-400 block mb-0.5">Data nașterii:</span>
             <input type="text" id="editDN" placeholder="ex: 12.05.1980" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+            <label class="flex items-center space-x-1.5 mt-1 cursor-pointer">
+              <input type="checkbox" id="editDNAprox" class="rounded text-cyan-500 focus:ring-0">
+              <span class="text-[10px] text-cyan-300 font-medium">~ Dată aproximată</span>
+            </label>
           </div>
           <div>
             <span class="text-[10px] text-slate-400 block mb-0.5">Data adormirii:</span>
             <input type="text" id="editDA" placeholder="ex: 03.11.2020" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+            <label class="flex items-center space-x-1.5 mt-1 cursor-pointer">
+              <input type="checkbox" id="editDAAprox" class="rounded text-amber-500 focus:ring-0">
+              <span class="text-[10px] text-amber-300 font-medium">~ Dată aproximată</span>
+            </label>
           </div>
         </div>
 
@@ -1166,10 +1191,18 @@
         <div>
           <span class="text-[10px] text-slate-400 block mb-0.5">Data nașterii:</span>
           <input type="text" id="newDN" placeholder="ex: 12.05.1980" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+          <label class="flex items-center space-x-1.5 mt-1 cursor-pointer">
+            <input type="checkbox" id="newDNAprox" class="rounded text-cyan-500 focus:ring-0">
+            <span class="text-[10px] text-cyan-300 font-medium">~ Dată aproximată</span>
+          </label>
         </div>
         <div>
           <span class="text-[10px] text-slate-400 block mb-0.5">Data adormirii:</span>
           <input type="text" id="newDA" placeholder="ex: 03.11.2020" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+          <label class="flex items-center space-x-1.5 mt-1 cursor-pointer">
+            <input type="checkbox" id="newDAAprox" class="rounded text-amber-500 focus:ring-0">
+            <span class="text-[10px] text-amber-300 font-medium">~ Dată aproximată</span>
+          </label>
         </div>
       </div>
 
@@ -1308,7 +1341,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v19.0";
+    const APP_VERSION = "v20.0";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -1486,6 +1519,32 @@
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&appTitle=${encodeURIComponent(appTitle)}&appLogo=${encodeURIComponent(appLogo)}&appIconPath=${encodeURIComponent(appIconPath)}&pomelnicBatchSize=${pomelnicBatchSize}&psaltireBatchSize=${psaltireBatchSize}&callback=void`;
       script.onerror = () => showToast("Eroare rețea la salvare! Verifică conexiunea.");
       document.body.appendChild(script);
+    }
+
+    let deferredPwaInstallPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPwaInstallPrompt = e;
+      const btn = document.getElementById('btnPwaInstall');
+      if (btn) btn.classList.add('ring-2', 'ring-cyan-400');
+    });
+
+    async function triggerPwaInstallPrompt() {
+      if (deferredPwaInstallPrompt) {
+        deferredPwaInstallPrompt.prompt();
+        const { outcome } = await deferredPwaInstallPrompt.userChoice;
+        if (outcome === 'accepted') {
+          showToast("Aplicație instalată pe dispozitiv!");
+        }
+        deferredPwaInstallPrompt = null;
+      } else {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          alert("Pentru instalare pe iPhone:\n1. Apasă butonul de Share din Safari (pătratul cu săgeată sus din bară).\n2. Alege «Add to Home Screen» («Adaugă pe ecranul principal»).");
+        } else {
+          alert("Pentru instalare pe Android/Laptop:\n1. Deschide meniul Chrome (cele 3 puncte ⋮ din colțul dreapta-sus).\n2. Alege «Instalează aplicația» (sau «Adaugă pe ecranul de pornire»).");
+        }
+      }
     }
 
     async function forceCleanStorageAndReload() {
@@ -1929,6 +1988,45 @@
     }
 
     // 1. ANIVERSĂRI
+    function getPersonAgeSummary(p) {
+      if (!p) return '';
+      const currentYear = new Date().getFullYear();
+      let birthYear = null;
+      let deathYear = null;
+      if (p.dn) {
+        const bp = p.dn.split(/[\.\/\-]/);
+        if (bp.length === 3) birthYear = parseInt(bp[2], 10);
+      }
+      if (p.da) {
+        const dp = p.da.split(/[\.\/\-]/);
+        if (dp.length === 3) deathYear = parseInt(dp[2], 10);
+      }
+
+      const dnTilde = p.dnAprox ? '~' : '';
+      const daTilde = p.daAprox ? '~' : '';
+
+      if (p.stare !== 'Adormit') {
+        // Persoană vie
+        if (birthYear && !isNaN(birthYear)) {
+          const age = currentYear - birthYear;
+          return `🌱 ${dnTilde}${age} ani`;
+        }
+        return '';
+      }
+
+      // Persoană adormită
+      const parts = [];
+      if (deathYear && !isNaN(deathYear)) {
+        const yearsDormit = Math.max(0, currentYear - deathYear);
+        parts.push(`† ${daTilde}${yearsDormit} ani dormit`);
+      }
+      if (birthYear && !isNaN(birthYear)) {
+        const ageLume = currentYear - birthYear;
+        parts.push(`ar fi avut ${dnTilde}${ageLume} ani`);
+      }
+      return parts.join(' • ');
+    }
+
     function computeTodaysAnniversaries(peopleList) {
       const now = new Date();
       const currentDay = now.getDate();
@@ -3618,6 +3716,7 @@
         const isViu = p.stare === 'Viu';
         const badgeColor = isViu ? 'bg-emerald-950 border-emerald-800 text-emerald-300' : 'bg-amber-950 border-amber-800 text-amber-300';
         const isChecked = selectedRowIds.has(p.rowId);
+        const ageSummary = getPersonAgeSummary(p);
 
         return `
           <div oncontextmenu="handleLaptopContextMenu(event, ${p.rowId})" onclick="handlePersonCardClick(event, ${p.rowId})" class="p-3 bg-cardbg border ${isChecked ? 'border-cyan-500 bg-slate-800/80' : 'border-bordercol'} rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-600 transition shadow-sm relative">
@@ -3631,7 +3730,8 @@
                   <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${isViu ? '🌱' : '†'} ${p.stare}</span>
                   ${p.necesitaAtentie ? '<span class="text-[9px] bg-rose-950 border border-rose-800 text-rose-300 px-1 py-0.2 rounded font-bold">⚠️ Atenție</span>' : ''}
                 </div>
-                <p class="text-[11px] text-slate-400 truncate">${p.dn ? 'n. ' + p.dn : ''} ${p.da ? '• d. ' + p.da : ''}</p>
+                <p class="text-[11px] text-slate-400 truncate">${p.dn ? (p.dnAprox ? '~n. ' : 'n. ') + p.dn : ''} ${p.da ? (p.daAprox ? '• ~d. ' : '• d. ') + p.da : ''}</p>
+                ${ageSummary ? `<p class="text-[10px] text-cyan-300 font-medium truncate">${ageSummary}</p>` : ''}
               </div>
             </div>
             <div class="flex items-center space-x-1">
@@ -3792,7 +3892,9 @@
         document.getElementById('editStare').value = selectedPersonForEdit.stare;
         document.getElementById('editNecesitaAtentie').checked = (selectedPersonForEdit.necesitaAtentie === true);
         document.getElementById('editDN').value = selectedPersonForEdit.dn || '';
+        document.getElementById('editDNAprox').checked = (selectedPersonForEdit.dnAprox === true);
         document.getElementById('editDA').value = selectedPersonForEdit.da || '';
+        document.getElementById('editDAAprox').checked = (selectedPersonForEdit.daAprox === true);
         document.getElementById('editIstoricMedical').value = selectedPersonForEdit.istoricMedical || '';
         document.getElementById('editBolnav').checked = (selectedPersonForEdit.bolnav === true);
         document.getElementById('editCopii').value = (selectedPersonForEdit.copii && selectedPersonForEdit.copii !== '-') ? selectedPersonForEdit.copii : '';
@@ -3816,7 +3918,9 @@
       selectedPersonForEdit.stare = document.getElementById('editStare').value;
       selectedPersonForEdit.necesitaAtentie = document.getElementById('editNecesitaAtentie').checked;
       selectedPersonForEdit.dn = document.getElementById('editDN').value.trim();
+      selectedPersonForEdit.dnAprox = document.getElementById('editDNAprox').checked;
       selectedPersonForEdit.da = document.getElementById('editDA').value.trim();
+      selectedPersonForEdit.daAprox = document.getElementById('editDAAprox').checked;
       selectedPersonForEdit.istoricMedical = document.getElementById('editIstoricMedical').value.trim();
       selectedPersonForEdit.bolnav = document.getElementById('editBolnav').checked;
       selectedPersonForEdit.copii = document.getElementById('editCopii').value.trim() || '-';
@@ -3830,7 +3934,7 @@
       showToast("Modificări salvate!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(selectedPersonForEdit.prenume)}&nume=${encodeURIComponent(selectedPersonForEdit.nume)}&grad=${encodeURIComponent(selectedPersonForEdit.grad)}&info=${encodeURIComponent(selectedPersonForEdit.info)}&stare=${encodeURIComponent(selectedPersonForEdit.stare)}&necesitaAtentie=${selectedPersonForEdit.necesitaAtentie}&dn=${encodeURIComponent(selectedPersonForEdit.dn)}&da=${encodeURIComponent(selectedPersonForEdit.da)}&istoricMedical=${encodeURIComponent(selectedPersonForEdit.istoricMedical)}&bolnav=${selectedPersonForEdit.bolnav}&copii=${encodeURIComponent(selectedPersonForEdit.copii)}&sot=${encodeURIComponent(selectedPersonForEdit.sot)}&parinti=${encodeURIComponent(selectedPersonForEdit.parinti)}&apropiati=${encodeURIComponent(selectedPersonForEdit.apropiati)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(selectedPersonForEdit.prenume)}&nume=${encodeURIComponent(selectedPersonForEdit.nume)}&grad=${encodeURIComponent(selectedPersonForEdit.grad)}&info=${encodeURIComponent(selectedPersonForEdit.info)}&stare=${encodeURIComponent(selectedPersonForEdit.stare)}&necesitaAtentie=${selectedPersonForEdit.necesitaAtentie}&dn=${encodeURIComponent(selectedPersonForEdit.dn)}&dnAprox=${selectedPersonForEdit.dnAprox}&da=${encodeURIComponent(selectedPersonForEdit.da)}&daAprox=${selectedPersonForEdit.daAprox}&istoricMedical=${encodeURIComponent(selectedPersonForEdit.istoricMedical)}&bolnav=${selectedPersonForEdit.bolnav}&copii=${encodeURIComponent(selectedPersonForEdit.copii)}&sot=${encodeURIComponent(selectedPersonForEdit.sot)}&parinti=${encodeURIComponent(selectedPersonForEdit.parinti)}&apropiati=${encodeURIComponent(selectedPersonForEdit.apropiati)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -3843,6 +3947,8 @@
       document.getElementById('newStare').value = 'Viu';
       document.getElementById('newNecesitaAtentie').checked = false;
       document.getElementById('newBolnav').checked = false;
+      document.getElementById('newDNAprox').checked = false;
+      document.getElementById('newDAAprox').checked = false;
       document.getElementById('newIsActivPomelnic').checked = true;
       document.getElementById('addPersonModal').classList.remove('hidden');
     }
@@ -3860,7 +3966,9 @@
       const stare = document.getElementById('newStare').value;
       const necesitaAtentie = document.getElementById('newNecesitaAtentie').checked;
       const dn = document.getElementById('newDN').value.trim();
+      const dnAprox = document.getElementById('newDNAprox').checked;
       const da = document.getElementById('newDA').value.trim();
+      const daAprox = document.getElementById('newDAAprox').checked;
       const istoricMedical = document.getElementById('newIstoricMedical').value.trim();
       const bolnav = document.getElementById('newBolnav').checked;
       const copii = document.getElementById('newCopii').value.trim() || '-';
@@ -3871,7 +3979,7 @@
 
       const newRowId = allPeople.length + 2;
       allPeople.push({
-        rowId: newRowId, prenume, nume, info, istoricMedical, dn, da, bolnav,
+        rowId: newRowId, prenume, nume, info, istoricMedical, dn, dnAprox, da, daAprox, bolnav,
         stare, grad, copii, sot, parinti, apropiati, necesitaAtentie, isActivPomelnic
       });
 
@@ -3881,7 +3989,7 @@
       showToast("Persoană adăugată în Pomelnic!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addPerson&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&dn=${encodeURIComponent(dn)}&da=${encodeURIComponent(da)}&istoricMedical=${encodeURIComponent(istoricMedical)}&bolnav=${bolnav}&copii=${encodeURIComponent(copii)}&sot=${encodeURIComponent(sot)}&parinti=${encodeURIComponent(parinti)}&apropiati=${encodeURIComponent(apropiati)}&isActivPomelnic=${isActivPomelnic}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addPerson&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&dn=${encodeURIComponent(dn)}&dnAprox=${dnAprox}&da=${encodeURIComponent(da)}&daAprox=${daAprox}&istoricMedical=${encodeURIComponent(istoricMedical)}&bolnav=${bolnav}&copii=${encodeURIComponent(copii)}&sot=${encodeURIComponent(sot)}&parinti=${encodeURIComponent(parinti)}&apropiati=${encodeURIComponent(apropiati)}&isActivPomelnic=${isActivPomelnic}&callback=void`;
       document.body.appendChild(script);
     }
 

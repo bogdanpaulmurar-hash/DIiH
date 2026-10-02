@@ -286,6 +286,8 @@ function doGet(e) {
     const van = (stare === "Adormit") ? "A" : "V";
     const necesitaAtentie = (e.parameter.necesitaAtentie === "true" || e.parameter.necesitaAtentie === true);
     const bolnav = (e.parameter.bolnav === "true" || e.parameter.bolnav === true);
+    const dnAprox = (e.parameter.dnAprox === "true" || e.parameter.dnAprox === true);
+    const daAprox = (e.parameter.daAprox === "true" || e.parameter.daAprox === true);
 
     sh.appendRow([
       newRowId,                                       // Col 1: RowID
@@ -297,9 +299,9 @@ function doGet(e) {
       (e.parameter.info || "").trim(),                // Col 7: Informatii
       (e.parameter.istoricMedical || "").trim(),      // Col 8: Istoric medical
       (e.parameter.dn || "").trim(),                  // Col 9: Data nasterii
-      "",                                             // Col 10: DataNasterii_aproximata
+      dnAprox,                                        // Col 10: DataNasterii_aproximata
       (e.parameter.da || "").trim(),                  // Col 11: Data adormirii
-      "",                                             // Col 12: DataAdormirii_aproximata
+      daAprox,                                        // Col 12: DataAdormirii_aproximata
       bolnav,                                         // Col 13: Bolnav
       stare,                                          // Col 14: Starea sufleteasca
       (e.parameter.grad || "").trim(),                // Col 15: Grad
@@ -323,7 +325,15 @@ function doGet(e) {
       if (e.parameter.info !== undefined) sh.getRange(rowId, 7).setValue(e.parameter.info);
       if (e.parameter.istoricMedical !== undefined) sh.getRange(rowId, 8).setValue(e.parameter.istoricMedical);
       if (e.parameter.dn !== undefined) sh.getRange(rowId, 9).setValue(e.parameter.dn);
+      if (e.parameter.dnAprox !== undefined) {
+        const dnVal = (e.parameter.dnAprox === "true" || e.parameter.dnAprox === true);
+        sh.getRange(rowId, 10).setValue(dnVal);
+      }
       if (e.parameter.da !== undefined) sh.getRange(rowId, 11).setValue(e.parameter.da);
+      if (e.parameter.daAprox !== undefined) {
+        const daVal = (e.parameter.daAprox === "true" || e.parameter.daAprox === true);
+        sh.getRange(rowId, 12).setValue(daVal);
+      }
       if (e.parameter.bolnav !== undefined) {
         const bVal = (e.parameter.bolnav === "true" || e.parameter.bolnav === true);
         sh.getRange(rowId, 13).setValue(bVal);
@@ -604,7 +614,9 @@ function getPomelnicData(ss) {
       info: (r[6] || "").toString().trim(),
       istoricMedical: (r[7] || "").toString().trim(),
       dn: parseDateToText(r[8]),
+      dnAprox: (r[9] === true || r[9] === "TRUE" || r[9] === "true" || r[9] === 1 || r[9] === "1"),
       da: parseDateToText(r[10]),
+      daAprox: (r[11] === true || r[11] === "TRUE" || r[11] === "true" || r[11] === 1 || r[11] === "1"),
       bolnav: (r[12] === true || r[12] === "TRUE" || r[12] === "true" || r[12] === 1 || r[12] === "1"),
       stare: (r[13] || "Viu").toString().trim(),
       grad: (r[14] || "").toString().trim(),
