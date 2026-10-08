@@ -291,28 +291,29 @@ function doGet(e) {
     const pomelnicAndreea = (e.parameter.pomelnicAndreea === "true" || e.parameter.pomelnicAndreea === true);
 
     sh.appendRow([
-      newRowId,                                       // Col 1: RowID
-      van,                                            // Col 2: (F) V/A/N
-      isActiv,                                        // Col 3: (F) Activ_Inactiv/calcul_pomelnic
-      pomelnicAndreea,                                // Col 4: Pomelnic_Andreea
-      (e.parameter.prenume || "").trim(),             // Col 5: Prenume
-      (e.parameter.nume || "").trim(),                // Col 6: Nume
-      (e.parameter.info || "").trim(),                // Col 7: Informatii
-      (e.parameter.istoricMedical || "").trim(),      // Col 8: Istoric medical
-      (e.parameter.dn || "").trim(),                  // Col 9: Data nasterii
-      dnAprox,                                        // Col 10: DataNasterii_aproximata
-      (e.parameter.da || "").trim(),                  // Col 11: Data adormirii
-      daAprox,                                        // Col 12: DataAdormirii_aproximata
-      bolnav,                                         // Col 13: Bolnav
-      stare,                                          // Col 14: Starea sufleteasca
-      (e.parameter.grad || "").trim(),                // Col 15: Grad
-      (e.parameter.copii || "-").trim(),              // Col 16: Copil
-      (e.parameter.sot || "-").trim(),                // Col 17: Sot/Sotie
-      (e.parameter.parinti || "-").trim(),            // Col 18: Parinti
-      (e.parameter.apropiati || "-").trim(),          // Col 19: Frati, bunici, apropiati
-      "09:00",                                        // Col 20: StartTime
-      "10:00",                                        // Col 21: EndTime
-      necesitaAtentie                                 // Col 22: NECESITA_Atentie!!!
+      newRowId,                                       // Col 1 (A): RowID
+      van,                                            // Col 2 (B): (F) V/A/N
+      isActiv,                                        // Col 3 (C): (F) Activ_Inactiv/calcul_pomelnic
+      pomelnicAndreea,                                // Col 4 (D): Pomelnic_Andreea
+      false,                                          // Col 5 (E): Pomelnic_calendar
+      (e.parameter.prenume || "").trim(),             // Col 6 (F): Prenume
+      (e.parameter.nume || "").trim(),                // Col 7 (G): Nume
+      (e.parameter.info || "").trim(),                // Col 8 (H): Informatii
+      (e.parameter.istoricMedical || "").trim(),      // Col 9 (I): Istoric medical
+      (e.parameter.dn || "").trim(),                  // Col 10 (J): Data nasterii
+      dnAprox,                                        // Col 11 (K): D A N A
+      (e.parameter.da || "").trim(),                  // Col 12 (L): Data adormirii
+      daAprox,                                        // Col 13 (M): D A D A
+      bolnav,                                         // Col 14 (N): Bolnav
+      stare,                                          // Col 15 (O): Starea sufleteasca
+      (e.parameter.grad || "").trim(),                // Col 16 (P): Grad (Coloana P!)
+      (e.parameter.copii || "-").trim(),              // Col 17 (Q): Copil
+      (e.parameter.sot || "-").trim(),                // Col 18 (R): Sot/Sotie
+      (e.parameter.parinti || "-").trim(),            // Col 19 (S): Parinti
+      (e.parameter.apropiati || "-").trim(),          // Col 20 (T): Frati, bunici, apropiati
+      "09:00",                                        // Col 21 (U): StartTime
+      "10:00",                                        // Col 22 (V): EndTime
+      necesitaAtentie                                 // Col 23 (W): NECESITA_Atentie!!!
     ]);
     return returnResponse(e, { success: true, rowId: newRowId });
   }
@@ -321,36 +322,36 @@ function doGet(e) {
     let sh = ss.getSheetByName("Pomelnic");
     let rowId = parseInt(e.parameter.rowId, 10);
     if (sh && rowId >= 2 && rowId <= sh.getLastRow()) {
-      if (e.parameter.prenume !== undefined) sh.getRange(rowId, 5).setValue(e.parameter.prenume);
-      if (e.parameter.nume !== undefined) sh.getRange(rowId, 6).setValue(e.parameter.nume);
-      if (e.parameter.info !== undefined) sh.getRange(rowId, 7).setValue(e.parameter.info);
-      if (e.parameter.istoricMedical !== undefined) sh.getRange(rowId, 8).setValue(e.parameter.istoricMedical);
-      if (e.parameter.dn !== undefined) sh.getRange(rowId, 9).setValue(e.parameter.dn);
+      if (e.parameter.prenume !== undefined) sh.getRange(rowId, 6).setValue(e.parameter.prenume);
+      if (e.parameter.nume !== undefined) sh.getRange(rowId, 7).setValue(e.parameter.nume);
+      if (e.parameter.info !== undefined) sh.getRange(rowId, 8).setValue(e.parameter.info);
+      if (e.parameter.istoricMedical !== undefined) sh.getRange(rowId, 9).setValue(e.parameter.istoricMedical);
+      if (e.parameter.dn !== undefined) sh.getRange(rowId, 10).setValue(e.parameter.dn);
       if (e.parameter.dnAprox !== undefined) {
         const dnVal = (e.parameter.dnAprox === "true" || e.parameter.dnAprox === true);
-        sh.getRange(rowId, 10).setValue(dnVal);
+        sh.getRange(rowId, 11).setValue(dnVal);
       }
-      if (e.parameter.da !== undefined) sh.getRange(rowId, 11).setValue(e.parameter.da);
+      if (e.parameter.da !== undefined) sh.getRange(rowId, 12).setValue(e.parameter.da);
       if (e.parameter.daAprox !== undefined) {
         const daVal = (e.parameter.daAprox === "true" || e.parameter.daAprox === true);
-        sh.getRange(rowId, 12).setValue(daVal);
+        sh.getRange(rowId, 13).setValue(daVal);
       }
       if (e.parameter.bolnav !== undefined) {
         const bVal = (e.parameter.bolnav === "true" || e.parameter.bolnav === true);
-        sh.getRange(rowId, 13).setValue(bVal);
+        sh.getRange(rowId, 14).setValue(bVal);
       }
       if (e.parameter.stare !== undefined) {
-        sh.getRange(rowId, 14).setValue(e.parameter.stare);
+        sh.getRange(rowId, 15).setValue(e.parameter.stare);
         sh.getRange(rowId, 2).setValue(e.parameter.stare === "Adormit" ? "A" : "V");
       }
-      if (e.parameter.grad !== undefined) sh.getRange(rowId, 15).setValue(e.parameter.grad);
-      if (e.parameter.copii !== undefined) sh.getRange(rowId, 16).setValue(e.parameter.copii);
-      if (e.parameter.sot !== undefined) sh.getRange(rowId, 17).setValue(e.parameter.sot);
-      if (e.parameter.parinti !== undefined) sh.getRange(rowId, 18).setValue(e.parameter.parinti);
-      if (e.parameter.apropiati !== undefined) sh.getRange(rowId, 19).setValue(e.parameter.apropiati);
+      if (e.parameter.grad !== undefined) sh.getRange(rowId, 16).setValue(e.parameter.grad);
+      if (e.parameter.copii !== undefined) sh.getRange(rowId, 17).setValue(e.parameter.copii);
+      if (e.parameter.sot !== undefined) sh.getRange(rowId, 18).setValue(e.parameter.sot);
+      if (e.parameter.parinti !== undefined) sh.getRange(rowId, 19).setValue(e.parameter.parinti);
+      if (e.parameter.apropiati !== undefined) sh.getRange(rowId, 20).setValue(e.parameter.apropiati);
       if (e.parameter.necesitaAtentie !== undefined) {
         const valBool = (e.parameter.necesitaAtentie === "true" || e.parameter.necesitaAtentie === true);
-        sh.getRange(rowId, 22).setValue(valBool);
+        sh.getRange(rowId, 23).setValue(valBool);
       }
       if (e.parameter.isActivPomelnic !== undefined) {
         const valAct = (e.parameter.isActivPomelnic === "true" || e.parameter.isActivPomelnic === true);
@@ -381,7 +382,7 @@ function doGet(e) {
     return returnResponse(e, { error: "Parametri lipsă" });
   }
 
-  // Actualizare în calup Necesită Atenție (Pomelnic)
+  // Actualizare în calup Necesită Atenție (Pomelnic - Coloana W = 23)
   if (action === "batchUpdateAtentie") {
     let sh = ss.getSheetByName("Pomelnic");
     const rowIdsStr = e.parameter.rowIds || "";
@@ -390,7 +391,7 @@ function doGet(e) {
       const ids = rowIdsStr.split(",").map(x => parseInt(x.trim(), 10)).filter(n => !isNaN(n));
       ids.forEach(rId => {
         if (rId >= 2 && rId <= sh.getLastRow()) {
-          sh.getRange(rId, 22).setValue(flagValue);
+          sh.getRange(rId, 23).setValue(flagValue);
         }
       });
     }
@@ -614,42 +615,48 @@ function getPsaltireGrupData(ss) {
 function getPomelnicData(ss) {
   const sh = ss.getSheetByName("Pomelnic");
   if (!sh || sh.getLastRow() < 2) return [];
-  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 22).getValues();
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 23).getValues();
   let list = [];
   rows.forEach((r, idx) => {
-    let prenume = (r[4] || "").toString().trim();
-    let nume = (r[5] || "").toString().trim();
+    let prenume = (r[5] || "").toString().trim(); // Col 6 (F): Prenume
+    let nume = (r[6] || "").toString().trim();    // Col 7 (G): Nume
     if (!prenume && !nume) return;
     
-    let valC = r[2];
+    let valC = r[2]; // Col 3 (C): Activ_Inactiv
     let isActivPomelnic = (valC === true || valC === "TRUE" || valC === "true" || valC === 1 || valC === "1");
 
-    let valD = r[3];
+    let valD = r[3]; // Col 4 (D): Pomelnic_Andreea
     let pomelnicAndreea = (valD === true || valD === "TRUE" || valD === "true" || valD === 1 || valD === "1");
+
+    let valE = r[4]; // Col 5 (E): Pomelnic_calendar
+    let pomelnicCalendar = (valE === true || valE === "TRUE" || valE === "true" || valE === 1 || valE === "1");
     
-    let valV = r[21];
-    let necesitaAtentie = (valV === true || valV === "TRUE" || valV === "true" || valV === 1 || valV === "1");
+    let valW = r[22]; // Col 23 (W): NECESITA_Atentie!!!
+    let necesitaAtentie = (valW === true || valW === "TRUE" || valW === "true" || valW === 1 || valW === "1");
 
     list.push({
       rowId: idx + 2,
       isActivPomelnic: isActivPomelnic,
       pomelnicAndreea: pomelnicAndreea,
+      pomelnicCalendar: pomelnicCalendar,
       necesitaAtentie: necesitaAtentie,
       prenume: prenume,
       nume: nume,
-      info: (r[6] || "").toString().trim(),
-      istoricMedical: (r[7] || "").toString().trim(),
-      dn: parseDateToText(r[8]),
-      dnAprox: (r[9] === true || r[9] === "TRUE" || r[9] === "true" || r[9] === 1 || r[9] === "1"),
-      da: parseDateToText(r[10]),
-      daAprox: (r[11] === true || r[11] === "TRUE" || r[11] === "true" || r[11] === 1 || r[11] === "1"),
-      bolnav: (r[12] === true || r[12] === "TRUE" || r[12] === "true" || r[12] === 1 || r[12] === "1"),
-      stare: (r[13] || "Viu").toString().trim(),
-      grad: (r[14] || "").toString().trim(),
-      copii: (r[15] || "").toString().trim(),
-      sot: (r[16] || "").toString().trim(),
-      parinti: (r[17] || "").toString().trim(),
-      apropiati: (r[18] || "").toString().trim()
+      info: (r[7] || "").toString().trim(),                                                   // Col 8 (H)
+      istoricMedical: (r[8] || "").toString().trim(),                                         // Col 9 (I)
+      dn: parseDateToText(r[9]),                                                              // Col 10 (J)
+      dnAprox: (r[10] === true || r[10] === "TRUE" || r[10] === "true" || r[10] === 1 || r[10] === "1"), // Col 11 (K)
+      da: parseDateToText(r[11]),                                                             // Col 12 (L)
+      daAprox: (r[12] === true || r[12] === "TRUE" || r[12] === "true" || r[12] === 1 || r[12] === "1"), // Col 13 (M)
+      bolnav: (r[13] === true || r[13] === "TRUE" || r[13] === "true" || r[13] === 1 || r[13] === "1"),   // Col 14 (N)
+      stare: (r[14] || "Viu").toString().trim(),                                              // Col 15 (O) Starea sufleteasca
+      grad: (r[15] || "").toString().trim(),                                                  // Col 16 (P) Grad (Coloana P)
+      copii: (r[16] || "").toString().trim(),                                                 // Col 17 (Q)
+      sot: (r[17] || "").toString().trim(),                                                   // Col 18 (R)
+      parinti: (r[18] || "").toString().trim(),                                               // Col 19 (S)
+      apropiati: (r[19] || "").toString().trim(),                                             // Col 20 (T)
+      startTime: (r[20] || "09:00").toString().trim(),                                        // Col 21 (U)
+      endTime: (r[21] || "10:00").toString().trim()                                           // Col 22 (V)
     });
   });
   return list;

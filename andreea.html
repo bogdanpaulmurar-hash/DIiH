@@ -170,6 +170,15 @@
           <span id="pomelnicBatchBadge" class="bg-emerald-950 border border-emerald-800 text-emerald-300 text-[11px] px-2.5 py-1 rounded-full font-mono font-bold">10 Vii • 10 Adormiți</span>
         </div>
 
+        <!-- Link către noua subpagină dedicată din interiorul tabului Pomelnic -->
+        <button onclick="switchTab('pomelnic'); setPomelnicSubtab('astazi');" class="w-full bg-gradient-to-r from-emerald-950 via-slate-900 to-cyan-950 hover:from-emerald-900 hover:to-cyan-900 border border-emerald-600/70 text-emerald-200 p-2.5 rounded-xl text-xs font-bold flex items-center justify-between transition shadow-md group">
+          <span class="flex items-center space-x-2">
+            <span class="text-base">📿</span>
+            <span class="text-left font-bold text-white">Deschide Pomelnicul Zilei (Subpagină Dedicată)</span>
+          </span>
+          <span class="text-emerald-400 group-hover:translate-x-1 transition-transform text-sm font-bold">➔</span>
+        </button>
+
         <div class="flex space-x-2">
           <button onclick="printPomelnicAltar(currentDailyPomelnicVii, currentDailyPomelnicAdormiti)" class="flex-1 bg-amber-950 hover:bg-amber-900 border border-amber-700 text-amber-200 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center space-x-1 transition">
             <span>⛪</span>
@@ -267,13 +276,75 @@
         </button>
       </div>
 
-      <!-- Bara Celor 5 Subtaburi Pomelnic -->
+      <!-- Bara Celor 6 Subtaburi Pomelnic -->
       <div class="flex items-center space-x-1 overflow-x-auto pb-1 border-b border-bordercol/80">
+        <button onclick="setPomelnicSubtab('astazi')" id="btnPomSub_astazi" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">📿 Pomelnicul Zilei</button>
         <button onclick="setPomelnicSubtab('total')" id="btnPomSub_total" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cyan-900 text-cyan-200 whitespace-nowrap">I. Personal Total</button>
         <button onclick="setPomelnicSubtab('psaltire')" id="btnPomSub_psaltire" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">II. Psaltire Grup</button>
         <button onclick="setPomelnicSubtab('bolnavi')" id="btnPomSub_bolnavi" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">III. Bolnavi</button>
         <button onclick="setPomelnicSubtab('adormiti')" id="btnPomSub_adormiti" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">IV. Adormiți</button>
         <button onclick="setPomelnicSubtab('categorii')" id="btnPomSub_categorii" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">V. Categorii / Grad</button>
+      </div>
+
+      <!-- Subpagina 0: Pomelnicul Zilei (Subpagină Dedicată) -->
+      <div id="pomelnicSubView_astazi" class="hidden space-y-3">
+        <div class="p-3.5 bg-cardbg border border-emerald-800/80 rounded-2xl shadow-lg space-y-3">
+          <div class="flex items-center justify-between border-b border-bordercol pb-2">
+            <div>
+              <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider block">📿 Pomelnicul Zilei de Rând</span>
+              <p class="text-[10px] text-slate-400">Calcul rotativ zilnic din Coloana C</p>
+            </div>
+            <span id="subpagePomelnicBadge" class="bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs px-2.5 py-1 rounded-full font-mono font-bold">10 Vii • 10 Adormiți</span>
+          </div>
+
+          <!-- Selector Pomenire/zi & Bifat Rânduială -->
+          <div class="flex items-center justify-between bg-darkbg p-2 rounded-xl border border-bordercol">
+            <div class="flex items-center space-x-1.5">
+              <span class="text-[11px] text-slate-400">Tranșă zilnică:</span>
+              <select id="subpagePomelnicBatchSelect" onchange="handlePomelnicBatchChange(this.value)" class="bg-cardbg text-cyan-300 font-bold border border-cyan-800 rounded px-2 py-1 text-xs">
+                <option value="10">10 / zi</option>
+                <option value="20">20 / zi</option>
+                <option value="30">30 / zi</option>
+                <option value="40">40 / zi</option>
+                <option value="50">50 / zi</option>
+              </select>
+            </div>
+            <button onclick="markRanduialaItemToday('pomelnic', 'complet'); showToast('✓ Pomenirea zilei a fost bifată în calendar!');" class="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold active:scale-95 transition flex items-center space-x-1 shadow-sm">
+              <span>✓</span>
+              <span>Pomenit azi</span>
+            </button>
+          </div>
+
+          <!-- Butoane Tipar -->
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="printPomelnicAltar(currentDailyPomelnicVii, currentDailyPomelnicAdormiti)" class="bg-amber-950 hover:bg-amber-900 border border-amber-700 text-amber-200 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition">
+              <span>⛪</span>
+              <span>Format Altar (Prenume)</span>
+            </button>
+            <button onclick="printDailyPomelnicFamilyPDF()" class="bg-slate-800 hover:bg-slate-700 border border-bordercol text-slate-200 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition">
+              <span>📄</span>
+              <span>PDF Familie (Complet)</span>
+            </button>
+          </div>
+
+          <!-- Vii -->
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between text-xs font-bold text-emerald-400 border-b border-emerald-950/60 pb-1">
+              <span>🌱 PENTRU CEI VII</span>
+              <span id="subpageCountViiBadge" class="text-[10px] font-mono bg-emerald-950 px-2 py-0.5 rounded">0</span>
+            </div>
+            <div id="subpageDailyPomelnicVii" class="space-y-1.5 max-h-60 overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- Adormiți -->
+          <div class="space-y-1.5 pt-2">
+            <div class="flex items-center justify-between text-xs font-bold text-amber-400 border-b border-amber-950/60 pb-1">
+              <span>† PENTRU CEI ADORMIȚI</span>
+              <span id="subpageCountAdormitiBadge" class="text-[10px] font-mono bg-amber-950 px-2 py-0.5 rounded">0</span>
+            </div>
+            <div id="subpageDailyPomelnicAdormiti" class="space-y-1.5 max-h-60 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
       </div>
 
       <!-- Secțiunea I: Personal Total -->
@@ -922,6 +993,30 @@
       <div id="subtab-setari" class="subtab-content space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           
+          <!-- CONT UTILIZATOR & SCHIMBARE PROFIL (BOGDAN MURAR / ANDREEA MURAR) -->
+          <div class="p-3 bg-darkbg border border-cyan-700/80 rounded-xl space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="text-xl">👤</span>
+                <div>
+                  <span class="text-[10px] text-slate-400 block uppercase font-bold">Utilizator Conectat:</span>
+                  <span id="currentUserDisplayBadge" class="text-xs font-bold text-cyan-300">Bogdan Murar</span>
+                </div>
+              </div>
+              <span id="currentUserRoleBadge" class="text-[10px] bg-emerald-950 border border-emerald-800 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold">Autentificat</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 pt-0.5">
+              <button onclick="promptSwitchUser()" id="btnQuickSwitchUser" class="p-2 bg-slate-800 hover:bg-slate-700 border border-bordercol rounded-xl font-bold text-xs text-pink-300 transition flex items-center justify-center space-x-1 active:scale-95">
+                <span>🔄</span>
+                <span id="btnQuickSwitchText">Treci pe Andreea</span>
+              </button>
+              <button onclick="logoutCurrentUser()" class="p-2 bg-rose-950/60 hover:bg-rose-900 border border-rose-800 rounded-xl font-bold text-xs text-rose-200 transition flex items-center justify-center space-x-1 active:scale-95">
+                <span>🚪</span>
+                <span>Deconectare</span>
+              </button>
+            </div>
+          </div>
+
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
             <span class="font-bold text-cyan-300 block">Versiune Curentă: v22.0 (Build 2026-10-08)</span>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -1423,16 +1518,38 @@
             </button>
           </div>
 
-          <!-- Selector Vedere Calendar -->
+          <!-- Selector Vedere Calendar & Navigare Lună -->
           <div class="flex items-center justify-between border-t border-bordercol/60 pt-2">
-            <span class="text-[10px] text-slate-400 font-medium">Format vizualizare:</span>
+            <div class="flex items-center space-x-1">
+              <button onclick="navRanduialaMonth(-1)" class="p-1 bg-cardbg border border-bordercol rounded hover:text-white">◀</button>
+              <span id="randuialaMonthLabel" class="text-xs font-bold text-white px-1">Octombrie 2026</span>
+              <button onclick="navRanduialaMonth(1)" class="p-1 bg-cardbg border border-bordercol rounded hover:text-white">▶</button>
+              <button onclick="navRanduialaToToday()" class="text-[9px] px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-rose-300">Azi</button>
+            </div>
             <div class="flex space-x-1">
-              <button onclick="setRanduialaView('3days')" id="btnRanduialaView_3days" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-900 text-rose-100">3 Zile</button>
-              <button onclick="setRanduialaView('week')" id="btnRanduialaView_week" class="px-2.5 py-1 rounded-lg text-[10px] bg-cardbg text-slate-400 border border-bordercol">1 Săptămână</button>
-              <button onclick="setRanduialaView('month')" id="btnRanduialaView_month" class="px-2.5 py-1 rounded-lg text-[10px] bg-cardbg text-slate-400 border border-bordercol">Lună</button>
+              <button onclick="setRanduialaView('calendar')" id="btnRanduialaView_calendar" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-900 text-rose-100">Grilă Lună</button>
+              <button onclick="setRanduialaView('3days')" id="btnRanduialaView_3days" class="px-2 py-1 rounded-lg text-[10px] bg-cardbg text-slate-400 border border-bordercol">3 Zile</button>
+              <button onclick="setRanduialaView('week')" id="btnRanduialaView_week" class="px-2 py-1 rounded-lg text-[10px] bg-cardbg text-slate-400 border border-bordercol">1 Săpt.</button>
             </div>
           </div>
+
+          <!-- Grilă Calendaristică Desenată (L, M, M, J, V, S, D) -->
+          <div id="randuialaMonthGridBox" class="space-y-1 pt-1">
+            <div class="grid grid-cols-7 gap-1 text-center font-mono text-[10px] text-slate-400 font-bold">
+              <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span class="text-rose-400">D</span>
+            </div>
+            <div id="randuialaMonthGrid" class="grid grid-cols-7 gap-1 text-center"></div>
+          </div>
+
+          <!-- Bandă orizontală cu scroll între zile (Carusel) -->
+          <div class="pt-1 border-t border-bordercol/50">
+            <span class="text-[10px] text-slate-400 block mb-1">Glisează orizontal între zile:</span>
+            <div id="randuialaHorizontalStrip" class="flex space-x-2 overflow-x-auto pb-1.5"></div>
+          </div>
         </div>
+
+        <!-- Cardul detaliat al zilei selectate -->
+        <div id="randuialaSelectedDayBox"></div>
 
         <div id="randuialaCardsContainer" class="space-y-2 pb-2"></div>
       </div>
@@ -1495,7 +1612,7 @@
           <input type="text" id="editNume" placeholder="Nume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
         </div>
         <div>
-          <label class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Grad (Coloana O):</label>
+          <label class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Grad (Coloana P):</label>
           <div class="grid grid-cols-2 gap-2">
             <select id="editGradSelect" onchange="syncGradField('edit')" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
               <option value="">-- Alege Grad --</option>
@@ -1513,6 +1630,17 @@
           <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
             <input type="checkbox" id="editNecesitaAtentie" class="rounded text-rose-600 focus:ring-0">
             <span class="text-[11px] text-rose-300 font-medium">⚠️ Necesită Atenție</span>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center space-x-2 p-2 bg-darkbg border border-cyan-900/80 rounded-lg cursor-pointer">
+            <input type="checkbox" id="editIsActivPomelnic" class="rounded text-cyan-500 focus:ring-0">
+            <span class="text-[11px] text-cyan-300 font-medium">📋 Activ Pomelnic (Col C)</span>
+          </label>
+          <label class="flex items-center space-x-2 p-2 bg-darkbg border border-fuchsia-900/80 rounded-lg cursor-pointer">
+            <input type="checkbox" id="editPomelnicAndreea" class="rounded text-fuchsia-600 focus:ring-0">
+            <span class="text-[11px] text-fuchsia-300 font-medium">🌸 Pomelnic Andreea (Col D)</span>
           </label>
         </div>
 
@@ -1537,16 +1665,10 @@
 
         <textarea id="editIstoricMedical" rows="2" placeholder="Istoric medical" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
 
-        <div class="grid grid-cols-2 gap-2">
-          <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-            <input type="checkbox" id="editBolnav" class="rounded text-amber-600 focus:ring-0">
-            <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
-          </label>
-          <label class="flex items-center space-x-2 p-2 bg-darkbg border border-fuchsia-900/80 rounded-lg cursor-pointer">
-            <input type="checkbox" id="editPomelnicAndreea" class="rounded text-fuchsia-600 focus:ring-0">
-            <span class="text-[11px] text-fuchsia-300 font-medium">🌸 Pomelnic Andreea</span>
-          </label>
-        </div>
+        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+          <input type="checkbox" id="editBolnav" class="rounded text-amber-600 focus:ring-0">
+          <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
+        </label>
 
         <input type="text" id="editCopii" placeholder="Copii" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
         <input type="text" id="editSot" placeholder="Soț / Soție" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
@@ -1605,7 +1727,7 @@
         <input type="text" id="newNume" placeholder="Nume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
       </div>
       <div>
-        <label class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Grad (Coloana O):</label>
+        <label class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Grad (Coloana P):</label>
         <div class="grid grid-cols-2 gap-2">
           <select id="newGradSelect" onchange="syncGradField('new')" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
             <option value="">-- Alege Grad --</option>
@@ -1622,7 +1744,18 @@
         </select>
         <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
           <input type="checkbox" id="newNecesitaAtentie" class="rounded text-rose-600 focus:ring-0">
-          <span class="text-[11px] text-rose-300 font-medium">⚠️ Atenție</span>
+          <span class="text-[11px] text-rose-300 font-medium">⚠️ Necesită Atenție</span>
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-cyan-900/80 rounded-lg cursor-pointer">
+          <input type="checkbox" id="newIsActivPomelnic" checked class="rounded text-cyan-500 focus:ring-0">
+          <span class="text-[11px] text-cyan-300 font-medium">📋 Activ Pomelnic (Col C)</span>
+        </label>
+        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-fuchsia-900/80 rounded-lg cursor-pointer">
+          <input type="checkbox" id="newPomelnicAndreea" class="rounded text-fuchsia-600 focus:ring-0">
+          <span class="text-[11px] text-fuchsia-300 font-medium">🌸 Pomelnic Andreea (Col D)</span>
         </label>
       </div>
 
@@ -1647,26 +1780,15 @@
 
       <textarea id="newIstoricMedical" rows="2" placeholder="Istoric medical" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
 
-      <div class="grid grid-cols-2 gap-2">
-        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-          <input type="checkbox" id="newBolnav" class="rounded text-amber-600 focus:ring-0">
-          <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
-        </label>
-        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-fuchsia-900/80 rounded-lg cursor-pointer">
-          <input type="checkbox" id="newPomelnicAndreea" class="rounded text-fuchsia-600 focus:ring-0">
-          <span class="text-[11px] text-fuchsia-300 font-medium">🌸 Pomelnic Andreea</span>
-        </label>
-      </div>
+      <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+        <input type="checkbox" id="newBolnav" class="rounded text-amber-600 focus:ring-0">
+        <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
+      </label>
 
       <input type="text" id="newCopii" placeholder="Copii" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
       <input type="text" id="newSot" placeholder="Soț / Soție" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
       <input type="text" id="newParinti" placeholder="Părinți" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
       <input type="text" id="newApropiati" placeholder="Frați / Bunici / Apropiați" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
-
-      <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-        <input type="checkbox" id="newIsActivPomelnic" checked class="rounded text-emerald-600 focus:ring-0">
-        <span class="text-[11px] text-emerald-300 font-medium">✅ Activ în rotația de pomenire</span>
-      </label>
 
       <button onclick="saveNewPerson()" class="w-full bg-emerald-600 hover:bg-emerald-500 py-2.5 rounded-xl text-white font-medium active:scale-95 transition">💾 Adaugă în Pomelnic</button>
     </div>
@@ -1830,6 +1952,40 @@
     </div>
   </div>
 
+  <!-- MODAL AUTENTIFICARE & COMUTARE UTILIZATOR (BOGDAN MURAR / ANDREEA MURAR) -->
+  <div id="userLoginModal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-cardbg border border-cyan-800/80 w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4 text-xs">
+      <div class="text-center space-y-1">
+        <span class="text-3xl block">🔐</span>
+        <h3 id="userLoginModalTitle" class="text-base font-bold text-white">Autentificare Utilizator</h3>
+        <p class="text-[11px] text-slate-400">Alege profilul și introdu parola pentru a continua</p>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-[10px] text-slate-400 block font-bold uppercase mb-1">Utilizator:</label>
+          <select id="loginUserSelect" onchange="onLoginUserChange()" class="w-full bg-darkbg border border-bordercol rounded-xl p-2.5 text-white font-bold text-xs focus:border-cyan-500">
+            <option value="Bogdan Murar">Bogdan Murar (Proprietar)</option>
+            <option value="Andreea Murar">Andreea Murar (Familie)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block font-bold uppercase mb-1">Parolă:</label>
+          <input type="password" id="loginPasswordInput" placeholder="Introdu parola" class="w-full bg-darkbg border border-bordercol rounded-xl p-2.5 text-white text-xs focus:border-cyan-500">
+        </div>
+
+        <button onclick="handleLoginSubmit()" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95 transition shadow-lg">
+          Conectare & Aplică Profil
+        </button>
+      </div>
+
+      <div class="pt-1 text-center">
+        <button onclick="closeUserLoginModal()" id="btnLoginCancel" class="text-[11px] text-slate-400 hover:text-white">Anulează</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
@@ -1881,16 +2037,171 @@
     const DEFAULT_OWNER_APP_ICON = './icons/icon-sigiliu-monograma-hristos.svg';
     const DEFAULT_SHARED_APP_ICON = './icons/icon-heart-ekg.png';
 
-    let sharingConfig = JSON.parse(localStorage.getItem('diih_sharing_config') || '{}');
-    let appTitle = (sharingConfig && sharingConfig.sharedAppTitle) || "Andreea";
-    let appLogo = (sharingConfig && sharingConfig.sharedAppLogo) || "🌸";
-    let appIconPath = (sharingConfig && sharingConfig.sharedAppIconPath) || DEFAULT_SHARED_APP_ICON;
+    // 1. SISTEM AUTENTIFICARE & PROFILURI UTILIZATORI (BOGDAN MURAR / ANDREEA MURAR)
+    const APP_USERS = {
+      "Bogdan Murar": {
+        pass: "Ber.lin",
+        defaultTitle: "DIiH",
+        defaultLogo: "🧭",
+        defaultIcon: DEFAULT_OWNER_APP_ICON,
+        isOwner: true
+      },
+      "Andreea Murar": {
+        pass: "Ber.lin",
+        defaultTitle: "Andreea",
+        defaultLogo: "🌸",
+        defaultIcon: DEFAULT_SHARED_APP_ICON,
+        isOwner: false
+      }
+    };
+
+    function getCurrentLoggedInUser() {
+      return localStorage.getItem('diih_logged_user') || 'Andreea Murar';
+    }
+
+    function getUserProfileSettings(username) {
+      try {
+        const raw = localStorage.getItem(`diih_user_profile_${username}`);
+        if (raw) return JSON.parse(raw);
+      } catch(e) {}
+      const u = APP_USERS[username] || APP_USERS["Bogdan Murar"];
+      return {
+        appTitle: u.defaultTitle,
+        appLogo: u.defaultLogo,
+        appIconPath: u.defaultIcon,
+        pomelnicBatchSize: 20
+      };
+    }
+
+    function saveUserProfileSettings(username, settings) {
+      localStorage.setItem(`diih_user_profile_${username}`, JSON.stringify(settings));
+    }
+
+    function applyUserUIState() {
+      const uName = getCurrentLoggedInUser();
+      const uConfig = APP_USERS[uName] || APP_USERS["Bogdan Murar"];
+      const userProf = getUserProfileSettings(uName);
+
+      appTitle = userProf.appTitle || uConfig.defaultTitle;
+      appLogo = userProf.appLogo || uConfig.defaultLogo;
+      appIconPath = userProf.appIconPath || uConfig.defaultIcon;
+      pomelnicBatchSize = parseInt(userProf.pomelnicBatchSize || "20", 10);
+
+      const bName = document.getElementById('currentUserDisplayBadge');
+      if (bName) bName.textContent = uName;
+      const bRole = document.getElementById('currentUserRoleBadge');
+      if (bRole) bRole.textContent = uConfig.isOwner ? "Proprietar" : "Familie";
+
+      const btnSwitchTxt = document.getElementById('btnQuickSwitchText');
+      if (btnSwitchTxt) {
+        btnSwitchTxt.textContent = (uName === "Bogdan Murar") ? "Treci pe Andreea" : "Treci pe Bogdan";
+      }
+
+      applyAppBrandUI();
+    }
+
+    function promptSwitchUser(forcedTarget) {
+      const current = getCurrentLoggedInUser();
+      const target = forcedTarget || (current === "Bogdan Murar" ? "Andreea Murar" : "Bogdan Murar");
+      const sel = document.getElementById('loginUserSelect');
+      if (sel) sel.value = target;
+      const passIn = document.getElementById('loginPasswordInput');
+      if (passIn) passIn.value = '';
+      const title = document.getElementById('userLoginModalTitle');
+      if (title) title.textContent = `Schimbare pe profilul: ${target}`;
+      document.getElementById('userLoginModal')?.classList.remove('hidden');
+      setTimeout(() => { if (passIn) passIn.focus(); }, 150);
+    }
+
+    function onLoginUserChange() {
+      const sel = document.getElementById('loginUserSelect');
+      const title = document.getElementById('userLoginModalTitle');
+      if (sel && title) title.textContent = `Autentificare: ${sel.value}`;
+    }
+
+    function handleLoginSubmit() {
+      const sel = document.getElementById('loginUserSelect');
+      const passIn = document.getElementById('loginPasswordInput');
+      const selectedUser = sel ? sel.value : 'Bogdan Murar';
+      const enteredPass = passIn ? passIn.value.trim() : '';
+
+      const userDef = APP_USERS[selectedUser];
+      if (!userDef || enteredPass !== userDef.pass) {
+        showToast("Parolă incorectă!");
+        return;
+      }
+
+      // Salvează setările utilizatorului anterior
+      const oldUser = getCurrentLoggedInUser();
+      saveUserProfileSettings(oldUser, {
+        appTitle, appLogo, appIconPath, pomelnicBatchSize
+      });
+
+      // Activează noul utilizator
+      localStorage.setItem('diih_logged_user', selectedUser);
+      applyUserUIState();
+      renderAll();
+      closeUserLoginModal();
+      showToast(`✓ Conectat cu succes ca ${selectedUser}!`);
+    }
+
+    function logoutCurrentUser() {
+      if (!confirm("Sigur dorești să te deconectezi?")) return;
+      promptSwitchUser();
+    }
+
+    function closeUserLoginModal() {
+      document.getElementById('userLoginModal')?.classList.add('hidden');
+    }
+
+    // NORMALIZARE ȘI CURĂȚARE DATE POMELNIC (Elimină orice decalaj istoric sau "true" în nume)
+    function normalizePersonRecord(p) {
+      if (!p) return p;
+      if (p.prenume === true || p.prenume === false || p.prenume === 'true' || p.prenume === 'false') {
+        const isAct = (p.prenume === true || p.prenume === 'true');
+        p.isActivPomelnic = isAct;
+        p.prenume = (p.nume || '').toString().trim();
+        p.nume = (p.info || '').toString().trim();
+        p.info = (p.istoricMedical || '').toString().trim();
+        p.istoricMedical = (p.dn || '').toString().trim();
+        p.dn = p.dnAprox ? '' : (p.dn || '');
+        p.dnAprox = !!p.daAprox;
+        p.da = p.daAprox ? '' : (p.da || '');
+        p.bolnav = !!p.bolnav;
+        if (p.prenume === 'true' || p.prenume === 'false') p.prenume = '';
+      }
+      if (typeof p.prenume === 'string' && (p.prenume.startsWith('true ') || p.prenume.startsWith('false '))) {
+        p.prenume = p.prenume.replace(/^(true|false)\s+/i, '').trim();
+      }
+      if (p.da && p.da.trim() && p.stare !== 'Adormit') {
+        p.stare = 'Adormit';
+      }
+      if (!p.stare || p.stare === 'true' || p.stare === 'false') {
+        p.stare = (p.da && p.da.trim()) ? 'Adormit' : 'Viu';
+      }
+      if (p.grad === 'Viu' || p.grad === 'Adormit' || p.grad === 'true' || p.grad === 'false' || p.grad === 'Necunoscut') {
+        p.grad = '';
+      }
+      return p;
+    }
+
+    function getPersonFullName(p) {
+      if (!p) return '';
+      const cleanPrenume = (p.prenume || '').toString().replace(/^(true|false)\s*/i, '').trim();
+      const cleanNume = (p.nume || '').toString().replace(/^(true|false)\s*/i, '').trim();
+      if (cleanPrenume === 'true' || cleanPrenume === 'false') return cleanNume || 'Fără prenume';
+      return [cleanPrenume, cleanNume].filter(Boolean).join(' ') || 'Fără nume';
+    }
+
+    let appTitle = localStorage.getItem('diih_app_title') || "DIiH";
+    let appLogo = localStorage.getItem('diih_app_logo') || "🧭";
+    let appIconPath = localStorage.getItem('diih_app_icon_path') || DEFAULT_OWNER_APP_ICON;
     let pomelnicBatchSize = parseInt(localStorage.getItem('diih_batch_size') || "20", 10);
     let psaltireBatchSize = parseInt(localStorage.getItem('diih_psaltire_batch_size') || "20", 10);
+    let sharingConfig = JSON.parse(localStorage.getItem('diih_sharing_config') || '{}');
     const SHEET_DIRECT_URL = "https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit";
     const urlParams = new URLSearchParams(window.location.search);
-    const sharedModeToken = urlParams.get('share') || sharingConfig.shareToken || 'andreea';
-    localStorage.setItem('diih_active_shared_token', sharedModeToken);
+    const sharedModeToken = urlParams.get('share');
 
     let allInventory = JSON.parse(localStorage.getItem('diih_inventar') || '[]');
     let inventoryLoaded = false;
@@ -1917,6 +2228,7 @@
     const browserName = navigator.userAgent.includes('Chrome') ? 'Chrome' : (navigator.userAgent.includes('Edge') ? 'Edge' : 'Browser');
 
     document.addEventListener("DOMContentLoaded", () => {
+      applyUserUIState();
       applyAppBrandUI();
       displayCurrentDate();
       calculateTodayPsaltire();
@@ -1929,7 +2241,7 @@
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'Andreea v22 pornit');
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH v22 pornit');
 
       applySharedModeIfNeeded();
 
@@ -2230,90 +2542,217 @@
       showToast("✓ Toate rânduielile au fost bifate pentru astăzi!");
     }
 
-    function setRanduialaView(viewMode) {
-      currentRanduialaView = viewMode;
-      ['3days', 'week', 'month'].forEach(m => {
-        const btn = document.getElementById(`btnRanduialaView_${m}`);
-        if (btn) {
-          if (m === viewMode) {
-            btn.className = "px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-900 text-rose-100";
-          } else {
-            btn.className = "px-2.5 py-1 rounded-lg text-[10px] bg-cardbg text-slate-400 border border-bordercol";
-          }
-        }
-      });
+    let randuialaCurrentCalendarMonth = new Date();
+    let randuialaSelectedDayStr = new Date().toISOString().split('T')[0];
+
+    function navRanduialaMonth(delta) {
+      randuialaCurrentCalendarMonth.setMonth(randuialaCurrentCalendarMonth.getMonth() + delta);
       renderRanduialaCalendar();
     }
 
-    function renderRanduialaCalendar() {
-      const cont = document.getElementById('randuialaCardsContainer');
-      if (!cont) return;
+    function navRanduialaToToday() {
+      randuialaCurrentCalendarMonth = new Date();
+      randuialaSelectedDayStr = new Date().toISOString().split('T')[0];
+      renderRanduialaCalendar();
+    }
 
-      const today = new Date();
-      let daysCount = (currentRanduialaView === '3days') ? 3 : (currentRanduialaView === 'week' ? 7 : 30);
-      const days = [];
+    function selectRanduialaDay(dStr) {
+      randuialaSelectedDayStr = dStr;
+      renderRanduialaCalendar();
+    }
 
-      for (let i = 0; i < daysCount; i++) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        days.push(d);
+    function setRanduialaView(viewMode) {
+      currentRanduialaView = viewMode;
+      ['calendar', '3days', 'week'].forEach(m => {
+        const btn = document.getElementById(`btnRanduialaView_${m}`);
+        if (btn) {
+          if (m === viewMode) {
+            btn.className = "px-2 py-1 rounded-lg text-[10px] font-bold bg-rose-900 text-rose-100";
+          } else {
+            btn.className = "px-2 py-1 rounded-lg text-[10px] bg-cardbg text-slate-400 border border-bordercol";
+          }
+        }
+      });
+      const gridBox = document.getElementById('randuialaMonthGridBox');
+      if (gridBox) gridBox.classList.toggle('hidden', viewMode !== 'calendar');
+      renderRanduialaCalendar();
+    }
+
+    function renderRanduialaMonthGrid(gridEl, todayStr) {
+      if (!gridEl) return;
+      const y = randuialaCurrentCalendarMonth.getFullYear();
+      const m = randuialaCurrentCalendarMonth.getMonth();
+      const firstDay = new Date(y, m, 1);
+      const lastDay = new Date(y, m + 1, 0);
+      let startDayOfWeek = (firstDay.getDay() + 6) % 7;
+      const totalDays = lastDay.getDate();
+
+      let cellsHtml = '';
+      for (let i = 0; i < startDayOfWeek; i++) {
+        cellsHtml += `<div class="p-1 rounded-lg opacity-20 text-[9px] text-slate-600">·</div>`;
       }
-
-      cont.innerHTML = days.map(d => {
-        const dStr = d.toISOString().split('T')[0];
+      for (let d = 1; d <= totalDays; d++) {
+        const dStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const dayData = getRanduialaDay(dStr);
-        const isToday = (dStr === today.toISOString().split('T')[0]);
-        const dayName = d.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'short' });
-
+        const isToday = (dStr === todayStr);
+        const isSelected = (dStr === randuialaSelectedDayStr);
         const allDone = dayData.catisma && dayData.pomelnic && dayData.rugaciune && dayData.scriptura;
 
-        return `
-          <div class="p-3 bg-darkbg border ${allDone ? 'border-emerald-700/80 bg-emerald-950/20' : (isToday ? 'border-rose-700/80' : 'border-bordercol')} rounded-2xl space-y-2 transition shadow-sm">
-            <div class="flex items-center justify-between border-b border-bordercol/40 pb-1.5">
-              <div class="flex items-center space-x-1.5">
-                <span class="text-xs font-bold ${isToday ? 'text-rose-300' : 'text-white'} capitalize">${dayName}</span>
-                ${isToday ? '<span class="text-[9px] bg-rose-950 border border-rose-800 text-rose-200 px-1.5 py-0.2 rounded font-bold uppercase">Azi</span>' : ''}
-              </div>
-              <span class="text-[10px] font-mono ${allDone ? 'text-emerald-400 font-bold' : 'text-slate-400'}">
-                ${allDone ? '✓ Îndeplinit' : 'În curs'}
-              </span>
+        let bgClass = "bg-cardbg text-slate-300 border-bordercol";
+        if (allDone) bgClass = "bg-emerald-950 border-emerald-600 text-emerald-200 font-bold shadow-sm";
+        else if (isToday) bgClass = "bg-rose-950/60 border-rose-500 text-rose-200 font-bold";
+        if (isSelected) bgClass += " ring-2 ring-amber-400";
+
+        cellsHtml += `
+          <button onclick="selectRanduialaDay('${dStr}')" class="p-1 rounded-xl border flex flex-col items-center justify-between min-h-[44px] transition active:scale-95 ${bgClass}">
+            <span class="text-[10px] ${isToday ? 'text-amber-300 font-bold' : ''}">${d}</span>
+            <div class="flex items-center space-x-0.5 text-[8px] leading-none pt-0.5">
+              <span class="${dayData.catisma ? 'text-rose-400 font-bold' : 'text-slate-600'}">📖</span>
+              <span class="${dayData.pomelnic ? 'text-emerald-400 font-bold' : 'text-slate-600'}">📿</span>
+              <span class="${dayData.rugaciune ? 'text-amber-400 font-bold' : 'text-slate-600'}">🕊️</span>
+              <span class="${dayData.scriptura ? 'text-cyan-400 font-bold' : 'text-slate-600'}">📜</span>
             </div>
-
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px]">
-              <!-- 1. Catisma -->
-              <label class="flex items-center space-x-2 p-1.5 bg-cardbg rounded-xl border ${dayData.catisma ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
-                <input type="checkbox" onchange="setRanduialaDayItem('${dStr}', 'catisma', this.checked)" ${dayData.catisma ? 'checked' : ''} class="rounded text-rose-600 focus:ring-0">
-                <span class="truncate">📖 Catisma</span>
-              </label>
-
-              <!-- 2. Pomelnic -->
-              <div class="flex items-center justify-between p-1.5 bg-cardbg rounded-xl border ${dayData.pomelnic ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'}">
-                <label class="flex items-center space-x-1.5 cursor-pointer truncate">
-                  <input type="checkbox" onchange="setRanduialaDayItem('${dStr}', 'pomelnic', this.checked ? 'complet' : false)" ${dayData.pomelnic ? 'checked' : ''} class="rounded text-emerald-600 focus:ring-0">
-                  <span class="truncate">📿 Pomelnic</span>
-                </label>
-                ${dayData.pomelnic ? `
-                  <button onclick="setRanduialaDayItem('${dStr}', 'pomelnic', '${dayData.pomelnic === 'complet' ? 'partial' : 'complet'}')" class="text-[9px] font-mono px-1 py-0.2 bg-darkbg border border-bordercol rounded text-slate-300" title="Comută între parțial și complet">
-                    ${dayData.pomelnic === 'complet' ? 'Tot' : 'Part'}
-                  </button>
-                ` : ''}
-              </div>
-
-              <!-- 3. Rugăciune Neam -->
-              <label class="flex items-center space-x-2 p-1.5 bg-cardbg rounded-xl border ${dayData.rugaciune ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
-                <input type="checkbox" onchange="setRanduialaDayItem('${dStr}', 'rugaciune', this.checked)" ${dayData.rugaciune ? 'checked' : ''} class="rounded text-amber-600 focus:ring-0">
-                <span class="truncate">🕊️ Pt. Neam</span>
-              </label>
-
-              <!-- 4. Sf. Scriptură -->
-              <label class="flex items-center space-x-2 p-1.5 bg-cardbg rounded-xl border ${dayData.scriptura ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
-                <input type="checkbox" onchange="setRanduialaDayItem('${dStr}', 'scriptura', this.checked)" ${dayData.scriptura ? 'checked' : ''} class="rounded text-cyan-600 focus:ring-0">
-                <span class="truncate">📜 Scriptură</span>
-              </label>
-            </div>
-          </div>
+          </button>
         `;
-      }).join('');
+      }
+      gridEl.innerHTML = cellsHtml;
+    }
+
+    function renderRanduialaSelectedDayBox(todayStr) {
+      const selectedBox = document.getElementById('randuialaSelectedDayBox');
+      if (!selectedBox) return;
+      const selDate = new Date(randuialaSelectedDayStr + 'T00:00:00');
+      const dayData = getRanduialaDay(randuialaSelectedDayStr);
+      const isToday = (randuialaSelectedDayStr === todayStr);
+      const niceDate = selDate.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const allDone = dayData.catisma && dayData.pomelnic && dayData.rugaciune && dayData.scriptura;
+
+      selectedBox.innerHTML = `
+        <div class="p-3 bg-cardbg border ${allDone ? 'border-emerald-700/80 bg-emerald-950/20' : (isToday ? 'border-rose-700/80' : 'border-bordercol')} rounded-2xl space-y-2.5 transition shadow-sm">
+          <div class="flex items-center justify-between border-b border-bordercol/40 pb-1.5">
+            <div class="space-y-0.5">
+              <span class="text-[10px] text-slate-400 block uppercase font-bold">Rânduială selectată:</span>
+              <span class="text-xs font-bold text-white capitalize block">${niceDate}</span>
+            </div>
+            <button onclick="setRanduialaDayItem('${randuialaSelectedDayStr}', 'all', true)" class="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold active:scale-95 transition">
+              ✓ Bifează tot
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1.5 text-xs">
+            <label class="flex items-center space-x-2 p-2 bg-darkbg rounded-xl border ${dayData.catisma ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
+              <input type="checkbox" onchange="setRanduialaDayItem('${randuialaSelectedDayStr}', 'catisma', this.checked)" ${dayData.catisma ? 'checked' : ''} class="rounded text-rose-600 focus:ring-0">
+              <span class="font-bold truncate">📖 Catisma</span>
+            </label>
+
+            <div class="flex items-center justify-between p-2 bg-darkbg rounded-xl border ${dayData.pomelnic ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'}">
+              <label class="flex items-center space-x-1.5 cursor-pointer truncate">
+                <input type="checkbox" onchange="setRanduialaDayItem('${randuialaSelectedDayStr}', 'pomelnic', this.checked ? 'complet' : false)" ${dayData.pomelnic ? 'checked' : ''} class="rounded text-emerald-600 focus:ring-0">
+                <span class="font-bold truncate">📿 Pomelnic</span>
+              </label>
+              ${dayData.pomelnic ? `
+                <button onclick="setRanduialaDayItem('${randuialaSelectedDayStr}', 'pomelnic', '${dayData.pomelnic === 'complet' ? 'partial' : 'complet'}')" class="text-[9px] font-mono px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-slate-200" title="Comută între parțial și complet">
+                  ${dayData.pomelnic === 'complet' ? 'Tot' : 'Part'}
+                </button>
+              ` : ''}
+            </div>
+
+            <label class="flex items-center space-x-2 p-2 bg-darkbg rounded-xl border ${dayData.rugaciune ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
+              <input type="checkbox" onchange="setRanduialaDayItem('${randuialaSelectedDayStr}', 'rugaciune', this.checked)" ${dayData.rugaciune ? 'checked' : ''} class="rounded text-amber-600 focus:ring-0">
+              <span class="font-bold truncate">🕊️ Pt. Neam</span>
+            </label>
+
+            <label class="flex items-center space-x-2 p-2 bg-darkbg rounded-xl border ${dayData.scriptura ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
+              <input type="checkbox" onchange="setRanduialaDayItem('${randuialaSelectedDayStr}', 'scriptura', this.checked)" ${dayData.scriptura ? 'checked' : ''} class="rounded text-cyan-600 focus:ring-0">
+              <span class="font-bold truncate">📜 Scriptură</span>
+            </label>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRanduialaCalendar() {
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+
+      const monthLabel = document.getElementById('randuialaMonthLabel');
+      if (monthLabel) {
+        monthLabel.textContent = randuialaCurrentCalendarMonth.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
+      }
+
+      const gridEl = document.getElementById('randuialaMonthGrid');
+      renderRanduialaMonthGrid(gridEl, todayStr);
+
+      const stripEl = document.getElementById('randuialaHorizontalStrip');
+      if (stripEl) {
+        const stripDays = [];
+        for (let i = 13; i >= 0; i--) {
+          const sd = new Date(today);
+          sd.setDate(today.getDate() - i);
+          stripDays.push(sd);
+        }
+        for (let i = 1; i <= 2; i++) {
+          const sd = new Date(today);
+          sd.setDate(today.getDate() + i);
+          stripDays.push(sd);
+        }
+
+        stripEl.innerHTML = stripDays.map(sd => {
+          const sdStr = sd.toISOString().split('T')[0];
+          const sdData = getRanduialaDay(sdStr);
+          const isToday = (sdStr === todayStr);
+          const isSelected = (sdStr === randuialaSelectedDayStr);
+          const allDone = sdData.catisma && sdData.pomelnic && sdData.rugaciune && sdData.scriptura;
+          const label = sd.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric' });
+
+          return `
+            <button onclick="selectRanduialaDay('${sdStr}')" class="shrink-0 p-2 rounded-xl border flex flex-col items-center justify-between min-w-[70px] transition active:scale-95 ${isSelected ? 'ring-2 ring-amber-400' : ''} ${allDone ? 'bg-emerald-950 border-emerald-700 text-emerald-200' : (isToday ? 'bg-rose-950/60 border-rose-600 text-rose-200' : 'bg-cardbg border-bordercol text-slate-300')}">
+              <span class="text-[10px] font-bold capitalize">${label}</span>
+              ${isToday ? '<span class="text-[8px] bg-rose-900 px-1 rounded font-bold uppercase my-0.5">Azi</span>' : ''}
+              <div class="flex items-center space-x-0.5 text-[8px] pt-1">
+                <span class="${sdData.catisma ? 'text-rose-300' : 'text-slate-600'}">📖</span>
+                <span class="${sdData.pomelnic ? 'text-emerald-300' : 'text-slate-600'}">📿</span>
+                <span class="${sdData.rugaciune ? 'text-amber-300' : 'text-slate-600'}">🕊️</span>
+                <span class="${sdData.scriptura ? 'text-cyan-300' : 'text-slate-600'}">📜</span>
+              </div>
+            </button>
+          `;
+        }).join('');
+      }
+
+      renderRanduialaSelectedDayBox(todayStr);
+
+      const cont = document.getElementById('randuialaCardsContainer');
+      if (cont && currentRanduialaView !== 'calendar') {
+        let daysCount = (currentRanduialaView === '3days') ? 3 : 7;
+        const days = [];
+        for (let i = 0; i < daysCount; i++) {
+          const d = new Date(today);
+          d.setDate(today.getDate() - i);
+          days.push(d);
+        }
+        cont.innerHTML = days.map(d => {
+          const dStr = d.toISOString().split('T')[0];
+          const dData = getRanduialaDay(dStr);
+          const isT = (dStr === todayStr);
+          const dName = d.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'short' });
+          const allD = dData.catisma && dData.pomelnic && dData.rugaciune && dData.scriptura;
+
+          return `
+            <div class="p-2.5 bg-darkbg border ${allD ? 'border-emerald-700/80' : (isT ? 'border-rose-700/80' : 'border-bordercol')} rounded-xl flex items-center justify-between text-xs">
+              <span class="font-bold ${isT ? 'text-rose-300' : 'text-white'} capitalize">${dName}</span>
+              <div class="flex items-center space-x-1 text-[10px]">
+                <span class="${dData.catisma ? 'text-rose-400 font-bold' : 'text-slate-600'}">📖</span>
+                <span class="${dData.pomelnic ? 'text-emerald-400 font-bold' : 'text-slate-600'}">📿</span>
+                <span class="${dData.rugaciune ? 'text-amber-400 font-bold' : 'text-slate-600'}">🕊️</span>
+                <span class="${dData.scriptura ? 'text-cyan-400 font-bold' : 'text-slate-600'}">📜</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } else if (cont) {
+        cont.innerHTML = '';
+      }
     }
 
     function openPsaltireIframeModal() {
@@ -2419,7 +2858,9 @@
 
     // SINCRONIZARE LIVE 1:1 CU GOOGLE SHEETS
     function isInActiveSharedMode() {
-      return true; // andreea.html rulează permanent în modul dedicat Andreea
+      const user = getCurrentLoggedInUser();
+      if (user === "Andreea Murar") return true;
+      return !!(sharedModeToken && sharingConfig && sharingConfig.shareToken === sharedModeToken);
     }
 
     // Pomelnicul NU se partajează niciodată integral — doar categoriile (Grad) bifate explicit în Admin
@@ -2518,7 +2959,7 @@
         applyCloudSettings(data.settings);
 
         if (data.pomelnic && Array.isArray(data.pomelnic)) {
-          allPeople = data.pomelnic;
+          allPeople = data.pomelnic.map(normalizePersonRecord);
           localStorage.setItem('diih_people', JSON.stringify(allPeople));
         }
         if (data.cumparaturi && Array.isArray(data.cumparaturi)) {
@@ -2614,7 +3055,7 @@
     }
 
     function loadStoredData() {
-      allPeople = JSON.parse(localStorage.getItem('diih_people') || '[]');
+      allPeople = (JSON.parse(localStorage.getItem('diih_people') || '[]')).map(normalizePersonRecord);
       allShopping = JSON.parse(localStorage.getItem('diih_shopping') || '[]');
       allGanduri = JSON.parse(localStorage.getItem('diih_ganduri') || '[]');
       schoolActivities = JSON.parse(localStorage.getItem('diih_school_activities') || '[]');
@@ -2820,49 +3261,87 @@
         }
       }
 
-      document.getElementById('pomelnicBatchBadge').textContent = `${currentDailyPomelnicVii.length} Vii • ${currentDailyPomelnicAdormiti.length} Adormiți`;
-      document.getElementById('countViiBadge').textContent = currentDailyPomelnicVii.length;
-      document.getElementById('countAdormitiBadge').textContent = currentDailyPomelnicAdormiti.length;
+      const badgeText = `${currentDailyPomelnicVii.length} Vii • ${currentDailyPomelnicAdormiti.length} Adormiți`;
+      const badgeEl = document.getElementById('pomelnicBatchBadge');
+      if (badgeEl) badgeEl.textContent = badgeText;
+      const countV = document.getElementById('countViiBadge');
+      if (countV) countV.textContent = currentDailyPomelnicVii.length;
+      const countA = document.getElementById('countAdormitiBadge');
+      if (countA) countA.textContent = currentDailyPomelnicAdormiti.length;
+
+      // Actualizăm și subpagina dedicată Pomelnicul Zilei din interiorul tabului Pomelnic
+      const subBadge = document.getElementById('subpagePomelnicBadge');
+      if (subBadge) subBadge.textContent = badgeText;
+      const subCountV = document.getElementById('subpageCountViiBadge');
+      if (subCountV) subCountV.textContent = currentDailyPomelnicVii.length;
+      const subCountA = document.getElementById('subpageCountAdormitiBadge');
+      if (subCountA) subCountA.textContent = currentDailyPomelnicAdormiti.length;
+      const subBatchSel = document.getElementById('subpagePomelnicBatchSelect');
+      if (subBatchSel) subBatchSel.value = (pomelnicBatchSize || 20).toString();
 
       const containerVii = document.getElementById('dailyPomelnicListVii');
+      const subContainerVii = document.getElementById('subpageDailyPomelnicVii');
       if (currentDailyPomelnicVii.length === 0) {
-        containerVii.innerHTML = `<p class="text-[11px] text-slate-500 italic py-1">Nicio persoană vie activă în Coloana C.</p>`;
+        const emptyV = `<p class="text-[11px] text-slate-500 italic py-1">Nicio persoană vie activă în Coloana C.</p>`;
+        if (containerVii) containerVii.innerHTML = emptyV;
+        if (subContainerVii) subContainerVii.innerHTML = emptyV;
       } else {
-        containerVii.innerHTML = currentDailyPomelnicVii.map(p => `
-          <div onclick="openPersonModal(${p.rowId})" class="py-1 flex items-center justify-between cursor-pointer hover:bg-slate-800/40 rounded px-1 transition">
-            <div class="flex items-center space-x-2">
-              <span class="text-emerald-400 text-xs font-bold">🌱</span>
-              <span class="text-xs text-white font-medium">${p.prenume} ${p.nume}</span>
+        const htmlV = currentDailyPomelnicVii.map(p => {
+          const fullName = getPersonFullName(p);
+          const ageSummary = getPersonAgeSummary(p);
+          return `
+            <div onclick="openPersonModal(${p.rowId})" class="py-1.5 px-2 bg-darkbg border border-bordercol/60 hover:border-emerald-600 rounded-xl flex items-center justify-between cursor-pointer transition shadow-sm">
+              <div class="space-y-0.5 truncate pr-2">
+                <div class="flex items-center space-x-2">
+                  <span class="text-emerald-400 text-xs font-bold">🌱</span>
+                  <span class="text-xs text-white font-bold truncate">${fullName}</span>
+                </div>
+                ${ageSummary ? `<p class="text-[10px] text-cyan-300 font-medium truncate pl-5">${ageSummary}</p>` : ''}
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 border border-emerald-800 text-emerald-300 font-bold shrink-0">${p.grad || 'Viu'}</span>
             </div>
-            <span class="text-[10px] text-slate-400">${p.grad || 'Viu'}</span>
-          </div>
-        `).join('');
+          `;
+        }).join('');
+        if (containerVii) containerVii.innerHTML = htmlV;
+        if (subContainerVii) subContainerVii.innerHTML = htmlV;
       }
 
       const containerAdormiti = document.getElementById('dailyPomelnicListAdormiti');
+      const subContainerAdormiti = document.getElementById('subpageDailyPomelnicAdormiti');
       if (currentDailyPomelnicAdormiti.length === 0) {
-        containerAdormiti.innerHTML = `<p class="text-[11px] text-slate-500 italic py-1">Nicio persoană adormită activă în Coloana C.</p>`;
+        const emptyA = `<p class="text-[11px] text-slate-500 italic py-1">Nicio persoană adormită activă în Coloana C.</p>`;
+        if (containerAdormiti) containerAdormiti.innerHTML = emptyA;
+        if (subContainerAdormiti) subContainerAdormiti.innerHTML = emptyA;
       } else {
-        containerAdormiti.innerHTML = currentDailyPomelnicAdormiti.map(p => `
-          <div onclick="openPersonModal(${p.rowId})" class="py-1 flex items-center justify-between cursor-pointer hover:bg-slate-800/40 rounded px-1 transition">
-            <div class="flex items-center space-x-2">
-              <span class="text-amber-400 text-xs font-bold">†</span>
-              <span class="text-xs text-white font-medium">${p.prenume} ${p.nume}</span>
+        const htmlA = currentDailyPomelnicAdormiti.map(p => {
+          const fullName = getPersonFullName(p);
+          const ageSummary = getPersonAgeSummary(p);
+          return `
+            <div onclick="openPersonModal(${p.rowId})" class="py-1.5 px-2 bg-darkbg border border-bordercol/60 hover:border-amber-600 rounded-xl flex items-center justify-between cursor-pointer transition shadow-sm">
+              <div class="space-y-0.5 truncate pr-2">
+                <div class="flex items-center space-x-2">
+                  <span class="text-amber-400 text-xs font-bold">†</span>
+                  <span class="text-xs text-white font-bold truncate">${fullName}</span>
+                </div>
+                ${ageSummary ? `<p class="text-[10px] text-amber-200 font-medium truncate pl-5">${ageSummary}</p>` : ''}
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-amber-950 border border-amber-800 text-amber-300 font-bold shrink-0">${p.grad || 'Adormit'}</span>
             </div>
-            <span class="text-[10px] text-slate-400">${p.grad || 'Adormit'}</span>
-          </div>
-        `).join('');
+          `;
+        }).join('');
+        if (containerAdormiti) containerAdormiti.innerHTML = htmlA;
+        if (subContainerAdormiti) subContainerAdormiti.innerHTML = htmlA;
       }
     }
 
-    // --- CENTRU DE POMENIRE (5 SUBTABURI POMELNIC) ---
-    let currentPomelnicSubtab = 'total';
+    // --- CENTRU DE POMENIRE (SUBTABURI POMELNIC) ---
+    let currentPomelnicSubtab = 'astazi';
     let centerAdormitiMode = '20'; // '20', '30', 'ALL'
     let centerGradSliceSize = '20'; // '20', '30', 'ALL'
 
     function setPomelnicSubtab(subtabId) {
       currentPomelnicSubtab = subtabId;
-      ['total', 'psaltire', 'bolnavi', 'adormiti', 'categorii'].forEach(id => {
+      ['astazi', 'total', 'psaltire', 'bolnavi', 'adormiti', 'categorii'].forEach(id => {
         const view = document.getElementById(`pomelnicSubView_${id}`);
         const btn = document.getElementById(`btnPomSub_${id}`);
         if (view) view.classList.toggle('hidden', id !== subtabId);
@@ -2875,7 +3354,8 @@
         }
       });
 
-      if (subtabId === 'psaltire') renderCenterPsaltireGrup();
+      if (subtabId === 'astazi') renderDailyPomelnic20();
+      else if (subtabId === 'psaltire') renderCenterPsaltireGrup();
       else if (subtabId === 'bolnavi') renderCenterBolnaviList();
       else if (subtabId === 'adormiti') renderCenterAdormitiList();
       else if (subtabId === 'categorii') {
@@ -2916,16 +3396,18 @@
       if (!cont) return;
       const q = (document.getElementById('pomelnicCenterBolnaviSearch')?.value || '').toLowerCase().trim();
 
+      // 1. Bolnavi din pomelnicul personal
       const personalBolnavi = allPeople.filter(p => p.bolnav === true).map(p => ({
         source: 'personal',
         id: p.rowId,
-        nume: `${p.prenume} ${p.nume}`,
+        nume: getPersonFullName(p),
         detalii: p.istoricMedical || p.info || 'Trecut la bolnavi în pomelnic',
         grad: p.grad || 'Viu',
         ageSummary: getPersonAgeSummary(p),
         original: p
       }));
 
+      // 2. Bolnavi din Psaltire_Grup
       const psaltireBolnavi = (psaltireGrupData || []).filter(x => {
         const s = (x.sectiune || '').toUpperCase();
         const r = (x.persoanaRaw || '').toLowerCase();
@@ -2989,7 +3471,7 @@
       if (!cont) return;
       const q = (document.getElementById('pomelnicCenterAdormitiSearch')?.value || '').toLowerCase().trim();
 
-      const allAdormiti = getVisiblePeople().filter(p => p.stare === 'Adormit');
+      const allAdormiti = getVisiblePeople().filter(p => p.stare === 'Adormit' || (p.da && p.da.trim()));
       let displayList = allAdormiti;
 
       if (centerAdormitiMode !== 'ALL') {
@@ -3016,14 +3498,15 @@
       }
 
       cont.innerHTML = displayList.map(p => {
+        const fullName = getPersonFullName(p);
         const ageSummary = getPersonAgeSummary(p);
         return `
           <div onclick="openPersonModal(${p.rowId})" class="p-3 bg-darkbg border border-bordercol hover:border-amber-800/80 rounded-2xl flex items-center justify-between cursor-pointer transition shadow-sm">
             <div class="space-y-0.5 truncate pr-2">
               <div class="flex items-center space-x-1.5">
-                <span class="text-xs font-bold text-white truncate">${p.prenume} ${p.nume}</span>
+                <span class="text-xs font-bold text-white truncate">${fullName}</span>
                 <span class="text-[9px] bg-amber-950 border border-amber-800 text-amber-300 px-1.5 py-0.2 rounded font-bold">† Adormit</span>
-                ${p.grad ? `<span class="text-[9px] text-slate-400">• ${p.grad}</span>` : ''}
+                ${(p.grad && !['Viu','Adormit'].includes(p.grad)) ? `<span class="text-[9px] text-slate-400">• ${p.grad}</span>` : ''}
               </div>
               <p class="text-[10px] text-slate-400 truncate">${p.da ? (p.daAprox ? '~d. ' : 'd. ') + p.da : ''} ${p.dn ? (p.dnAprox ? '• ~n. ' : '• n. ') + p.dn : ''}</p>
               ${ageSummary ? `<p class="text-[10px] text-amber-200 font-medium truncate">${ageSummary}</p>` : ''}
@@ -3039,7 +3522,11 @@
       if (!sel) return;
       const current = sel.value;
       const grads = new Set();
-      allPeople.forEach(p => { if (p.grad && p.grad.trim()) grads.add(p.grad.trim()); });
+      allPeople.forEach(p => {
+        if (p.grad && p.grad.trim() && !['Viu', 'Adormit', 'true', 'false', 'Necunoscut'].includes(p.grad.trim())) {
+          grads.add(p.grad.trim());
+        }
+      });
       const sorted = Array.from(grads).sort();
       sel.innerHTML = `<option value="ALL">-- Toate Categoriile (de rând) --</option>` + sorted.map(g => `<option value="${encodeURIComponent(g)}">${g}</option>`).join('');
       if (current) sel.value = current;
@@ -3091,12 +3578,13 @@
 
       cont.innerHTML = displayList.map(p => {
         const isViu = p.stare !== 'Adormit';
+        const fullName = getPersonFullName(p);
         const ageSummary = getPersonAgeSummary(p);
         return `
           <div onclick="openPersonModal(${p.rowId})" class="p-3 bg-darkbg border border-bordercol hover:border-cyan-700 rounded-2xl flex items-center justify-between cursor-pointer transition shadow-sm">
             <div class="space-y-0.5 truncate pr-2">
               <div class="flex items-center space-x-1.5">
-                <span class="text-xs font-bold text-white truncate">${p.prenume} ${p.nume}</span>
+                <span class="text-xs font-bold text-white truncate">${fullName}</span>
                 <span class="text-[9px] px-1.5 py-0.2 rounded font-bold ${isViu ? 'bg-emerald-950 border border-emerald-800 text-emerald-300' : 'bg-amber-950 border border-amber-800 text-amber-300'}">${isViu ? '🌱 Viu' : '† Adormit'}</span>
               </div>
               <p class="text-[10px] text-slate-400 truncate">${p.grad || '-'} ${p.dn ? '• n. ' + p.dn : ''} ${p.da ? '• d. ' + p.da : ''}</p>

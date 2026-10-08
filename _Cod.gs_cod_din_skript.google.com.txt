@@ -66,7 +66,7 @@ function executeSyncEngine(isSimulation) {
 
   let endRow = Math.min(startRow + PROD_CONFIG.BATCH_SIZE - 1, totalRows);
   const numRowsToFetch = endRow - startRow + 1;
-  const rows = sheet.getRange(startRow, 1, numRowsToFetch, 22).getValues();
+  const rows = sheet.getRange(startRow, 1, numRowsToFetch, 23).getValues();
 
   let stats = {
     processed: 0,
@@ -88,17 +88,17 @@ function executeSyncEngine(isSimulation) {
 
     const rowId = row[0] || currentRowNumber;
     const isActiv = (row[2] === true || row[2] === "TRUE" || row[2] === 1 || row[2] === "1");
-    const prenume = (row[4] || "").toString().trim();
-    const nume = (row[5] || "").toString().trim();
-    const info = (row[6] || "").toString().trim();
-    const dataNasteriiRaw = row[8];
-    const dataAdormiriiRaw = row[10];
-    const stareaSufleteasca = (row[13] || "Viu").toString().trim();
-    const grad = (row[14] || "").toString().trim();
-    const copii = (row[15] || "").toString().trim();
-    const sot = (row[16] || "").toString().trim();
-    const parinti = (row[17] || "").toString().trim();
-    const apropiati = (row[18] || "").toString().trim();
+    const prenume = (row[5] || "").toString().trim();
+    const nume = (row[6] || "").toString().trim();
+    const info = (row[7] || "").toString().trim();
+    const dataNasteriiRaw = row[9];
+    const dataAdormiriiRaw = row[11];
+    const stareaSufleteasca = (row[14] || "Viu").toString().trim();
+    const grad = (row[15] || "").toString().trim();
+    const copii = (row[16] || "").toString().trim();
+    const sot = (row[17] || "").toString().trim();
+    const parinti = (row[18] || "").toString().trim();
+    const apropiati = (row[19] || "").toString().trim();
 
     if (!isActiv || (!prenume && !nume)) {
       stats.skipped++;
