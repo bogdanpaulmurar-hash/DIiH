@@ -211,11 +211,33 @@ function doGet(e) {
 
   if (action === "deleteGand") {
     let sh = ss.getSheetByName("Ganduri");
+    if (!sh || sh.getLastRow() < 2) return returnResponse(e, { success: true });
+    
+    let targetGand = (e.parameter.gand || "").toString().trim();
     let rowId = parseInt(e.parameter.rowId, 10);
-    if (sh && rowId >= 2 && rowId <= sh.getLastRow()) {
-      sh.deleteRow(rowId);
-      return returnResponse(e, { success: true });
+    let deleted = false;
+
+    // 1. Căutăm după textul gândului (asigură ștergerea corectă chiar dacă rândurile s-au decalat)
+    if (targetGand) {
+      const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
+      const col = (header === "ID") ? 2 : 1;
+      const vals = sh.getRange(2, col, sh.getLastRow() - 1, 1).getValues();
+      for (let i = vals.length - 1; i >= 0; i--) {
+        if (vals[i][0] && vals[i][0].toString().trim() === targetGand) {
+          sh.deleteRow(i + 2);
+          deleted = true;
+          break;
+        }
+      }
     }
+
+    // 2. Fallback după rowId dacă nu s-a găsit după text
+    if (!deleted && !isNaN(rowId) && rowId >= 2 && rowId <= sh.getLastRow()) {
+      sh.deleteRow(rowId);
+      deleted = true;
+    }
+
+    return returnResponse(e, { success: true, deleted: deleted });
   }
 
   // 6. CUMPĂRĂTURI (Structură suportată: cu ID pe Col 1 sau direct Magazin pe Col 1; suport autor)
@@ -251,11 +273,39 @@ function doGet(e) {
 
   if (action === "deleteCumparaturi") {
     let sh = ss.getSheetByName("lista_cumparaturi");
+    if (!sh || sh.getLastRow() < 2) return returnResponse(e, { success: true });
+
+    let targetProdus = (e.parameter.produs || "").toString().trim();
+    let targetMagazin = (e.parameter.magazin || "").toString().trim();
     let rowId = parseInt(e.parameter.rowId, 10);
-    if (sh && rowId >= 2 && rowId <= sh.getLastRow()) {
-      sh.deleteRow(rowId);
-      return returnResponse(e, { success: true });
+    let deleted = false;
+
+    // 1. Căutăm după produs și magazin (asigură ștergerea corectă chiar dacă rândurile s-au decalat)
+    if (targetProdus) {
+      const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
+      const hasIdCol = (header === "ID");
+      const magazinCol = hasIdCol ? 2 : 1;
+      const produsCol = hasIdCol ? 3 : 2;
+      const maxRows = sh.getLastRow() - 1;
+      const vals = sh.getRange(2, 1, maxRows, hasIdCol ? 3 : 2).getValues();
+      for (let i = vals.length - 1; i >= 0; i--) {
+        let pVal = (vals[i][produsCol - 1] || "").toString().trim();
+        let mVal = (vals[i][magazinCol - 1] || "").toString().trim();
+        if (pVal === targetProdus || pVal.startsWith(targetProdus) || (targetMagazin && mVal === targetMagazin && pVal.includes(targetProdus))) {
+          sh.deleteRow(i + 2);
+          deleted = true;
+          break;
+        }
+      }
     }
+
+    // 2. Fallback după rowId dacă nu s-a găsit după conținut
+    if (!deleted && !isNaN(rowId) && rowId >= 2 && rowId <= sh.getLastRow()) {
+      sh.deleteRow(rowId);
+      deleted = true;
+    }
+
+    return returnResponse(e, { success: true, deleted: deleted });
   }
 
   if (action === "deleteMagazinCumparaturi") {
@@ -705,10 +755,36 @@ function getGanduriData(ss) {
 }
 
 function getNoteAnaniaData(ss) {
-  const sh = ss.getSheetByName("noteBIBLIA_Anania");
+  const sh = ss.getSheetByName("noteBIBLIA_Anania") || ss.getSheetByName("Biblia_Note");
   if (!sh || sh.getLastRow() < 2) return [];
-  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 4).getValues();
-  return rows.map(r => ({ cartea: r[0], versetul: r[1], indice: r[2], explicatie: r[3] })).filter(x => x.cartea);
+  const maxCols = Math.min(Math.max(sh.getLastColumn(), 4), 8);
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, maxCols).getValues();
+  return rows.map((r, idx) => {
+    // Dacă structura are 7 sau 8 coloane (ID, Cartea, Capitol, Verset, Text_Verset, Indice, Explicatie, Moment)
+    if (maxCols >= 7 && r[4]) {
+      return {
+        id: r[0] || (idx + 1),
+        cartea: (r[1] || "").toString().trim(),
+        capitol: (r[2] || "").toString().trim(),
+        versetul: (r[3] || "").toString().trim(),
+        textVerset: (r[4] || "").toString().trim(),
+        indice: (r[5] || "").toString().trim(),
+        explicatie: (r[6] || "").toString().trim(),
+        moment: (r[7] || "").toString().trim()
+      };
+    }
+    // Structură simplificată (4 coloane: Cartea, Versetul, Indice, Explicatie sau 5 coloane cu Text Verset)
+    return {
+      id: idx + 1,
+      cartea: (r[0] || "").toString().trim(),
+      capitol: "",
+      versetul: (r[1] || "").toString().trim(),
+      textVerset: (r[4] || "").toString().trim(),
+      indice: (r[2] || "").toString().trim(),
+      explicatie: (r[3] || "").toString().trim(),
+      moment: ""
+    };
+  }).filter(x => x.cartea || x.explicatie);
 }
 
 function getInventoryData(ss) {
