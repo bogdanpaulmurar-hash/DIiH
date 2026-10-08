@@ -198,6 +198,26 @@
           </button>
         </div>
 
+        <!-- Butoane Rapide către Secțiunile Pomelnicului -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 pt-0.5 text-[10px]">
+          <button onclick="switchTab('pomelnic'); setPomelnicSubtab('total');" class="p-2 bg-darkbg border border-bordercol hover:border-cyan-500 rounded-xl font-bold text-slate-200 transition text-left flex items-center space-x-1.5">
+            <span>📜</span>
+            <span class="truncate">Pomelnic Total</span>
+          </button>
+          <button onclick="switchTab('pomelnic'); setPomelnicSubtab('psaltire');" class="p-2 bg-darkbg border border-bordercol hover:border-rose-500 rounded-xl font-bold text-rose-300 transition text-left flex items-center space-x-1.5">
+            <span>📖</span>
+            <span class="truncate">Psaltire Grup</span>
+          </button>
+          <button onclick="switchTab('pomelnic'); setPomelnicSubtab('bolnavi');" class="p-2 bg-darkbg border border-bordercol hover:border-amber-500 rounded-xl font-bold text-amber-300 transition text-left flex items-center space-x-1.5">
+            <span>🏥</span>
+            <span class="truncate">Bolnavi</span>
+          </button>
+          <button onclick="switchTab('pomelnic'); setPomelnicSubtab('adormiti');" class="p-2 bg-darkbg border border-bordercol hover:border-amber-400 rounded-xl font-bold text-slate-300 transition text-left flex items-center space-x-1.5">
+            <span>†</span>
+            <span class="truncate">Adormiți</span>
+          </button>
+        </div>
+
         <!-- Vii -->
         <div class="space-y-1 pt-1">
           <div class="flex items-center justify-between text-xs font-bold text-emerald-400 border-b border-emerald-950/60 pb-1">
@@ -265,7 +285,18 @@
         </button>
       </div>
 
-      <div class="relative">
+      <!-- Bara Celor 5 Subtaburi Pomelnic -->
+      <div class="flex items-center space-x-1 overflow-x-auto pb-1 border-b border-bordercol/80">
+        <button onclick="setPomelnicSubtab('total')" id="btnPomSub_total" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cyan-900 text-cyan-200 whitespace-nowrap">I. Personal Total</button>
+        <button onclick="setPomelnicSubtab('psaltire')" id="btnPomSub_psaltire" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">II. Psaltire Grup</button>
+        <button onclick="setPomelnicSubtab('bolnavi')" id="btnPomSub_bolnavi" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">III. Bolnavi</button>
+        <button onclick="setPomelnicSubtab('adormiti')" id="btnPomSub_adormiti" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">IV. Adormiți</button>
+        <button onclick="setPomelnicSubtab('categorii')" id="btnPomSub_categorii" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">V. Categorii / Grad</button>
+      </div>
+
+      <!-- Secțiunea I: Personal Total -->
+      <div id="pomelnicSubView_total" class="space-y-3">
+        <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </span>
@@ -301,17 +332,89 @@
         <button onclick="toggleSelectMode()" id="toggleSelectModeBtn" class="px-2.5 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700 hover:text-white font-medium whitespace-nowrap">☑️ Selectează</button>
       </div>
 
-      <div id="batchActionBar" class="hidden sticky top-14 z-30 bg-slate-900/95 border border-cyan-700/60 p-2.5 rounded-2xl shadow-2xl flex items-center justify-between text-xs space-x-2">
-        <span class="text-cyan-300 font-bold pl-1"><span id="batchCount">0</span> selectați</span>
-        <div class="flex items-center space-x-1.5 overflow-x-auto">
-          <button onclick="printSelectedAltarPDF()" class="px-2 py-1.5 bg-amber-950 border border-amber-700 text-amber-200 rounded-xl font-bold hover:bg-amber-900 transition whitespace-nowrap">⛪ Altar (Prenume)</button>
-          <button onclick="applyBatchAtentie(true)" class="px-2 py-1.5 bg-rose-950 border border-rose-700 text-rose-200 rounded-xl font-bold hover:bg-rose-900 transition whitespace-nowrap">⚠️ Atenție</button>
-          <button onclick="applyBatchAtentie(false)" class="px-2 py-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 rounded-xl font-bold hover:bg-emerald-900 transition whitespace-nowrap">✅ Scoate</button>
-          <button onclick="cancelSelection()" class="p-1.5 text-slate-400 hover:text-white">✕</button>
+      <div id="batchActionBar" class="hidden sticky top-14 z-30 bg-slate-900/95 border border-cyan-700/60 p-2 rounded-2xl shadow-2xl flex items-center justify-between text-xs space-x-1.5">
+        <span class="text-cyan-300 font-bold pl-1 text-[11px] shrink-0"><span id="batchCount">0</span> sel.</span>
+        <div class="flex items-center space-x-1 overflow-x-auto">
+          <button onclick="printSelectedAltarPDF()" class="px-2 py-1.5 bg-amber-950 border border-amber-700 text-amber-200 rounded-xl font-bold hover:bg-amber-900 transition whitespace-nowrap text-[10px]">⛪ Altar</button>
+          <button onclick="applyBatchAtentie(true)" class="px-2 py-1.5 bg-rose-950 border border-rose-700 text-rose-200 rounded-xl font-bold hover:bg-rose-900 transition whitespace-nowrap text-[10px]">⚠️ Atenție</button>
+          <button onclick="applyBatchAtentie(false)" class="px-2 py-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 rounded-xl font-bold hover:bg-emerald-900 transition whitespace-nowrap text-[10px]">✅ Scoate</button>
+          <button onclick="applyBatchAndreeaToggle()" class="px-2 py-1.5 bg-fuchsia-950 border border-fuchsia-700 text-fuchsia-200 rounded-xl font-bold hover:bg-fuchsia-900 transition whitespace-nowrap text-[10px] flex items-center space-x-1" title="Comută prezența în Pomelnicul Andreei">
+            <span>🌸</span>
+            <span>Andreea</span>
+          </button>
+          <button onclick="cancelSelection()" class="p-1 text-slate-400 hover:text-white shrink-0">✕</button>
         </div>
       </div>
 
-      <div id="peopleListContainer" class="space-y-2"></div>
+        <div id="peopleListContainer" class="space-y-2"></div>
+      </div>
+
+      <!-- Secțiunea II: Psaltire Grup -->
+      <div id="pomelnicSubView_psaltire" class="hidden space-y-3">
+        <div class="p-3 bg-cardbg border border-bordercol rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-rose-300 uppercase">📖 Pomelnicul Grupului de Psaltire</span>
+            <button onclick="printPsaltireGrupAltarPDF()" class="text-[10px] bg-amber-950 border border-amber-800 text-amber-200 px-2 py-1 rounded-lg font-bold">⛪ Tipar Altar</button>
+          </div>
+          <input type="text" id="pomelnicCenterPsaltireSearch" oninput="renderCenterPsaltireGrup()" placeholder="Caută persoană în psaltire..." class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white">
+          <div id="pomelnicCenterPsaltireList" class="space-y-1.5 divide-y divide-bordercol/30 max-h-[65vh] overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+
+      <!-- Secțiunea III: Bolnavi -->
+      <div id="pomelnicSubView_bolnavi" class="hidden space-y-3">
+        <div class="p-3 bg-cardbg border border-bordercol rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-amber-300 uppercase block">🏥 Pomelnicul celor Bolnavi</span>
+              <p class="text-[10px] text-slate-400">Pomelnicul personal + bolnavii din Grupul de Psaltire</p>
+            </div>
+            <span id="centerBolnaviCountBadge" class="bg-amber-950 border border-amber-800 text-amber-200 text-xs px-2 py-0.5 rounded-full font-mono font-bold">0 bolnavi</span>
+          </div>
+          <input type="text" id="pomelnicCenterBolnaviSearch" oninput="renderCenterBolnaviList()" placeholder="Caută în lista celor bolnavi..." class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white">
+          <div id="pomelnicCenterBolnaviList" class="space-y-1.5 max-h-[65vh] overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+
+      <!-- Secțiunea IV: Adormiți -->
+      <div id="pomelnicSubView_adormiti" class="hidden space-y-3">
+        <div class="p-3 bg-cardbg border border-bordercol rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-slate-200 uppercase block">† Pomenirea celor Adormiți</span>
+              <p class="text-[10px] text-slate-400">Vârsta la adormire & anii de când au adormit</p>
+            </div>
+            <div class="flex space-x-1">
+              <button onclick="setCenterAdormitiMode('20')" id="btnCenterAdormiti_20" class="px-2 py-1 bg-amber-950 text-amber-200 border border-amber-800 rounded-lg text-xs font-bold">20 / zi</button>
+              <button onclick="setCenterAdormitiMode('30')" id="btnCenterAdormiti_30" class="px-2 py-1 bg-darkbg text-slate-400 border border-bordercol rounded-lg text-xs">30 / zi</button>
+              <button onclick="setCenterAdormitiMode('ALL')" id="btnCenterAdormiti_ALL" class="px-2 py-1 bg-darkbg text-slate-400 border border-bordercol rounded-lg text-xs">Toți</button>
+            </div>
+          </div>
+          <input type="text" id="pomelnicCenterAdormitiSearch" oninput="renderCenterAdormitiList()" placeholder="Caută în adormiți..." class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white">
+          <div id="pomelnicCenterAdormitiList" class="space-y-1.5 max-h-[65vh] overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+
+      <!-- Secțiunea V: Categorii / Grad -->
+      <div id="pomelnicSubView_categorii" class="hidden space-y-3">
+        <div class="p-3 bg-cardbg border border-bordercol rounded-2xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-cyan-300 uppercase block">📂 Pomenire Rotativă pe Categorie (Grad - Col O)</span>
+            <div class="flex space-x-1">
+              <button onclick="setCenterGradSliceSize('20')" id="btnCenterGrad_20" class="px-2 py-1 bg-cyan-900 text-cyan-200 rounded-lg text-xs font-bold">20 / zi</button>
+              <button onclick="setCenterGradSliceSize('30')" id="btnCenterGrad_30" class="px-2 py-1 bg-darkbg text-slate-400 border border-bordercol rounded-lg text-xs">30 / zi</button>
+              <button onclick="setCenterGradSliceSize('ALL')" id="btnCenterGrad_ALL" class="px-2 py-1 bg-darkbg text-slate-400 border border-bordercol rounded-lg text-xs">Toți</button>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-[11px] text-slate-400">Alege Grad:</span>
+            <select id="pomelnicCenterGradSelect" onchange="renderCenterGradSliceList()" class="flex-1 bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+              <option value="ALL">-- Toate Categoriile (de rând) --</option>
+            </select>
+          </div>
+          <div id="pomelnicCenterGradList" class="space-y-1.5 max-h-[65vh] overflow-y-auto pr-1"></div>
+        </div>
+      </div>
     </section>
 
     <!-- TAB 3: ȘCOALĂ (Lună / Săptămână / Listă, Ore, Plăți, Sumar Zi/Lună/An) -->
@@ -553,6 +656,24 @@
           </div>
         </div>
 
+        <!-- Indicator Cartea Curentă & Buton Vizualizare Carte -->
+        <div class="p-3 bg-darkbg border border-amber-900/60 rounded-xl space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] text-amber-300 uppercase font-bold tracking-wider">Cartea din care citești:</span>
+            <span id="scripturaBookProgressBadge" class="bg-amber-950 border border-amber-800 text-amber-200 text-[10px] px-2 py-0.5 rounded-full font-bold">1 / 24 cap.</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="truncate pr-2">
+              <span id="scripturaBookProgressTitle" class="text-xs font-bold text-white truncate block">Cartea lui Iosua Navi</span>
+              <span id="scripturaBookRemainingText" class="text-[10px] text-slate-400 block">Mai sunt 23 capitole din această carte</span>
+            </div>
+            <button onclick="goToCurrentScripturaBook()" class="px-2.5 py-1.5 bg-amber-900/80 hover:bg-amber-800 border border-amber-700 text-amber-100 rounded-xl text-xs font-bold transition flex items-center space-x-1 shrink-0 active:scale-95 shadow-sm" title="Mergi direct la această carte în lista completă de mai jos">
+              <span>📖</span>
+              <span>Vezi cartea</span>
+            </button>
+          </div>
+        </div>
+
         <!-- Următorul de Citit -->
         <div class="p-3 bg-darkbg border border-cyan-800/80 rounded-xl flex items-center justify-between space-x-2">
           <div class="truncate">
@@ -762,50 +883,16 @@
           <!-- Secțiunea 1: Aplicația Mea Personală -->
           <div class="space-y-2 p-3 bg-darkbg rounded-xl border border-bordercol">
             <div class="flex items-center justify-between">
-              <span class="font-bold text-cyan-300 text-[11px] uppercase">🏠 Ecranul Meu «Astăzi» (DIiH Personal):</span>
-              <div class="space-x-1">
+              <div>
+                <span class="font-bold text-cyan-300 text-[11px] uppercase block">🏠 Chenarele de pe «Astăzi» (Ordine & Vizibilitate):</span>
+                <span class="text-[9px] text-slate-400">Folosește săgețile ▲ ▼ pentru a alege ordinea chenarelor</span>
+              </div>
+              <div class="space-x-1 shrink-0">
                 <button onclick="toggleAllOwnerWidgets(true)" class="text-[9px] px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-slate-300">Toate</button>
                 <button onclick="toggleAllOwnerWidgets(false)" class="text-[9px] px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-slate-300">Niciunul</button>
               </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtOwner_psaltire" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-slate-200">📖 Citirea Psaltirii</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtOwner_biblia360" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-slate-200">📜 Biblia 360 & Citatul Zilei</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtOwner_scriptura" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-slate-200">📑 Continuitate Sf. Scriptură</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtOwner_anniversaries" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-slate-200">🎉 Aniversările Zilei</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtOwner_pomelnic" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-slate-200">📿 Pomelnicul de Astăzi</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtOwner_school" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-slate-200">🎓 Școală & Activități</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtOwner_shopping" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-slate-200">🛒 Cumpărături</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtOwner_ganduri" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-slate-200">💡 Gândul Zilei</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtOwner_inventory" onchange="saveOwnerWidgetsConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-slate-200">📦 Inventar</span>
-              </label>
-            </div>
+            <div id="ownerWidgetsOrderContainer" class="space-y-1 text-[11px]"></div>
           </div>
 
           <!-- Secțiunea 2: Aplicația Partajată (Familia Murar) -->
@@ -854,7 +941,7 @@
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v21.0 (Build 2026-10-02)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v22.0 (Build 2026-10-08)</span>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
             <a href="https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit" target="_blank" rel="noopener" class="w-full flex items-center justify-center space-x-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 py-2 rounded-xl font-bold hover:bg-emerald-900 transition">
               <span>📑</span>
@@ -888,106 +975,38 @@
             </button>
           </div>
 
-          <!-- Pictograme Noi Propuse (Vectoriale SVG) -->
-          <div class="border-b border-bordercol pb-3 space-y-2">
-            <h4 class="font-bold text-amber-300 uppercase tracking-wider text-xs">🎨 Pictograme Propuse pentru Aplicație</h4>
-            <div class="p-2 bg-darkbg border border-cyan-800 rounded-xl flex items-center space-x-2">
-              <img id="activeIconPreview" src="./icons/icon-sigiliu-monograma-hristos.svg" class="w-9 h-9 rounded-lg border border-cyan-700">
-              <div>
-                <span class="text-[10px] text-cyan-300 font-bold block">Emblemă activă acum (salvată în Cloud)</span>
-                <span class="text-[9px] text-slate-400">Se aplică automat pe toate dispozitivele sincronizate</span>
-              </div>
-            </div>
-            <p class="text-[10px] text-slate-400">Apasă pe oricare emblemă pentru a o salva INSTANT și automat în Cloud (inclusiv variantele brâncovenești):</p>
+          <!-- Personalizare Nume și Simbol / Logo -->
+          <div class="border-b border-bordercol pb-3 space-y-2.5">
+            <h4 class="font-bold text-white uppercase tracking-wider text-xs">🎨 Nume Aplicație & Simbol (Cloud)</h4>
             
-            <div class="space-y-1.5 pt-1">
-              <span class="text-[10px] text-amber-400 font-bold block uppercase tracking-wider">☦️ Variante Brâncovenești & Sigilii Tradiționale:</span>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <button onclick="setAppCustomIcon('./icons/icon-monograma-hristos-brancoveneasca.svg', '☦️')" class="p-2.5 bg-darkbg border-2 border-amber-500/60 hover:border-amber-400 rounded-xl flex items-center space-x-2.5 text-left transition">
-                  <img src="./icons/icon-monograma-hristos-brancoveneasca.svg" class="w-9 h-9 rounded-lg border border-amber-600/40">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Placă Brâncovenească</span>
-                    <span class="text-[9px] text-amber-300">Carmin, mărgăritare & Rugăciune</span>
-                  </div>
-                </button>
-                <button onclick="setAppCustomIcon('./icons/icon-sigiliu-monograma-hristos.svg', '☧')" class="p-2.5 bg-darkbg border-2 border-amber-500/60 hover:border-amber-400 rounded-xl flex items-center space-x-2.5 text-left transition">
-                  <img src="./icons/icon-sigiliu-monograma-hristos.svg" class="w-9 h-9 rounded-full border border-amber-600/40">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Sigiliu Monastic Auriu</span>
-                    <span class="text-[9px] text-amber-300">Rotund • Rugăciunea lui Iisus</span>
-                  </div>
-                </button>
-                <button onclick="setAppCustomIcon('./icons/icon-sigiliu-gravura-monograma.svg', '☧')" class="p-2 bg-darkbg border border-bordercol hover:border-slate-400 rounded-xl flex items-center space-x-2 text-left transition">
-                  <img src="./icons/icon-sigiliu-gravura-monograma.svg" class="w-8 h-8 rounded-full border border-slate-600">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Gravură Tradițională</span>
-                    <span class="text-[9px] text-slate-400">Stil tuș alb-negru</span>
-                  </div>
-                </button>
-                <button onclick="setAppCustomIcon('./icons/icon-orthodox-cross.svg', '☦️')" class="p-2 bg-darkbg border border-bordercol hover:border-amber-400 rounded-xl flex items-center space-x-2 text-left transition">
-                  <img src="./icons/icon-orthodox-cross.svg" class="w-8 h-8 rounded-lg">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Cruce Ortodoxă Bizantină</span>
-                    <span class="text-[9px] text-slate-400">Aurie cu nimb luminos</span>
-                  </div>
-                </button>
-              </div>
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-1">Nume Aplicație:</label>
+              <input type="text" id="settingAppTitle" value="DIiH" class="w-full bg-darkbg border border-bordercol rounded-xl p-2 text-white text-xs font-bold focus:border-cyan-500">
+            </div>
 
-              <span class="text-[10px] text-pink-400 font-bold block uppercase tracking-wider pt-1">👨‍👩‍👧‍👦 Icoane Specifice pentru Familie (max 4 — pentru a nu le confunda):</span>
-              <div class="grid grid-cols-2 gap-2 text-xs">
-                <button onclick="setAppCustomIcon('./icons/icon-heart-ekg.png', '❤️')" class="p-2 bg-darkbg border border-bordercol hover:border-pink-400 rounded-xl flex items-center space-x-2 text-left transition">
-                  <img src="./icons/icon-heart-ekg.png" class="w-8 h-8 rounded-lg">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Inimă EKG</span>
-                    <span class="text-[9px] text-pink-300">Original v16</span>
-                  </div>
-                </button>
-                <button onclick="setAppCustomIcon('./icons/icon-family-home.svg', '🏡')" class="p-2 bg-darkbg border border-bordercol hover:border-amber-400 rounded-xl flex items-center space-x-2 text-left transition">
-                  <img src="./icons/icon-family-home.svg" class="w-8 h-8 rounded-lg">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Căminul Familiei</span>
-                    <span class="text-[9px] text-amber-300">Casă curată</span>
-                  </div>
-                </button>
-                <button onclick="setAppCustomIcon('./icons/icon-heart-cross.svg', '🤍')" class="p-2 bg-darkbg border border-bordercol hover:border-pink-400 rounded-xl flex items-center space-x-2 text-left transition">
-                  <img src="./icons/icon-heart-cross.svg" class="w-8 h-8 rounded-lg">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Inimă & Cruce</span>
-                    <span class="text-[9px] text-pink-300">Iubire & Ocrotire</span>
-                  </div>
-                </button>
-                <button onclick="setAppCustomIcon('./icons/icon-family-vine.svg', '🌿')" class="p-2 bg-darkbg border border-bordercol hover:border-emerald-400 rounded-xl flex items-center space-x-2 text-left transition">
-                  <img src="./icons/icon-family-vine.svg" class="w-8 h-8 rounded-lg">
-                  <div class="truncate">
-                    <span class="font-bold text-white block text-[11px] truncate">Vița & Măslinul</span>
-                    <span class="text-[9px] text-emerald-300">Familie Roditoare</span>
-                  </div>
-                </button>
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-1">Simbol / Logo Aplicație (Alege sau tastează):</label>
+              <div class="flex items-center space-x-2">
+                <input type="text" id="settingAppLogo" value="🧭" class="w-16 bg-darkbg border border-bordercol rounded-xl p-2 text-white text-center text-lg font-bold focus:border-cyan-500">
+                <div class="flex flex-wrap gap-1">
+                  <button type="button" onclick="selectAppSymbol('☧')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol text-amber-300 font-bold hover:bg-slate-800 text-sm">☧</button>
+                  <button type="button" onclick="selectAppSymbol('☦')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol text-amber-300 font-bold hover:bg-slate-800 text-sm">☦</button>
+                  <button type="button" onclick="selectAppSymbol('☩')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol text-amber-300 font-bold hover:bg-slate-800 text-sm">☩</button>
+                  <button type="button" onclick="selectAppSymbol('🏠')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol hover:bg-slate-800 text-sm">🏠</button>
+                  <button type="button" onclick="selectAppSymbol('🧭')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol hover:bg-slate-800 text-sm">🧭</button>
+                  <button type="button" onclick="selectAppSymbol('🌿')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol hover:bg-slate-800 text-sm">🌿</button>
+                  <button type="button" onclick="selectAppSymbol('📖')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol hover:bg-slate-800 text-sm">📖</button>
+                  <button type="button" onclick="selectAppSymbol('🌸')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol hover:bg-slate-800 text-sm">🌸</button>
+                </div>
               </div>
             </div>
 
-            <div class="p-2.5 bg-darkbg border border-bordercol rounded-xl space-y-1.5">
-              <span class="font-bold text-cyan-300 block text-[11px]">📸 Cum creezi/cauți alte pictograme?</span>
-              <p class="text-[10px] text-slate-400 leading-relaxed">
-                1. Deschide orice chat AI capabil să genereze imagini (ex: ChatGPT/DALL-E, Gemini, Copilot Designer) și descrie stilul dorit (ex: "icănă rotundă stil brâncovenesc, auriu pe roșu carmin, cu monograma lui Hristos și Rugăciunea lui Iisus scrisă circular").<br>
-                2. Salvează fișierul descoperit ca <strong>.svg</strong> (ideal, vectorial) sau <strong>.png</strong> pătrat, minim 512x512px.<br>
-                3. Trimite-mi fișierul aici în conversație (sau pune-l direct în folderul <code class="text-cyan-300">/icons</code> din proiect) și îți adaug automat butonul de selecție în această listă.<br>
-                4. Alternativ, poți atașa poza direct în foaia <strong>Setari</strong> din Google Sheets (ca link public Google Drive) și mi-o semnalezi să o preiau în cod.
-              </p>
-            </div>
-          </div>
-
-          <div class="border-b border-bordercol pb-3 space-y-2">
-            <h4 class="font-bold text-white uppercase tracking-wider">🎨 Personalizare Brand (Cloud)</h4>
-            <div class="grid grid-cols-3 gap-2">
-              <input type="text" id="settingAppTitle" value="DIiH" class="col-span-2 bg-darkbg border border-bordercol rounded-lg p-2 text-white">
-              <input type="text" id="settingAppLogo" value="🧭" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-center">
-            </div>
             <div class="flex items-center space-x-2 pt-1">
-              <input type="number" id="settingPomelnicBatchSize" min="4" max="100" value="20" class="w-20 bg-darkbg border border-bordercol rounded-lg p-2 text-white text-center font-bold">
-              <span class="text-slate-400">persoane Pomelnic zilnic</span>
+              <input type="number" id="settingPomelnicBatchSize" min="4" max="100" value="20" class="w-20 bg-darkbg border border-bordercol rounded-xl p-2 text-white text-center font-bold">
+              <span class="text-slate-400 text-[11px]">persoane Pomelnic zilnic</span>
             </div>
-            <button onclick="saveGlobalCustomSettings()" class="w-full bg-cyan-900 border border-cyan-700 text-cyan-100 py-2 rounded-xl font-medium">💾 Salvează în Cloud</button>
+
+            <button onclick="saveGlobalCustomSettings()" class="w-full bg-cyan-900 border border-cyan-700 text-cyan-100 py-2.5 rounded-xl font-bold text-xs active:scale-95 transition">💾 Salvează în Cloud</button>
           </div>
 
           <!-- Personalizare Meniu Principal Jos (Setări Utilizator) -->
@@ -1154,11 +1173,21 @@
 
           <button onclick="saveAdminSharingConfig()" class="w-full bg-cyan-900 border border-cyan-700 text-cyan-100 py-2.5 rounded-xl font-bold">💾 Salvează Configurația de Partajare</button>
 
-          <div id="adminShareLinkBox" class="hidden p-3 bg-emerald-950/40 border border-emerald-700 rounded-xl space-y-2">
-            <span class="font-bold text-emerald-300 block text-[11px]">🔗 Link de partajare generat:</span>
-            <input type="text" id="adminShareLinkOutput" readonly class="w-full bg-darkbg border border-emerald-800 rounded-lg p-2 text-emerald-200 text-[10px] font-mono">
-            <button onclick="copyShareLink()" class="w-full bg-emerald-800 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold text-[11px]">📋 Copiază Link-ul</button>
-            <p class="text-[10px] text-emerald-100/80">Trimite acest link soției tale pe iPhone. În Safari: deschide link-ul → apasă Share → <strong>"Add to Home Screen"</strong> pentru acces rapid ca o aplicație.</p>
+          <div id="adminShareLinkBox" class="hidden p-3 bg-emerald-950/40 border border-emerald-700 rounded-xl space-y-3">
+            <div class="space-y-1.5">
+              <span class="font-bold text-pink-300 block text-[11px]">📱 Link Dedicat iPhone Safari (Aplicație Andreea Independentă):</span>
+              <input type="text" id="adminShareLinkOutputIPhone" readonly class="w-full bg-darkbg border border-pink-800 rounded-lg p-2 text-pink-200 text-[10px] font-mono">
+              <button onclick="copyShareLinkIPhone()" class="w-full bg-pink-900 hover:bg-pink-800 text-white py-2 rounded-lg font-bold text-[11px]">📋 Copiază Link-ul pentru iPhone</button>
+              <p class="text-[10px] text-pink-200/90 leading-relaxed">
+                Pe iPhone-ul Andreei: deschide în Safari acest link → butonul Share (pătrățel cu săgeată) → <strong>"Add to Home Screen"</strong>. Se va instala ca aplicație de sine stătătoare, cu numele „Andreea” și iconița proprie, fără să interfereze cu DIiH!
+              </p>
+            </div>
+
+            <div class="space-y-1.5 pt-2 border-t border-emerald-800/60">
+              <span class="font-bold text-emerald-300 block text-[11px]">🔗 Link Universal Web:</span>
+              <input type="text" id="adminShareLinkOutput" readonly class="w-full bg-darkbg border border-emerald-800 rounded-lg p-2 text-emerald-200 text-[10px] font-mono">
+              <button onclick="copyShareLink()" class="w-full bg-emerald-800 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold text-[11px]">📋 Copiază Link Universal</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1192,7 +1221,13 @@
             </select>
           </div>
 
-          <button onclick="openInventoryItemModal(null)" class="w-full bg-violet-800 hover:bg-violet-700 text-white font-bold py-2.5 rounded-xl transition">➕ Adaugă Obiect Nou</button>
+          <div class="flex space-x-2">
+            <button onclick="openInventoryItemModal(null)" class="flex-1 bg-violet-800 hover:bg-violet-700 text-white font-bold py-2.5 rounded-xl transition">➕ Adaugă Obiect Nou</button>
+            <button onclick="openInventoryConfigModal()" class="px-3 bg-darkbg border border-bordercol hover:border-violet-500 text-slate-300 hover:text-white rounded-xl text-xs font-bold transition flex items-center space-x-1" title="Gestionează Categoriile și Spațiile de Depozitare">
+              <span>⚙️</span>
+              <span>Categorii & Spații</span>
+            </button>
+          </div>
 
           <div id="inventoryListContainer" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
         </div>
@@ -1274,18 +1309,26 @@
     </div>
   </nav>
 
-  <!-- MODAL RÂNDUIALĂ PSALTIRE CU POMELNICUL GRUPULUI INTEGRAT -->
+  <!-- MODAL RÂNDUIALĂ PSALTIRE CU CELE 3 SUBTABURI (CATISMĂ, RUGĂCIUNE NEAM, CALENDAR) -->
   <div id="psaltireIframeModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col justify-end sm:justify-center p-0 sm:p-4">
-    <div class="bg-cardbg border border-bordercol w-full max-w-lg h-[95vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden mx-auto p-5 space-y-3">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg h-[95vh] rounded-t-3xl sm:rounded-2xl flex flex-col overflow-hidden mx-auto p-4 sm:p-5 space-y-2.5">
       <div class="flex items-center justify-between border-b border-bordercol pb-2">
         <div>
-          <span class="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-full font-bold uppercase">Rânduială Psaltire</span>
+          <span class="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-full font-bold uppercase">Rânduială Zilnică</span>
           <h2 id="modalIframeTitle" class="text-base font-bold text-white mt-0.5"></h2>
         </div>
         <button onclick="closePsaltireIframeModal()" class="text-slate-400 hover:text-white p-2 text-lg">✕</button>
       </div>
+
+      <!-- 3 Subtaburi Psaltire & Rânduială -->
+      <div class="flex items-center space-x-1 border-b border-bordercol pb-1.5 shrink-0">
+        <button onclick="setPsaltireModalSubtab('randuiala')" id="btnPsaltModal_randuiala" class="flex-1 py-1.5 px-1 rounded-xl text-[11px] font-bold bg-rose-900 text-rose-100 text-center transition">📖 Catisma & Pomelnic</button>
+        <button onclick="setPsaltireModalSubtab('rugaciune')" id="btnPsaltModal_rugaciune" class="flex-1 py-1.5 px-1 rounded-xl text-[11px] font-bold bg-darkbg text-slate-400 hover:text-white border border-bordercol text-center transition">🕊️ Rugăciune Neam</button>
+        <button onclick="setPsaltireModalSubtab('calendar')" id="btnPsaltModal_calendar" class="flex-1 py-1.5 px-1 rounded-xl text-[11px] font-bold bg-darkbg text-slate-400 hover:text-white border border-bordercol text-center transition">📅 Calendar Bife</button>
+      </div>
       
-      <div class="flex-1 space-y-3 text-xs text-slate-300 overflow-y-auto pr-1">
+      <!-- Subtab 1: Rânduială Catisma & Pomelnic Grup -->
+      <div id="psaltireSubView_randuiala" class="flex-1 space-y-3 text-xs text-slate-300 overflow-y-auto pr-1">
         <div class="p-3 bg-darkbg border border-bordercol rounded-xl space-y-1">
           <span class="text-rose-400 font-bold block">Structura Catismei de astăzi:</span>
           <p id="modalPsaltireDetails" class="font-mono text-slate-200"></p>
@@ -1324,6 +1367,92 @@
           <span>📖 Deschide Textul Liturgic pe Doxologia.ro</span>
           <span>↗</span>
         </a>
+      </div>
+
+      <!-- Subtab 2: Rugăciunea pentru Neam a Părintelui Gheorghe Calciu -->
+      <div id="psaltireSubView_rugaciune" class="hidden flex-1 space-y-3 overflow-y-auto pr-1">
+        <div class="p-4 bg-darkbg border border-amber-900/60 rounded-2xl space-y-3 font-serif text-slate-200 leading-relaxed text-[13px] select-text">
+          <div class="text-center border-b border-amber-900/40 pb-2 space-y-1">
+            <span class="text-amber-400 text-lg block">☦</span>
+            <h3 class="text-base font-bold text-amber-300 font-sans tracking-wide">Rugăciunea pentru Neam</h3>
+            <p class="text-[11px] text-amber-500/80 font-sans italic">a Părintelui Gheorghe Calciu-Dumitreasa</p>
+          </div>
+
+          <p class="first-letter:text-2xl first-letter:font-bold first-letter:text-amber-400">
+            Stăpâne Doamne, Dumnezeul nostru, Părinte, Fiule şi Duhule Sfinte, venim la Tine, Doamne, cu pocăinţă şi durere în inimi, să ne rugăm pentru poporul nostru românesc.
+          </p>
+
+          <p>
+            Ascultă cererea noastră, intră Doamne, ca un Împărat ceresc în ţara noastră şi în neamul nostru şi-l scapă, Iisuse, de uneltirile vrăjmaşilor văzuţi şi nevăzuţi.
+          </p>
+
+          <p>
+            Că prigoneşte vrăjmaşul sufletul neamului românesc şi viaţa lui o calcă în picioare. Făcutu-l-a să locuiască în întuneric ca morţii cei din veacuri, şi sufletul lui este mâhnit de moarte.
+          </p>
+
+          <p>
+            Că l-au trădat cei puşi de Tine să-l conducă şi au uitat că Tu ai spus ca cel ce vrea să fie întâiul, să slujească tuturor. Şi ei au ştiut acest lucru, dar s-au trufit, au uitat de poporul Tău, l-au asuprit şi l-au jefuit, l-au vândut altor neamuri şi au călcat poruncile Tale, iar pământul acesta, pe care l-ai dat neamului românesc pe veci, l-au înstrăinat.
+          </p>
+
+          <p>
+            Dar poporul acesta Te slăveşte, Doamne, nu numai cu buzele ci şi cu inima. Adu-Ţi aminte de el pentru cei ce Te cunosc pe Tine, pentru monahii şi monahiile care zilnic se roagă pentru el şi pentru rugăciunea noastră de astăzi, chiar dacă suntem nevrednici de mila Ta. Pentru că toţi ne-am abătut, toţi am făcut nelegiuire, şi ierarhii, şi preoţii şi credincioşii. Nu mai este nici unul care să facă dreptate, nu mai este nici unul!
+          </p>
+
+          <p>
+            Ci încetează Doamne, bătaia Ta împotriva poporului românesc. Adu-Ţi aminte, Iisuse, de fraţii noştri care sunt în afara ţării, în exil sau vânduţi odată cu teritoriile cedate, şi-i miluieşte pe ei. Reunifică poporul Tău. Repune-l în cinstea pe care a avut-o la Tine mai înainte, iartă-i păcatele săvârşite, apostaziile, răutăţile, îndemnurile la desfrânare, la neiertare şi la răzvrătire împotriva Ta.
+          </p>
+
+          <p>
+            Rugători aducem pentru noi pe Maica Ta cea Sfântă, Pururea Fecioara Maria, Puterile Cereşti, pe Sfinţii Tăi Apostoli, pe mucenicii neamului nostru şi pe toţi mucenicii, sfinţii şi cuvioşii care au slujit Ţie cu credinţă curată.
+          </p>
+
+          <p>
+            Adu-Ţi aminte, Stăpâne, de toţi cei care s-au jertfit pentru Cruce, Biserică şi Neam; adu-Ţi aminte de sângele lor care s-a vărsat şi pune-l pe acesta în balanţa iertării noastre.
+          </p>
+
+          <p>
+            Redă poporului nostru pământul care l-a păzit cu grijă şi credinţă prin veacuri, redă-i bisericile şi mânăstirile vândute, redă-i pacea văzduhului şi îmbelşugarea roadelor pământului, stăpânirea de sine, demnitatea lui creştină şi naţională de altădată, conducători buni şi cinstiţi, neasupritori, nemincinoşi şi nelacomi, redă-i arhierei vrednici de Tine, Iisuse Mare Arhiereu, preoţi dăruiţi Bisericii şi Neamului, credincioşi misiunii lor, adevăraţi secerători, aşa cum Îi vrei Tu, Milostive.
+          </p>
+
+          <p>
+            Auzi-ne Doamne întru îndurarea Ta! Nu intra Stăpâne la judecată cu robii Tăi, ci întoarce-Ţi iar privirea spre noi şi ne ridică din păcat cu dreapta Ta cea mântuitoare. Şi trecând prin patimile toate, curăţaţi prin suferinţă, să ajungem şi la Sfânta Ta Înviere, Iisuse, slăvindu-Te pe Tine împreună cu Tatăl şi Duhul Sfânt, acum şi pururi şi în vecii vecilor. <strong class="text-amber-300">Amin!</strong>
+          </p>
+
+          <div class="pt-2 font-sans">
+            <button onclick="markRanduialaItemToday('rugaciune', true); showToast('✓ Rugăciunea pentru Neam a fost consemnată pentru astăzi!');" class="w-full bg-amber-950 hover:bg-amber-900 border border-amber-700 text-amber-200 font-bold py-2.5 rounded-xl text-xs active:scale-95 transition flex items-center justify-center space-x-1.5 shadow-md">
+              <span>🕊️</span>
+              <span>Am rostit Rugăciunea pentru Neam astăzi</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subtab 3: Calendar Rânduială (Bife zilnice: Catisma, Pomelnic, Rugăciune + Scriptură) -->
+      <div id="psaltireSubView_calendar" class="hidden flex-1 space-y-3 overflow-y-auto pr-1 text-xs">
+        <div class="p-3 bg-darkbg border border-bordercol rounded-2xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold text-rose-300 uppercase block">📅 Rânduiala Zilnică de Rugăciune</span>
+              <span class="text-[10px] text-slate-400">Catisma • Pomelnic • Rugăciune Neam • Scriptură</span>
+            </div>
+            <button onclick="markAllRanduialaToday()" class="px-2.5 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white rounded-xl text-[11px] font-bold active:scale-95 transition shadow-sm flex items-center space-x-1">
+              <span>✓</span>
+              <span>Toate bifate azi</span>
+            </button>
+          </div>
+
+          <!-- Selector Vedere Calendar -->
+          <div class="flex items-center justify-between border-t border-bordercol/60 pt-2">
+            <span class="text-[10px] text-slate-400 font-medium">Format vizualizare:</span>
+            <div class="flex space-x-1">
+              <button onclick="setRanduialaView('3days')" id="btnRanduialaView_3days" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-900 text-rose-100">3 Zile</button>
+              <button onclick="setRanduialaView('week')" id="btnRanduialaView_week" class="px-2.5 py-1 rounded-lg text-[10px] bg-cardbg text-slate-400 border border-bordercol">1 Săptămână</button>
+              <button onclick="setRanduialaView('month')" id="btnRanduialaView_month" class="px-2.5 py-1 rounded-lg text-[10px] bg-cardbg text-slate-400 border border-bordercol">Lună</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="randuialaCardsContainer" class="space-y-2 pb-2"></div>
       </div>
 
       <div class="pt-2 flex justify-end border-t border-bordercol">
@@ -1383,7 +1512,15 @@
           <input type="text" id="editPrenume" placeholder="Prenume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
           <input type="text" id="editNume" placeholder="Nume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
         </div>
-        <input type="text" id="editGrad" list="gradOptionsList" placeholder="Grad / Cler / Rudenie" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+        <div>
+          <label class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Grad (Coloana O):</label>
+          <div class="grid grid-cols-2 gap-2">
+            <select id="editGradSelect" onchange="syncGradField('edit')" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+              <option value="">-- Alege Grad --</option>
+            </select>
+            <input type="text" id="editGrad" list="gradOptionsList" placeholder="Sau scrie alt grad..." class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+          </div>
+        </div>
         <textarea id="editInfo" rows="2" placeholder="Informații suplimentare" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
 
         <div class="grid grid-cols-2 gap-2">
@@ -1418,10 +1555,16 @@
 
         <textarea id="editIstoricMedical" rows="2" placeholder="Istoric medical" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
 
-        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-          <input type="checkbox" id="editBolnav" class="rounded text-amber-600 focus:ring-0">
-          <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
-        </label>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+            <input type="checkbox" id="editBolnav" class="rounded text-amber-600 focus:ring-0">
+            <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
+          </label>
+          <label class="flex items-center space-x-2 p-2 bg-darkbg border border-fuchsia-900/80 rounded-lg cursor-pointer">
+            <input type="checkbox" id="editPomelnicAndreea" class="rounded text-fuchsia-600 focus:ring-0">
+            <span class="text-[11px] text-fuchsia-300 font-medium">🌸 Pomelnic Andreea</span>
+          </label>
+        </div>
 
         <input type="text" id="editCopii" placeholder="Copii" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
         <input type="text" id="editSot" placeholder="Soț / Soție" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
@@ -1479,7 +1622,15 @@
         <input type="text" id="newPrenume" placeholder="Prenume *" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
         <input type="text" id="newNume" placeholder="Nume" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
       </div>
-      <input type="text" id="newGrad" list="gradOptionsList" placeholder="Grad / Cler / Rudenie" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+      <div>
+        <label class="text-[10px] text-slate-400 font-semibold uppercase block mb-1">Grad (Coloana O):</label>
+        <div class="grid grid-cols-2 gap-2">
+          <select id="newGradSelect" onchange="syncGradField('new')" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+            <option value="">-- Alege Grad --</option>
+          </select>
+          <input type="text" id="newGrad" list="gradOptionsList" placeholder="Sau scrie alt grad..." class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+        </div>
+      </div>
       <textarea id="newInfo" rows="2" placeholder="Informații suplimentare" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
 
       <div class="grid grid-cols-2 gap-2">
@@ -1514,10 +1665,16 @@
 
       <textarea id="newIstoricMedical" rows="2" placeholder="Istoric medical" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></textarea>
 
-      <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-        <input type="checkbox" id="newBolnav" class="rounded text-amber-600 focus:ring-0">
-        <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
-      </label>
+      <div class="grid grid-cols-2 gap-2">
+        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+          <input type="checkbox" id="newBolnav" class="rounded text-amber-600 focus:ring-0">
+          <span class="text-[11px] text-amber-300 font-medium">🏥 Bolnav</span>
+        </label>
+        <label class="flex items-center space-x-2 p-2 bg-darkbg border border-fuchsia-900/80 rounded-lg cursor-pointer">
+          <input type="checkbox" id="newPomelnicAndreea" class="rounded text-fuchsia-600 focus:ring-0">
+          <span class="text-[11px] text-fuchsia-300 font-medium">🌸 Pomelnic Andreea</span>
+        </label>
+      </div>
 
       <input type="text" id="newCopii" placeholder="Copii" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
       <input type="text" id="newSot" placeholder="Soț / Soție" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
@@ -1587,10 +1744,20 @@
       <input type="text" id="inventoryItemName" placeholder="Denumire obiect (ex: Bormaşină Bosch)" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
 
       <div class="grid grid-cols-2 gap-2">
-        <input type="text" id="inventoryItemCategory" list="inventoryCategoryList" placeholder="Categorie (ex: Scule)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
-        <datalist id="inventoryCategoryList"></datalist>
-        <input type="text" id="inventoryItemSpace" list="inventorySpaceList" placeholder="Spațiu (ex: Garaj - Raft 2)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
-        <datalist id="inventorySpaceList"></datalist>
+        <div class="space-y-1">
+          <label class="text-[9px] text-slate-400 block font-bold uppercase">Categorie:</label>
+          <select id="inventoryItemCategorySelect" onchange="syncInventoryCatSpace('category')" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            <option value="">-- Alege Categorie --</option>
+          </select>
+          <input type="text" id="inventoryItemCategory" placeholder="Sau scrie altă categorie..." class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[9px] text-slate-400 block font-bold uppercase">Spațiu Depozitare:</label>
+          <select id="inventoryItemSpaceSelect" onchange="syncInventoryCatSpace('space')" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            <option value="">-- Alege Spațiu --</option>
+          </select>
+          <input type="text" id="inventoryItemSpace" placeholder="Sau scrie alt spațiu..." class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-2">
@@ -1644,10 +1811,47 @@
     </div>
   </div>
 
+  <!-- MODAL GESTIONARE CATEGORII & SPAȚII INVENTAR -->
+  <div id="inventoryConfigModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-4 text-xs">
+      <div class="flex items-center justify-between border-b border-bordercol pb-2">
+        <div>
+          <h3 class="font-bold text-violet-300 uppercase tracking-wider text-sm">⚙️ Categorii & Spații Inventar</h3>
+          <p class="text-[10px] text-slate-400">Personalizează listele predefinite</p>
+        </div>
+        <button onclick="closeInventoryConfigModal()" class="text-slate-400 hover:text-white text-base">✕</button>
+      </div>
+
+      <!-- Secțiunea Categorii -->
+      <div class="p-3 bg-darkbg border border-bordercol rounded-xl space-y-2">
+        <span class="font-bold text-violet-300 block uppercase text-[11px]">📁 Categorii Obiecte:</span>
+        <div class="flex space-x-1.5">
+          <input type="text" id="newInvCustomCategoryInput" placeholder="Adaugă o categorie nouă..." class="flex-1 bg-cardbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white text-xs">
+          <button onclick="addCustomInventoryCategory()" class="px-3 bg-violet-800 hover:bg-violet-700 text-white rounded-lg font-bold">➕ Adaugă</button>
+        </div>
+        <div id="inventoryCategoriesManageList" class="flex flex-wrap gap-1.5 pt-1 max-h-36 overflow-y-auto"></div>
+      </div>
+
+      <!-- Secțiunea Spații -->
+      <div class="p-3 bg-darkbg border border-bordercol rounded-xl space-y-2">
+        <span class="font-bold text-cyan-300 block uppercase text-[11px]">📍 Spații de Depozitare:</span>
+        <div class="flex space-x-1.5">
+          <input type="text" id="newInvCustomSpaceInput" placeholder="Adaugă un spațiu nou..." class="flex-1 bg-cardbg border border-bordercol rounded-lg px-2.5 py-1.5 text-white text-xs">
+          <button onclick="addCustomInventorySpace()" class="px-3 bg-cyan-800 hover:bg-cyan-700 text-white rounded-lg font-bold">➕ Adaugă</button>
+        </div>
+        <div id="inventorySpacesManageList" class="flex flex-wrap gap-1.5 pt-1 max-h-36 overflow-y-auto"></div>
+      </div>
+
+      <div class="pt-2 flex justify-end border-t border-bordercol">
+        <button onclick="closeInventoryConfigModal()" class="px-5 py-2 bg-slate-800 rounded-xl text-white text-xs font-medium">Închide</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v21.0";
+    const APP_VERSION = "v22.0";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -1691,9 +1895,13 @@
     let isGanduriGrouped = true;
     let editingGandRowId = null;
 
+    // CONFIGURARE ICONIȚE APLICAȚIE DIRECT DIN COD
+    const DEFAULT_OWNER_APP_ICON = './icons/icon-sigiliu-monograma-hristos.svg';
+    const DEFAULT_SHARED_APP_ICON = './icons/icon-heart-ekg.png';
+
     let appTitle = localStorage.getItem('diih_app_title') || "DIiH";
     let appLogo = localStorage.getItem('diih_app_logo') || "🧭";
-    let appIconPath = localStorage.getItem('diih_app_icon_path') || './icons/icon-sigiliu-monograma-hristos.svg';
+    let appIconPath = localStorage.getItem('diih_app_icon_path') || DEFAULT_OWNER_APP_ICON;
     let pomelnicBatchSize = parseInt(localStorage.getItem('diih_batch_size') || "20", 10);
     let psaltireBatchSize = parseInt(localStorage.getItem('diih_psaltire_batch_size') || "20", 10);
     let sharingConfig = JSON.parse(localStorage.getItem('diih_sharing_config') || '{}');
@@ -1738,7 +1946,7 @@
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'DIiH v21 pornit');
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH v22 pornit');
 
       applySharedModeIfNeeded();
 
@@ -1977,11 +2185,160 @@
       renderModalPsaltireDailyRoster();
     }
 
+    let currentPsaltireModalSubtab = 'randuiala';
+    let currentRanduialaView = '3days';
+
+    function setPsaltireModalSubtab(subtabId) {
+      currentPsaltireModalSubtab = subtabId;
+      ['randuiala', 'rugaciune', 'calendar'].forEach(id => {
+        const view = document.getElementById(`psaltireSubView_${id}`);
+        const btn = document.getElementById(`btnPsaltModal_${id}`);
+        if (view) view.classList.toggle('hidden', id !== subtabId);
+        if (btn) {
+          if (id === subtabId) {
+            btn.className = "flex-1 py-1.5 px-1 rounded-xl text-[11px] font-bold bg-rose-900 text-rose-100 text-center transition";
+          } else {
+            btn.className = "flex-1 py-1.5 px-1 rounded-xl text-[11px] font-bold bg-darkbg text-slate-400 hover:text-white border border-bordercol text-center transition";
+          }
+        }
+      });
+
+      if (subtabId === 'calendar') {
+        renderRanduialaCalendar();
+      }
+    }
+
+    function getRanduialaTrackerData() {
+      try {
+        return JSON.parse(localStorage.getItem('diih_randuiala_tracker') || '{}');
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function saveRanduialaTrackerData(data) {
+      localStorage.setItem('diih_randuiala_tracker', JSON.stringify(data));
+    }
+
+    function getRanduialaDay(dateStr) {
+      const data = getRanduialaTrackerData();
+      return data[dateStr] || { catisma: false, pomelnic: false, rugaciune: false, scriptura: false };
+    }
+
+    function setRanduialaDayItem(dateStr, item, val) {
+      const data = getRanduialaTrackerData();
+      if (!data[dateStr]) data[dateStr] = { catisma: false, pomelnic: false, rugaciune: false, scriptura: false };
+      data[dateStr][item] = val;
+      saveRanduialaTrackerData(data);
+      renderRanduialaCalendar();
+    }
+
+    function markRanduialaItemToday(item, val) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      setRanduialaDayItem(todayStr, item, val);
+    }
+
+    function markAllRanduialaToday() {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const data = getRanduialaTrackerData();
+      data[todayStr] = { catisma: true, pomelnic: 'complet', rugaciune: true, scriptura: true };
+      saveRanduialaTrackerData(data);
+      renderRanduialaCalendar();
+      showToast("✓ Toate rânduielile au fost bifate pentru astăzi!");
+    }
+
+    function setRanduialaView(viewMode) {
+      currentRanduialaView = viewMode;
+      ['3days', 'week', 'month'].forEach(m => {
+        const btn = document.getElementById(`btnRanduialaView_${m}`);
+        if (btn) {
+          if (m === viewMode) {
+            btn.className = "px-2.5 py-1 rounded-lg text-[10px] font-bold bg-rose-900 text-rose-100";
+          } else {
+            btn.className = "px-2.5 py-1 rounded-lg text-[10px] bg-cardbg text-slate-400 border border-bordercol";
+          }
+        }
+      });
+      renderRanduialaCalendar();
+    }
+
+    function renderRanduialaCalendar() {
+      const cont = document.getElementById('randuialaCardsContainer');
+      if (!cont) return;
+
+      const today = new Date();
+      let daysCount = (currentRanduialaView === '3days') ? 3 : (currentRanduialaView === 'week' ? 7 : 30);
+      const days = [];
+
+      for (let i = 0; i < daysCount; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        days.push(d);
+      }
+
+      cont.innerHTML = days.map(d => {
+        const dStr = d.toISOString().split('T')[0];
+        const dayData = getRanduialaDay(dStr);
+        const isToday = (dStr === today.toISOString().split('T')[0]);
+        const dayName = d.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric', month: 'short' });
+
+        const allDone = dayData.catisma && dayData.pomelnic && dayData.rugaciune && dayData.scriptura;
+
+        return `
+          <div class="p-3 bg-darkbg border ${allDone ? 'border-emerald-700/80 bg-emerald-950/20' : (isToday ? 'border-rose-700/80' : 'border-bordercol')} rounded-2xl space-y-2 transition shadow-sm">
+            <div class="flex items-center justify-between border-b border-bordercol/40 pb-1.5">
+              <div class="flex items-center space-x-1.5">
+                <span class="text-xs font-bold ${isToday ? 'text-rose-300' : 'text-white'} capitalize">${dayName}</span>
+                ${isToday ? '<span class="text-[9px] bg-rose-950 border border-rose-800 text-rose-200 px-1.5 py-0.2 rounded font-bold uppercase">Azi</span>' : ''}
+              </div>
+              <span class="text-[10px] font-mono ${allDone ? 'text-emerald-400 font-bold' : 'text-slate-400'}">
+                ${allDone ? '✓ Îndeplinit' : 'În curs'}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px]">
+              <!-- 1. Catisma -->
+              <label class="flex items-center space-x-2 p-1.5 bg-cardbg rounded-xl border ${dayData.catisma ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
+                <input type="checkbox" onchange="setRanduialaDayItem('${dStr}', 'catisma', this.checked)" ${dayData.catisma ? 'checked' : ''} class="rounded text-rose-600 focus:ring-0">
+                <span class="truncate">📖 Catisma</span>
+              </label>
+
+              <!-- 2. Pomelnic -->
+              <div class="flex items-center justify-between p-1.5 bg-cardbg rounded-xl border ${dayData.pomelnic ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'}">
+                <label class="flex items-center space-x-1.5 cursor-pointer truncate">
+                  <input type="checkbox" onchange="setRanduialaDayItem('${dStr}', 'pomelnic', this.checked ? 'complet' : false)" ${dayData.pomelnic ? 'checked' : ''} class="rounded text-emerald-600 focus:ring-0">
+                  <span class="truncate">📿 Pomelnic</span>
+                </label>
+                ${dayData.pomelnic ? `
+                  <button onclick="setRanduialaDayItem('${dStr}', 'pomelnic', '${dayData.pomelnic === 'complet' ? 'partial' : 'complet'}')" class="text-[9px] font-mono px-1 py-0.2 bg-darkbg border border-bordercol rounded text-slate-300" title="Comută între parțial și complet">
+                    ${dayData.pomelnic === 'complet' ? 'Tot' : 'Part'}
+                  </button>
+                ` : ''}
+              </div>
+
+              <!-- 3. Rugăciune Neam -->
+              <label class="flex items-center space-x-2 p-1.5 bg-cardbg rounded-xl border ${dayData.rugaciune ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
+                <input type="checkbox" onchange="setRanduialaDayItem('${dStr}', 'rugaciune', this.checked)" ${dayData.rugaciune ? 'checked' : ''} class="rounded text-amber-600 focus:ring-0">
+                <span class="truncate">🕊️ Pt. Neam</span>
+              </label>
+
+              <!-- 4. Sf. Scriptură -->
+              <label class="flex items-center space-x-2 p-1.5 bg-cardbg rounded-xl border ${dayData.scriptura ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
+                <input type="checkbox" onchange="setRanduialaDayItem('${dStr}', 'scriptura', this.checked)" ${dayData.scriptura ? 'checked' : ''} class="rounded text-cyan-600 focus:ring-0">
+                <span class="truncate">📜 Scriptură</span>
+              </label>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
     function openPsaltireIframeModal() {
       const info = CATISME_INFO[currentCatismaNum];
       document.getElementById('modalIframeTitle').textContent = `Catisma ${info.roman} (${currentCatismaNum})`;
       document.getElementById('modalPsaltireDetails').textContent = `Psalmii rânduiți: ${info.display}`;
       document.getElementById('externalDoxologiaBtn').href = `https://doxologia.ro/${info.slug}`;
+      setPsaltireModalSubtab('randuiala');
       renderModalPsaltireDailyRoster();
       document.getElementById('psaltireIframeModal').classList.remove('hidden');
     }
@@ -2089,9 +2446,16 @@
     }
 
     function getVisiblePeople() {
-      const allowed = getSharedAllowedPomelnicCategories();
-      if (allowed === null) return allPeople;
-      return allPeople.filter(p => p.grad && allowed.includes(p.grad.trim()));
+      if (isInActiveSharedMode()) {
+        const andreeaList = allPeople.filter(p => p.pomelnicAndreea === true);
+        if (andreeaList.length > 0) return andreeaList;
+        const allowed = getSharedAllowedPomelnicCategories();
+        if (allowed !== null && allowed.length > 0) {
+          return allPeople.filter(p => p.grad && allowed.includes(p.grad.trim()));
+        }
+        return andreeaList;
+      }
+      return allPeople;
     }
 
     function applyCloudSettings(settings) {
@@ -2291,6 +2655,13 @@
       renderGanduriList();
       renderPsaltireGrupList();
       updateTodayWidgetView();
+
+      if (typeof populateCategoryDropdown === 'function') populateCategoryDropdown();
+      if (typeof populateCenterGradDropdown === 'function') populateCenterGradDropdown();
+      if (currentPomelnicSubtab === 'psaltire') renderCenterPsaltireGrup();
+      else if (currentPomelnicSubtab === 'bolnavi') renderCenterBolnaviList();
+      else if (currentPomelnicSubtab === 'adormiti') renderCenterAdormitiList();
+      else if (currentPomelnicSubtab === 'categorii') renderCenterGradSliceList();
     }
 
     // BIBLIA 360 NAVIGARE
@@ -2330,7 +2701,7 @@
         // Persoană vie
         if (birthYear && !isNaN(birthYear)) {
           const age = currentYear - birthYear;
-          return `🌱 ${dnTilde}${age} ani`;
+          return `🌱 ${dnTilde}${age} ani în viață`;
         }
         return '';
       }
@@ -2343,7 +2714,7 @@
       }
       if (birthYear && !isNaN(birthYear)) {
         const ageLume = currentYear - birthYear;
-        parts.push(`ar fi avut ${dnTilde}${ageLume} ani`);
+        parts.push(`ar fi avut ${dnTilde}${ageLume} ani în lume`);
       }
       return parts.join(' • ');
     }
@@ -2499,6 +2870,259 @@
           </div>
         `).join('');
       }
+    }
+
+    // --- CENTRU DE POMENIRE (5 SUBTABURI POMELNIC) ---
+    let currentPomelnicSubtab = 'total';
+    let centerAdormitiMode = '20'; // '20', '30', 'ALL'
+    let centerGradSliceSize = '20'; // '20', '30', 'ALL'
+
+    function setPomelnicSubtab(subtabId) {
+      currentPomelnicSubtab = subtabId;
+      ['total', 'psaltire', 'bolnavi', 'adormiti', 'categorii'].forEach(id => {
+        const view = document.getElementById(`pomelnicSubView_${id}`);
+        const btn = document.getElementById(`btnPomSub_${id}`);
+        if (view) view.classList.toggle('hidden', id !== subtabId);
+        if (btn) {
+          if (id === subtabId) {
+            btn.className = "px-3 py-1.5 text-xs font-bold rounded-xl bg-cyan-900 text-cyan-200 whitespace-nowrap shadow-sm";
+          } else {
+            btn.className = "px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap";
+          }
+        }
+      });
+
+      if (subtabId === 'psaltire') renderCenterPsaltireGrup();
+      else if (subtabId === 'bolnavi') renderCenterBolnaviList();
+      else if (subtabId === 'adormiti') renderCenterAdormitiList();
+      else if (subtabId === 'categorii') {
+        populateCenterGradDropdown();
+        renderCenterGradSliceList();
+      }
+    }
+
+    function renderCenterPsaltireGrup() {
+      const cont = document.getElementById('pomelnicCenterPsaltireList');
+      if (!cont) return;
+      const q = (document.getElementById('pomelnicCenterPsaltireSearch')?.value || '').toLowerCase().trim();
+      const list = psaltireGrupData || [];
+      const filtered = list.filter(p => {
+        if (p.exclusLaPomenire) return false;
+        if (q === '') return true;
+        return `${p.persoanaRaw || ''} ${p.sectiune || ''} ${p.catisma || ''}`.toLowerCase().includes(q);
+      });
+
+      if (filtered.length === 0) {
+        cont.innerHTML = `<p class="text-center py-6 text-slate-500 text-xs italic">Nicio persoană găsită în grupul de psaltire.</p>`;
+        return;
+      }
+
+      cont.innerHTML = filtered.map(p => `
+        <div onclick="openEditPsaltireModal(${p.rowId})" class="p-2.5 bg-darkbg rounded-xl border border-bordercol flex items-center justify-between cursor-pointer hover:border-rose-700/60 transition">
+          <div class="truncate pr-2">
+            <span class="text-xs font-bold text-white block truncate">${p.persoanaRaw || '-'}</span>
+            <span class="text-[10px] text-slate-400 block">${p.sectiune || 'Grup'} • Catisma: ${p.catisma || '-'}</span>
+          </div>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-rose-950 border border-rose-800 text-rose-300 font-bold shrink-0">Cat. ${p.catisma || '-'}</span>
+        </div>
+      `).join('');
+    }
+
+    function renderCenterBolnaviList() {
+      const cont = document.getElementById('pomelnicCenterBolnaviList');
+      if (!cont) return;
+      const q = (document.getElementById('pomelnicCenterBolnaviSearch')?.value || '').toLowerCase().trim();
+
+      const personalBolnavi = allPeople.filter(p => p.bolnav === true).map(p => ({
+        source: 'personal',
+        id: p.rowId,
+        nume: `${p.prenume} ${p.nume}`,
+        detalii: p.istoricMedical || p.info || 'Trecut la bolnavi în pomelnic',
+        grad: p.grad || 'Viu',
+        ageSummary: getPersonAgeSummary(p),
+        original: p
+      }));
+
+      const psaltireBolnavi = (psaltireGrupData || []).filter(x => {
+        const s = (x.sectiune || '').toUpperCase();
+        const r = (x.persoanaRaw || '').toLowerCase();
+        return s.includes('BOLNAV') || r.includes('bolnav');
+      }).map(p => ({
+        source: 'psaltire',
+        id: p.rowId,
+        nume: p.persoanaRaw,
+        detalii: `Secțiune: ${p.sectiune || 'Bolnavi'} • Catisma: ${p.catisma || '-'}`,
+        grad: 'Psaltire Grup',
+        ageSummary: '',
+        original: p
+      }));
+
+      const combined = [...personalBolnavi, ...psaltireBolnavi];
+      const filtered = combined.filter(b => {
+        if (q === '') return true;
+        return `${b.nume} ${b.detalii} ${b.grad}`.toLowerCase().includes(q);
+      });
+
+      const badge = document.getElementById('centerBolnaviCountBadge');
+      if (badge) badge.textContent = `${combined.length} bolnavi`;
+
+      if (filtered.length === 0) {
+        cont.innerHTML = `<p class="text-center py-6 text-slate-500 text-xs italic">Nicio persoană marcată ca bolnavă.</p>`;
+        return;
+      }
+
+      cont.innerHTML = filtered.map(b => `
+        <div onclick="${b.source === 'personal' ? `openPersonModal(${b.id})` : `openEditPsaltireModal(${b.id})`}" class="p-3 bg-darkbg border border-amber-900/50 hover:border-amber-700 rounded-2xl flex items-center justify-between cursor-pointer transition shadow-sm">
+          <div class="space-y-0.5 truncate pr-2">
+            <div class="flex items-center space-x-1.5 flex-wrap">
+              <span class="text-xs font-bold text-white truncate">${b.nume}</span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded font-bold ${b.source === 'personal' ? 'bg-amber-950 border border-amber-800 text-amber-300' : 'bg-rose-950 border border-rose-800 text-rose-300'}">🏥 ${b.source === 'personal' ? 'Pomelnic Personal' : 'Psaltire Grup'}</span>
+            </div>
+            <p class="text-[10px] text-slate-300 truncate">${b.detalii}</p>
+            ${b.ageSummary ? `<p class="text-[10px] text-cyan-300 font-medium truncate">${b.ageSummary}</p>` : ''}
+          </div>
+          <span class="text-slate-500 text-base pr-1">›</span>
+        </div>
+      `).join('');
+    }
+
+    function setCenterAdormitiMode(mode) {
+      centerAdormitiMode = mode;
+      ['20', '30', 'ALL'].forEach(m => {
+        const btn = document.getElementById(`btnCenterAdormiti_${m}`);
+        if (btn) {
+          if (m === mode) {
+            btn.className = "px-2 py-1 bg-amber-950 text-amber-200 border border-amber-800 rounded-lg text-xs font-bold";
+          } else {
+            btn.className = "px-2 py-1 bg-darkbg text-slate-400 border border-bordercol rounded-lg text-xs";
+          }
+        }
+      });
+      renderCenterAdormitiList();
+    }
+
+    function renderCenterAdormitiList() {
+      const cont = document.getElementById('pomelnicCenterAdormitiList');
+      if (!cont) return;
+      const q = (document.getElementById('pomelnicCenterAdormitiSearch')?.value || '').toLowerCase().trim();
+
+      const allAdormiti = getVisiblePeople().filter(p => p.stare === 'Adormit');
+      let displayList = allAdormiti;
+
+      if (centerAdormitiMode !== 'ALL') {
+        const count = parseInt(centerAdormitiMode, 10) || 20;
+        if (allAdormiti.length > 0) {
+          const today = new Date();
+          const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+          const sliceCount = Math.min(count, allAdormiti.length);
+          const startIndex = (dayOfYear * sliceCount) % allAdormiti.length;
+          displayList = [];
+          for (let i = 0; i < sliceCount; i++) {
+            displayList.push(allAdormiti[(startIndex + i) % allAdormiti.length]);
+          }
+        }
+      }
+
+      if (q !== '') {
+        displayList = displayList.filter(p => `${p.prenume} ${p.nume} ${p.info || ''} ${p.grad || ''}`.toLowerCase().includes(q));
+      }
+
+      if (displayList.length === 0) {
+        cont.innerHTML = `<p class="text-center py-6 text-slate-500 text-xs italic">Nicio persoană adormită găsită.</p>`;
+        return;
+      }
+
+      cont.innerHTML = displayList.map(p => {
+        const ageSummary = getPersonAgeSummary(p);
+        return `
+          <div onclick="openPersonModal(${p.rowId})" class="p-3 bg-darkbg border border-bordercol hover:border-amber-800/80 rounded-2xl flex items-center justify-between cursor-pointer transition shadow-sm">
+            <div class="space-y-0.5 truncate pr-2">
+              <div class="flex items-center space-x-1.5">
+                <span class="text-xs font-bold text-white truncate">${p.prenume} ${p.nume}</span>
+                <span class="text-[9px] bg-amber-950 border border-amber-800 text-amber-300 px-1.5 py-0.2 rounded font-bold">† Adormit</span>
+                ${p.grad ? `<span class="text-[9px] text-slate-400">• ${p.grad}</span>` : ''}
+              </div>
+              <p class="text-[10px] text-slate-400 truncate">${p.da ? (p.daAprox ? '~d. ' : 'd. ') + p.da : ''} ${p.dn ? (p.dnAprox ? '• ~n. ' : '• n. ') + p.dn : ''}</p>
+              ${ageSummary ? `<p class="text-[10px] text-amber-200 font-medium truncate">${ageSummary}</p>` : ''}
+            </div>
+            <span class="text-slate-500 text-base pr-1">›</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function populateCenterGradDropdown() {
+      const sel = document.getElementById('pomelnicCenterGradSelect');
+      if (!sel) return;
+      const current = sel.value;
+      const grads = new Set();
+      allPeople.forEach(p => { if (p.grad && p.grad.trim()) grads.add(p.grad.trim()); });
+      const sorted = Array.from(grads).sort();
+      sel.innerHTML = `<option value="ALL">-- Toate Categoriile (de rând) --</option>` + sorted.map(g => `<option value="${encodeURIComponent(g)}">${g}</option>`).join('');
+      if (current) sel.value = current;
+    }
+
+    function setCenterGradSliceSize(size) {
+      centerGradSliceSize = size;
+      ['20', '30', 'ALL'].forEach(s => {
+        const btn = document.getElementById(`btnCenterGrad_${s}`);
+        if (btn) {
+          if (s === size) {
+            btn.className = "px-2 py-1 bg-cyan-900 text-cyan-200 rounded-lg text-xs font-bold";
+          } else {
+            btn.className = "px-2 py-1 bg-darkbg text-slate-400 border border-bordercol rounded-lg text-xs";
+          }
+        }
+      });
+      renderCenterGradSliceList();
+    }
+
+    function renderCenterGradSliceList() {
+      const cont = document.getElementById('pomelnicCenterGradList');
+      if (!cont) return;
+      const sel = document.getElementById('pomelnicCenterGradSelect');
+      const chosenGrad = sel ? decodeURIComponent(sel.value) : 'ALL';
+
+      let pool = getVisiblePeople();
+      if (chosenGrad !== 'ALL') {
+        pool = pool.filter(p => p.grad && p.grad.trim() === chosenGrad);
+      }
+
+      let displayList = pool;
+      if (centerGradSliceSize !== 'ALL' && pool.length > 0) {
+        const count = parseInt(centerGradSliceSize, 10) || 20;
+        const today = new Date();
+        const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+        const sliceCount = Math.min(count, pool.length);
+        const startIndex = (dayOfYear * sliceCount) % pool.length;
+        displayList = [];
+        for (let i = 0; i < sliceCount; i++) {
+          displayList.push(pool[(startIndex + i) % pool.length]);
+        }
+      }
+
+      if (displayList.length === 0) {
+        cont.innerHTML = `<p class="text-center py-6 text-slate-500 text-xs italic">Nicio persoană în această categorie.</p>`;
+        return;
+      }
+
+      cont.innerHTML = displayList.map(p => {
+        const isViu = p.stare !== 'Adormit';
+        const ageSummary = getPersonAgeSummary(p);
+        return `
+          <div onclick="openPersonModal(${p.rowId})" class="p-3 bg-darkbg border border-bordercol hover:border-cyan-700 rounded-2xl flex items-center justify-between cursor-pointer transition shadow-sm">
+            <div class="space-y-0.5 truncate pr-2">
+              <div class="flex items-center space-x-1.5">
+                <span class="text-xs font-bold text-white truncate">${p.prenume} ${p.nume}</span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded font-bold ${isViu ? 'bg-emerald-950 border border-emerald-800 text-emerald-300' : 'bg-amber-950 border border-amber-800 text-amber-300'}">${isViu ? '🌱 Viu' : '† Adormit'}</span>
+              </div>
+              <p class="text-[10px] text-slate-400 truncate">${p.grad || '-'} ${p.dn ? '• n. ' + p.dn : ''} ${p.da ? '• d. ' + p.da : ''}</p>
+              ${ageSummary ? `<p class="text-[10px] text-cyan-300 font-medium truncate">${ageSummary}</p>` : ''}
+            </div>
+            <span class="text-slate-500 text-base pr-1">›</span>
+          </div>
+        `;
+      }).join('');
     }
 
     // 3. TIPAR PDF ALTAR (DOAR PRENUME, DOUĂ COLOANE, FĂRĂ EMOJI)
@@ -3296,6 +3920,8 @@
       document.getElementById('schoolChild').value = act.child || '';
       document.getElementById('schoolInstitution').value = act.institution || '';
       document.getElementById('schoolActTitle').value = act.title || '';
+      document.getElementById('schoolStartHour').value = act.startHour || '08:00';
+      document.getElementById('schoolEndHour').value = act.endHour || '16:00';
       document.getElementById('schoolHours').value = act.hours || 1;
       document.getElementById('schoolRate').value = act.rate || 0;
       document.getElementById('schoolPaymentType').value = act.paymentType || 'Pe oră';
@@ -3339,6 +3965,8 @@
       document.getElementById('btnSaveSchoolAct').textContent = "💾 Salvează Activitate";
       document.getElementById('schoolFormTitle').textContent = "➕ Adaugă / Editează Activitate";
       document.getElementById('schoolActTitle').value = '';
+      document.getElementById('schoolStartHour').value = '08:00';
+      document.getElementById('schoolEndHour').value = '16:00';
       document.getElementById('schoolDayMessage').value = '';
       calcSchoolAutoTotal();
     }
@@ -3453,6 +4081,8 @@
       schoolActivities.forEach(a => {
         if (selectedSchoolDays.has(a.date) && a.title === editingSchoolActivity.title && a.child === editingSchoolActivity.child) {
           a.institution = institution;
+          a.startHour = startHour;
+          a.endHour = endHour;
           a.hours = hours;
           a.rate = rate;
           a.total = total;
@@ -4085,12 +4715,14 @@
                 <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleRowSelection(${p.rowId})" class="w-4 h-4 rounded text-cyan-500 focus:ring-0">
               ` : ''}
               <div class="space-y-0.5 truncate">
-                <div class="flex items-center space-x-2">
+                <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
                   <span class="text-sm font-semibold text-white truncate">${p.prenume} ${p.nume}</span>
                   <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${isViu ? '🌱' : '†'} ${p.stare}</span>
                   ${p.necesitaAtentie ? '<span class="text-[9px] bg-rose-950 border border-rose-800 text-rose-300 px-1 py-0.2 rounded font-bold">⚠️ Atenție</span>' : ''}
+                  ${p.bolnav ? '<span class="text-[9px] bg-amber-950 border border-amber-800 text-amber-300 px-1 py-0.2 rounded font-bold">🏥 Bolnav</span>' : ''}
+                  ${p.pomelnicAndreea ? '<span class="text-[9px] bg-fuchsia-950 border border-fuchsia-800 text-fuchsia-300 px-1 py-0.2 rounded font-bold" title="Inclus în Pomelnicul Andreei">🌸 Andreea</span>' : ''}
                 </div>
-                <p class="text-[11px] text-slate-400 truncate">${p.dn ? (p.dnAprox ? '~n. ' : 'n. ') + p.dn : ''} ${p.da ? (p.daAprox ? '• ~d. ' : '• d. ') + p.da : ''}</p>
+                <p class="text-[11px] text-slate-400 truncate">${p.dn ? (p.dnAprox ? '~n. ' : 'n. ') + p.dn : ''} ${p.da ? (p.daAprox ? '• ~d. ' : '• d. ') + p.da : ''} ${p.grad ? '• ' + p.grad : ''}</p>
                 ${ageSummary ? `<p class="text-[10px] text-cyan-300 font-medium truncate">${ageSummary}</p>` : ''}
               </div>
             </div>
@@ -4157,6 +4789,25 @@
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateAtentie&rowIds=${idsArray.join(',')}&necesitaAtentie=${flagValue}&callback=void`;
+      document.body.appendChild(script);
+
+      cancelSelection();
+      renderAll();
+    }
+
+    function applyBatchAndreeaToggle() {
+      if (selectedRowIds.size === 0) return;
+      const idsArray = Array.from(selectedRowIds);
+      const selectedPeople = allPeople.filter(p => selectedRowIds.has(p.rowId));
+      const allHaveAndreea = selectedPeople.every(p => p.pomelnicAndreea === true);
+      const newFlag = !allHaveAndreea;
+
+      selectedPeople.forEach(p => { p.pomelnicAndreea = newFlag; });
+      localStorage.setItem('diih_people', JSON.stringify(allPeople));
+      showToast(`${idsArray.length} persoane ${newFlag ? 'adăugate în' : 'scoase din'} Pomelnicul Andreei!`);
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateAndreea&rowIds=${idsArray.join(',')}&pomelnicAndreea=${newFlag}&callback=void`;
       document.body.appendChild(script);
 
       cancelSelection();
@@ -4240,14 +4891,37 @@
       document.getElementById('personModal').classList.remove('hidden');
     }
 
+    function syncGradField(prefix) {
+      const sel = document.getElementById(`${prefix}GradSelect`);
+      const txt = document.getElementById(`${prefix}Grad`);
+      if (sel && txt && sel.value) {
+        txt.value = sel.value;
+      }
+    }
+
+    function populateGradDropdowns() {
+      const grads = new Set();
+      ["1. Cler", "1. Cler (D)", "1.2. Cler", "1.3. Cler", "2. Familie", "2.1. Familie", "3. Nași", "4. Fini", "5. Mătuși / Unchi", "6. Verișori", "7. Nepoți de verișori", "8. Alte rude", "9. Prieteni, apropiați", "9.1. Colegi muncă", "9.2. Vecini", "9.6. Pomelnic de suflet"].forEach(g => grads.add(g));
+      allPeople.forEach(p => { if (p.grad && p.grad.trim()) grads.add(p.grad.trim()); });
+      const sorted = Array.from(grads).sort();
+      const opts = `<option value="">-- Alege Grad --</option>` + sorted.map(g => `<option value="${g}">${g}</option>`).join('');
+      const edSel = document.getElementById('editGradSelect');
+      if (edSel) edSel.innerHTML = opts;
+      const nwSel = document.getElementById('newGradSelect');
+      if (nwSel) nwSel.innerHTML = opts;
+    }
+
     function toggleEditMode() {
       const form = document.getElementById('editPersonForm');
       const details = document.getElementById('modalDetails');
       const isHidden = form.classList.contains('hidden');
       if (isHidden && selectedPersonForEdit) {
+        populateGradDropdowns();
         document.getElementById('editPrenume').value = selectedPersonForEdit.prenume;
         document.getElementById('editNume').value = selectedPersonForEdit.nume;
-        document.getElementById('editGrad').value = selectedPersonForEdit.grad;
+        document.getElementById('editGrad').value = selectedPersonForEdit.grad || '';
+        const edGradSel = document.getElementById('editGradSelect');
+        if (edGradSel) edGradSel.value = selectedPersonForEdit.grad || '';
         document.getElementById('editInfo').value = selectedPersonForEdit.info;
         document.getElementById('editStare').value = selectedPersonForEdit.stare;
         document.getElementById('editNecesitaAtentie').checked = (selectedPersonForEdit.necesitaAtentie === true);
@@ -4257,6 +4931,7 @@
         document.getElementById('editDAAprox').checked = (selectedPersonForEdit.daAprox === true);
         document.getElementById('editIstoricMedical').value = selectedPersonForEdit.istoricMedical || '';
         document.getElementById('editBolnav').checked = (selectedPersonForEdit.bolnav === true);
+        document.getElementById('editPomelnicAndreea').checked = (selectedPersonForEdit.pomelnicAndreea === true);
         document.getElementById('editCopii').value = (selectedPersonForEdit.copii && selectedPersonForEdit.copii !== '-') ? selectedPersonForEdit.copii : '';
         document.getElementById('editSot').value = (selectedPersonForEdit.sot && selectedPersonForEdit.sot !== '-') ? selectedPersonForEdit.sot : '';
         document.getElementById('editParinti').value = (selectedPersonForEdit.parinti && selectedPersonForEdit.parinti !== '-') ? selectedPersonForEdit.parinti : '';
@@ -4283,6 +4958,7 @@
       selectedPersonForEdit.daAprox = document.getElementById('editDAAprox').checked;
       selectedPersonForEdit.istoricMedical = document.getElementById('editIstoricMedical').value.trim();
       selectedPersonForEdit.bolnav = document.getElementById('editBolnav').checked;
+      selectedPersonForEdit.pomelnicAndreea = document.getElementById('editPomelnicAndreea').checked;
       selectedPersonForEdit.copii = document.getElementById('editCopii').value.trim() || '-';
       selectedPersonForEdit.sot = document.getElementById('editSot').value.trim() || '-';
       selectedPersonForEdit.parinti = document.getElementById('editParinti').value.trim() || '-';
@@ -4294,7 +4970,7 @@
       showToast("Modificări salvate!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(selectedPersonForEdit.prenume)}&nume=${encodeURIComponent(selectedPersonForEdit.nume)}&grad=${encodeURIComponent(selectedPersonForEdit.grad)}&info=${encodeURIComponent(selectedPersonForEdit.info)}&stare=${encodeURIComponent(selectedPersonForEdit.stare)}&necesitaAtentie=${selectedPersonForEdit.necesitaAtentie}&dn=${encodeURIComponent(selectedPersonForEdit.dn)}&dnAprox=${selectedPersonForEdit.dnAprox}&da=${encodeURIComponent(selectedPersonForEdit.da)}&daAprox=${selectedPersonForEdit.daAprox}&istoricMedical=${encodeURIComponent(selectedPersonForEdit.istoricMedical)}&bolnav=${selectedPersonForEdit.bolnav}&copii=${encodeURIComponent(selectedPersonForEdit.copii)}&sot=${encodeURIComponent(selectedPersonForEdit.sot)}&parinti=${encodeURIComponent(selectedPersonForEdit.parinti)}&apropiati=${encodeURIComponent(selectedPersonForEdit.apropiati)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(selectedPersonForEdit.prenume)}&nume=${encodeURIComponent(selectedPersonForEdit.nume)}&grad=${encodeURIComponent(selectedPersonForEdit.grad)}&info=${encodeURIComponent(selectedPersonForEdit.info)}&stare=${encodeURIComponent(selectedPersonForEdit.stare)}&necesitaAtentie=${selectedPersonForEdit.necesitaAtentie}&dn=${encodeURIComponent(selectedPersonForEdit.dn)}&dnAprox=${selectedPersonForEdit.dnAprox}&da=${encodeURIComponent(selectedPersonForEdit.da)}&daAprox=${selectedPersonForEdit.daAprox}&istoricMedical=${encodeURIComponent(selectedPersonForEdit.istoricMedical)}&bolnav=${selectedPersonForEdit.bolnav}&pomelnicAndreea=${selectedPersonForEdit.pomelnicAndreea}&copii=${encodeURIComponent(selectedPersonForEdit.copii)}&sot=${encodeURIComponent(selectedPersonForEdit.sot)}&parinti=${encodeURIComponent(selectedPersonForEdit.parinti)}&apropiati=${encodeURIComponent(selectedPersonForEdit.apropiati)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -4303,13 +4979,18 @@
     }
 
     function openAddPersonModal() {
+      populateGradDropdowns();
       ['newPrenume','newNume','newGrad','newInfo','newDN','newDA','newIstoricMedical','newCopii','newSot','newParinti','newApropiati'].forEach(id => { document.getElementById(id).value = ''; });
+      const nSel = document.getElementById('newGradSelect');
+      if (nSel) nSel.value = '';
       document.getElementById('newStare').value = 'Viu';
       document.getElementById('newNecesitaAtentie').checked = false;
       document.getElementById('newBolnav').checked = false;
       document.getElementById('newDNAprox').checked = false;
       document.getElementById('newDAAprox').checked = false;
-      document.getElementById('newIsActivPomelnic').checked = true;
+      document.getElementById('newPomelnicAndreea').checked = isInActiveSharedMode();
+      const nAct = document.getElementById('newIsActivPomelnic');
+      if (nAct) nAct.checked = true;
       document.getElementById('addPersonModal').classList.remove('hidden');
     }
 
@@ -4331,16 +5012,18 @@
       const daAprox = document.getElementById('newDAAprox').checked;
       const istoricMedical = document.getElementById('newIstoricMedical').value.trim();
       const bolnav = document.getElementById('newBolnav').checked;
+      const pomelnicAndreea = document.getElementById('newPomelnicAndreea').checked;
       const copii = document.getElementById('newCopii').value.trim() || '-';
       const sot = document.getElementById('newSot').value.trim() || '-';
       const parinti = document.getElementById('newParinti').value.trim() || '-';
       const apropiati = document.getElementById('newApropiati').value.trim() || '-';
-      const isActivPomelnic = document.getElementById('newIsActivPomelnic').checked;
+      const nAct = document.getElementById('newIsActivPomelnic');
+      const isActivPomelnic = nAct ? nAct.checked : true;
 
       const newRowId = allPeople.length + 2;
       allPeople.push({
         rowId: newRowId, prenume, nume, info, istoricMedical, dn, dnAprox, da, daAprox, bolnav,
-        stare, grad, copii, sot, parinti, apropiati, necesitaAtentie, isActivPomelnic
+        pomelnicAndreea, stare, grad, copii, sot, parinti, apropiati, necesitaAtentie, isActivPomelnic
       });
 
       localStorage.setItem('diih_people', JSON.stringify(allPeople));
@@ -4349,7 +5032,7 @@
       showToast("Persoană adăugată în Pomelnic!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addPerson&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&dn=${encodeURIComponent(dn)}&dnAprox=${dnAprox}&da=${encodeURIComponent(da)}&daAprox=${daAprox}&istoricMedical=${encodeURIComponent(istoricMedical)}&bolnav=${bolnav}&copii=${encodeURIComponent(copii)}&sot=${encodeURIComponent(sot)}&parinti=${encodeURIComponent(parinti)}&apropiati=${encodeURIComponent(apropiati)}&isActivPomelnic=${isActivPomelnic}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addPerson&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&dn=${encodeURIComponent(dn)}&dnAprox=${dnAprox}&da=${encodeURIComponent(da)}&daAprox=${daAprox}&istoricMedical=${encodeURIComponent(istoricMedical)}&bolnav=${bolnav}&pomelnicAndreea=${pomelnicAndreea}&copii=${encodeURIComponent(copii)}&sot=${encodeURIComponent(sot)}&parinti=${encodeURIComponent(parinti)}&apropiati=${encodeURIComponent(apropiati)}&isActivPomelnic=${isActivPomelnic}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -4382,95 +5065,124 @@
     // 14. CANONUL SFINTEI SCRIPTURI (BARTOLOMEU VALERIU ANANIA) & EVIDENȚĂ LECTURĂ
     const SCRIPTURA_CANON = {
       vt: [
-        { name: "Facerea", abbr: "Fac", caps: 50 },
-        { name: "Ieșirea", abbr: "Ieș", caps: 40 },
-        { name: "Leviticul", abbr: "Lev", caps: 27 },
-        { name: "Numerele", abbr: "Num", caps: 36 },
-        { name: "Deuteronomul", abbr: "Dt", caps: 34 },
-        { name: "Iisus Navi", abbr: "Ios", caps: 24 },
-        { name: "Judecători", abbr: "Jud", caps: 21 },
-        { name: "Rut", abbr: "Rut", caps: 4 },
-        { name: "1 Regi", abbr: "1Rg", caps: 31 },
-        { name: "2 Regi", abbr: "2Rg", caps: 24 },
-        { name: "3 Regi", abbr: "3Rg", caps: 22 },
-        { name: "4 Regi", abbr: "4Rg", caps: 25 },
-        { name: "1 Paralipomena", abbr: "1Par", caps: 29 },
-        { name: "2 Paralipomena", abbr: "2Par", caps: 36 },
-        { name: "1 Ezdra", abbr: "1Ezd", caps: 10 },
-        { name: "Neemia", abbr: "Neem", caps: 13 },
-        { name: "Tobit", abbr: "Tob", caps: 14 },
-        { name: "Iudita", abbr: "Iud", caps: 16 },
-        { name: "Estera", abbr: "Est", caps: 10 },
-        { name: "1 Macabei", abbr: "1Mac", caps: 16 },
-        { name: "2 Macabei", abbr: "2Mac", caps: 15 },
-        { name: "3 Macabei", abbr: "3Mac", caps: 7 },
-        { name: "Iov", abbr: "Iov", caps: 42 },
-        { name: "Psalmii", abbr: "Ps", caps: 151 },
-        { name: "Rugăciunea lui Manase", abbr: "Man", caps: 1 },
-        { name: "Pildele lui Solomon", abbr: "Pild", caps: 31 },
-        { name: "Ecclesiastul", abbr: "Eccl", caps: 12 },
-        { name: "Cântarea Cântărilor", abbr: "Cânt", caps: 8 },
-        { name: "Înțelepciunea lui Solomon", abbr: "Înț", caps: 19 },
-        { name: "Înțelepciunea lui Iisus Sirah", abbr: "Sir", caps: 51 },
-        { name: "Osea", abbr: "Os", caps: 14 },
-        { name: "Amos", abbr: "Am", caps: 9 },
-        { name: "Miheia", abbr: "Mih", caps: 7 },
+        { name: "Facerea", abbr: "Fac.", caps: 50 },
+        { name: "Ieșirea", abbr: "Ieș.", caps: 40 },
+        { name: "Leviticul", abbr: "Lev.", caps: 27 },
+        { name: "Numerii", abbr: "Num.", caps: 36 },
+        { name: "Deuteronomul", abbr: "Deut.", caps: 34 },
+        { name: "Cartea lui Iosua Navi", abbr: "Ios.", caps: 24 },
+        { name: "Cartea Judecătorilor", abbr: "Jud.", caps: 21 },
+        { name: "Cartea Rut", abbr: "Rut", caps: 4 },
+        { name: "Cartea întâi a Regilor", abbr: "1 Regi", caps: 31 },
+        { name: "Cartea a doua a Regilor", abbr: "2 Regi", caps: 24 },
+        { name: "Cartea a treia a Regilor", abbr: "3 Regi", caps: 22 },
+        { name: "Cartea a patra a Regilor", abbr: "4 Regi", caps: 25 },
+        { name: "Cartea întâi Paralipomena (întâi a Cronicilor)", abbr: "1 Par.", caps: 29 },
+        { name: "Cartea a doua Paralipomena (a doua a Cronicilor)", abbr: "2 Par.", caps: 36 },
+        { name: "Cartea întâi a lui Ezdra", abbr: "1 Ezdr.", caps: 10 },
+        { name: "Cartea lui Neemia (a doua a lui Ezdra)", abbr: "Neem.", caps: 13 },
+        { name: "Cartea Esterei", abbr: "Est.", caps: 10 },
+        { name: "Cartea lui Iov", abbr: "Iov", caps: 42 },
+        { name: "Psalmii", abbr: "Ps.", caps: 151 },
+        { name: "Pildele lui Solomon", abbr: "Prov.", caps: 31 },
+        { name: "Eclesiastul", abbr: "Ecl.", caps: 12 },
+        { name: "Cântarea Cântărilor", abbr: "Cânt.", caps: 8 },
+        { name: "Isaia", abbr: "Isa.", caps: 66 },
+        { name: "Ieremia", abbr: "Ier.", caps: 52 },
+        { name: "Plângerile lui Ieremia", abbr: "Plâng.", caps: 5 },
+        { name: "Iezechiel", abbr: "Iez.", caps: 48 },
+        { name: "Daniel", abbr: "Dan.", caps: 12 },
+        { name: "Osea", abbr: "Os.", caps: 14 },
+        { name: "Amos", abbr: "Am.", caps: 9 },
+        { name: "Miheia", abbr: "Miheia", caps: 7 },
         { name: "Ioil", abbr: "Ioil", caps: 3 },
-        { name: "Avdie", abbr: "Avd", caps: 1 },
+        { name: "Avdie", abbr: "Avd.", caps: 1 },
         { name: "Iona", abbr: "Iona", caps: 4 },
         { name: "Naum", abbr: "Naum", caps: 3 },
-        { name: "Avacum", abbr: "Avac", caps: 3 },
-        { name: "Sofonie", abbr: "Sof", caps: 3 },
-        { name: "Agheu", abbr: "Agh", caps: 2 },
-        { name: "Zaharia", abbr: "Zah", caps: 14 },
-        { name: "Maleahi", abbr: "Mal", caps: 4 },
-        { name: "Isaia", abbr: "Is", caps: 66 },
-        { name: "Ieremia", abbr: "Ir", caps: 52 },
-        { name: "Plângerile lui Ieremia", abbr: "Plâng", caps: 5 },
-        { name: "Scrisoarea lui Ieremia", abbr: "Scris", caps: 1 },
-        { name: "Baruh", abbr: "Bar", caps: 5 },
-        { name: "Iezechiel", abbr: "Iez", caps: 48 },
-        { name: "Daniel", abbr: "Dn", caps: 14 }
+        { name: "Avacum", abbr: "Avac.", caps: 3 },
+        { name: "Sofonie", abbr: "Sof.", caps: 3 },
+        { name: "Agheu", abbr: "Ag.", caps: 2 },
+        { name: "Zaharia", abbr: "Zah.", caps: 14 },
+        { name: "Maleahi", abbr: "Mal.", caps: 4 },
+        { name: "Cartea lui Tobit", abbr: "Tob.", caps: 14 },
+        { name: "Cartea Iuditei", abbr: "Iud.", caps: 16 },
+        { name: "Cartea lui Baruh", abbr: "Bar.", caps: 5 },
+        { name: "Epistola lui Ieremia", abbr: "Ep. Ier.", caps: 1 },
+        { name: "Cântarea celor trei tineri", abbr: "Cânt. 3 tin.", caps: 1 },
+        { name: "Cântarea a treia a lui Ezdra", abbr: "3 Ezdr.", caps: 9 },
+        { name: "Cartea înțelepciunii lui Solomon", abbr: "Înț.", caps: 19 },
+        { name: "Cartea înțelepciunii lui Isus, fiul lui Sirah (Ecclesiasticul)", abbr: "Sir.", caps: 51 },
+        { name: "Istoria Susanei", abbr: "Sus.", caps: 1 },
+        { name: "Istoria omorârii balaurului și a sfărâmării lui Bel", abbr: "Bel", caps: 1 },
+        { name: "Cartea întâi a Macabeilor", abbr: "1 Mac.", caps: 16 },
+        { name: "Cartea a doua a Macabeilor", abbr: "2 Mac.", caps: 15 },
+        { name: "Cartea a treia a Macabeilor", abbr: "3 Mac.", caps: 7 },
+        { name: "Rugăciunea regelui Manase", abbr: "Man.", caps: 1 }
       ],
       nt: [
-        { name: "Matei", abbr: "Mt", caps: 28 },
-        { name: "Marcu", abbr: "Mc", caps: 16 },
-        { name: "Luca", abbr: "Lc", caps: 24 },
-        { name: "Ioan", abbr: "In", caps: 21 },
-        { name: "Faptele Apostolilor", abbr: "Fap", caps: 28 },
-        { name: "Romani", abbr: "Rom", caps: 16 },
-        { name: "1 Corinteni", abbr: "1Cor", caps: 16 },
-        { name: "2 Corinteni", abbr: "2Cor", caps: 13 },
-        { name: "Galateni", abbr: "Gal", caps: 6 },
-        { name: "Efeseni", abbr: "Ef", caps: 6 },
-        { name: "Filipeni", abbr: "Flp", caps: 4 },
-        { name: "Coloseni", abbr: "Col", caps: 4 },
-        { name: "1 Tesaloniceni", abbr: "1Tes", caps: 5 },
-        { name: "2 Tesaloniceni", abbr: "2Tes", caps: 3 },
-        { name: "1 Timotei", abbr: "1Tim", caps: 6 },
-        { name: "2 Timotei", abbr: "2Tim", caps: 4 },
-        { name: "Tit", abbr: "Tit", caps: 3 },
-        { name: "Filimon", abbr: "Flm", caps: 1 },
-        { name: "Evrei", abbr: "Evr", caps: 13 },
-        { name: "Iacov", abbr: "Iac", caps: 5 },
-        { name: "1 Petru", abbr: "1Ptr", caps: 5 },
-        { name: "2 Petru", abbr: "2Ptr", caps: 3 },
-        { name: "1 Ioan", abbr: "1In", caps: 5 },
-        { name: "2 Ioan", abbr: "2In", caps: 1 },
-        { name: "3 Ioan", abbr: "3In", caps: 1 },
-        { name: "Iuda", abbr: "Iuda", caps: 1 },
-        { name: "Apocalipsa", abbr: "Apoc", caps: 22 }
+        { name: "Evanghelia după Matei", abbr: "Mat.", caps: 28 },
+        { name: "Evanghelia după Marcu", abbr: "Marc.", caps: 16 },
+        { name: "Evanghelia după Luca", abbr: "Luc.", caps: 24 },
+        { name: "Evanghelia după Ioan", abbr: "Ioan", caps: 21 },
+        { name: "Faptele Apostolilor", abbr: "Fapte", caps: 28 },
+        { name: "Epistola către Romani", abbr: "Rom.", caps: 16 },
+        { name: "Epistola întâia către Corinteni", abbr: "1 Cor.", caps: 16 },
+        { name: "Epistola a doua către Corinteni", abbr: "2 Cor.", caps: 13 },
+        { name: "Epistola către Galateni", abbr: "Gal.", caps: 6 },
+        { name: "Epistola către Efeseni", abbr: "Efes.", caps: 6 },
+        { name: "Epistola către Filipeni", abbr: "Filip.", caps: 4 },
+        { name: "Epistola către Coloseni", abbr: "Col.", caps: 4 },
+        { name: "Epistola întâia către Tesaloniceni", abbr: "1 Tes.", caps: 5 },
+        { name: "Epistola a doua către Tesaloniceni", abbr: "2 Tes.", caps: 3 },
+        { name: "Epistola întâia către Timotei", abbr: "1 Tim.", caps: 6 },
+        { name: "Epistola a doua către Timotei", abbr: "2 Tim.", caps: 4 },
+        { name: "Epistola către Tit", abbr: "Tit", caps: 3 },
+        { name: "Epistola către Filimon", abbr: "Filim.", caps: 1 },
+        { name: "Epistola către Evrei", abbr: "Evr.", caps: 13 },
+        { name: "Epistola Sfântului Apostol Iacob", abbr: "Iac.", caps: 5 },
+        { name: "Epistola întâia a Sfântului Apostol Petru", abbr: "1 Pet.", caps: 5 },
+        { name: "Epistola a doua a Sfântului Apostol Petru", abbr: "2 Pet.", caps: 3 },
+        { name: "Epistola întâia a Sfântului Apostol Ioan", abbr: "1 Ioan", caps: 5 },
+        { name: "Epistola a doua a Sfântului Apostol Ioan", abbr: "2 Ioan", caps: 1 },
+        { name: "Epistola a treia a Sfântului Apostol Ioan", abbr: "3 Ioan", caps: 1 },
+        { name: "Epistola Sfântului Apostol Iuda", abbr: "Iuda", caps: 1 },
+        { name: "Apocalipsa", abbr: "Apoc.", caps: 22 }
       ]
     };
 
     let scripturaCurrentTestament = 'ALL';
     let scripturaExpandedBook = null;
 
+    function getScripturaCleanKey(abbr, cap) {
+      return `${abbr.replace(/[^a-zA-Z0-9]/g, '')}_${cap}`;
+    }
+
+    function isScripturaCapRead(readMap, abbr, cap) {
+      if (!readMap) return false;
+      return !!(readMap[`${abbr}_${cap}`] || readMap[getScripturaCleanKey(abbr, cap)]);
+    }
+
+    function setScripturaCapRead(readMap, abbr, cap, val) {
+      const k1 = `${abbr}_${cap}`;
+      const k2 = getScripturaCleanKey(abbr, cap);
+      if (val) {
+        readMap[k1] = true;
+        readMap[k2] = true;
+      } else {
+        delete readMap[k1];
+        delete readMap[k2];
+      }
+    }
+
     function getAllScripturaBooks() {
       const all = [];
       SCRIPTURA_CANON.vt.forEach(b => all.push({ ...b, testament: 'VT' }));
       SCRIPTURA_CANON.nt.forEach(b => all.push({ ...b, testament: 'NT' }));
       return all;
+    }
+
+    function getScripturaTotalCaps() {
+      return getAllScripturaBooks().reduce((s, b) => s + b.caps, 0);
     }
 
     function getScripturaReadMap() {
@@ -4486,9 +5198,8 @@
       const readMap = getScripturaReadMap();
       for (const b of books) {
         for (let c = 1; c <= b.caps; c++) {
-          const key = `${b.abbr}_${c}`;
-          if (!readMap[key]) {
-            return { book: b, cap: c, key: key, completed: false };
+          if (!isScripturaCapRead(readMap, b.abbr, c)) {
+            return { book: b, cap: c, key: `${b.abbr}_${c}`, completed: false };
           }
         }
       }
@@ -4502,8 +5213,14 @@
         return;
       }
       const readMap = getScripturaReadMap();
-      readMap[next.key] = true;
+      setScripturaCapRead(readMap, next.book.abbr, next.cap, true);
       localStorage.setItem('diih_scriptura_read', JSON.stringify(readMap));
+
+      // Bifează automat lectura scripturii în calendarul de rânduială pentru ziua de azi
+      if (typeof markRanduialaItemToday === 'function') {
+        markRanduialaItemToday('scriptura', true);
+      }
+
       const newNext = getNextScripturaChapter();
       showToast(`✓ Marcat citit: ${next.book.abbr}, ${next.cap}. De continuat: ${newNext.book.abbr}, ${newNext.cap}`);
       updateScripturaDisplays();
@@ -4511,22 +5228,19 @@
 
     function toggleScripturaChapter(bookAbbr, cap) {
       const readMap = getScripturaReadMap();
-      const key = `${bookAbbr}_${cap}`;
-      if (readMap[key]) {
-        delete readMap[key];
-      } else {
-        readMap[key] = true;
-      }
+      const currentState = isScripturaCapRead(readMap, bookAbbr, cap);
+      setScripturaCapRead(readMap, bookAbbr, cap, !currentState);
       localStorage.setItem('diih_scriptura_read', JSON.stringify(readMap));
+      if (!currentState && typeof markRanduialaItemToday === 'function') {
+        markRanduialaItemToday('scriptura', true);
+      }
       updateScripturaDisplays();
     }
 
     function setBookAllChapters(bookAbbr, caps, state) {
       const readMap = getScripturaReadMap();
       for (let c = 1; c <= caps; c++) {
-        const key = `${bookAbbr}_${c}`;
-        if (state) readMap[key] = true;
-        else delete readMap[key];
+        setScripturaCapRead(readMap, bookAbbr, c, state);
       }
       localStorage.setItem('diih_scriptura_read', JSON.stringify(readMap));
       updateScripturaDisplays();
@@ -4549,24 +5263,54 @@
       renderScripturaBooksList();
     }
 
+    function goToCurrentScripturaBook() {
+      const next = getNextScripturaChapter();
+      filterScripturaTestament(next.book.testament);
+      scripturaExpandedBook = next.book.abbr;
+      renderScripturaBooksList();
+      setTimeout(() => {
+        const domId = `bookCard_${next.book.abbr.replace(/[^a-zA-Z0-9]/g, '')}`;
+        const el = document.getElementById(domId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('ring-2', 'ring-amber-400');
+          setTimeout(() => el.classList.remove('ring-2', 'ring-amber-400'), 2500);
+        }
+      }, 150);
+    }
+
     function updateScripturaDisplays() {
       const books = getAllScripturaBooks();
       const readMap = getScripturaReadMap();
+      const totalCapsCount = getScripturaTotalCaps();
       let totalRead = 0;
       books.forEach(b => {
         for (let c = 1; c <= b.caps; c++) {
-          if (readMap[`${b.abbr}_${c}`]) totalRead++;
+          if (isScripturaCapRead(readMap, b.abbr, c)) totalRead++;
         }
       });
-      const percent = ((totalRead / 1337) * 100).toFixed(1);
+      const percent = ((totalRead / totalCapsCount) * 100).toFixed(1);
       const next = getNextScripturaChapter();
 
       const badge = document.getElementById('scripturaTotalProgressBadge');
-      if (badge) badge.textContent = `${totalRead} / 1337 cap.`;
+      if (badge) badge.textContent = `${totalRead} / ${totalCapsCount} cap.`;
       const pctEl = document.getElementById('scripturaProgressPercent');
       if (pctEl) pctEl.textContent = `${percent}%`;
       const bar = document.getElementById('scripturaProgressBar');
       if (bar) bar.style.width = `${percent}%`;
+
+      // Indicator carte curentă
+      let readInCurrentBook = 0;
+      for (let c = 1; c <= next.book.caps; c++) {
+        if (isScripturaCapRead(readMap, next.book.abbr, c)) readInCurrentBook++;
+      }
+      const remInBook = Math.max(0, next.book.caps - readInCurrentBook);
+      const bBadge = document.getElementById('scripturaBookProgressBadge');
+      if (bBadge) bBadge.textContent = `${readInCurrentBook} / ${next.book.caps} cap.`;
+      const bTitle = document.getElementById('scripturaBookProgressTitle');
+      if (bTitle) bTitle.textContent = `${next.book.name} (${next.book.abbr})`;
+      const bRem = document.getElementById('scripturaBookRemainingText');
+      if (bRem) bRem.textContent = next.completed ? "Toate capitolele au fost parcurse!" : (remInBook === 0 ? "Cartea este parcursă integral!" : `Mai sunt ${remInBook} capitole din această carte`);
 
       const nextTitle = document.getElementById('scripturaNextChapterTitle');
       if (nextTitle) {
@@ -4580,7 +5324,7 @@
       }
       const wgtBadge = document.getElementById('ownerWidgetScripturaBadge');
       if (wgtBadge) {
-        wgtBadge.textContent = `${totalRead} / 1337 cap.`;
+        wgtBadge.textContent = `${totalRead} / ${totalCapsCount} cap.`;
       }
 
       // Biblia 360 quote inside tab-scriptura
@@ -4614,7 +5358,7 @@
       container.innerHTML = books.map(b => {
         let bookReadCount = 0;
         for (let c = 1; c <= b.caps; c++) {
-          if (readMap[`${b.abbr}_${c}`]) bookReadCount++;
+          if (isScripturaCapRead(readMap, b.abbr, c)) bookReadCount++;
         }
         const isCompleted = bookReadCount === b.caps;
         const isExpanded = scripturaExpandedBook === b.abbr;
@@ -4624,8 +5368,7 @@
         if (isExpanded) {
           const capButtons = [];
           for (let c = 1; c <= b.caps; c++) {
-            const key = `${b.abbr}_${c}`;
-            const isRead = !!readMap[key];
+            const isRead = isScripturaCapRead(readMap, b.abbr, c);
             const isNext = (!isRead && next.book.abbr === b.abbr && next.cap === c);
 
             let capClass = "bg-darkbg text-slate-400 border border-bordercol hover:border-cyan-500";
@@ -4659,7 +5402,7 @@
         }
 
         return `
-          <div class="bg-cardbg border ${isCompleted ? 'border-emerald-800/80' : 'border-bordercol'} rounded-2xl p-3 space-y-1.5 transition">
+          <div id="bookCard_${b.abbr.replace(/[^a-zA-Z0-9]/g, '')}" class="bg-cardbg border ${isCompleted ? 'border-emerald-800/80' : 'border-bordercol'} rounded-2xl p-3 space-y-1.5 transition">
             <div onclick="toggleScripturaBookExpand('${b.abbr}')" class="flex items-center justify-between cursor-pointer select-none">
               <div class="flex items-center space-x-2 truncate">
                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${b.testament === 'VT' ? 'bg-amber-950 border border-amber-800 text-amber-300' : 'bg-cyan-950 border border-cyan-800 text-cyan-300'} font-mono">${b.abbr}</span>
@@ -4677,7 +5420,56 @@
       }).join('');
     }
 
-    // 15. PERSONALIZARE WIDGET-URI ASTĂZI (OWNER & SHARED)
+    // 15. PERSONALIZARE & REORDONARE WIDGET-URI ASTĂZI (OWNER & SHARED)
+    const ALL_OWNER_WIDGET_DEFS = [
+      { id: 'psaltire', label: '📖 Citirea Psaltirii' },
+      { id: 'biblia360', label: '📜 Biblia 360 & Citatul Zilei' },
+      { id: 'scriptura', label: '📑 Continuitate Sf. Scriptură' },
+      { id: 'anniversaries', label: '🎉 Aniversările Zilei' },
+      { id: 'pomelnic', label: '📿 Pomelnicul de Astăzi' },
+      { id: 'school', label: '🎓 Școală & Activități' },
+      { id: 'shopping', label: '🛒 Cumpărături' },
+      { id: 'ganduri', label: '💡 Gândul Zilei' },
+      { id: 'inventory', label: '📦 Inventar' }
+    ];
+
+    function getOwnerWidgetsOrder() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('diih_owner_widgets_order') || '[]');
+        const defaultIds = ALL_OWNER_WIDGET_DEFS.map(w => w.id);
+        const combined = Array.from(new Set([...saved, ...defaultIds])).filter(id => defaultIds.includes(id));
+        return combined.length > 0 ? combined : defaultIds;
+      } catch (e) {
+        return ALL_OWNER_WIDGET_DEFS.map(w => w.id);
+      }
+    }
+
+    function moveOwnerWidgetOrder(widgetId, delta) {
+      const order = getOwnerWidgetsOrder();
+      const idx = order.indexOf(widgetId);
+      if (idx === -1) return;
+      const newIdx = idx + delta;
+      if (newIdx < 0 || newIdx >= order.length) return;
+      const temp = order[idx];
+      order[idx] = order[newIdx];
+      order[newIdx] = temp;
+      localStorage.setItem('diih_owner_widgets_order', JSON.stringify(order));
+      applyOwnerWidgetsVisibility();
+      showToast("Ordinea chenarelor a fost actualizată!");
+    }
+
+    function toggleOwnerWidgetActive(widgetId, state) {
+      const active = getOwnerWidgetsConfig();
+      let updated;
+      if (state) {
+        updated = Array.from(new Set([...active, widgetId]));
+      } else {
+        updated = active.filter(id => id !== widgetId);
+      }
+      localStorage.setItem('diih_owner_widgets', JSON.stringify(updated));
+      applyOwnerWidgetsVisibility();
+    }
+
     function getOwnerWidgetsConfig() {
       try {
         return JSON.parse(localStorage.getItem('diih_owner_widgets') || '["psaltire","biblia360","scriptura","anniversaries","pomelnic","school","shopping","ganduri","inventory"]');
@@ -4686,34 +5478,54 @@
       }
     }
 
-    function saveOwnerWidgetsConfig() {
-      const list = [];
-      ['psaltire','biblia360','scriptura','anniversaries','pomelnic','school','shopping','ganduri','inventory'].forEach(id => {
-        const el = document.getElementById(`wgtOwner_${id}`);
-        if (el && el.checked) list.push(id);
-      });
-      localStorage.setItem('diih_owner_widgets', JSON.stringify(list));
+    function toggleAllOwnerWidgets(state) {
+      const defaultIds = ALL_OWNER_WIDGET_DEFS.map(w => w.id);
+      localStorage.setItem('diih_owner_widgets', JSON.stringify(state ? defaultIds : []));
       applyOwnerWidgetsVisibility();
-      showToast("Configurația widget-urilor pentru Astăzi a fost salvată!");
     }
 
-    function toggleAllOwnerWidgets(state) {
-      ['psaltire','biblia360','scriptura','anniversaries','pomelnic','school','shopping','ganduri','inventory'].forEach(id => {
-        const el = document.getElementById(`wgtOwner_${id}`);
-        if (el) el.checked = state;
-      });
-      saveOwnerWidgetsConfig();
+    function renderOwnerWidgetsSettingsList() {
+      const container = document.getElementById('ownerWidgetsOrderContainer');
+      if (!container) return;
+      const order = getOwnerWidgetsOrder();
+      const active = getOwnerWidgetsConfig();
+
+      container.innerHTML = order.map((id, index) => {
+        const def = ALL_OWNER_WIDGET_DEFS.find(w => w.id === id) || { id, label: id };
+        const isChecked = active.includes(id);
+        const isFirst = index === 0;
+        const isLast = index === order.length - 1;
+
+        return `
+          <div class="flex items-center justify-between p-2 bg-cardbg border ${isChecked ? 'border-bordercol' : 'border-bordercol/40 opacity-70'} rounded-xl transition">
+            <label class="flex items-center space-x-2.5 cursor-pointer truncate flex-1 pr-2">
+              <input type="checkbox" onchange="toggleOwnerWidgetActive('${id}', this.checked)" ${isChecked ? 'checked' : ''} class="rounded text-cyan-500 focus:ring-0">
+              <span class="text-xs font-medium text-slate-200 truncate">${def.label}</span>
+            </label>
+            <div class="flex items-center space-x-1 shrink-0">
+              <button onclick="moveOwnerWidgetOrder('${id}', -1)" ${isFirst ? 'disabled class="opacity-20 p-1 text-slate-500"' : 'class="p-1 text-slate-300 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition"'} title="Mută mai sus">▲</button>
+              <button onclick="moveOwnerWidgetOrder('${id}', 1)" ${isLast ? 'disabled class="opacity-20 p-1 text-slate-500"' : 'class="p-1 text-slate-300 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition"'} title="Mută mai jos">▼</button>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function applyOwnerWidgetsVisibility() {
       if (isInActiveSharedMode()) return;
+      const order = getOwnerWidgetsOrder();
       const active = getOwnerWidgetsConfig();
-      ['psaltire','biblia360','scriptura','anniversaries','pomelnic','school','shopping','ganduri','inventory'].forEach(id => {
-        const wgt = document.getElementById(`ownerWidget_${id}`);
-        if (wgt) wgt.classList.toggle('hidden', !active.includes(id));
-        const cb = document.getElementById(`wgtOwner_${id}`);
-        if (cb) cb.checked = active.includes(id);
-      });
+      const container = document.getElementById('todayOwnerContent');
+      if (container) {
+        order.forEach(id => {
+          const wgt = document.getElementById(`ownerWidget_${id}`);
+          if (wgt) {
+            container.appendChild(wgt);
+            wgt.classList.toggle('hidden', !active.includes(id));
+          }
+        });
+      }
+      renderOwnerWidgetsSettingsList();
     }
 
     function toggleAllSharedWidgets(state) {
@@ -4825,24 +5637,153 @@
       document.body.appendChild(script);
     }
 
+    const INVENTORY_DEFAULT_CATEGORIES = [
+      "Unelte & Scule", "Electrocasnice", "Documente & Acte", "Electronice & IT",
+      "Mobilier", "Auto & Garaj", "Cărți & Bisericești", "Grădină", "Haine & Textile", "Diverse"
+    ];
+
+    const INVENTORY_DEFAULT_SPACES = [
+      "Garaj", "Atelier", "Pod / Mansardă", "Debara", "Bucătărie",
+      "Living", "Dormitor", "Birou", "Pivniță / Beci", "Balcon"
+    ];
+
+    function getInventoryCategories() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('diih_inv_categories') || '[]');
+        const set = new Set([...INVENTORY_DEFAULT_CATEGORIES, ...saved]);
+        allInventory.forEach(it => { if (it.category && it.category !== '-') set.add(it.category); });
+        return Array.from(set).sort();
+      } catch (e) {
+        return INVENTORY_DEFAULT_CATEGORIES;
+      }
+    }
+
+    function getInventorySpaces() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('diih_inv_spaces') || '[]');
+        const set = new Set([...INVENTORY_DEFAULT_SPACES, ...saved]);
+        allInventory.forEach(it => { if (it.space && it.space !== '-') set.add(it.space); });
+        return Array.from(set).sort();
+      } catch (e) {
+        return INVENTORY_DEFAULT_SPACES;
+      }
+    }
+
+    function addCustomInventoryCategory() {
+      const input = document.getElementById('newInvCustomCategoryInput');
+      const val = input ? input.value.trim() : '';
+      if (!val) return;
+      const cats = JSON.parse(localStorage.getItem('diih_inv_categories') || '[]');
+      if (!cats.includes(val)) cats.push(val);
+      localStorage.setItem('diih_inv_categories', JSON.stringify(cats));
+      input.value = '';
+      populateInventoryDatalists();
+      renderInventoryConfigLists();
+      showToast(`Categorie adăugată: ${val}`);
+    }
+
+    function deleteCustomInventoryCategory(cat) {
+      let cats = JSON.parse(localStorage.getItem('diih_inv_categories') || '[]');
+      cats = cats.filter(c => c !== cat);
+      localStorage.setItem('diih_inv_categories', JSON.stringify(cats));
+      populateInventoryDatalists();
+      renderInventoryConfigLists();
+    }
+
+    function addCustomInventorySpace() {
+      const input = document.getElementById('newInvCustomSpaceInput');
+      const val = input ? input.value.trim() : '';
+      if (!val) return;
+      const spaces = JSON.parse(localStorage.getItem('diih_inv_spaces') || '[]');
+      if (!spaces.includes(val)) spaces.push(val);
+      localStorage.setItem('diih_inv_spaces', JSON.stringify(spaces));
+      input.value = '';
+      populateInventoryDatalists();
+      renderInventoryConfigLists();
+      showToast(`Spațiu adăugat: ${val}`);
+    }
+
+    function deleteCustomInventorySpace(sp) {
+      let spaces = JSON.parse(localStorage.getItem('diih_inv_spaces') || '[]');
+      spaces = spaces.filter(s => s !== sp);
+      localStorage.setItem('diih_inv_spaces', JSON.stringify(spaces));
+      populateInventoryDatalists();
+      renderInventoryConfigLists();
+    }
+
+    function openInventoryConfigModal() {
+      renderInventoryConfigLists();
+      document.getElementById('inventoryConfigModal')?.classList.remove('hidden');
+    }
+
+    function closeInventoryConfigModal() {
+      document.getElementById('inventoryConfigModal')?.classList.add('hidden');
+    }
+
+    function renderInventoryConfigLists() {
+      const catCont = document.getElementById('inventoryCategoriesManageList');
+      if (catCont) {
+        const cats = getInventoryCategories();
+        catCont.innerHTML = cats.map(c => `
+          <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-cardbg border border-bordercol text-slate-200 text-xs">
+            <span>${c}</span>
+            <button onclick="deleteCustomInventoryCategory('${c}')" class="text-rose-400 hover:text-rose-300 font-bold ml-1">✕</button>
+          </span>
+        `).join('');
+      }
+
+      const spCont = document.getElementById('inventorySpacesManageList');
+      if (spCont) {
+        const spaces = getInventorySpaces();
+        spCont.innerHTML = spaces.map(s => `
+          <span class="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-cardbg border border-bordercol text-slate-200 text-xs">
+            <span>${s}</span>
+            <button onclick="deleteCustomInventorySpace('${s}')" class="text-rose-400 hover:text-rose-300 font-bold ml-1">✕</button>
+          </span>
+        `).join('');
+      }
+    }
+
+    function syncInventoryCatSpace(type) {
+      if (type === 'category') {
+        const sel = document.getElementById('inventoryItemCategorySelect');
+        const txt = document.getElementById('inventoryItemCategory');
+        if (sel && txt && sel.value) txt.value = sel.value;
+      } else if (type === 'space') {
+        const sel = document.getElementById('inventoryItemSpaceSelect');
+        const txt = document.getElementById('inventoryItemSpace');
+        if (sel && txt && sel.value) txt.value = sel.value;
+      }
+    }
+
     function populateInventoryDatalists() {
-      const spaces = new Set();
-      const categories = new Set();
-      allInventory.forEach(it => {
-        if (it.space && it.space !== '-') spaces.add(it.space);
-        if (it.category && it.category !== '-') categories.add(it.category);
-      });
+      const spaces = getInventorySpaces();
+      const categories = getInventoryCategories();
 
       const spaceList = document.getElementById('inventorySpaceList');
-      if (spaceList) spaceList.innerHTML = Array.from(spaces).sort().map(s => `<option value="${s}">`).join('');
+      if (spaceList) spaceList.innerHTML = spaces.map(s => `<option value="${s}">`).join('');
 
       const catList = document.getElementById('inventoryCategoryList');
-      if (catList) catList.innerHTML = Array.from(categories).sort().map(c => `<option value="${c}">`).join('');
+      if (catList) catList.innerHTML = categories.map(c => `<option value="${c}">`).join('');
+
+      const catSel = document.getElementById('inventoryItemCategorySelect');
+      if (catSel) {
+        const cur = catSel.value;
+        catSel.innerHTML = `<option value="">-- Alege Categorie --</option>` + categories.map(c => `<option value="${c}">${c}</option>`).join('');
+        if (cur) catSel.value = cur;
+      }
+
+      const spSel = document.getElementById('inventoryItemSpaceSelect');
+      if (spSel) {
+        const cur = spSel.value;
+        spSel.innerHTML = `<option value="">-- Alege Spațiu --</option>` + spaces.map(s => `<option value="${s}">${s}</option>`).join('');
+        if (cur) spSel.value = cur;
+      }
 
       const spaceFilter = document.getElementById('inventorySpaceFilter');
       if (spaceFilter) {
         const currentVal = spaceFilter.value;
-        spaceFilter.innerHTML = `<option value="ALL">Toate Spațiile</option>` + Array.from(spaces).sort().map(s => `<option value="${s}">${s}</option>`).join('');
+        spaceFilter.innerHTML = `<option value="ALL">Toate Spațiile</option>` + spaces.map(s => `<option value="${s}">${s}</option>`).join('');
         spaceFilter.value = currentVal || 'ALL';
       }
     }
@@ -4922,13 +5863,18 @@
       const photoPreview = document.getElementById('inventoryPhotoPreview');
       const photoPlaceholder = document.getElementById('inventoryPhotoPlaceholder');
 
+      populateInventoryDatalists();
       if (id) {
         const item = allInventory.find(x => x.id === id);
         if (!item) return;
         title.textContent = "Editează Obiect";
         document.getElementById('inventoryItemName').value = item.name || '';
         document.getElementById('inventoryItemCategory').value = item.category || '';
+        const catSel = document.getElementById('inventoryItemCategorySelect');
+        if (catSel) catSel.value = item.category || '';
         document.getElementById('inventoryItemSpace').value = item.space || '';
+        const spSel = document.getElementById('inventoryItemSpaceSelect');
+        if (spSel) spSel.value = item.space || '';
         document.getElementById('inventoryItemQty').value = item.qty || 1;
         document.getElementById('inventoryItemValue').value = item.value || '';
         document.getElementById('inventoryItemPurchaseDate').value = item.purchaseDate || '';
@@ -4957,7 +5903,11 @@
         title.textContent = "Adaugă Obiect Nou";
         document.getElementById('inventoryItemName').value = '';
         document.getElementById('inventoryItemCategory').value = '';
+        const catSel = document.getElementById('inventoryItemCategorySelect');
+        if (catSel) catSel.value = '';
         document.getElementById('inventoryItemSpace').value = '';
+        const spSel = document.getElementById('inventoryItemSpaceSelect');
+        if (spSel) spSel.value = '';
         document.getElementById('inventoryItemQty').value = 1;
         document.getElementById('inventoryItemValue').value = '';
         document.getElementById('inventoryItemPurchaseDate').value = '';
@@ -5020,8 +5970,24 @@
       const name = document.getElementById('inventoryItemName').value.trim();
       if (!name) return showToast("Introdu o denumire pentru obiect.");
 
-      const category = document.getElementById('inventoryItemCategory').value.trim() || '-';
-      const space = document.getElementById('inventoryItemSpace').value.trim() || '-';
+      const category = (document.getElementById('inventoryItemCategory').value.trim() || document.getElementById('inventoryItemCategorySelect')?.value.trim()) || '-';
+      const space = (document.getElementById('inventoryItemSpace').value.trim() || document.getElementById('inventoryItemSpaceSelect')?.value.trim()) || '-';
+
+      // Salvează noile categorii/spații personalizate dacă nu existau deja
+      if (category && category !== '-') {
+        const cats = JSON.parse(localStorage.getItem('diih_inv_categories') || '[]');
+        if (!cats.includes(category) && !INVENTORY_DEFAULT_CATEGORIES.includes(category)) {
+          cats.push(category);
+          localStorage.setItem('diih_inv_categories', JSON.stringify(cats));
+        }
+      }
+      if (space && space !== '-') {
+        const spaces = JSON.parse(localStorage.getItem('diih_inv_spaces') || '[]');
+        if (!spaces.includes(space) && !INVENTORY_DEFAULT_SPACES.includes(space)) {
+          spaces.push(space);
+          localStorage.setItem('diih_inv_spaces', JSON.stringify(spaces));
+        }
+      }
       const qty = document.getElementById('inventoryItemQty').value || '1';
       const value = document.getElementById('inventoryItemValue').value || '';
       const purchaseDate = document.getElementById('inventoryItemPurchaseDate').value || '';
@@ -5175,9 +6141,14 @@
       });
 
       if (sharingConfig.shareToken) {
+        const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
         const link = `${window.location.origin}${window.location.pathname}?share=${sharingConfig.shareToken}`;
-        document.getElementById('adminShareLinkOutput').value = link;
-        document.getElementById('adminShareLinkBox').classList.remove('hidden');
+        const iphoneLink = `${window.location.origin}${basePath}andreea.html?share=${sharingConfig.shareToken}`;
+        const out = document.getElementById('adminShareLinkOutput');
+        if (out) out.value = link;
+        const iphOut = document.getElementById('adminShareLinkOutputIPhone');
+        if (iphOut) iphOut.value = iphoneLink;
+        document.getElementById('adminShareLinkBox')?.classList.remove('hidden');
       }
       toggleAdminPomelnicCategoriesBox();
       populateAdminPomelnicCategoriesList(sharingConfig.pomelnicCategories || []);
@@ -5260,10 +6231,23 @@
       document.body.appendChild(script);
     }
 
+    function selectAppSymbol(symbol) {
+      const input = document.getElementById('settingAppLogo');
+      if (input) input.value = symbol;
+    }
+
     function copyShareLink() {
       const input = document.getElementById('adminShareLinkOutput');
+      if (!input) return;
       input.select();
-      navigator.clipboard.writeText(input.value).then(() => showToast("Link copiat în clipboard!")).catch(() => showToast("Nu s-a putut copia automat, selectează manual."));
+      navigator.clipboard.writeText(input.value).then(() => showToast("Link universal copiat!")).catch(() => showToast("Selectează manual link-ul."));
+    }
+
+    function copyShareLinkIPhone() {
+      const input = document.getElementById('adminShareLinkOutputIPhone');
+      if (!input) return;
+      input.select();
+      navigator.clipboard.writeText(input.value).then(() => showToast("Link iPhone Andreea copiat!")).catch(() => showToast("Selectează manual link-ul."));
     }
 
     let sharedModeInitialized = false;

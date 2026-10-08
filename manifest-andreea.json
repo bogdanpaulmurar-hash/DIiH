@@ -1,0 +1,26 @@
+{
+  "id": "andreea-pwa-app",
+  "name": "Andreea",
+  "short_name": "Andreea",
+  "description": "Agenda și rânduiala Andreei",
+  "start_url": "./andreea.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icons/icon-heart-ekg.png",
+      "sizes": "512x512 192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-family-home.svg",
+      "sizes": "512x512 192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

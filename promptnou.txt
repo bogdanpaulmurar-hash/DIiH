@@ -1,11 +1,214 @@
-1. in aplicatia Andreei pune Inventar in meniul principal, nu sub meniul ascuns. Defapt fa cumva sa poat sa aleg ce sa fie ascuns (mai multe) si ce sa fie in bara principala.
+Modificari:
 
-2. Vreau sa pot sa aleg care tab poate fi afisat in bara de meniu si ce sa fie ascuns. ce are bifa sa fie in meniul principal, ce nu, sa se ascunda. Nu stiu unde integrezi, dar te las sa alegi tu si imi spui ulterior.
+1. Pomelnic: 
+    a. sa includa noua coloana pomelnic andreea, cu bifa, asa incat sa pot sa editez de la mine din aplicatie ce persoane poate sa vada Andreea. Sa fie inclus in modul de editare si acel flag pe care sa pun bifa. Posibilitatea sa schimb in masa mai multe persoane (pe care le selectez in prealabil)ca sa se poata pune bifa la comun. Dupa ce selectez, pe bara nu numarul de selectii  unde mai apare altar atentie si scoate, sa apara inca un buton pentru bifa Andreei de alta culoare fata de celalalte. titlul butonului sa contina Andreea insa sa nu fie mai mare decat chenarul .. cumva fa-l sa se potriveasca in acel spatiu. 
+    b. În editarea persoanelor lipsește campul dropdown grad din coloana O. Include-l și pe acela (titlu: Grad)
+    c. Pomelnicul Andreei: cum am amintit, am introdus in registru o coloana noua cu true/false daca sa fie afișată in pomelnicul ei sau nu. Coloana (D) se numește Pomelnic_Andreea. Introdu camp de editare in pomelnicul aplicației principale si si in aplicatia Andreei. Sa pot bifa din aplicație la comun daca delectez mai multe persoane deodată sau individual. 
 
-3. sectiunea de widget o regandim, elimina ce e acolo si aici o sa avem tipurile de widgeturi disponibile pentru toate functiile care pot fi adaugate in "Astazi". De ex in aplicatia shareuuita sunt si alte widgeturi pe care eu nu le am. 
-Permite-mi sa pot alege ce sa am in astazi, atat la mine cat si in aplicatia shareuita. gandeste tu unde introduci setarile si cum si informeaza-ma ulterior. 
 
-3. Tab nou cu Citirea Sf. Scripturi caruia ii atribui si un widget personalizabil. Aici nu folosim date din registru excel google ci cauti dupa biblia diortosita de mitr bartolomeu anania cum se numesc toate cartile bibliei, si fiecare cate capitole are. foloseste prescurtari in widget insa daca intru pe widget se acceseaza tabul dedicat unda am un overview bine organizat cu toate cartile si toate capitolele fiecarei carti. sa fie delimitat noul de vechiul testament, si se pastreaza ordinea canonica. ce face acest tab si widget? vreau sa vad unde am ramas cu citirea scipturii si sa stiu de unde continui. daca azi am citit si bifat sau marcat depinde cum o sa implementezi 3Rg, 17, in widget apare ca am de continuat cu 3Rg, 18. si asa mai departe. gandesti tu o logica pentru acest tab de tracking a citirii Sf. Scripturi ortodoxe diortosite de Mitr. Bartolomeu. Poate facem ceva mai organizat si comasam biblia 360 cu citatul zilnic cu continua lectura zilnica. Sa folosim pentru ambele ca setari si tot ce cuprinde fiecare sectiune, intr-un singur tab, insa in astazi pot fi separate widgeturile.
+2. tabul Astazi: 
+    a. Ordinea chenarelor de pe tab-ul astazi sa poata fi schimbata din widget si sa pot sa le aleg ordinea usor. 
+    b. Regandim secțiunea pomelnic. Lista cu oameni va fi accesata din astazi și in lista vor fi alte taburi care vor cuprinde: 
+        I. pomelnicul personal total, cel in care intru normal și prelucrez și editez și pun filtre, 
+        II. pomelnicul de la psaltire, 
+        III. bolnavi (toți cei care au bifa de bolnavi se grupează + lista cu bolnavii de la psaltire) 
+        IV. Adormiți. 
+        V. categorii ( aici aleg eu ce categorie din (grad) sa fie afișată. Daca aleg tot, se afiseaza pomelnicul actual care apare in astazi cu persoanele de rand de pomenit. Daca schimb gradul se reface calcului restrans pe acea categorie de grad. Fiecare tab ramane regula cu selecția a unui nr de 20/30... sau aleg eu un nr care are calcul (rotativ) și am lista de pomelnic cum doresc. 
+    Rămâne și in meniu pomelnicul vechi și psaltirea, asta va fi extra din tab-ul astazi cand intru pe pomelnic. Pe astazi regandeste ce va fi afisat pe chenarul de pomelnic sau poate chiar realizeaza o trimitere la unul din acele subtaburi unde vad direct pomelnicul si celalalte taburi. te las sa le gandesti tu.
+    c. Citirea psaltirii sa mai includă la deschidere o noutate: se va împărți in 2 subtaburi după deschidere și vor apărea pe unul pomelnicul de la psaltire ca acum și pe celalalt se va exporta de pe doxologia rugaciunea pentru neam a părintelui Gheorghe calciu care o găsești pe doxologia. Preia cumva cu Ornamente textul sa fie frumos plasat pe pagina și cu paragrafe impărțit. Si daca nu e complicat și nu generam probleme de performanta mai punem un subtab 3 cu calendar cu bifa daca mi-am făcut rânduiala. Rânduiala este compusa din catisma, pomelnic parțial sau pomelnic complet și rugăciunea pentru neam. Adaugă posibilitatea sa pun toate bifele deodată (3 pt ca pomelnicul e fie parțial fie complet) și si individual dacă nu am reușit tot. Sa fie calendar avansat ca in tabul scoala cu culori si vizualizări diferite, fara calcul, însă sa legam și sectiunea de lectura zilnica. Daca bifez acolo sa apară si bifa aceea aici in calendar. Cumva fiecare bifa sa fie specifica unei realizări. Sa pot sa îmi dau seama ce nu am realizat într-o zi.. aici se va crea in plus o noua vizualizare asemenea cum e pe toata luna insa restransa la alegere pe 3 zile sau 1 saptamana si se vede calendarul putin mai mare si mai frumos asa incat sa pot sa vad pe fiecare zi in parte daca sunt mai multe bife si ce reprezinta fiecare.
 
-4. Pomelnic ambele aplicatii: Previzualizare numelui sa includă vârsta in lume ( și la cei adormiti) și timpul de cand a adormit( pentru cei adormiti : exemplu viu: 20 ani dormit. Daca nu incape textul, atunci foloseste ceva simbiluri specifice care inlocuiesc textul. la adormiti o cruce si la cei in viata, nu stiu, alege tu. Actual arata ca in screenshot cu data nasterii si cu data adormirii dar sa se includa si ce am cerut in limita locului ramas disponibil si a spatiului pe care in cuprinde textul. Unde nu am data nasterii numai data adormirii acolo faci doar calcul de cat timp a adormit. in excel coloana J si L sunt checkboxuri pentru estimarea datei pentru atunci cand nu stiu exact. include in campul editabil si aceste bife de estimare data nastere si adormire, ambele, si daca e bifata, sa am un simbol de ~ in calculul de varsta in lume sau in vesnicie. 
+3. Inventar: 
+    a. Am nevoie de categorii predefinite in dropdown
+    b. Posibilitatea sa personalizez categoriile
+    c. Posibilitatea de a introduce spatii predefinite si sa le am ca dropdown si sa creez sau editez cele existente.
 
+4. Setari: Inca sunt probleme cu imaginea. trebuie sa eliminam setarile actuale cu imaginile aplicaitei mele si a ceiei care poate fi shareuita (cea pentru Andreea) si introdu tu o imagine predefinita pe care o pot schimba eu din fisierele cu cod si imi indici exact unde si cum trebuie sa fac daca vreau sa o schimnb atat la mine cat si la Andreea. Acolo va fi un link sau o legatura simpla de modificat de mine, in caz ca introduc in fisiere o noua imagine. si asa voi schimba de acum pozele. in rest elimina setarile pentru poza aplicatiei, ramane doar setarea pt schimbarea numelui si a logo-ului din aplicatie cu ☧, emojy sau ceva predefinit specific aplicatiei. o casa, sau o cruce bizantina (dar nu ruseasca)
+
+5. aplicatia de share, cea a Andreei: Nu poate fi instalata pe Iphone ca pe android si daca o instalez îmi instalează aplicația DIiH nu aplicația andreei configurata pt ea. După câteva secunde o încarcă a ei dar de instalat apare ca e instalata a mea. Si poza aplicației tot a mea este. trebuie sa regandim conceptul pentru iphone pentru ca nu se comporta ca pe android. te rog sa imi dai si alte solutii sau daca ai una mai buna implementeazo direct.
+
+6. Sfântă Scriptură: 
+    a. titlul cartii lui Iisus Navi este gresit - din cate stiu este Iosua. Verifica oricum ordinea cartilor dupa canonul biblic diortosit de mitr- bartolomeu anania. am atasat si poza in conversatie. 
+    b. Am nevoie de o legătură undeva in partea de sus care ma duce la cartea respectiv capitolul la care am rămas daca vreau sa vad, de ex câte capitole au mai rămas din acea carte. actual am numarul de capitole citite din totalul de capitole. dar un buton de legatura spre toata cartea m-ar ajuta poate cand vreau sa verific. sau introduci tu un alt indice tot undeva in partea de sus 17/25 si sa se distinga ca este vorba de capitolele cartii din care citesc.
+    c. Foloseste https://biblia.dervent.ro/VT-Fc-1 pentru citatele zilnice de unde iei versetul care contine nota de subsol ca citat zilnic si transpui si nota de subsol a fiecarui indice din verset. Sa se parcurga toata biblia cu toate notele de subsol si apoi se reia de la inceput- pentru fiecare zi cate un verset cu notele aferente. Ar fi mai bine sa avem asta in registru in tabul dedicat sf scripturi? sa introduc acolo totul printr-un automatism? sau ai tu alta varianta care o legi aici si apare aici nota zilnica cu versetul de care apartine? cum procedam aici? am atasat o poza in chat cu cum arata pe dervent versetul si notele de subsol. am apasat pe indicele a(rosu) din primul verset si ai nota de subsol in dreapta. 
+
+7. Scoala: Ora daca o schimb la o activitate, nu se modifica
+
+8. Am observat ca notificarile iar nu merg. trebuie regandire si facute mai bine. candva mergeau. si parca aniversarile nu sunt sincronizate corect cu datele sin pomenlic. astaziu 08 octombire este in calendar aniversarea de adormire a ps vasile fluieras. nu imi apare in aplicatie. te rog verifica mecanismul si calculul. 
+
+Îndreptar pentru folosirea aparatului ajutător de pe lângă textul biblic
+CĂRȚILE SFINTEI SCRIPTURI
+
+în ordinea Cuprinsului	în ordinea alfabetică a siglelor
+
+
+VECHIUL TESTAMENT
+Fc	Facerea	Ag	Agheu
+Iș	Ieșirea	Am	Amos
+Lv	Leviticul	Avc	Avacum
+Nm	Numerele	Avd	Avdia
+Dt	Deuteronomul	Bar	Baruh
+Ios	Iosua Navi	Bel	Bel și Balaurul
+Jd	Judecători	Cânt	Cântarea Cântărilor
+Rut	Rut	Dn	Daniel
+1 Rg	1 Regi	Dt	Deuteronomul
+2 Rg	2 Regi	Ecc	Ecclesiastul
+3 Rg	3 Regi	Epist	Epistola lui Ieremia
+4 Rg	4 Regi	Est	Estera
+1 Par	1 Paralipomena	Ezr	Ezdra
+2 Par	2 Paralipomena	3 Ezr	Cartea a treia a lui Ezdra
+Ezr	Ezdra	Fc	Facerea
+Ne	Neemia	Idt	Iudita
+Est	Estera	Ioil	Ioil
+Iov	Iov	Iona	Iona
+Ps	Psalmii	Ios	Iosua Navi
+Pr	Proverbele lui Solomon	Iov	Iov
+Ecc	Ecclesiastul	Ir	Ieremia
+Cânt	Cântarea Cântărilor	Is	Isaia
+Is	Isaia	Iș	Ieșirea
+Ir	Ieremia	Iz	Iezechiel
+Plg	Plângerile lui Ieremia	Jd	Judecători
+Iz	Iezechiel	Lv	Leviticul
+Dn	Daniel	1 Mac	1 Macabei
+Os	Osea	2 Mac	2 Macabei
+Am	Amos	3 Mac	3 Macabei
+Mi	Miheia	Mal	Maleahi
+Ioil	Ioil	Man	Manase
+Avd	Avdia	Mi	Miheia
+Iona	Iona	Naum	Naum
+Naum	Naum	Ne	Neemia
+Avc	Avacum	Nm	Numerele
+Sof	Sofonie	Os	Osea
+Ag	Agheu	1 Par	1 Paralipomena
+Za	Zaharia	2 Par	2 Paralipomena
+Mal	Maleahi	Plg	Plângerile lui Ieremia
+Tob	Tobit	Pr	Proverbele lui Solomon
+Idt	Iudita	Ps	Psalmii
+Bar	Baruh	1 Rg	1 Regi
+Epist	Epistola lui Ieremia	2 Rg	2 Regi
+Tin	Cântarea celor trei tineri	3 Rg	3 Regi
+3 Ezr	Cartea a treia a lui Ezdra	4 Rg	4 Regi
+Sol	Înțelepciunea lui Solomon	Rut	Rut
+Sir	Înțelepciunea lui Isus, fiul lui Sirah	Sir	Înțelepciunea lui Isus, fiul lui Sirah
+Sus	Istoria Susanei	Sof	Sofonie
+Bel	Bel și Balaurul	Sol	Înțelepciunea lui Solomon
+1 Mac	1 Macabei	Sus	Istoria Susanei
+2 Mac	2 Macabei	Tin	Cântarea celor trei tineri
+3 Mac	3 Macabei	Tob	Tobit
+Man	Manase	Za	Zaharia
+
+
+NOUL TESTAMENT
+Mt	Evanghelia după Matei	Ap	Apocalipsa
+Mc	Evanghelia după Marcu	1 Co	1 Corinteni
+Lc	Evanghelia după Luca	2 Co	2 Corinteni
+In	Evanghelia după Ioan	Col	Coloseni
+FA	Faptele Apostolilor	Ef	Efeseni
+Rm	Romani	Evr	Evrei
+1 Co	1 Corinteni	FA	Faptele Apostolilor
+2 Co	2 Corinteni	Flm	Filimon
+Ga	Galateni	Flp	Filipeni
+Ef	Efeseni	Ga	Galateni
+Flp	Filipeni	Iac	Iacob
+Col	Coloseni	In	Evanghelia după Ioan
+1 Tes	1 Tesaloniceni	1 In	1 Ioan
+2 Tes	2 Tesaloniceni	2 In	2 Ioan
+1 Tim	1 Timotei	3 In	3 Ioan
+2 Tim	2 Timotei	Iuda	Iuda
+Tit	Tit	Lc	Evanghelia după Luca
+Flm	Filimon	Mc	Evanghelia după Marcu
+Evr	Evrei	Mt	Evanghelia după Matei
+Iac	Iacob	1 Ptr	1 Petru
+1 Ptr	1 Petru	2 Ptr	2 Petru
+2 Ptr	2 Petru	Rm	Romani
+1 In	1 Ioan	1 Tes	1 Tesaloniceni
+2 In	2 Ioan	2 Tes	2 Tesaloniceni
+3 In	3 Ioan	1 Tim	1 Timotei
+Iuda	Iuda	2 Tim	2 Timotei
+Ap	Apocalipsa	Tit	Tit
+SIGLE ÎN NOTELE INFRAPAGINALE
+
+BJ	La Bible de Jérusalem
+BOB	Biblia de la Blaj 1795
+GALA	Biblia de București 1938
+KJV	King James Version
+MIRON	Biblia de București 1936
+NICOD	Biblia de București 1944
+OSTY	La Bible trad. Osty
+RSV	Revised Standard Version
+SINOD	Biblia de București 1914
+ȘAGUNA	Biblia de Sibiu 1858
+ȘERBAN	Biblia de București 1688
+TEV	Today's English Version
+TOB	Traduction Oecuménique de la Bible
+Ebr. /T.M.	Versiunea Ebraică / Textul Masoretic
+Sept. /LXX	Septuaginta
+V.T.	Vechiul Testament
+N.T.	Noul Testament
+ed.	ediția
+=	adică (egal cu)
+v.	versetul
+vv.	versetele
+CUM TREBUIE CITITE TRIMITERILE
+
+11)	versetul care trimite
+11-12)	versetele care trimit
+3,1	capitolul 3, versetul 1
+3, 1-7	capitolul 3, versetele 1 până la 7 (inclusiv)
+3,1,3	capitolul 3, versetele 1 și 3
+3,1-7,12	capitolul 3, versetele 1 până la 7, versetul 12
+3, 1-7; 9,5	capitolul 3, versetele 1 până la 7, capitolul 9, versetul 5
+(cifrele scrise îngroșat - fără paranteză - indică întotdeauna capitolul)
+
+Unități de măsură și monede menționate în Sfânta Scriptură
+În perioada scrierii cărților biblice, măsurile de lungime, de capacitate și de greutate, precum și monedele întrebuințate de poporul evreu, au suferit multe schimbări, atât ca denumire, cât și ca valoare. Aceste schimbări, întâlnite și la celelalte popoare din antichitate, au fost impuse fie de evoluția situației economice din țară, fie de schimburile comerciale cu popoarele vecine. Pentru multe din aceste denumiri, de mult dispărute, nu s'au putut găsi cuvinte corespunzătoare în limba română; din această cauză, ele au fost fie transcrise aproape întocmai, fie traduse prin denumiri generale, ca: măsuri, coșuri, banițe etc. Tabelele de mai jos indică valorile acestor unități de măsură:
+
+
+Măsuri de lungime
+deget	1,75	cm
+lat de palmă	0,75	cm
+palmă	22,50	cm
+cot	45	cm
+braț	1,85	m
+picior	32	cm
+pas	1,75	m
+prăjină (trestie)	2,88	m
+stadiu	185	m
+milă	1,5	km
+
+
+Măsuri de capacitate
+Pentru cereale:
+
+omer	364	l
+nebel	225	l
+efă	36,4	l
+baniță	15	l
+Pentru lichide:
+omer	364	l
+măsură	36,4	l
+hin	6,06	l
+log	0,50	l
+
+
+Măsuri de greutate
+talant	34,272	kg
+mină	571,200	g
+siclu	5,712	g
+gheră	0,571	g
+livră romană	327,450	g
+
+
+Monede
+
+Valoarea de schimb a monedelor depindea de natura și greutatea metalului din care erau confecționate. În epoca patriarhilor se practica schimbul în natură, produsele fiind evaluate prin cântărire. Trecerea la sistemul monetar s'a făcut treptat, încheindu-se abia în epoca profeților. La început, aurul și argintul folosite ca mijloc de schimb circulau în forme și dimensiuni variate; pentru a li se stabili valoarea, trebuiau cântărite de fiecare dată. De aceea, denumirile măsurilor curente de greutate s'au dat și celor dintâi monede propriu-zise. După ce forma și greutatea acestora s'a standardizat (începând din sec. VII î. H.), n'a mai fost nevoie de cântărirea lor. Denumirile și valorile monetare menționate în Sfânta Scriptură se prezintă astfel:
+Din aur	Din argint
+siclu	11,424 g	14,54 g
+statir	8,60 g	–
+dinar (drahmă)	–	4,55 g
+mină	571,200 g	727,00 g
+talant	34,272 kg	43,62 kg
+Codrantul, leptaua, asariul și obolul, mici subdiviziuni monetare din aramă, unele cântărind sub 1 gram, serveau la darea restului și la micile cumpărături zilnice.
+
+Mina (= 50 sicli = 2000 drahme) și talantul (= 3000 sicli = 12000 drahme) nu erau monede, ci denumiri ale sumelor monetare mari.
+
+Puterea de cumpărare a acestor monede, pe vremea Mântuitorului, rezultă din informația că dinarul reprezenta salariul zilnic al unui muncitor agricol (Mt 20, 13) și asigura întreținerea unui om pe timp de 24 ore (Mt 20, 2, 9, 10, 13; Lc 10, 35; Mc 14, 5 etc.).

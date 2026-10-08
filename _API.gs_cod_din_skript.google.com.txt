@@ -288,12 +288,13 @@ function doGet(e) {
     const bolnav = (e.parameter.bolnav === "true" || e.parameter.bolnav === true);
     const dnAprox = (e.parameter.dnAprox === "true" || e.parameter.dnAprox === true);
     const daAprox = (e.parameter.daAprox === "true" || e.parameter.daAprox === true);
+    const pomelnicAndreea = (e.parameter.pomelnicAndreea === "true" || e.parameter.pomelnicAndreea === true);
 
     sh.appendRow([
       newRowId,                                       // Col 1: RowID
       van,                                            // Col 2: (F) V/A/N
       isActiv,                                        // Col 3: (F) Activ_Inactiv/calcul_pomelnic
-      e.parameter.pomelnicCalendar || "-",            // Col 4: Pomelnic_calendar
+      pomelnicAndreea,                                // Col 4: Pomelnic_Andreea
       (e.parameter.prenume || "").trim(),             // Col 5: Prenume
       (e.parameter.nume || "").trim(),                // Col 6: Nume
       (e.parameter.info || "").trim(),                // Col 7: Informatii
@@ -355,8 +356,29 @@ function doGet(e) {
         const valAct = (e.parameter.isActivPomelnic === "true" || e.parameter.isActivPomelnic === true);
         sh.getRange(rowId, 3).setValue(valAct);
       }
+      if (e.parameter.pomelnicAndreea !== undefined) {
+        const valAndreea = (e.parameter.pomelnicAndreea === "true" || e.parameter.pomelnicAndreea === true || e.parameter.pomelnicAndreea === "1" || e.parameter.pomelnicAndreea === 1);
+        sh.getRange(rowId, 4).setValue(valAndreea);
+      }
       return returnResponse(e, { success: true });
     }
+  }
+
+  // Actualizare în calup Pomelnic Andreea (Coloana D)
+  if (action === "batchUpdateAndreea") {
+    let sh = ss.getSheetByName("Pomelnic");
+    const rowIdsStr = e.parameter.rowIds || "";
+    const flagValue = (e.parameter.pomelnicAndreea === "true" || e.parameter.pomelnicAndreea === true);
+    if (sh && rowIdsStr) {
+      const ids = rowIdsStr.split(",").map(x => parseInt(x.trim(), 10)).filter(n => !isNaN(n));
+      ids.forEach(rId => {
+        if (rId >= 2 && rId <= sh.getLastRow()) {
+          sh.getRange(rId, 4).setValue(flagValue);
+        }
+      });
+      return returnResponse(e, { success: true, count: ids.length, flag: flagValue });
+    }
+    return returnResponse(e, { error: "Parametri lipsă" });
   }
 
   // Actualizare în calup Necesită Atenție (Pomelnic)
@@ -601,6 +623,9 @@ function getPomelnicData(ss) {
     
     let valC = r[2];
     let isActivPomelnic = (valC === true || valC === "TRUE" || valC === "true" || valC === 1 || valC === "1");
+
+    let valD = r[3];
+    let pomelnicAndreea = (valD === true || valD === "TRUE" || valD === "true" || valD === 1 || valD === "1");
     
     let valV = r[21];
     let necesitaAtentie = (valV === true || valV === "TRUE" || valV === "true" || valV === 1 || valV === "1");
@@ -608,6 +633,7 @@ function getPomelnicData(ss) {
     list.push({
       rowId: idx + 2,
       isActivPomelnic: isActivPomelnic,
+      pomelnicAndreea: pomelnicAndreea,
       necesitaAtentie: necesitaAtentie,
       prenume: prenume,
       nume: nume,
