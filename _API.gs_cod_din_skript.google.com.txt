@@ -188,13 +188,15 @@ function doGet(e) {
         gandId,
         noteContent,
         e.parameter.sursa || "Personal",
-        dataCreare
+        dataCreare,
+        e.parameter.user || e.parameter.author || ""
       ]);
     } else {
       sh.appendRow([
         noteContent,
         e.parameter.sursa || "Personal",
-        dataCreare
+        dataCreare,
+        e.parameter.user || e.parameter.author || ""
       ]);
     }
     return returnResponse(e, { success: true });
@@ -244,18 +246,20 @@ function doGet(e) {
     return returnResponse(e, { success: true, deleted: deleted });
   }
 
-  // 6. CUMPĂRĂTURI (Structură suportată: cu ID pe Col 1 sau direct Magazin pe Col 1; suport autor)
+  // 6. CUMPĂRĂTURI (Structură suportată: cu ID pe Col 1 sau direct Magazin pe Col 1; suport autor & opțiune "Nu partaja")
   if (action === "addCumparaturi") {
     let sh = ss.getSheetByName("lista_cumparaturi");
     if (!sh) {
       sh = ss.insertSheet("lista_cumparaturi");
-      sh.appendRow(["ID", "Magazin", "Produs", "Cantitate", "DataCreare"]);
-      sh.getRange("A1:E1").setFontWeight("bold");
+      sh.appendRow(["ID", "Magazin", "Produs", "Cantitate", "DataCreare", "NuPartaja", "Owner"]);
+      sh.getRange("A1:G1").setFontWeight("bold");
     }
     const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
     const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
     const author = e.parameter.author ? ` (${e.parameter.author})` : "";
     const produsComplet = (e.parameter.produs || "") + author;
+    const nuPartaja = (e.parameter.nuPartaja === "true" || e.parameter.nuPartaja === true) ? "DA" : "NU";
+    const owner = e.parameter.owner || e.parameter.user || e.parameter.author || "";
     if (header === "ID") {
       const shopId = e.parameter.id || ("SHOP-" + Date.now());
       sh.appendRow([
@@ -263,13 +267,17 @@ function doGet(e) {
         e.parameter.magazin || "General",
         produsComplet,
         e.parameter.cantitate || "1",
-        dataCreare
+        dataCreare,
+        nuPartaja,
+        owner
       ]);
     } else {
       sh.appendRow([
         e.parameter.magazin || "General",
         produsComplet,
-        e.parameter.cantitate || "1"
+        e.parameter.cantitate || "1",
+        nuPartaja,
+        owner
       ]);
     }
     return returnResponse(e, { success: true });
@@ -728,19 +736,24 @@ function getCumparaturiData(ss) {
   const sh = ss.getSheetByName("lista_cumparaturi");
   if (!sh || sh.getLastRow() < 2) return [];
   const maxRows = sh.getLastRow();
+  const maxCols = Math.min(Math.max(sh.getLastColumn(), 3), 7);
   const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
   const hasIdCol = (header === "ID");
-  const numCols = hasIdCol ? 5 : 3;
-  const rows = sh.getRange(2, 1, maxRows - 1, numCols).getValues();
+  const rows = sh.getRange(2, 1, maxRows - 1, maxCols).getValues();
   return rows.map((r, i) => {
     let magazin = hasIdCol ? (r[1] || "General") : (r[0] || "General");
     let produs = hasIdCol ? (r[2] || "") : (r[1] || "");
     let cantitate = hasIdCol ? (r[3] || "1") : (r[2] || "1");
+    let nuPartajaVal = hasIdCol ? (r[5] || "") : (r[3] || "");
+    let nuPartaja = (nuPartajaVal === true || nuPartajaVal.toString().trim().toUpperCase() === "DA" || nuPartajaVal.toString().trim().toLowerCase() === "true");
+    let owner = hasIdCol ? (r[6] || "").toString().trim() : (r[4] || "").toString().trim();
     return {
       rowId: i + 2,
       magazin: magazin.toString().trim(),
       produs: produs.toString().trim(),
-      cantitate: cantitate.toString().trim()
+      cantitate: cantitate.toString().trim(),
+      nuPartaja: nuPartaja,
+      owner: owner
     };
   }).filter(x => x.produs !== "");
 }
@@ -749,20 +762,22 @@ function getGanduriData(ss) {
   const sh = ss.getSheetByName("Notite") || ss.getSheetByName("Ganduri");
   if (!sh || sh.getLastRow() < 2) return [];
   const maxRows = sh.getLastRow();
+  const maxCols = Math.min(Math.max(sh.getLastColumn(), 3), 6);
   const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
   const hasIdCol = (header === "ID");
-  const numCols = hasIdCol ? 4 : 3;
-  const rows = sh.getRange(2, 1, maxRows - 1, numCols).getValues();
+  const rows = sh.getRange(2, 1, maxRows - 1, maxCols).getValues();
   return rows.map((r, i) => {
     let gand = hasIdCol ? (r[1] || "") : (r[0] || "");
     let sursa = hasIdCol ? (r[2] || "Personal") : (r[1] || "Personal");
     let dataVal = hasIdCol ? r[3] : r[2];
+    let user = hasIdCol ? (r[4] || "").toString().trim() : (r[3] || "").toString().trim();
     return {
       rowId: i + 2,
       gand: gand.toString().trim(),
       nota: gand.toString().trim(),
       sursa: sursa.toString().trim(),
-      data: dataVal ? parseDateToText(dataVal) : ""
+      data: dataVal ? parseDateToText(dataVal) : "",
+      user: user
     };
   }).filter(x => x.gand !== "");
 }
@@ -770,34 +785,81 @@ function getGanduriData(ss) {
 function getNoteAnaniaData(ss) {
   const sh = ss.getSheetByName("noteBIBLIA_Anania") || ss.getSheetByName("Biblia_Note");
   if (!sh || sh.getLastRow() < 2) return [];
-  const maxCols = Math.min(Math.max(sh.getLastColumn(), 4), 8);
+  const maxCols = Math.min(Math.max(sh.getLastColumn(), 4), 10);
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, maxCols).getValues();
-  return rows.map((r, idx) => {
-    // Dacă structura are 7 sau 8 coloane (ID, Cartea, Capitol, Verset, Text_Verset, Indice, Explicatie, Moment)
+
+  // Grupare pe Carte + Capitol + Verset conform specificațiilor din secțiunea 2:
+  // "A single verse can contain multiple note indices (e.g., indices a, b, c in Verse 1).
+  // In Google Sheets/Excel, the note cell for a given verse must concatenate ALL notes belonging to that verse.
+  // Each note inside the single cell must be delimited by its note index tag: [Nota A] Text for note A... [Nota B] Text for note B..."
+  const verseMap = new Map();
+
+  rows.forEach((r, idx) => {
+    let cartea = "", capitol = "", versetul = "", textVerset = "", indice = "", explicatie = "", moment = "", derventUrl = "";
+
     if (maxCols >= 7 && r[4]) {
-      return {
-        id: r[0] || (idx + 1),
-        cartea: (r[1] || "").toString().trim(),
-        capitol: (r[2] || "").toString().trim(),
-        versetul: (r[3] || "").toString().trim(),
-        textVerset: (r[4] || "").toString().trim(),
-        indice: (r[5] || "").toString().trim(),
-        explicatie: (r[6] || "").toString().trim(),
-        moment: (r[7] || "").toString().trim()
-      };
+      cartea = (r[1] || "").toString().trim();
+      capitol = (r[2] || "").toString().trim();
+      versetul = (r[3] || "").toString().trim();
+      textVerset = (r[4] || "").toString().trim();
+      indice = (r[5] || "").toString().trim();
+      explicatie = (r[6] || "").toString().trim();
+      moment = (r[7] || "").toString().trim();
+      derventUrl = (r[8] || "").toString().trim();
+    } else {
+      cartea = (r[0] || "").toString().trim();
+      versetul = (r[1] || "").toString().trim();
+      indice = (r[2] || "").toString().trim();
+      explicatie = (r[3] || "").toString().trim();
+      if (maxCols >= 5 && r[4]) textVerset = (r[4] || "").toString().trim();
     }
-    // Structură simplificată (4 coloane: Cartea, Versetul, Indice, Explicatie sau 5 coloane cu Text Verset)
-    return {
-      id: idx + 1,
-      cartea: (r[0] || "").toString().trim(),
-      capitol: "",
-      versetul: (r[1] || "").toString().trim(),
-      textVerset: (r[4] || "").toString().trim(),
-      indice: (r[2] || "").toString().trim(),
-      explicatie: (r[3] || "").toString().trim(),
-      moment: ""
-    };
-  }).filter(x => x.cartea || x.explicatie);
+
+    if (!cartea && !explicatie) return;
+
+    if (!capitol && versetul) {
+      const cvMatch = versetul.match(/(\d+)[:,\s]+(\d+.*)/);
+      if (cvMatch) {
+        capitol = cvMatch[1];
+        versetul = cvMatch[2];
+      }
+    }
+
+    const key = `${cartea}_${capitol}_${versetul}`.toLowerCase();
+    const cleanIndice = (indice || "A").toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const noteTag = `[Nota ${cleanIndice}]`;
+
+    if (verseMap.has(key)) {
+      const existing = verseMap.get(key);
+      if (textVerset && !existing.textVerset) existing.textVerset = textVerset;
+      let noteBody = explicatie.replace(/^\[Nota\s+[A-Za-z0-9]+\]\s*/i, '').trim();
+      if (!existing.explicatie.includes(noteTag)) {
+        existing.explicatie = `${existing.explicatie.trim()} ${noteTag} ${noteBody}`.trim();
+      }
+      if (existing.indices.indexOf(cleanIndice) === -1) {
+        existing.indices.push(cleanIndice);
+      }
+    } else {
+      let finalExplicatie = explicatie.trim();
+      if (!finalExplicatie.startsWith("[Nota")) {
+        finalExplicatie = `${noteTag} ${finalExplicatie}`.trim();
+      }
+      const item = {
+        id: idx + 1,
+        cartea: cartea,
+        capitol: capitol,
+        versetul: versetul,
+        textVerset: textVerset,
+        indice: cleanIndice,
+        indices: [cleanIndice],
+        explicatie: finalExplicatie,
+        moment: moment,
+        derventUrl: derventUrl
+      };
+      verseMap.set(key, item);
+    }
+  });
+
+  return Array.from(verseMap.values());
 }
 
 function getInventoryData(ss) {
