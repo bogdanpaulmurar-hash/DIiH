@@ -79,7 +79,8 @@
         </div>
       </div>
       <div class="flex items-center space-x-1.5">
-        <button onclick="promptSwitchUser()" id="headerUserSwitchBtn" class="flex items-center space-x-1 px-2 py-1 rounded-xl bg-cardbg border border-bordercol hover:border-pink-500 text-slate-200 active:scale-95 transition" title="Comută utilizator">
+        <button onclick="promptSwitchUser()" id="headerUserSwitchBtn" class="flex items-center space-x-1.5 px-2 py-1 rounded-xl bg-cardbg border border-bordercol hover:border-pink-500 text-slate-200 active:scale-95 transition" title="Comută utilizator">
+          <img id="headerUserPhoto" src="" class="hidden w-5 h-5 rounded-full object-cover border border-pink-400">
           <span id="headerUserIcon" class="text-xs">🌸</span>
           <span id="headerUserName" class="text-xs font-bold text-pink-300">Andreea</span>
         </button>
@@ -111,10 +112,13 @@
         <p id="psaltireStari" class="text-xs text-slate-300 mt-1 font-mono"></p>
       </div>
 
-      <!-- Biblia Anania (Cu Versetul Zilei & Nota de Subsol Bartolomeu Anania) -->
-      <div id="ownerWidget_biblia360" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
+      <!-- Citatul Zilei din Biblia Bartolomeu Anania (Comasare Verset + Note Dervent conform specificațiilor) -->
+      <div id="ownerWidget_biblia360" class="bg-cardbg border border-amber-800/80 rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
-          <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">📜 Biblia — Ediția Bartolomeu Anania</span>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">📜 Biblia — Ediția Bartolomeu Anania</span>
+            <span id="biblicalDayBadge" class="text-[10px] text-slate-400 font-mono"></span>
+          </div>
           <div class="flex items-center space-x-1">
             <button onclick="setBibliaMoment('dimineata')" id="btnBibliaMom_dimineata" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/70 text-amber-200 border border-amber-700">☀️ Dimineața</button>
             <button onclick="setBibliaMoment('seara')" id="btnBibliaMom_seara" class="px-2 py-0.5 rounded text-[10px] font-bold bg-darkbg text-slate-400 border border-bordercol hover:text-white">🌙 Seara</button>
@@ -122,23 +126,8 @@
             <button onclick="navBiblia(1)" class="px-1.5 py-0.5 bg-darkbg border border-bordercol rounded text-[10px] text-slate-300 hover:text-white" title="Următorul">▶</button>
           </div>
         </div>
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-[10px] text-slate-400 font-semibold uppercase">Versetul Zilei:</span>
-            <p id="biblicalRef" class="text-[11px] font-semibold text-amber-400">Matei 6, 33</p>
-          </div>
-          <p id="biblicalQuote" class="text-xs text-slate-200 italic leading-relaxed">„Căutați mai întâi împărăția lui Dumnezeu și dreptatea Lui...”</p>
-        </div>
-        <div class="pt-2 border-t border-slate-700/50 space-y-1">
-          <div class="flex items-center justify-between mb-0.5">
-            <span class="text-[10px] text-amber-300/90 font-semibold uppercase">Notă de subsol & Tâlcuire (Mitropolitul Bartolomeu Anania):</span>
-            <span id="biblicalNoteIndice" class="text-[9px] bg-amber-950 border border-amber-800 text-amber-300 px-1.5 py-0.2 rounded font-mono font-bold">Nota a</span>
-          </div>
-          <p id="biblicalNoteText" class="text-xs text-slate-300 leading-relaxed font-sans">«Împărăția lui Dumnezeu»: Stăpânirea Duhului Sfânt în inima omului curățit de patimi.</p>
-          <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
-            <a id="biblicalExternalLink" href="https://biblia.dervent.ro" target="_blank" class="text-cyan-400 hover:underline">Accesează pe biblia.dervent.ro ↗</a>
-            <span id="biblicalDayBadge" class="text-slate-500 font-mono">Ziua 1</span>
-          </div>
+        <div id="bibliaRenderContainer" class="space-y-3">
+          <!-- Dinamic generat de updateBibliaQuoteDisplay() conform specificațiilor exacte de afișare -->
         </div>
       </div>
 
@@ -702,6 +691,12 @@
           <input type="text" id="shopCantitate" onkeydown="handleShopKeyDown(event)" placeholder="Cantitate (1 kg, 2 buc)" value="1" class="bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500">
         </div>
         <input type="text" id="shopProdus" onkeydown="handleShopKeyDown(event)" placeholder="Nume produs... (Apasă Enter pentru adăugare instantă)" class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500">
+        <div class="flex items-center space-x-2 px-1">
+          <label class="flex items-center space-x-2 text-xs text-slate-300 cursor-pointer select-none">
+            <input type="checkbox" id="shopNuPartaja" class="w-4 h-4 rounded bg-darkbg border-bordercol text-emerald-600 focus:ring-0">
+            <span>🔒 Nu partaja (rămâne privat doar pe profilul meu)</span>
+          </label>
+        </div>
         <button onclick="addShoppingItem()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-medium text-xs py-2.5 rounded-xl active:scale-95 transition">➕ Adaugă pe listă</button>
       </div>
 
@@ -1055,6 +1050,21 @@
                 <span>🚪</span>
                 <span>Deconectare</span>
               </button>
+            </div>
+            <!-- Poză de profil personalizată (Strict izolată per profil) -->
+            <div class="pt-2 border-t border-bordercol/50 space-y-2">
+              <span class="text-[10px] text-slate-400 block font-bold uppercase">Poză de Profil (Header Avatar):</span>
+              <div class="flex items-center space-x-3">
+                <img id="settingsProfilePicPreview" src="" class="hidden w-12 h-12 rounded-full object-cover border-2 border-cyan-400 shadow">
+                <div id="settingsProfilePicPlaceholder" class="w-12 h-12 rounded-full bg-slate-800 border border-dashed border-bordercol flex items-center justify-center text-xl text-slate-400">👤</div>
+                <div class="flex-1 space-y-1">
+                  <label class="block text-center text-xs bg-slate-800 hover:bg-slate-700 text-cyan-200 border border-bordercol py-1.5 px-3 rounded-lg cursor-pointer transition">
+                    📸 Încarcă poza
+                    <input type="file" id="profilePicInput" accept="image/*" onchange="handleProfilePhotoSelect(event)" class="hidden">
+                  </label>
+                  <button onclick="clearProfilePhoto()" class="w-full text-[10px] text-rose-400 hover:text-rose-300">Elimină poza</button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1885,8 +1895,9 @@
       </div>
 
       <!-- Preview Fotografie -->
-      <div id="invDetailPhotoContainer" class="w-full flex justify-center">
-        <img id="invDetailPhoto" src="" alt="Foto Obiect" class="max-h-56 rounded-xl border border-bordercol object-cover w-full">
+      <div id="invDetailPhotoContainer" class="w-full flex flex-col items-center justify-center bg-darkbg/60 p-2 rounded-xl border border-bordercol">
+        <img id="invDetailPhoto" src="" alt="Foto Obiect" class="max-h-72 rounded-xl object-contain w-full cursor-pointer hover:opacity-95 transition shadow-lg" onclick="openInventoryPhotoFullscreen(this.src)" title="Apasă pentru mărire la rezoluție completă">
+        <span class="text-[10px] text-slate-400 mt-1 block">🔍 Apasă pe imagine pentru mărire la rezoluție maximă</span>
       </div>
 
       <!-- Proprietăți detaliate -->
@@ -1953,7 +1964,7 @@
       </div>
 
       <div class="flex items-center space-x-3">
-        <img id="inventoryPhotoPreview" src="" class="hidden w-20 h-20 rounded-xl object-cover border border-bordercol">
+        <img id="inventoryPhotoPreview" src="" class="hidden w-20 h-20 rounded-xl object-cover border border-bordercol shadow cursor-pointer" onclick="openInventoryPhotoFullscreen(this.src)" title="Apasă pentru mărire">
         <div id="inventoryPhotoPlaceholder" class="w-20 h-20 rounded-xl border border-dashed border-bordercol flex items-center justify-center text-2xl text-slate-600">📷</div>
         <div class="flex-1 space-y-1">
           <label class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-center text-slate-300 cursor-pointer block hover:border-violet-500">
@@ -2098,8 +2109,7 @@
           Conectare & Aplică Profil
         </button>
 
-        <div class="pt-2 border-t border-bordercol/60 flex items-center justify-between text-[11px]">
-          <button onclick="quickSwitchWithoutPass()" class="text-cyan-400 hover:text-cyan-300 font-medium">⚡ Comută direct fără parolă</button>
+        <div class="pt-2 border-t border-bordercol/60 flex items-center justify-end text-[11px]">
           <a href="./index.html" class="text-cyan-400 hover:text-cyan-300 font-medium">🧭 Pagina Bogdan ↗</a>
         </div>
       </div>
@@ -2108,6 +2118,12 @@
         <button onclick="closeUserLoginModal()" id="btnLoginCancel" class="text-[11px] text-slate-400 hover:text-white">Anulează</button>
       </div>
     </div>
+  </div>
+
+  <!-- MODAL ZOOM/FULLSCREEN FOTO INVENTAR -->
+  <div id="invPhotoFullscreenModal" class="hidden fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-4 cursor-pointer" onclick="closeInventoryPhotoFullscreen()">
+    <button onclick="closeInventoryPhotoFullscreen()" class="absolute top-4 right-4 text-white text-2xl p-2 bg-slate-800/80 rounded-full hover:bg-slate-700 transition">✕</button>
+    <img id="invPhotoFullscreenImg" src="" class="max-w-full max-h-[85vh] rounded-xl object-contain shadow-2xl cursor-default" onclick="event.stopPropagation()">
   </div>
 
   <script>
@@ -2189,7 +2205,11 @@
     function getUserProfileSettings(username) {
       try {
         const raw = localStorage.getItem(`diih_user_profile_${username}`);
-        if (raw) return JSON.parse(raw);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (!parsed.headerPicture) parsed.headerPicture = "";
+          return parsed;
+        }
       } catch(e) {}
       const u = APP_USERS[username] || APP_USERS["Bogdan Murar"];
       const defaultWidgets = (username === "Andreea Murar")
@@ -2202,6 +2222,7 @@
         appTitle: u.defaultTitle,
         appLogo: u.defaultLogo,
         appIconPath: u.defaultIcon,
+        headerPicture: "",
         pomelnicBatchSize: 20,
         widgets: defaultWidgets,
         widgetsOrder: ["psaltire", "biblia360", "scriptura", "anniversaries", "pomelnic", "school", "shopping", "notite", "gandul_zilei", "inventory"],
@@ -2349,8 +2370,35 @@
 
       const hName = document.getElementById('headerUserName');
       if (hName) hName.textContent = (uName === "Bogdan Murar") ? "Bogdan" : "Andreea";
-      const hIcon = document.getElementById('headerUserIcon');
-      if (hIcon) hIcon.textContent = (uName === "Bogdan Murar") ? "👤" : "🌸";
+      
+      const userPhoto = document.getElementById('headerUserPhoto');
+      const userIcon = document.getElementById('headerUserIcon');
+      if (userProf.headerPicture) {
+        if (userPhoto) {
+          userPhoto.src = userProf.headerPicture;
+          userPhoto.classList.remove('hidden');
+        }
+        if (userIcon) userIcon.classList.add('hidden');
+      } else {
+        if (userPhoto) userPhoto.classList.add('hidden');
+        if (userIcon) {
+          userIcon.textContent = (uName === "Bogdan Murar") ? "👤" : "🌸";
+          userIcon.classList.remove('hidden');
+        }
+      }
+
+      const settingsPreview = document.getElementById('settingsProfilePicPreview');
+      const settingsPlaceholder = document.getElementById('settingsProfilePicPlaceholder');
+      if (settingsPreview && settingsPlaceholder) {
+        if (userProf.headerPicture) {
+          settingsPreview.src = userProf.headerPicture;
+          settingsPreview.classList.remove('hidden');
+          settingsPlaceholder.classList.add('hidden');
+        } else {
+          settingsPreview.classList.add('hidden');
+          settingsPlaceholder.classList.remove('hidden');
+        }
+      }
 
       const btnSwitchTxt = document.getElementById('btnQuickSwitchText');
       if (btnSwitchTxt) {
@@ -2358,6 +2406,45 @@
       }
 
       applyAppBrandUI();
+    }
+
+    function handleProfilePhotoSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const maxDim = 120;
+          const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+          const uName = getCurrentLoggedInUser();
+          const prof = getUserProfileSettings(uName);
+          prof.headerPicture = dataUrl;
+          saveUserProfileSettings(uName, prof);
+          applyUserUIState();
+          showToast("Poză de profil actualizată!");
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearProfilePhoto() {
+      const uName = getCurrentLoggedInUser();
+      const prof = getUserProfileSettings(uName);
+      prof.headerPicture = '';
+      saveUserProfileSettings(uName, prof);
+      applyUserUIState();
+      showToast("Poză de profil eliminată.");
     }
 
     function promptSwitchUser(forcedTarget) {
@@ -2387,18 +2474,12 @@
 
       const userDef = APP_USERS[selectedUser];
       const validPass = (userDef ? userDef.pass : 'Ber.lin').toLowerCase();
-      // Validare flexibilă (acceptă Ber.lin, berlin, etc.)
+      // Validare strictă prin parolă (acceptă Ber.lin, berlin)
       if (!userDef || (enteredPass !== validPass && enteredPass !== 'berlin' && enteredPass !== 'ber.lin')) {
-        showToast("Parolă incorectă!");
+        showToast("Parolă incorectă! Introdu Ber.lin pentru comutare.");
         return;
       }
 
-      executeUserSwitch(selectedUser);
-    }
-
-    function quickSwitchWithoutPass() {
-      const sel = document.getElementById('loginUserSelect');
-      const selectedUser = sel ? sel.value : (getCurrentLoggedInUser() === 'Bogdan Murar' ? 'Andreea Murar' : 'Bogdan Murar');
       executeUserSwitch(selectedUser);
     }
 
@@ -2417,6 +2498,8 @@
       localStorage.setItem('diih_logged_user', selectedUser);
       applyUserUIState();
       renderAll();
+      renderGanduriList();
+      renderShoppingList();
       applyOwnerNavLayout();
       applyOwnerWidgetsVisibility();
       closeUserLoginModal();
@@ -2562,6 +2645,17 @@
         checkAndTriggerScheduledNotifications();
       }, 45000);
       checkAndTriggerScheduledNotifications();
+
+      // Trezire imediată notificări pe mobil când utilizatorul deblochează ecranul sau schimbă tabul
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) checkAndTriggerScheduledNotifications();
+      });
+      window.addEventListener('pageshow', () => {
+        checkAndTriggerScheduledNotifications();
+      });
+      window.addEventListener('focus', () => {
+        checkAndTriggerScheduledNotifications();
+      });
     });
 
     function applyAppBrandUI() {
@@ -2919,15 +3013,19 @@
         else if (isToday) bgClass = "bg-rose-950/60 border-rose-500 text-rose-200 font-bold";
         if (isSelected) bgClass += " ring-2 ring-amber-400";
 
+        const activeIcons = [];
+        if (dayData.catisma) activeIcons.push('<span class="text-rose-400 font-bold">📖</span>');
+        if (dayData.pomelnic) activeIcons.push('<span class="text-emerald-400 font-bold">📿</span>');
+        if (dayData.rugaciune) activeIcons.push('<span class="text-amber-400 font-bold">🕊️</span>');
+        if (dayData.scriptura) activeIcons.push('<span class="text-cyan-400 font-bold">📜</span>');
+        const iconsHtml = activeIcons.length > 0
+          ? `<div class="flex items-center space-x-0.5 text-[8px] leading-none pt-0.5">${activeIcons.join('')}</div>`
+          : '';
+
         cellsHtml += `
           <button onclick="selectRanduialaDay('${dStr}')" class="p-1 rounded-xl border flex flex-col items-center justify-between min-h-[44px] transition active:scale-95 ${bgClass}">
             <span class="text-[10px] ${isToday ? 'text-amber-300 font-bold' : ''}">${d}</span>
-            <div class="flex items-center space-x-0.5 text-[8px] leading-none pt-0.5">
-              <span class="${dayData.catisma ? 'text-rose-400 font-bold' : 'text-slate-600'}">📖</span>
-              <span class="${dayData.pomelnic ? 'text-emerald-400 font-bold' : 'text-slate-600'}">📿</span>
-              <span class="${dayData.rugaciune ? 'text-amber-400 font-bold' : 'text-slate-600'}">🕊️</span>
-              <span class="${dayData.scriptura ? 'text-cyan-400 font-bold' : 'text-slate-600'}">📜</span>
-            </div>
+            ${iconsHtml}
           </button>
         `;
       }
@@ -3021,16 +3119,20 @@
           const allDone = sdData.catisma && sdData.pomelnic && sdData.rugaciune && sdData.scriptura;
           const label = sd.toLocaleDateString('ro-RO', { weekday: 'short', day: 'numeric' });
 
+          const activeIcons = [];
+          if (sdData.catisma) activeIcons.push('<span class="text-rose-300">📖</span>');
+          if (sdData.pomelnic) activeIcons.push('<span class="text-emerald-300">📿</span>');
+          if (sdData.rugaciune) activeIcons.push('<span class="text-amber-300">🕊️</span>');
+          if (sdData.scriptura) activeIcons.push('<span class="text-cyan-300">📜</span>');
+          const iconsHtml = activeIcons.length > 0
+            ? `<div class="flex items-center space-x-0.5 text-[8px] pt-1">${activeIcons.join('')}</div>`
+            : '';
+
           return `
             <button onclick="selectRanduialaDay('${sdStr}')" class="shrink-0 p-2 rounded-xl border flex flex-col items-center justify-between min-w-[70px] transition active:scale-95 ${isSelected ? 'ring-2 ring-amber-400' : ''} ${allDone ? 'bg-emerald-950 border-emerald-700 text-emerald-200' : (isToday ? 'bg-rose-950/60 border-rose-600 text-rose-200' : 'bg-cardbg border-bordercol text-slate-300')}">
               <span class="text-[10px] font-bold capitalize">${label}</span>
               ${isToday ? '<span class="text-[8px] bg-rose-900 px-1 rounded font-bold uppercase my-0.5">Azi</span>' : ''}
-              <div class="flex items-center space-x-0.5 text-[8px] pt-1">
-                <span class="${sdData.catisma ? 'text-rose-300' : 'text-slate-600'}">📖</span>
-                <span class="${sdData.pomelnic ? 'text-emerald-300' : 'text-slate-600'}">📿</span>
-                <span class="${sdData.rugaciune ? 'text-amber-300' : 'text-slate-600'}">🕊️</span>
-                <span class="${sdData.scriptura ? 'text-cyan-300' : 'text-slate-600'}">📜</span>
-              </div>
+              ${iconsHtml}
             </button>
           `;
         }).join('');
@@ -3444,47 +3546,118 @@
     }
 
     // BIBLIA BARTOLOMEU ANANIA: VERSETUL ZILEI & NOTA DE SUBSOL (DIMINEAȚA / SEARA)
+    const BIBLE_BOOKS_TOTAL_CHAPTERS = {
+      "Facerea": 50, "Ieșirea": 40, "Leviticul": 27, "Numerii": 36, "Deuteronomul": 34,
+      "Iosua": 24, "Iosua Navi": 24, "Judecătorii": 21, "Rut": 4, "1 Regi": 31, "2 Regi": 24, "3 Regi": 22, "4 Regi": 25,
+      "1 Cronici": 29, "2 Cronici": 36, "1 Ezdra": 10, "Neemia": 13, "2 Ezdra": 9, "Tobit": 14, "Iudita": 16, "Estera": 10,
+      "Iov": 42, "Psalmii": 151, "Pildele lui Solomon": 31, "Pilde": 31, "Ecclesiastul": 12, "Cântarea Cântărilor": 8,
+      "Înțelepciunea lui Solomon": 19, "Înțelepciunea lui Iisus Sirah": 51, "Sirah": 51, "Isaia": 66, "Ieremia": 52,
+      "Plângerile lui Ieremia": 5, "Baruh": 5, "Epistola lui Ieremia": 1, "Iezechiel": 48, "Daniel": 14,
+      "Osea": 14, "Ioil": 3, "Amos": 9, "Obadia": 1, "Iona": 4, "Miheia": 7, "Naum": 3, "Avacum": 3, "Sofonie": 3,
+      "Agheu": 2, "Zaharia": 14, "Malahi": 4, "1 Macabei": 16, "2 Macabei": 15, "3 Macabei": 7, "3 Ezdra": 9,
+      "Matei": 28, "Evanghelia după Matei": 28, "Marcu": 16, "Evanghelia după Marcu": 16,
+      "Luca": 24, "Evanghelia după Luca": 24, "Ioan": 21, "Evanghelia după Ioan": 21,
+      "Faptele Apostolilor": 28, "Fapte": 28, "Romani": 16, "Epistola către Romani": 16,
+      "1 Corinteni": 16, "2 Corinteni": 13, "Galateni": 6, "Efeseni": 6, "Filipeni": 4, "Coloseni": 4,
+      "1 Tesaloniceni": 5, "2 Tesaloniceni": 3, "1 Timotei": 6, "2 Timotei": 4, "Tit": 3, "Filimon": 1,
+      "Evrei": 13, "Iacov": 5, "1 Petru": 5, "2 Petru": 3, "1 Ioan": 5, "2 Ioan": 1, "3 Ioan": 1, "Iuda": 1, "Apocalipsa": 22
+    };
+
     const DEFAULT_ANANIA_VERSES_NOTES = [
       {
-        cartea: "Facerea", capitol: "1", versetul: "1",
-        textVerset: "La început a făcut Dumnezeu cerul și pământul.",
-        indice: "a",
-        explicatie: "«cerul și pământul»: Universul văzut și nevăzut. Creația din nimic (ex nihilo) prin voința și puterea lui Dumnezeu, fără materie preexistentă.",
+        testament: "Vechiul Testament",
+        cartea: "Facerea",
+        capitol: "1",
+        totalCapitole: "50",
+        versetul: "1",
+        textVerset: "1 Întru'nceput^a a făcut^b Dumnezeu cerul și pământul^c",
+        indices: ["A", "B", "C"],
+        derventUrl: "https://biblia.dervent.ro/VT-Fc-01",
+        notes: [
+          {
+            indice: "A",
+            titluAnchor: "Întru'nceput",
+            textNota: "În interiorul dimensiunii nemărginite și atemporale a lui Dumnezeu se declanșează timpul prin actul creației din nimic (ex nihilo)."
+          },
+          {
+            indice: "B",
+            titluAnchor: "a făcut",
+            textNota: "Grecescul poiéo = „a face”, îl traduce pe ebraicul bara', verb ce exprimă exclusiv creația divină primară, absolută și desăvârșită."
+          },
+          {
+            indice: "C",
+            titluAnchor: "Dumnezeu cerul și pământul",
+            textNota: "Prin „cerul și pământul” (ebraism) se înțelege rezultatul creației în totalitatea ei: lumea spirituală (nevăzută) și lumea materială (văzută)."
+          }
+        ],
+        explicatie: "[Nota A] În interiorul dimensiunii nemărginite și atemporale a lui Dumnezeu se declanșează timpul prin actul creației din nimic (ex nihilo). [Nota B] Grecescul poiéo = „a face”, îl traduce pe ebraicul bara', verb ce exprimă exclusiv creația divină primară, absolută și desăvârșită. [Nota C] Prin „cerul și pământul” (ebraism) se înțelege rezultatul creației în totalitatea ei: lumea spirituală (nevăzută) și lumea materială (văzută).",
         moment: "dimineata"
       },
       {
-        cartea: "Psalmii", capitol: "22", versetul: "1-2",
-        textVerset: "Domnul mă paște și nimic nu-mi va lipsi. La loc de pășune, acolo m-a sălășluit; la apa odihnei m-a hrănit.",
-        indice: "b",
-        explicatie: "«Domnul mă paște»: Hristos, Păstorul cel Bun. Apa odihnei prefigurează apa Botezului și harul mângâietor al Duhului Sfânt.",
+        testament: "Vechiul Testament",
+        cartea: "Psalmii",
+        capitol: "22",
+        totalCapitole: "151",
+        versetul: "1-2",
+        textVerset: "1 Domnul mă paște^a și nimic nu-mi va lipsi. 2 La loc de pășune, acolo m-a sălășluit; la apa odihnei^b m-a hrănit.",
+        indices: ["A", "B"],
+        derventUrl: "https://biblia.dervent.ro/VT-Ps-22",
+        notes: [
+          {
+            indice: "A",
+            titluAnchor: "Domnul mă paște",
+            textNota: "Hristos este Păstorul cel Bun, Cel ce Se îngrijește neîncetat de sufletul omului credincios."
+          },
+          {
+            indice: "B",
+            titluAnchor: "la apa odihnei",
+            textNota: "Apa odihnei prefigurează apa curățitoare a Sfântului Botez și harul mângâietor al Duhului Sfânt."
+          }
+        ],
+        explicatie: "[Nota A] Hristos este Păstorul cel Bun, Cel ce Se îngrijește neîncetat de sufletul omului credincios. [Nota B] Apa odihnei prefigurează apa curățitoare a Sfântului Botez și harul mângâietor al Duhului Sfânt.",
         moment: "seara"
       },
       {
-        cartea: "Evanghelia după Matei", capitol: "6", versetul: "33",
-        textVerset: "Căutați mai întâi Împărăția lui Dumnezeu și dreptatea Lui, și toate acestea se vor adăuga vouă.",
-        indice: "a",
-        explicatie: "«Împărăția lui Dumnezeu»: Stăpânirea Duhului Sfânt în inima omului curățit de patimi. «Dreptatea Lui»: viețuirea virtuoasă conform poruncilor evanghelice.",
+        testament: "Noul Testament",
+        cartea: "Evanghelia după Matei",
+        capitol: "6",
+        totalCapitole: "28",
+        versetul: "33",
+        textVerset: "33 Căutați mai întâi Împărăția lui Dumnezeu^a și dreptatea Lui, și toate acestea se vor adăuga vouă.",
+        indices: ["A"],
+        derventUrl: "https://biblia.dervent.ro/NT-Mt-06",
+        notes: [
+          {
+            indice: "A",
+            titluAnchor: "Împărăția lui Dumnezeu",
+            textNota: "Stăpânirea Duhului Sfânt în inima omului curățit de patimi și viețuirea virtuoasă conform poruncilor evanghelice."
+          }
+        ],
+        explicatie: "[Nota A] Stăpânirea Duhului Sfânt în inima omului curățit de patimi și viețuirea virtuoasă conform poruncilor evanghelice.",
         moment: "dimineata"
       },
       {
-        cartea: "Evanghelia după Ioan", capitol: "1", versetul: "1-3",
-        textVerset: "La început era Cuvântul și Cuvântul era la Dumnezeu și Dumnezeu era Cuvântul. Toate prin El s-au făcut.",
-        indice: "a",
-        explicatie: "«Cuvântul» (Logos): Ipostasa Fiului lui Dumnezeu, veșnic născut din Tatăl, Creatorul a toate împreună cu Tatăl și cu Duhul Sfânt.",
-        moment: "seara"
-      },
-      {
-        cartea: "Epistola către Romani", capitol: "8", versetul: "28",
-        textVerset: "Și știm că Dumnezeu toate le lucrează spre binele celor ce-L iubesc pe El, al celor ce sunt chemați după voia Lui.",
-        indice: "c",
-        explicatie: "Providența divină îmbrățișează orice încercare sau necaz lumesc, transformându-le în trepte de desăvârșire duhovnicească pentru cei credincioși.",
-        moment: "dimineata"
-      },
-      {
-        cartea: "Filipeni", capitol: "4", versetul: "6-7",
-        textVerset: "Nu vă îngrijorați de nimic; ci în orice lucru, prin rugăciune și cerere cu mulțumire, faceți cunoscute cererile voastre înaintea lui Dumnezeu.",
-        indice: "a",
-        explicatie: "Pacea lui Dumnezeu, care covârșește orice minte, păzește inimile și cugetele întru Hristos Iisus împotriva oricărei tulburări.",
+        testament: "Noul Testament",
+        cartea: "Evanghelia după Ioan",
+        capitol: "1",
+        totalCapitole: "21",
+        versetul: "1-3",
+        textVerset: "1 La început era Cuvântul^a și Cuvântul era la Dumnezeu și Dumnezeu era Cuvântul. 2 Acesta era întru început la Dumnezeu. 3 Toate prin El s-au făcut^b.",
+        indices: ["A", "B"],
+        derventUrl: "https://biblia.dervent.ro/NT-In-01",
+        notes: [
+          {
+            indice: "A",
+            titluAnchor: "Cuvântul",
+            textNota: "Cuvântul (Logos): Ipostasa Fiului lui Dumnezeu, veșnic născut din Tatăl, Creatorul a toate împreună cu Tatăl și cu Duhul Sfânt."
+          },
+          {
+            indice: "B",
+            titluAnchor: "Toate prin El s-au făcut",
+            textNota: "Actul creației prin Cuvântul lui Dumnezeu, fără de El nimic nefăcându-se din ce s-a făcut."
+          }
+        ],
+        explicatie: "[Nota A] Cuvântul (Logos): Ipostasa Fiului lui Dumnezeu, veșnic născut din Tatăl, Creatorul a toate împreună cu Tatăl și cu Duhul Sfânt. [Nota B] Actul creației prin Cuvântul lui Dumnezeu, fără de El nimic nefăcându-se din ce s-a făcut.",
         moment: "seara"
       }
     ];
@@ -3521,13 +3694,20 @@
         const slot = (currentBibliaMoment === 'dimineata') ? 0 : 1;
         const targetIdx = Math.abs((dayOfYear * 2 + slot + currentBibliaOffset) % allNoteAnania.length);
         const item = allNoteAnania[targetIdx];
+        const cartea = item.cartea || "Sfânta Scriptură";
+        const cap = String(item.capitol || "1");
+        const totCap = item.totalCapitole || BIBLE_BOOKS_TOTAL_CHAPTERS[cartea] || "50";
         return {
-          cartea: item.cartea || "Sfânta Scriptură",
-          capitol: item.capitol || "",
-          versetul: item.versetul || "",
-          textVerset: item.textVerset || `Verset din cartea ${item.cartea} ${item.versetul ? item.versetul : ''}`,
-          indice: item.indice || "a",
-          explicatie: item.explicatie || "Tâlcuire și comentariu din ediția jubiliară a Mitropolitului Bartolomeu Valeriu Anania.",
+          cartea,
+          capitol: cap,
+          totalCapitole: totCap,
+          versetul: String(item.versetul || "1"),
+          textVerset: item.textVerset || `1 Verset din cartea ${cartea} ${item.versetul || ''}`,
+          indices: item.indices || (item.indice ? item.indice.split(/[,;\s]+/).filter(Boolean) : ["A"]),
+          explicatie: item.explicatie || "",
+          notes: item.notesDetail || null,
+          testament: item.testament || (isOldTestamentBook(cartea) ? "Vechiul Testament" : "Noul Testament"),
+          derventUrl: item.derventUrl || generateBibliaDerventUrl(cartea, cap),
           dayIndex: dayOfYear
         };
       }
@@ -3543,40 +3723,175 @@
       };
     }
 
+    function isOldTestamentBook(book) {
+      if (!book) return true;
+      const b = book.toLowerCase();
+      const ntKeywords = ['matei', 'marcu', 'luca', 'ioan', 'fapte', 'romani', 'corinteni', 'galateni', 'efeseni', 'filipeni', 'coloseni', 'tesaloniceni', 'timotei', 'tit', 'filimon', 'evrei', 'iacov', 'petru', 'iuda', 'apocalipsa'];
+      return !ntKeywords.some(kw => b.includes(kw));
+    }
+
+    function generateBibliaDerventUrl(cartea, capitol) {
+      if (!cartea) return "https://biblia.dervent.ro";
+      const capNum = String(parseInt(capitol, 10) || 1).padStart(2, '0');
+      const b = cartea.toLowerCase();
+      let code = "Fc";
+      let test = "VT";
+      if (b.includes("facere")) { code = "Fc"; test = "VT"; }
+      else if (b.includes("ieși") || b.includes("iesi")) { code = "Ies"; test = "VT"; }
+      else if (b.includes("psalm")) { code = "Ps"; test = "VT"; }
+      else if (b.includes("matei")) { code = "Mt"; test = "NT"; }
+      else if (b.includes("marcu")) { code = "Mc"; test = "NT"; }
+      else if (b.includes("luca")) { code = "Lc"; test = "NT"; }
+      else if (b.includes("ioan")) { code = "In"; test = "NT"; }
+      else if (b.includes("romani")) { code = "Rm"; test = "NT"; }
+      else if (b.includes("filipeni")) { code = "Flp"; test = "NT"; }
+      else {
+        test = isOldTestamentBook(cartea) ? "VT" : "NT";
+        code = cartea.slice(0, 2);
+      }
+      return `https://biblia.dervent.ro/${test}-${code}-${capNum}`;
+    }
+
+    function parseAnaniaNotes(entry) {
+      if (entry.notes && Array.isArray(entry.notes) && entry.notes.length > 0) {
+        return entry.notes.map(n => ({
+          indice: (n.indice || 'A').toUpperCase(),
+          titluAnchor: n.titluAnchor || '',
+          textNota: (n.textNota || '').replace(/^\[Nota\s+[A-Za-z0-9]+\]\s*/i, '').trim()
+        }));
+      }
+
+      const explicatie = entry.explicatie || '';
+      const regex = /\[Nota\s+([A-Za-z0-9]+)\]\s*([\s\S]*?)(?=(?:\[Nota\s+[A-Za-z0-9]+\]|$))/gi;
+      const parsed = [];
+      let match;
+
+      while ((match = regex.exec(explicatie)) !== null) {
+        const ind = match[1].toUpperCase();
+        const rawBody = match[2].trim();
+        let titlu = '';
+        let text = rawBody;
+        const splitMatch = rawBody.match(/^([^:\-\n\r]{2,50})\s*[:\-–—]\s*([\s\S]+)$/);
+        if (splitMatch) {
+          titlu = splitMatch[1].trim();
+          text = splitMatch[2].trim();
+        }
+        parsed.push({
+          indice: ind,
+          titluAnchor: titlu,
+          textNota: text
+        });
+      }
+
+      if (parsed.length === 0 && explicatie.trim()) {
+        const primaryIndice = (entry.indice || (entry.indices && entry.indices[0]) || 'A').toUpperCase();
+        let cleanText = explicatie.trim().replace(/^\[Nota\s+[A-Za-z0-9]+\]\s*/i, '').trim();
+        let titlu = '';
+        const splitMatch = cleanText.match(/^([^:\-\n\r]{2,50})\s*[:\-–—]\s*([\s\S]+)$/);
+        if (splitMatch) {
+          titlu = splitMatch[1].trim();
+          cleanText = splitMatch[2].trim();
+        }
+        parsed.push({
+          indice: primaryIndice,
+          titluAnchor: titlu,
+          textNota: cleanText
+        });
+      }
+
+      return parsed;
+    }
+
+    function formatBiblicalVerseText(text) {
+      if (!text) return '';
+      // Transform ^a, ^b, ^c into high-visibility inline markers
+      return text.replace(/\^([A-Za-z0-9]+)/g, (match, letter) => {
+        return `<sup class="inline-flex items-center justify-center font-bold text-amber-300 bg-amber-950/90 border border-amber-600/70 rounded px-1 py-0.2 text-[10px] mx-0.5 align-super select-none not-italic shadow-sm">${letter}</sup>`;
+      });
+    }
+
     function updateBibliaQuoteDisplay() {
       const entry = getActiveBibliaEntry();
       if (!entry) return;
-
-      const refEl = document.getElementById('biblicalRef');
-      if (refEl) {
-        const capVers = (entry.capitol ? entry.capitol : '') + (entry.versetul ? (entry.capitol ? ', ' : '') + entry.versetul : '');
-        refEl.textContent = `${entry.cartea} ${capVers}`.trim();
-      }
-
-      const quoteEl = document.getElementById('biblicalQuote');
-      if (quoteEl) {
-        quoteEl.textContent = `„${entry.textVerset}”`;
-      }
-
-      const noteTextEl = document.getElementById('biblicalNoteText');
-      if (noteTextEl) {
-        noteTextEl.textContent = entry.explicatie;
-      }
-
-      const indiceBadge = document.getElementById('biblicalNoteIndice');
-      if (indiceBadge) {
-        indiceBadge.textContent = entry.indice ? `Nota ${entry.indice}` : 'Notă Anania';
-      }
 
       const dayBadge = document.getElementById('biblicalDayBadge');
       if (dayBadge) {
         dayBadge.textContent = `Ziua ${entry.dayIndex} • ${currentBibliaMoment === 'dimineata' ? '☀️ Dimineața' : '🌙 Seara'}`;
       }
 
-      const linkEl = document.getElementById('biblicalExternalLink');
-      if (linkEl) {
-        linkEl.href = "https://biblia.dervent.ro";
-      }
+      const container = document.getElementById('bibliaRenderContainer');
+      if (!container) return;
+
+      const testament = entry.testament || (isOldTestamentBook(entry.cartea) ? "Vechiul Testament" : "Noul Testament");
+      const cartea = entry.cartea || "Facerea";
+      const capitol = entry.capitol || "1";
+      const totalCapitole = entry.totalCapitole || BIBLE_BOOKS_TOTAL_CHAPTERS[cartea] || "50";
+      const versetul = entry.versetul || "1";
+      const derventUrl = entry.derventUrl || generateBibliaDerventUrl(cartea, capitol);
+
+      const notesList = parseAnaniaNotes(entry);
+      const letterTags = notesList.map(n => `(${n.indice})`).join(', ');
+
+      const formattedVerseText = formatBiblicalVerseText(entry.textVerset);
+
+      const notesBlocksHtml = notesList.map(note => {
+        const titleAnchor = note.titluAnchor ? `${note.titluAnchor} [${note.indice}]` : `Nota [${note.indice}]`;
+        const bodyText = `[Nota ${note.indice}] ${note.textNota}`;
+        return `
+          <div class="p-3 bg-darkbg/90 rounded-xl border border-amber-900/40 space-y-1 shadow-sm">
+            <div class="text-xs font-bold text-amber-300 tracking-wide flex items-center space-x-1.5">
+              <span>📌</span>
+              <span>${titleAnchor}</span>
+            </div>
+            <div class="text-xs text-slate-200 leading-relaxed font-sans pl-1">
+              ${bodyText}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="space-y-3">
+          <!-- 1. Header Line 1 & 2. Header Line 2 -->
+          <div class="flex items-center justify-between border-b border-bordercol/60 pb-2">
+            <div class="text-xs font-extrabold text-amber-200 uppercase tracking-wider">
+              ${testament} — ${cartea}
+            </div>
+            <div class="text-[11px] font-mono text-slate-300 bg-darkbg px-2.5 py-0.5 rounded-full border border-bordercol">
+              Capitol ${capitol}/${totalCapitole}
+            </div>
+          </div>
+
+          <!-- 3. Header Line 3 -->
+          <div class="text-xs font-bold text-amber-300">
+            ${cartea} Capitol ${capitol}/${totalCapitole}, ${versetul}${letterTags ? ' ' + letterTags : ''}
+          </div>
+
+          <!-- 4. Verse Text with inline highlighted note markers -->
+          <div class="p-3.5 bg-gradient-to-br from-darkbg via-cardbg to-[#2a1d17] rounded-xl border border-amber-900/60 text-sm text-slate-100 italic leading-relaxed shadow-inner">
+            ${formattedVerseText}
+          </div>
+
+          <!-- 5. Footnote Commentary Blocks (rendered sequentially below the verse text) -->
+          <div class="space-y-2 pt-1">
+            ${notesBlocksHtml}
+          </div>
+
+          <!-- 6. Footer Source with possibility to open directly the link -->
+          <div class="pt-2 border-t border-bordercol/60 flex items-center justify-between text-[11px] text-slate-400">
+            <div class="truncate mr-2">
+              <span class="text-slate-400">Sursă: </span>
+              <a href="${derventUrl}" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:text-amber-300 underline font-mono break-all">
+                ${derventUrl}
+              </a>
+            </div>
+            <a href="${derventUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 text-amber-300 hover:text-white bg-darkbg px-2.5 py-1 rounded-lg border border-amber-800/60 transition shrink-0 font-bold active:scale-95 text-xs shadow-sm">
+              <span>Deschide</span>
+              <span>↗</span>
+            </a>
+          </div>
+        </div>
+      `;
     }
 
     // 1. ANIVERSĂRI
@@ -5104,41 +5419,53 @@
       document.getElementById('btnCancelGandEdit').classList.add('hidden');
     }
 
+    function getCurrentUserGanduri() {
+      const curUser = getCurrentLoggedInUser();
+      return allGanduri.filter(g => {
+        const owner = g.user || g.author;
+        if (!owner) return curUser === "Bogdan Murar";
+        return owner === curUser;
+      });
+    }
+
     function saveOrUpdateGand() {
       const gand = document.getElementById('gandInput').value.trim();
       const sursa = document.getElementById('gandSursa').value.trim() || 'Personal';
       if (!gand) return;
+      const curUser = getCurrentLoggedInUser();
 
       if (editingGandRowId) {
         const g = allGanduri.find(x => x.rowId === editingGandRowId);
         if (g) {
           g.gand = gand;
           g.sursa = sursa;
+          if (!g.user && !g.author) g.user = curUser;
         }
         localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
-        showToast("Gând actualizat!");
+        showToast("Notiță actualizată!");
 
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGand&rowId=${editingGandRowId}&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGand&rowId=${editingGandRowId}&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&callback=void`;
         document.body.appendChild(script);
 
         cancelGandEdit();
       } else {
         const newRowId = allGanduri.length + 2;
-        allGanduri.unshift({ rowId: newRowId, gand: gand, sursa: sursa, data: new Date().toLocaleDateString('ro-RO') });
+        allGanduri.unshift({ rowId: newRowId, gand: gand, sursa: sursa, data: new Date().toLocaleDateString('ro-RO'), user: curUser, author: curUser });
         localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
-        showToast("Gând salvat!");
+        showToast("Notiță salvată!");
 
         // Golim doar textul gândului, sursa rămâne precompletată!
         document.getElementById('gandInput').value = '';
         document.getElementById('gandInput').focus(); // Cursorul revine automat!
 
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&callback=void`;
         document.body.appendChild(script);
       }
 
       renderGanduriList();
+      updateTodayWidgetView();
     }
 
     function deleteGand(rowId) {
@@ -5148,7 +5475,8 @@
       allGanduri.forEach((g, idx) => { g.rowId = idx + 2; });
       localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
       renderGanduriList();
-      showToast("Gând șters!");
+      updateTodayWidgetView();
+      showToast("Notiță ștearsă!");
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteGand&rowId=${rowId}&gand=${encodeURIComponent(gandText)}&callback=void`;
@@ -5157,13 +5485,15 @@
 
     function renderGanduriList() {
       const container = document.getElementById('savedGanduriList');
-      if (allGanduri.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">Niciun gând salvat.</p>`;
+      if (!container) return;
+      const userGanduri = getCurrentUserGanduri();
+      if (userGanduri.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">Nicio notiță salvată pentru profilul curent.</p>`;
         return;
       }
 
       if (!isGanduriGrouped) {
-        container.innerHTML = allGanduri.map(g => `
+        container.innerHTML = userGanduri.map(g => `
           <div class="p-3 bg-cardbg border border-bordercol rounded-xl text-xs space-y-1 relative">
             <div class="absolute top-2 right-2 flex items-center space-x-1">
               <button onclick="startEditGand(${g.rowId})" class="text-slate-400 hover:text-cyan-300 p-1">✏️</button>
@@ -5178,7 +5508,7 @@
         `).join('');
       } else {
         const groups = {};
-        allGanduri.forEach(g => {
+        userGanduri.forEach(g => {
           const s = g.sursa || 'Personal';
           if (!groups[s]) groups[s] = [];
           groups[s].push(g);
@@ -5210,7 +5540,17 @@
       }
     }
 
-    // 7. CUMPĂRĂTURI (ENTER AUTOMAT, MAGAZIN PĂSTRAT, CURSOR POZIȚIONAT)
+    // 7. CUMPĂRĂTURI (ENTER AUTOMAT, MAGAZIN PĂSTRAT, CURSOR POZIȚIONAT, OPȚIUNE PRIVAT)
+    function getVisibleShoppingItems() {
+      const curUser = getCurrentLoggedInUser();
+      return allShopping.filter(item => {
+        const isPrivate = item.nuPartaja === true || item.nuPartaja === 'true' || item.nuPartaja === 'TRUE' || item.nuPartaja === 1;
+        if (!isPrivate) return true;
+        const owner = item.owner || item.author;
+        return owner === curUser;
+      });
+    }
+
     function toggleShoppingGrouping() {
       isShoppingGrouped = !isShoppingGrouped;
       document.getElementById('btnToggleShoppingGroup').textContent = `Grupate: ${isShoppingGrouped ? 'DA' : 'NU'}`;
@@ -5228,20 +5568,24 @@
       const magazin = document.getElementById('shopMagazin').value.trim() || 'General';
       const produs = document.getElementById('shopProdus').value.trim();
       const cantitate = document.getElementById('shopCantitate').value.trim() || '1';
+      const nuPartaja = document.getElementById('shopNuPartaja') ? document.getElementById('shopNuPartaja').checked : false;
+      const curUser = getCurrentLoggedInUser();
       if (!produs) return;
 
       const newRowId = allShopping.length + 2;
-      allShopping.push({ rowId: newRowId, magazin, produs, cantitate });
+      allShopping.push({ rowId: newRowId, magazin, produs, cantitate, nuPartaja, owner: curUser });
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       renderShoppingList();
-      showToast("Produs adăugat!");
+      updateTodayWidgetView();
+      showToast(nuPartaja ? "Produs adăugat (privat, doar pentru tine)!" : "Produs adăugat!");
 
       // Golim produsul, magazinul rămâne păstrat!
       document.getElementById('shopProdus').value = '';
+      if (document.getElementById('shopNuPartaja')) document.getElementById('shopNuPartaja').checked = false;
       document.getElementById('shopProdus').focus(); // Cursorul revine automat!
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&author=${encodeURIComponent(deviceName)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&author=${encodeURIComponent(deviceName)}&nuPartaja=${nuPartaja ? 'true' : 'false'}&owner=${encodeURIComponent(curUser)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -5253,6 +5597,7 @@
       allShopping.forEach((item, idx) => { item.rowId = idx + 2; });
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       renderShoppingList();
+      updateTodayWidgetView();
       showToast("Cumpărat!");
 
       const script = document.createElement('script');
@@ -5264,6 +5609,7 @@
       allShopping = allShopping.filter(item => item.magazin !== magazin);
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       renderShoppingList();
+      updateTodayWidgetView();
       showToast(`Tot magazinul ${magazin} cumpărat!`);
 
       const script = document.createElement('script');
@@ -5273,27 +5619,34 @@
 
     function renderShoppingList() {
       const container = document.getElementById('shoppingListContainer');
-      if (allShopping.length === 0) {
+      const visibleItems = getVisibleShoppingItems();
+      if (visibleItems.length === 0) {
         container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">Lista este goală.</p>`;
         return;
       }
 
       if (!isShoppingGrouped) {
-        container.innerHTML = allShopping.map(item => `
-          <div class="p-2.5 bg-cardbg border border-bordercol rounded-xl flex items-center justify-between text-xs">
-            <div>
-              <span class="font-semibold text-white">${item.produs}</span>
-              <span class="text-slate-400 text-[11px] block">${item.magazin} • Cantitate: ${item.cantitate}</span>
+        container.innerHTML = visibleItems.map(item => {
+          const isPriv = item.nuPartaja === true || item.nuPartaja === 'true' || item.nuPartaja === 'TRUE' || item.nuPartaja === 1;
+          return `
+            <div class="p-2.5 bg-cardbg border border-bordercol rounded-xl flex items-center justify-between text-xs">
+              <div>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-semibold text-white">${item.produs}</span>
+                  ${isPriv ? '<span class="text-[9px] bg-amber-950/80 border border-amber-700/80 text-amber-300 px-1 py-0.2 rounded font-semibold">🔒 Nu partaja</span>' : ''}
+                </div>
+                <span class="text-slate-400 text-[11px] block">${item.magazin} • Cantitate: ${item.cantitate}</span>
+              </div>
+              <button onclick="removeShoppingItem(${item.rowId})" class="p-1.5 text-slate-400 hover:text-emerald-400 border border-slate-700 rounded-lg text-xs flex items-center space-x-1">
+                <span>✔</span>
+                <span class="text-[10px]">Cumpărat</span>
+              </button>
             </div>
-            <button onclick="removeShoppingItem(${item.rowId})" class="p-1.5 text-slate-400 hover:text-emerald-400 border border-slate-700 rounded-lg text-xs flex items-center space-x-1">
-              <span>✔</span>
-              <span class="text-[10px]">Cumpărat</span>
-            </button>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       } else {
         const groups = {};
-        allShopping.forEach(item => {
+        visibleItems.forEach(item => {
           const m = item.magazin || 'General';
           if (!groups[m]) groups[m] = [];
           groups[m].push(item);
@@ -5308,15 +5661,21 @@
                 <button onclick="markWholeStoreCompleted('${magazin}')" class="text-[10px] bg-emerald-950 border border-emerald-800 text-emerald-300 px-2 py-0.5 rounded-lg hover:bg-emerald-900">Bifează tot magazinul</button>
               </div>
               <div class="space-y-1.5">
-                ${groups[magazin].map(item => `
-                  <div class="flex items-center justify-between text-xs py-1">
-                    <div>
-                      <span class="text-white">${item.produs}</span>
-                      <span class="text-slate-500 text-[10px] block">Cantitate: ${item.cantitate}</span>
+                ${groups[magazin].map(item => {
+                  const isPriv = item.nuPartaja === true || item.nuPartaja === 'true' || item.nuPartaja === 'TRUE' || item.nuPartaja === 1;
+                  return `
+                    <div class="flex items-center justify-between text-xs py-1">
+                      <div>
+                        <div class="flex items-center space-x-1.5">
+                          <span class="text-white">${item.produs}</span>
+                          ${isPriv ? '<span class="text-[9px] bg-amber-950/80 border border-amber-700/80 text-amber-300 px-1 py-0.2 rounded font-semibold">🔒 Nu partaja</span>' : ''}
+                        </div>
+                        <span class="text-slate-500 text-[10px] block">Cantitate: ${item.cantitate}</span>
+                      </div>
+                      <button onclick="removeShoppingItem(${item.rowId})" class="p-1 text-slate-400 hover:text-emerald-400 border border-slate-800 rounded px-2">✔</button>
                     </div>
-                    <button onclick="removeShoppingItem(${item.rowId})" class="p-1 text-slate-400 hover:text-emerald-400 border border-slate-800 rounded px-2">✔</button>
-                  </div>
-                `).join('')}
+                  `;
+                }).join('')}
               </div>
             </div>
           `;
@@ -5398,26 +5757,68 @@
     }
 
 
-    let lastNotifiedMinuteMap = {};
+    function getNotifsTriggeredToday() {
+      try {
+        const todayDateStr = new Date().toISOString().split('T')[0];
+        const raw = localStorage.getItem('diih_notifs_triggered_today');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.date === todayDateStr && parsed.keys) {
+            return parsed.keys;
+          }
+        }
+        const fresh = { date: todayDateStr, keys: {} };
+        localStorage.setItem('diih_notifs_triggered_today', JSON.stringify(fresh));
+        return fresh.keys;
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function markNotifTriggeredToday(key) {
+      try {
+        const todayDateStr = new Date().toISOString().split('T')[0];
+        const raw = localStorage.getItem('diih_notifs_triggered_today');
+        let data = { date: todayDateStr, keys: {} };
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed && parsed.date === todayDateStr && parsed.keys) {
+              data = parsed;
+            }
+          } catch (e) {}
+        }
+        data.keys[key] = true;
+        localStorage.setItem('diih_notifs_triggered_today', JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function isTimeSlotDue(slotTimeStr, currentMinutes) {
+      if (!slotTimeStr || !slotTimeStr.includes(':')) return false;
+      const parts = slotTimeStr.split(':');
+      const targetMin = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+      if (isNaN(targetMin)) return false;
+      const diff = currentMinutes - targetMin;
+      return diff >= 0 && diff <= 120;
+    }
 
     function checkAndTriggerScheduledNotifications() {
       const now = new Date();
-      const currentHH = String(now.getHours()).padStart(2, '0');
-      const currentMM = String(now.getMinutes()).padStart(2, '0');
-      const currentTimeStr = `${currentHH}:${currentMM}`;
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
       const todayDateStr = now.toISOString().split('T')[0];
 
       const savedConfig = JSON.parse(localStorage.getItem('diih_notifications_multi') || '{}');
       if (!savedConfig || Object.keys(savedConfig).length === 0) return;
+      const triggeredToday = getNotifsTriggeredToday();
 
       Object.keys(savedConfig).forEach(catId => {
         if (catId === 'individualAnniversary') return; // tratat separat mai jos, nu e un array de praguri
         const slots = savedConfig[catId] || [];
         slots.forEach((slot, idx) => {
-          if (!slot.t || slot.t !== currentTimeStr) return;
-          const key = `${todayDateStr}_${catId}_${idx}_${currentTimeStr}`;
-          if (lastNotifiedMinuteMap[key]) return; // deja declanșat în acest minut
-          lastNotifiedMinuteMap[key] = true;
+          if (!slot.t || !isTimeSlotDue(slot.t, currentMinutes)) return;
+          const key = `${catId}_${idx}_${slot.t}`;
+          if (triggeredToday[key]) return; // deja declanșat astăzi
+          markNotifTriggeredToday(key);
 
           let msg = slot.m || 'Alertă programată DIiH';
           let title = `DIiH [${catId.toUpperCase()}]`;
@@ -5434,7 +5835,7 @@
           } else if (catId === 'biblia') {
             const entry = getActiveBibliaEntry();
             title = `📜 ${entry.cartea} • Versetul & Nota Zilei`;
-            msg = `„${entry.textVerset}”\n\n📖 [${entry.indice}]: ${entry.explicatie}`;
+            msg = `„${entry.textVerset}”\n\n📖 [${entry.indices || entry.indice || 'Nota'}]: ${(entry.noteConcatenate || entry.explicatie || '').substring(0, 150)}...`;
           }
 
           triggerNotification(title, msg);
@@ -5444,12 +5845,12 @@
 
       // Notificare individuală per persoană (nume + vârstă) pentru fiecare aniversare/pomenire de astăzi
       const indivConfig = savedConfig.individualAnniversary;
-      if (indivConfig && indivConfig.enabled && indivConfig.time === currentTimeStr) {
+      if (indivConfig && indivConfig.enabled && isTimeSlotDue(indivConfig.time, currentMinutes)) {
         const matches = computeTodaysAnniversaries(allPeople);
         matches.forEach(m => {
-          const key = `${todayDateStr}_indiv_${m.person.rowId}_${m.type}_${currentTimeStr}`;
-          if (lastNotifiedMinuteMap[key]) return;
-          lastNotifiedMinuteMap[key] = true;
+          const key = `indiv_${m.person.rowId}_${m.type}_${indivConfig.time}`;
+          if (triggeredToday[key]) return;
+          markNotifTriggeredToday(key);
 
           const numeComplet = `${m.person.prenume} ${m.person.nume}`.trim();
           let title, msg;
@@ -6501,7 +6902,7 @@
       if (state) {
         updated = Array.from(new Set([...active, widgetId]));
       } else {
-        updated = active.filter(id => id !== widgetId);
+        updated = active.filter(id => id !== widgetId && id !== (widgetId === 'gandul_zilei' ? 'ganduri' : null));
       }
       setOwnerWidgetsConfig(updated);
       applyOwnerWidgetsVisibility();
@@ -6512,16 +6913,19 @@
         const currentUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : '';
         const profile = (typeof getUserProfileSettings === 'function' && currentUser) ? getUserProfileSettings(currentUser) : null;
         if (profile && Array.isArray(profile.widgets)) {
-          let list = [...profile.widgets];
-          if (list.includes('ganduri') && !list.includes('notite')) list.push('notite');
-          if (list.includes('ganduri') && !list.includes('gandul_zilei')) list.push('gandul_zilei');
+          let list = profile.widgets.filter(id => id !== 'ganduri');
+          if (profile.widgets.length !== list.length) {
+            profile.widgets = list;
+            saveUserProfileSettings(currentUser, profile);
+          }
           return list;
         }
         const saved = JSON.parse(localStorage.getItem('diih_owner_widgets') || 'null');
         if (Array.isArray(saved)) {
-          let list = [...saved];
-          if (list.includes('ganduri') && !list.includes('notite')) list.push('notite');
-          if (list.includes('ganduri') && !list.includes('gandul_zilei')) list.push('gandul_zilei');
+          let list = saved.filter(id => id !== 'ganduri');
+          if (saved.length !== list.length) {
+            localStorage.setItem('diih_owner_widgets', JSON.stringify(list));
+          }
           return list;
         }
         return ALL_OWNER_WIDGET_DEFS.map(w => w.id);
@@ -7165,28 +7569,72 @@
       reader.onload = function(e) {
         const img = new Image();
         img.onload = function() {
-          const maxW = 160;
-          const scale = Math.min(1, maxW / img.width);
+          const maxDim = 640;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+
           const canvas = document.createElement('canvas');
-          canvas.width = img.width * scale;
-          canvas.height = img.height * scale;
+          canvas.width = w;
+          canvas.height = h;
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.45);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, w, h);
+
+          let quality = 0.78;
+          let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+          // Păstrăm sub limita de siguranță pentru Google Sheets (~45k caractere)
+          if (dataUrl.length > 45000) {
+            quality = 0.60;
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+          if (dataUrl.length > 45000) {
+            const smallerCanvas = document.createElement('canvas');
+            smallerCanvas.width = Math.round(w * 0.75);
+            smallerCanvas.height = Math.round(h * 0.75);
+            const sCtx = smallerCanvas.getContext('2d');
+            sCtx.imageSmoothingEnabled = true;
+            sCtx.imageSmoothingQuality = 'high';
+            sCtx.drawImage(canvas, 0, 0, smallerCanvas.width, smallerCanvas.height);
+            dataUrl = smallerCanvas.toDataURL('image/jpeg', 0.60);
+          }
+
           inventoryPendingPhotoBase64 = dataUrl;
 
           const preview = document.getElementById('inventoryPhotoPreview');
           preview.src = dataUrl;
           preview.classList.remove('hidden');
           document.getElementById('inventoryPhotoPlaceholder').classList.add('hidden');
-
-          if (dataUrl.length > 15000) {
-            showToast("Atenție: poza este destul de mare, s-ar putea să nu se salveze corect.");
-          }
+          showToast("Fotografie procesată la claritate optimă!");
         };
         img.src = e.target.result;
       };
       reader.readAsDataURL(file);
+    }
+
+    function openInventoryPhotoFullscreen(src) {
+      if (!src) return;
+      const modal = document.getElementById('invPhotoFullscreenModal');
+      const img = document.getElementById('invPhotoFullscreenImg');
+      if (modal && img) {
+        img.src = src;
+        modal.classList.remove('hidden');
+      }
+    }
+
+    function closeInventoryPhotoFullscreen() {
+      const modal = document.getElementById('invPhotoFullscreenModal');
+      if (modal) modal.classList.add('hidden');
     }
 
     function clearInventoryPhoto() {
