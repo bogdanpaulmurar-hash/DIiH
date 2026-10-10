@@ -58,6 +58,8 @@ function doGet(e) {
     if (e.parameter.pomelnicBatchSize) setSettingValue(sh, "pomelnic_batch_size", e.parameter.pomelnicBatchSize);
     if (e.parameter.psaltireBatchSize) setSettingValue(sh, "psaltire_batch_size", e.parameter.psaltireBatchSize);
     if (e.parameter.sharingConfigJson) setSettingValue(sh, "sharing_config_json", e.parameter.sharingConfigJson);
+    if (e.parameter.randuialaTrackerJson) setSettingValue(sh, "randuiala_tracker_json", e.parameter.randuialaTrackerJson);
+    if (e.parameter.userProfilesJson) setSettingValue(sh, "user_profiles_json", e.parameter.userProfilesJson);
     return returnResponse(e, { success: true });
   }
 
@@ -169,27 +171,28 @@ function doGet(e) {
     }
   }
 
-  // 5. GÂNDURI (Structură suportată: cu ID pe Col 1 sau direct Gand pe Col 1)
-  if (action === "addGand") {
-    let sh = ss.getSheetByName("Ganduri");
+  // 5. NOTIȚE & GÂNDURI (Suport pentru tab separat "Notite" sau fallback pe "Ganduri")
+  if (action === "addGand" || action === "addNote" || action === "addNotita") {
+    let sh = ss.getSheetByName("Notite") || ss.getSheetByName("Ganduri");
     if (!sh) {
-      sh = ss.insertSheet("Ganduri");
+      sh = ss.insertSheet("Notite");
       sh.appendRow(["ID", "Gand", "Sursa", "DataCreare"]);
       sh.getRange("A1:D1").setFontWeight("bold");
     }
     const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
     const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+    const noteContent = e.parameter.gand || e.parameter.nota || e.parameter.notita || e.parameter.text || "";
     if (header === "ID") {
-      const gandId = e.parameter.id || ("GAND-" + Date.now());
+      const gandId = e.parameter.id || ("NOTE-" + Date.now());
       sh.appendRow([
         gandId,
-        e.parameter.gand,
+        noteContent,
         e.parameter.sursa || "Personal",
         dataCreare
       ]);
     } else {
       sh.appendRow([
-        e.parameter.gand,
+        noteContent,
         e.parameter.sursa || "Personal",
         dataCreare
       ]);
@@ -197,27 +200,28 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
-  if (action === "updateGand") {
-    let sh = ss.getSheetByName("Ganduri");
+  if (action === "updateGand" || action === "updateNote" || action === "updateNotita") {
+    let sh = ss.getSheetByName("Notite") || ss.getSheetByName("Ganduri");
     let rowId = parseInt(e.parameter.rowId, 10);
+    const noteContent = e.parameter.gand || e.parameter.nota || e.parameter.notita || e.parameter.text || "";
     if (sh && rowId >= 2 && rowId <= sh.getLastRow()) {
       const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
       const colOffset = (header === "ID") ? 1 : 0;
-      sh.getRange(rowId, 1 + colOffset).setValue(e.parameter.gand);
-      sh.getRange(rowId, 2 + colOffset).setValue(e.parameter.sursa);
+      sh.getRange(rowId, 1 + colOffset).setValue(noteContent);
+      if (e.parameter.sursa) sh.getRange(rowId, 2 + colOffset).setValue(e.parameter.sursa);
       return returnResponse(e, { success: true });
     }
   }
 
-  if (action === "deleteGand") {
-    let sh = ss.getSheetByName("Ganduri");
+  if (action === "deleteGand" || action === "deleteNote" || action === "deleteNotita") {
+    let sh = ss.getSheetByName("Notite") || ss.getSheetByName("Ganduri");
     if (!sh || sh.getLastRow() < 2) return returnResponse(e, { success: true });
     
-    let targetGand = (e.parameter.gand || "").toString().trim();
+    let targetGand = (e.parameter.gand || e.parameter.nota || e.parameter.notita || e.parameter.text || "").toString().trim();
     let rowId = parseInt(e.parameter.rowId, 10);
     let deleted = false;
 
-    // 1. Căutăm după textul gândului (asigură ștergerea corectă chiar dacă rândurile s-au decalat)
+    // 1. Căutăm după textul gândului / notiței (asigură ștergerea corectă chiar dacă rândurile s-au decalat)
     if (targetGand) {
       const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
       const col = (header === "ID") ? 2 : 1;
@@ -506,21 +510,25 @@ function doGet(e) {
   // 9. PRELUARE COMPLETĂ DATE PENTRU APLICAȚIE (RĂSPUNS 1:1)
   if (action === "getLiveData") {
     // Sincronizare ușoară/rapidă (fără Pomelnic 990 rânduri și fără Biblia 360) - folosită la polling frecvent
+    const notesList = getGanduriData(ss);
     const liveData = {
       settings: getSettingsData(ss),
       cumparaturi: getCumparaturiData(ss),
-      ganduri: getGanduriData(ss),
+      ganduri: notesList,
+      notite: notesList,
       schoolActivities: getSchoolActivitiesData(ss),
       psaltireGrup: getPsaltireGrupData(ss)
     };
     return returnResponse(e, liveData);
   }
 
+  const notesList = getGanduriData(ss);
   const responseData = {
     settings: getSettingsData(ss),
     pomelnic: getPomelnicData(ss),
     cumparaturi: getCumparaturiData(ss),
-    ganduri: getGanduriData(ss),
+    ganduri: notesList,
+    notite: notesList,
     noteAnania: getNoteAnaniaData(ss),
     bibliaBVA: getBiblia360Data(ss),
     schoolActivities: getSchoolActivitiesData(ss),
@@ -553,7 +561,9 @@ function getSettingsData(ss) {
     pomelnicBatchSize: 20, 
     psaltireBatchSize: 20, 
     notificationsJson: "",
-    sharingConfigJson: ""
+    sharingConfigJson: "",
+    randuialaTrackerJson: "",
+    userProfilesJson: ""
   };
   if (!sh || sh.getLastRow() < 2) return cfg;
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
@@ -567,6 +577,8 @@ function getSettingsData(ss) {
     if (k === "psaltire_batch_size" && v) cfg.psaltireBatchSize = parseInt(v, 10) || 20;
     if (k === "notifications_config_json" && v) cfg.notificationsJson = v.toString();
     if (k === "sharing_config_json" && v) cfg.sharingConfigJson = v.toString();
+    if (k === "randuiala_tracker_json" && v) cfg.randuialaTrackerJson = v.toString();
+    if (k === "user_profiles_json" && v) cfg.userProfilesJson = v.toString();
   });
   return cfg;
 }
@@ -734,7 +746,7 @@ function getCumparaturiData(ss) {
 }
 
 function getGanduriData(ss) {
-  const sh = ss.getSheetByName("Ganduri");
+  const sh = ss.getSheetByName("Notite") || ss.getSheetByName("Ganduri");
   if (!sh || sh.getLastRow() < 2) return [];
   const maxRows = sh.getLastRow();
   const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
@@ -748,6 +760,7 @@ function getGanduriData(ss) {
     return {
       rowId: i + 2,
       gand: gand.toString().trim(),
+      nota: gand.toString().trim(),
       sursa: sursa.toString().trim(),
       data: dataVal ? parseDateToText(dataVal) : ""
     };
