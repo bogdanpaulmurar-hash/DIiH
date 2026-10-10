@@ -261,13 +261,35 @@
         <div id="ownerWidgetShoppingContent" class="space-y-1 text-xs text-slate-300"></div>
       </div>
 
-      <!-- Gândul Zilei -->
-      <div id="ownerWidget_ganduri" onclick="switchTab('ganduri')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-600/60 active:scale-98 transition space-y-2">
+      <!-- Notițe Personale (fost Gânduri) -->
+      <div id="ownerWidget_notite" onclick="switchTab('notite')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-600/60 active:scale-98 transition space-y-2">
         <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
-          <span>💡 Gândul Zilei</span>
-          <span id="ownerWidgetGanduriBadge" class="bg-amber-950 border border-amber-800 px-2 py-0.5 rounded-full text-[10px]">Recent</span>
+          <div class="flex items-center space-x-1.5">
+            <span>📝 Notițe</span>
+            <span class="text-[10px] text-slate-500 font-normal">Deschide secțiunea</span>
+          </div>
+          <span id="ownerWidgetNotiteBadge" class="bg-amber-950 border border-amber-800 px-2 py-0.5 rounded-full text-[10px]">0 notițe</span>
         </div>
-        <div id="ownerWidgetGanduriContent" class="text-xs text-slate-200 italic"></div>
+        <div id="ownerWidgetNotiteContent" class="text-xs text-slate-200 italic line-clamp-2"></div>
+      </div>
+
+      <!-- Gândul Zilei (Generator / Citat Rotativ Zilnic) -->
+      <div id="ownerWidget_gandul_zilei" class="bg-gradient-to-br from-cardbg to-[#221820] border border-amber-800/60 rounded-2xl p-4 shadow-sm space-y-2.5">
+        <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
+          <div class="flex items-center space-x-1.5">
+            <span>💡 Gândul Zilei</span>
+            <span id="gandulZileiThemeBadge" class="text-[9px] bg-amber-950/80 border border-amber-800/80 text-amber-300 font-bold px-1.5 py-0.2 rounded">Înțelepciune</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <span id="gandulZileiIndexBadge" class="text-[10px] text-slate-400 font-mono">1/60</span>
+            <button onclick="navGrandThought(-1)" class="p-1 text-slate-400 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition text-[10px]" title="Gândul anterior">◀</button>
+            <button onclick="navGrandThought(1)" class="p-1 text-slate-400 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition text-[10px]" title="Gândul următor">▶</button>
+            <button onclick="randomGrandThought()" class="p-1 text-amber-300 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition text-[10px]" title="Gând aleator">🎲</button>
+            <button onclick="resetGrandThoughtToToday()" class="p-1 text-slate-400 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition text-[10px]" title="Gândul de azi">📅</button>
+          </div>
+        </div>
+        <div id="ownerWidgetGrandThoughtQuote" class="text-xs text-slate-100 font-medium italic leading-relaxed pl-2.5 border-l-2 border-amber-500"></div>
+        <div id="ownerWidgetGrandThoughtAuthor" class="text-[11px] text-amber-300 font-bold text-right"></div>
       </div>
 
       <!-- Inventar & Mentenanță -->
@@ -644,16 +666,16 @@
       </div>
     </section>
 
-    <!-- TAB 4: GÂNDURI (Cu Enter, Autorefresh și Sursă Păstrată) -->
-    <section id="tab-ganduri" class="tab-content hidden space-y-4">
+    <!-- TAB 4: NOTIȚE (Fost Gânduri, Cu Enter, Autorefresh și Sursă Păstrată) -->
+    <section id="tab-notite" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-3 shadow-sm">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
-          <h3 id="gandFormTitle" class="text-xs font-semibold text-amber-300 uppercase tracking-wider">✍️ Notează Gândul Zilei</h3>
+          <h3 id="gandFormTitle" class="text-xs font-semibold text-amber-300 uppercase tracking-wider">✍️ Notează o Notiță Nouă</h3>
           <span id="gandEditingBadge" class="hidden text-[10px] bg-cyan-950 border border-cyan-800 text-cyan-300 px-2 py-0.5 rounded-full font-bold">Mod Editare</span>
         </div>
 
-        <textarea id="gandInput" rows="3" onkeydown="handleGandKeyDown(event)" placeholder="Scrie reflecția de azi... (Apasă Enter pentru salvare instantă)" class="w-full bg-darkbg border border-bordercol rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"></textarea>
-        <input type="text" id="gandSursa" onkeydown="handleGandKeyDown(event)" placeholder="Sursă / Carte / Autor (rămâne păstrată)" class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition">
+        <textarea id="gandInput" rows="3" onkeydown="handleGandKeyDown(event)" placeholder="Scrie o notiță, idee sau reflecție... (Apasă Enter pentru salvare instantă)" class="w-full bg-darkbg border border-bordercol rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"></textarea>
+        <input type="text" id="gandSursa" onkeydown="handleGandKeyDown(event)" placeholder="Sursă / Categorie / Etichetă (rămâne păstrată)" class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition">
         
         <div class="flex space-x-2 pt-1">
           <button onclick="saveOrUpdateGand()" id="btnSaveGand" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs py-2.5 rounded-xl active:scale-95 transition">💾 Salvează în Sheet</button>
@@ -664,7 +686,7 @@
 
       <div class="space-y-2">
         <div class="flex items-center justify-between px-1">
-          <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Gânduri salvate</h4>
+          <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Notițe salvate</h4>
           <button onclick="toggleGanduriGrouping()" id="btnToggleGanduriGroup" class="text-[10px] bg-slate-800 px-2 py-0.5 rounded-lg border border-bordercol text-slate-300">Grupate: DA</button>
         </div>
         <div id="savedGanduriList" class="space-y-2"></div>
@@ -832,9 +854,13 @@
             <span class="text-lg">🛒</span>
             <span class="text-[9px] font-bold">Cumpărături</span>
           </button>
-          <button onclick="switchTab('ganduri')" id="btnSubGanduri" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">💡</span>
-            <span class="text-[9px] font-bold">Gânduri</span>
+          <button onclick="switchTab('notite')" id="btnSubNotite" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">📝</span>
+            <span class="text-[9px] font-bold">Notițe</span>
+          </button>
+          <button onclick="switchTab('notite')" id="btnSubGanduri" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">📝</span>
+            <span class="text-[9px] font-bold">Notițe</span>
           </button>
         </div>
       </div>
@@ -1119,8 +1145,8 @@
                 <span class="text-[11px] text-slate-200">🎓 Școală</span>
               </label>
               <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="navOpt_ganduri" onchange="saveOwnerNavConfig()" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">💡 Gânduri</span>
+                <input type="checkbox" id="navOpt_notite" onchange="saveOwnerNavConfig()" checked class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📝 Notițe</span>
               </label>
               <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
                 <input type="checkbox" id="navOpt_cumparaturi" onchange="saveOwnerNavConfig()" checked class="rounded text-cyan-500 focus:ring-0">
@@ -1378,9 +1404,13 @@
         <span class="text-base">🎓</span>
         <span>Școală</span>
       </button>
-      <button onclick="switchTab('ganduri')" id="nav-ganduri" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
-        <span class="text-base">💡</span>
-        <span>Gânduri</span>
+      <button onclick="switchTab('notite')" id="nav-notite" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
+        <span class="text-base">📝</span>
+        <span>Notițe</span>
+      </button>
+      <button onclick="switchTab('notite')" id="nav-ganduri" class="hidden flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
+        <span class="text-base">📝</span>
+        <span>Notițe</span>
       </button>
       <button onclick="switchTab('cumparaturi')" id="nav-cumparaturi" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
         <span class="text-base">🛒</span>
@@ -1843,6 +1873,78 @@
   </div>
 
 
+  <!-- MODAL DETALII / PREVIEW COMPLET OBIECT INVENTAR -->
+  <div id="inventoryDetailModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-4 text-xs">
+      <div class="flex items-start justify-between border-b border-bordercol pb-2">
+        <div class="space-y-1">
+          <span id="invDetailCategoryBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-violet-950 border border-violet-800 text-violet-300 uppercase">Categorie</span>
+          <h3 id="invDetailTitle" class="text-base font-bold text-white leading-tight">Nume Obiect</h3>
+        </div>
+        <button onclick="closeInventoryDetailModal()" class="text-slate-400 hover:text-white text-lg p-1">✕</button>
+      </div>
+
+      <!-- Preview Fotografie -->
+      <div id="invDetailPhotoContainer" class="w-full flex justify-center">
+        <img id="invDetailPhoto" src="" alt="Foto Obiect" class="max-h-56 rounded-xl border border-bordercol object-cover w-full">
+      </div>
+
+      <!-- Proprietăți detaliate -->
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="p-2.5 bg-darkbg rounded-xl border border-bordercol space-y-0.5">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">📍 Spațiu / Locație:</span>
+          <span id="invDetailSpace" class="font-bold text-violet-300 text-sm"></span>
+        </div>
+        <div class="p-2.5 bg-darkbg rounded-xl border border-bordercol space-y-0.5">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">📊 Cantitate & Stare:</span>
+          <div class="flex items-center space-x-1.5 pt-0.5">
+            <span id="invDetailQty" class="font-bold text-white"></span>
+            <span id="invDetailStatus" class="text-[10px] font-bold px-1.5 py-0.5 rounded border"></span>
+          </div>
+        </div>
+        <div class="p-2.5 bg-darkbg rounded-xl border border-bordercol space-y-0.5">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">💰 Valoare Estimată:</span>
+          <span id="invDetailValue" class="font-bold text-emerald-400 text-sm"></span>
+        </div>
+        <div class="p-2.5 bg-darkbg rounded-xl border border-bordercol space-y-0.5">
+          <span class="text-[10px] text-slate-400 uppercase font-bold block">📅 Data Achiziției:</span>
+          <span id="invDetailPurchaseDate" class="font-bold text-slate-200"></span>
+        </div>
+      </div>
+
+      <!-- Mentenanță -->
+      <div id="invDetailMaintenanceBox" class="p-2.5 bg-darkbg rounded-xl border border-bordercol space-y-1">
+        <span class="text-[10px] text-slate-400 uppercase font-bold block">🔧 Următoarea Mentenanță / Verificare:</span>
+        <div id="invDetailMaintenanceContent" class="text-xs font-semibold text-slate-200"></div>
+      </div>
+
+      <!-- Notițe / Descriere -->
+      <div class="p-2.5 bg-darkbg rounded-xl border border-bordercol space-y-1">
+        <span class="text-[10px] text-slate-400 uppercase font-bold block">📝 Descriere / Notițe:</span>
+        <p id="invDetailNotes" class="text-xs text-slate-200 leading-relaxed italic whitespace-pre-wrap"></p>
+      </div>
+
+      <!-- Istoric Mutări -->
+      <div id="invDetailHistoryBox" class="p-2.5 bg-darkbg rounded-xl border border-bordercol space-y-1 hidden">
+        <span class="text-[10px] text-slate-400 uppercase font-bold block">📜 Istoric Mutări:</span>
+        <div id="invDetailHistoryList" class="space-y-1 text-[11px] text-slate-300 max-h-32 overflow-y-auto"></div>
+      </div>
+
+      <!-- Butoane Acțiuni -->
+      <div class="pt-2 flex items-center justify-between border-t border-bordercol space-x-2">
+        <button id="btnInvDetailEdit" class="flex-1 py-2.5 bg-cyan-900 hover:bg-cyan-800 border border-cyan-700 text-cyan-100 font-bold rounded-xl transition flex items-center justify-center space-x-1">
+          <span>✏️</span><span>Editează</span>
+        </button>
+        <button id="btnInvDetailMove" class="flex-1 py-2.5 bg-violet-900 hover:bg-violet-800 border border-violet-700 text-violet-100 font-bold rounded-xl transition flex items-center justify-center space-x-1">
+          <span>📦</span><span>Mută</span>
+        </button>
+        <button onclick="closeInventoryDetailModal()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition">
+          Închide
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="inventoryItemModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-3 text-xs">
       <div class="flex items-center justify-between border-b border-bordercol pb-2">
@@ -2076,7 +2178,7 @@
         defaultTitle: "Andreea",
         defaultLogo: "🌸",
         defaultIcon: DEFAULT_SHARED_APP_ICON,
-        isOwner: false
+        isOwner: true
       }
     };
 
@@ -2090,16 +2192,144 @@
         if (raw) return JSON.parse(raw);
       } catch(e) {}
       const u = APP_USERS[username] || APP_USERS["Bogdan Murar"];
+      const defaultWidgets = (username === "Andreea Murar")
+        ? ["school", "shopping", "anniversaries", "notite", "gandul_zilei", "pomelnic", "inventory", "scriptura", "psaltire", "biblia360"]
+        : ["psaltire", "biblia360", "scriptura", "anniversaries", "pomelnic", "school", "shopping", "notite", "gandul_zilei", "inventory"];
+      const defaultNav = (username === "Andreea Murar")
+        ? ["today", "calendar", "cumparaturi", "notite", "pomelnic"]
+        : ["today", "pomelnic", "calendar", "notite", "cumparaturi"];
       return {
         appTitle: u.defaultTitle,
         appLogo: u.defaultLogo,
         appIconPath: u.defaultIcon,
-        pomelnicBatchSize: 20
+        pomelnicBatchSize: 20,
+        widgets: defaultWidgets,
+        widgetsOrder: ["psaltire", "biblia360", "scriptura", "anniversaries", "pomelnic", "school", "shopping", "notite", "gandul_zilei", "inventory"],
+        navModules: defaultNav,
+        settings: { showPomelnicNamesInWidget: true }
       };
     }
 
-    function saveUserProfileSettings(username, settings) {
-      localStorage.setItem(`diih_user_profile_${username}`, JSON.stringify(settings));
+    function saveUserProfileSettings(username, newSettings) {
+      const current = getUserProfileSettings(username);
+      const updated = { ...current, ...newSettings };
+      localStorage.setItem(`diih_user_profile_${username}`, JSON.stringify(updated));
+      try {
+        const allProfiles = JSON.parse(localStorage.getItem('diih_user_profiles') || '{}');
+        allProfiles[username] = updated;
+        localStorage.setItem('diih_user_profiles', JSON.stringify(allProfiles));
+        const script = document.createElement('script');
+        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&userProfilesJson=${encodeURIComponent(JSON.stringify(allProfiles))}&callback=void`;
+        document.body.appendChild(script);
+      } catch(e) {}
+    }
+
+    // 60+ Citate Patristice & Înțelepciune Duhovnicească pentru Gândul Zilei
+    const GRAND_THOUGHTS = [
+      { quote: "Iubește și fă ce vrei: dacă taci, să taci din iubire; dacă strigi, să strigi din iubire; dacă îndrepți, să îndrepți din iubire.", author: "Fericitul Augustin" },
+      { quote: "Dobândește pacea lăuntrică și mii de oameni din jurul tău se vor mântui.", author: "Sf. Serafim de Sarov" },
+      { quote: "Rugăciunea este respirația sufletului, hrana minții și sfințirea vieții.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Dragostea lui Hristos nu se gândește la sine, ci se dăruiește întru totul aproapelui.", author: "Sf. Porfirie Kafsokalivitul" },
+      { quote: "Toate supărările și necazurile noastre vin din faptul că nu avem smerenie.", author: "Sf. Paisie Aghioritul" },
+      { quote: "Ține mintea ta în iad și nu deznădăjdui.", author: "Sf. Siluan Athonitul" },
+      { quote: "Nu căuta la alții cusururi, ci caută la tine însuți virtuțile pe care nu le ai.", author: "Sf. Vasile cel Mare" },
+      { quote: "Răbdarea în necazuri este scara ce duce de-a dreptul către Rai.", author: "Sf. Ioan Scărarul" },
+      { quote: "Dacă vrei să fii ascultat de Dumnezeu când te rogi, ascultă-l și tu pe aproapele când te roagă.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Nimic nu este mai puternic decât omul care se roagă, căci el se face părtaș puterii dumnezeiești.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Fii blând cu toți și aspru doar cu tine însuți.", author: "Sf. Grigorie Teologul" },
+      { quote: "Nu cere de la Dumnezeu să-ți ia crucea, ci cere putere să o poți duce cu mulțumire.", author: "Sf. Teofan Zăvorâtul" },
+      { quote: "Liniștea inimii este limanul în care ancorează corabia sufletului ferit de furtunile lumii.", author: "Sf. Isaac Sirul" },
+      { quote: "Cine nu iartă pe aproapele, acela taie rădăcina propriei sale iertări de la Dumnezeu.", author: "Sf. Efrem Sirul" },
+      { quote: "Fapta bună făcută în ascuns este aur curat în vistieria cerească.", author: "Părintele Cleopa Ilie" },
+      { quote: "Cea mai mare biruință a unui om este biruința asupra propriei sale voințe păcătoase.", author: "Părintele Arsenie Boca" },
+      { quote: "Bucuria este semnul că Dumnezeu locuiește în inima omului.", author: "Părintele Teofil Părăian" },
+      { quote: "Smerenia este haina lui Dumnezeu: cine se îmbracă în ea, acela devine de neînvins.", author: "Sf. Paisie Aghioritul" },
+      { quote: "Când rugăciunea este unită cu dragostea, cerul se deschide și sufletul se luminează.", author: "Sf. Porfirie Kafsokalivitul" },
+      { quote: "Duhul Sfânt se odihnește întotdeauna peste cel blând, smerit și tăcut.", author: "Sf. Serafim de Sarov" },
+      { quote: "Înfrânarea limbii este începutul înțelepciunii și al curăției sufletești.", author: "Sf. Vasile cel Mare" },
+      { quote: "Omul care mulțumește lui Dumnezeu în suferință primește îndoită mângâiere.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Nu există păcat de neiertat în afară de cel nepocăit.", author: "Sf. Isaac Sirul" },
+      { quote: "Iubirea este cununa tuturor virtuților; fără ea, toate celelalte fapte sunt goale.", author: "Sf. Maxim Mărturisitorul" },
+      { quote: "Munca cu rugăciunea curăță mintea și aduc binecuvântarea cerească în cămin.", author: "Părintele Sofian Boghiu" },
+      { quote: "Pacea sufletului este mai de preț decât toate comorile acestei lumi trecătoare.", author: "Sf. Nectarie din Eghina" },
+      { quote: "Credința fără fapte bune este ca o lampă fără untdelemn.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Cine se socotește pe sine mai prejos decât toți, acela este înălțat de harul divin.", author: "Sf. Antonie cel Mare" },
+      { quote: "Întoarce-te către inima ta și acolo Îl vei găsi pe Hristos așteptându-te.", author: "Sf. Macarie cel Mare" },
+      { quote: "Când ești nedreptățit, bucură-te, căci plata ta este mare în ceruri.", author: "Sf. Grigorie de Nyssa" },
+      { quote: "Gândul bun alungă o mie de ispite înainte ca ele să prindă rădăcină.", author: "Sf. Paisie Aghioritul" },
+      { quote: "Iartă totul tuturor, dar ție însuți nu-ți ierta nimic din ceea ce întristează pe Domnul.", author: "Sf. Teofan Zăvorâtul" },
+      { quote: "O inimă înfrântă și smerită Dumnezeu nu o va urgisi niciodată.", author: "Sf. Proroc David" },
+      { quote: "Răutatea nu se biruiește cu răutate, ci cu bunătate și îndelungă răbdare.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Cine seamănă milostenie pe pământ va secera viață veșnică în ceruri.", author: "Sf. Vasile cel Mare" },
+      { quote: "Rugăciunea fără împrăștiere este măsura cea mai înaltă a unirii cu Dumnezeu.", author: "Sf. Grigorie Palama" },
+      { quote: "Nu privi la cât de grea este crucea, ci privește la Cel ce te ajută să o porți.", author: "Părintele Arsenie Boca" },
+      { quote: "Lumina lui Hristos luminează tuturor celor ce o primesc cu inimă curată.", author: "Sf. Ilarion Felea" },
+      { quote: "Dacă vrei pace în familie, fiecare să caute să odihnească pe celălalt, nu pe sine.", author: "Sf. Paisie Aghioritul" },
+      { quote: "Cuvântul bun este ca o ploaie caldă peste un pământ însetat de dragoste.", author: "Părintele Teofil Părăian" },
+      { quote: "Orice clipă trăită în recunoștință este o treaptă urcată spre Împărăția Cerurilor.", author: "Sf. Nicolae Velimirovici" },
+      { quote: "Nu te teme de slăbiciunile tale atâta timp cât te refugiezi cu căință în brațele Domnului.", author: "Sf. Porfirie Kafsokalivitul" },
+      { quote: "Să nu treacă nicio zi fără să faci măcar o bucurie unui om necăjit.", author: "Sf. Ioan Maximovici" },
+      { quote: "Postul trupesc fără postul de osândire și clevetire este lipsit de rod.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Mintea omului este ca o moară: ce-i pui să macine, aceea va scoate.", author: "Părintele Cleopa Ilie" },
+      { quote: "Frica de Dumnezeu nu este spaimă, ci teamă sfântă de a nu pierde dragostea Lui.", author: "Sf. Vasile cel Mare" },
+      { quote: "Privește la cer când valurile vieții caută să-ți scufunde corabia credinței.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Prietenul adevărat este acela care se roagă pentru tine când tu nu mai ai putere.", author: "Sf. Grigorie Teologul" },
+      { quote: "Fiecare om pe care îl întâlnești este o icoană vie a lui Hristos.", author: "Mitropolitul Antonie de Suroj" },
+      { quote: "Când ierți din inimă, vindeci mai întâi propria ta rană.", author: "Sf. Paisie Aghioritul" },
+      { quote: "Cere de la Dumnezeu înțelepciunea de a tăcea atunci când vorbirea aduce dezbinare.", author: "Sf. Arsenie cel Mare" },
+      { quote: "O lacrimă vărsată pentru păcate stinge un foc întreg de patimi.", author: "Sf. Efrem Sirul" },
+      { quote: "Iubirea este singura putere care preface un vrăjmaș într-un frate.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Fii stâlp de rugăciune în casa ta și binecuvântarea Domnului va ocroti căminul tău.", author: "Sf. Serafim de Sarov" },
+      { quote: "Cel ce nu mulțumește pentru puțin nu se va bucura niciodată de mult.", author: "Sf. Ioan Gură de Aur" },
+      { quote: "Liniștea minții începe atunci când încetezi să judeci intențiile celorlalți.", author: "Sf. Siluan Athonitul" },
+      { quote: "Răbdarea este aurul duhovnicesc curățit în cuptorul încercărilor.", author: "Părintele Arsenie Papacioc" },
+      { quote: "Fiecare răsărit de soare este o chemare nouă a milostivirii dumnezeiești.", author: "Sf. Teofan Zăvorâtul" },
+      { quote: "Dumnezeu nu caută la mulțimea faptelor, ci la dragostea cu care au fost săvârșite.", author: "Sf. Vasile cel Mare" },
+      { quote: "Pacea este darul lui Hristos; păstreaz-o în inimă prin rugăciune neîncetată.", author: "Sf. Porfirie Kafsokalivitul" }
+    ];
+
+    let grandThoughtManualOffset = 0;
+
+    function getDailyGrandThoughtIndex(offset = 0) {
+      const baseDate = new Date('2024-01-01T00:00:00');
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const diffTime = today.getTime() - baseDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const total = GRAND_THOUGHTS.length;
+      return ((diffDays + offset) % total + total) % total;
+    }
+
+    function updateGrandThoughtDisplay() {
+      const quoteEl = document.getElementById('gandulZileiQuoteText');
+      const authorEl = document.getElementById('gandulZileiAuthorText');
+      const numBadge = document.getElementById('gandulZileiNumBadge');
+      if (!quoteEl || !authorEl) return;
+      const idx = getDailyGrandThoughtIndex(grandThoughtManualOffset);
+      const item = GRAND_THOUGHTS[idx];
+      quoteEl.textContent = `„${item.quote}”`;
+      authorEl.textContent = `— ${item.author}`;
+      if (numBadge) {
+        numBadge.textContent = `${idx + 1}/${GRAND_THOUGHTS.length}${grandThoughtManualOffset !== 0 ? ' • Navigat' : ''}`;
+      }
+    }
+
+    function navGrandThought(delta) {
+      grandThoughtManualOffset += delta;
+      updateGrandThoughtDisplay();
+    }
+
+    function resetGrandThoughtToToday() {
+      grandThoughtManualOffset = 0;
+      updateGrandThoughtDisplay();
+      showToast("Revenit la Gândul Rânduit de Astăzi!");
+    }
+
+    function randomGrandThought() {
+      const rnd = Math.floor(Math.random() * GRAND_THOUGHTS.length);
+      const baseIdx = getDailyGrandThoughtIndex(0);
+      grandThoughtManualOffset = rnd - baseIdx;
+      updateGrandThoughtDisplay();
     }
 
     function applyUserUIState() {
@@ -2174,8 +2404,14 @@
 
     function executeUserSwitch(selectedUser) {
       const oldUser = getCurrentLoggedInUser();
+      const currentOrder = getOwnerWidgetsOrder();
+      const currentWidgets = getOwnerWidgetsConfig();
+      const currentNav = getOwnerNavConfig();
       saveUserProfileSettings(oldUser, {
-        appTitle, appLogo, appIconPath, pomelnicBatchSize
+        appTitle, appLogo, appIconPath, pomelnicBatchSize,
+        widgetsOrder: currentOrder,
+        widgets: currentWidgets,
+        navModules: currentNav
       });
 
       localStorage.setItem('diih_logged_user', selectedUser);
@@ -2575,6 +2811,11 @@
 
     function saveRanduialaTrackerData(data) {
       localStorage.setItem('diih_randuiala_tracker', JSON.stringify(data));
+      try {
+        const script = document.createElement('script');
+        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&randuialaTrackerJson=${encodeURIComponent(JSON.stringify(data))}&callback=void`;
+        document.body.appendChild(script);
+      } catch (e) {}
     }
 
     function getRanduialaDay(dateStr) {
@@ -2585,9 +2826,22 @@
     function setRanduialaDayItem(dateStr, item, val) {
       const data = getRanduialaTrackerData();
       if (!data[dateStr]) data[dateStr] = { catisma: false, pomelnic: false, rugaciune: false, scriptura: false };
-      data[dateStr][item] = val;
+      if (item === 'all') {
+        const isCurrentlyAll = !!(data[dateStr].catisma && data[dateStr].pomelnic && data[dateStr].rugaciune && data[dateStr].scriptura);
+        const nextState = (val !== undefined && typeof val === 'boolean') ? val : !isCurrentlyAll;
+        data[dateStr].catisma = nextState;
+        data[dateStr].pomelnic = nextState ? 'complet' : false;
+        data[dateStr].rugaciune = nextState;
+        data[dateStr].scriptura = nextState;
+      } else {
+        data[dateStr][item] = val;
+      }
       saveRanduialaTrackerData(data);
       renderRanduialaCalendar();
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (dateStr === todayStr && typeof updateTodayWidgetView === 'function') {
+        updateTodayWidgetView();
+      }
     }
 
     function markRanduialaItemToday(item, val) {
@@ -2801,13 +3055,26 @@
           const allD = dData.catisma && dData.pomelnic && dData.rugaciune && dData.scriptura;
 
           return `
-            <div class="p-2.5 bg-darkbg border ${allD ? 'border-emerald-700/80' : (isT ? 'border-rose-700/80' : 'border-bordercol')} rounded-xl flex items-center justify-between text-xs">
-              <span class="font-bold ${isT ? 'text-rose-300' : 'text-white'} capitalize">${dName}</span>
-              <div class="flex items-center space-x-1 text-[10px]">
-                <span class="${dData.catisma ? 'text-rose-400 font-bold' : 'text-slate-600'}">📖</span>
-                <span class="${dData.pomelnic ? 'text-emerald-400 font-bold' : 'text-slate-600'}">📿</span>
-                <span class="${dData.rugaciune ? 'text-amber-400 font-bold' : 'text-slate-600'}">🕊️</span>
-                <span class="${dData.scriptura ? 'text-cyan-400 font-bold' : 'text-slate-600'}">📜</span>
+            <div class="p-2.5 bg-darkbg border ${allD ? 'border-emerald-700/80 bg-emerald-950/20' : (isT ? 'border-rose-700/80' : 'border-bordercol')} rounded-xl flex items-center justify-between text-xs transition">
+              <button onclick="selectRanduialaDay('${dStr}')" class="text-left font-bold ${isT ? 'text-rose-300' : 'text-white'} capitalize hover:underline truncate mr-2">
+                ${dName}
+              </button>
+              <div class="flex items-center space-x-1 text-[11px] shrink-0">
+                <button onclick="setRanduialaDayItem('${dStr}', 'catisma', ${!dData.catisma})" title="📖 Catisma" class="p-1 rounded border transition active:scale-95 ${dData.catisma ? 'bg-rose-950 border-rose-700 text-rose-300 font-bold' : 'bg-cardbg border-bordercol text-slate-500 opacity-60'}">
+                  📖
+                </button>
+                <button onclick="setRanduialaDayItem('${dStr}', 'pomelnic', ${dData.pomelnic ? 'false' : "'complet'"})" title="📿 Pomelnic" class="p-1 rounded border transition active:scale-95 ${dData.pomelnic ? 'bg-emerald-950 border-emerald-700 text-emerald-300 font-bold' : 'bg-cardbg border-bordercol text-slate-500 opacity-60'}">
+                  📿
+                </button>
+                <button onclick="setRanduialaDayItem('${dStr}', 'rugaciune', ${!dData.rugaciune})" title="🕊️ Pt. Neam" class="p-1 rounded border transition active:scale-95 ${dData.rugaciune ? 'bg-amber-950 border-amber-700 text-amber-300 font-bold' : 'bg-cardbg border-bordercol text-slate-500 opacity-60'}">
+                  🕊️
+                </button>
+                <button onclick="setRanduialaDayItem('${dStr}', 'scriptura', ${!dData.scriptura})" title="📜 Scriptură" class="p-1 rounded border transition active:scale-95 ${dData.scriptura ? 'bg-cyan-950 border-cyan-700 text-cyan-300 font-bold' : 'bg-cardbg border-bordercol text-slate-500 opacity-60'}">
+                  📜
+                </button>
+                <button onclick="setRanduialaDayItem('${dStr}', 'all', ${!allD})" title="Bifează tot rândul" class="px-1.5 py-1 rounded text-[9px] font-bold border transition active:scale-95 ${allD ? 'bg-emerald-800 border-emerald-600 text-white' : 'bg-cardbg border-bordercol text-slate-400'}">
+                  ${allD ? '✓' : '○'}
+                </button>
               </div>
             </div>
           `;
@@ -2832,6 +3099,7 @@
     }
 
     function switchTab(tabId) {
+      if (tabId === 'ganduri') tabId = 'notite';
       if (tabId === 'inventar') {
         switchTab('more');
         switchSubTab('inventar');
@@ -2839,15 +3107,15 @@
       }
 
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      const targetTab = document.getElementById(`tab-${tabId}`);
+      const targetTab = document.getElementById(`tab-${tabId}`) || (tabId === 'notite' ? document.getElementById('tab-ganduri') : null);
       if (targetTab) targetTab.classList.remove('hidden');
 
-      const tabs = ['today', 'pomelnic', 'calendar', 'ganduri', 'cumparaturi', 'scriptura', 'inventar', 'more'];
+      const tabs = ['today', 'pomelnic', 'calendar', 'notite', 'ganduri', 'cumparaturi', 'scriptura', 'inventar', 'more'];
       tabs.forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
         if (!btn) return;
         const wasHidden = btn.classList.contains('hidden');
-        if (t === tabId) {
+        if (t === tabId || (tabId === 'notite' && t === 'ganduri')) {
           btn.className = "flex flex-col items-center space-y-1 text-cyan-400 font-bold";
         } else {
           btn.className = "flex flex-col items-center space-y-1 text-slate-400 hover:text-white";
@@ -2920,8 +3188,6 @@
 
     // SINCRONIZARE LIVE 1:1 CU GOOGLE SHEETS
     function isInActiveSharedMode() {
-      const user = getCurrentLoggedInUser();
-      if (user === "Andreea Murar") return true;
       return !!(sharedModeToken && sharingConfig && sharingConfig.shareToken === sharedModeToken);
     }
 
@@ -2981,6 +3247,28 @@
             localStorage.setItem('diih_sharing_config', JSON.stringify(sharingConfig));
             renderAdminSharingForm();
             applySharedModeIfNeeded();
+          }
+        } catch (e) {}
+      }
+
+      if (settings.randuialaTrackerJson) {
+        try {
+          const cloudTracker = JSON.parse(settings.randuialaTrackerJson);
+          if (cloudTracker && typeof cloudTracker === 'object') {
+            const localTracker = getRanduialaTrackerData();
+            const merged = { ...cloudTracker, ...localTracker };
+            localStorage.setItem('diih_randuiala_tracker', JSON.stringify(merged));
+          }
+        } catch (e) {}
+      }
+
+      if (settings.userProfilesJson) {
+        try {
+          const cloudProfiles = JSON.parse(settings.userProfilesJson);
+          if (cloudProfiles && typeof cloudProfiles === 'object') {
+            const localProfiles = JSON.parse(localStorage.getItem('diih_user_profiles') || '{}');
+            const mergedProfiles = { ...cloudProfiles, ...localProfiles };
+            localStorage.setItem('diih_user_profiles', JSON.stringify(mergedProfiles));
           }
         } catch (e) {}
       }
@@ -5306,11 +5594,15 @@
           : allShopping.slice(0, 3).map(x => `<p class="text-xs text-slate-200">• ${x.produs} <span class="text-slate-500">(${x.magazin})</span></p>`).join('');
       }
 
-      const gandContent = document.getElementById('ownerWidgetGanduriContent');
-      if (gandContent) {
+      const notiteContent = document.getElementById('ownerWidgetNotiteContent') || document.getElementById('ownerWidgetGanduriContent');
+      const notiteBadge = document.getElementById('ownerWidgetNotiteBadge');
+      if (notiteContent) {
         const latest = allGanduri[0];
-        gandContent.innerHTML = latest ? `"${latest.gand}" <span class="text-amber-400 text-[10px] not-italic block mt-0.5">— ${latest.sursa || 'Personal'}</span>` : '<span class="text-slate-400 not-italic">Niciun gând notat încă.</span>';
+        if (notiteBadge) notiteBadge.textContent = `${allGanduri.length} notițe`;
+        notiteContent.innerHTML = latest ? `"${latest.gand}" <span class="text-amber-400 text-[10px] not-italic block mt-0.5">— ${latest.sursa || 'Personal'}</span>` : '<span class="text-slate-400 not-italic">Nicio notiță adăugată încă.</span>';
       }
+
+      updateGrandThoughtDisplay();
 
       const invContent = document.getElementById('ownerWidgetInventoryContent');
       const invBadge = document.getElementById('ownerWidgetInventoryBadge');
@@ -5350,6 +5642,16 @@
       handleSearch();
     }
 
+    function highlightSearchMatch(text, query) {
+      if (!text || !query) return text || '';
+      const idx = text.toLowerCase().indexOf(query.toLowerCase());
+      if (idx === -1) return text;
+      const before = text.substring(0, idx);
+      const match = text.substring(idx, idx + query.length);
+      const after = text.substring(idx + query.length);
+      return `${before}<mark class="bg-amber-400 text-slate-900 rounded px-0.5 font-bold">${match}</mark>${after}`;
+    }
+
     function handleSearch() {
       const q = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase().trim() : '';
       const catDd = document.getElementById('categoryDropdown');
@@ -5377,25 +5679,31 @@
         const badgeColor = isViu ? 'bg-emerald-950 border-emerald-800 text-emerald-300' : 'bg-amber-950 border-amber-800 text-amber-300';
         const isChecked = selectedRowIds.has(p.rowId);
         const ageSummary = getPersonAgeSummary(p);
+        const isSearchActive = q.length > 0;
+        const displayName = isSearchActive ? `${highlightSearchMatch(p.prenume, q)} ${highlightSearchMatch(p.nume, q)}` : `${p.prenume} ${p.nume}`;
+        const displayGrad = isSearchActive ? highlightSearchMatch(p.grad || '', q) : (p.grad || '');
+        const datesText = `${p.da ? (p.daAprox ? '~d. ' : 'd. ') + p.da : ''} ${p.dn ? (p.dnAprox ? '• ~n. ' : '• n. ') + p.dn : ''}`.trim();
 
         return `
-          <div oncontextmenu="handleLaptopContextMenu(event, ${p.rowId})" onclick="handlePersonCardClick(event, ${p.rowId})" class="p-3 bg-cardbg border ${isChecked ? 'border-cyan-500 bg-slate-800/80' : 'border-bordercol'} rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-600 transition shadow-sm relative">
-            <div class="flex items-center space-x-2.5 overflow-hidden">
+          <div oncontextmenu="handleLaptopContextMenu(event, ${p.rowId})" onclick="handlePersonCardClick(event, ${p.rowId})" class="p-3 bg-cardbg border ${isChecked ? 'border-cyan-500 bg-slate-800/80' : (isSearchActive ? 'border-cyan-600/80 ring-1 ring-cyan-500/40 bg-cardbg' : 'border-bordercol')} rounded-2xl flex items-center justify-between cursor-pointer hover:border-slate-600 transition shadow-sm relative">
+            <div class="flex items-center space-x-2.5 overflow-hidden flex-1 min-w-0 pr-2">
               ${isSelectModeActive ? `
                 <input type="checkbox" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation(); toggleRowSelection(${p.rowId})" class="w-4 h-4 rounded text-cyan-500 focus:ring-0">
               ` : ''}
-              <div class="space-y-0.5 truncate">
+              <div class="space-y-0.5 truncate flex-1 min-w-0">
                 <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                  <span class="text-sm font-semibold text-white truncate">${p.prenume} ${p.nume}</span>
+                  <span class="text-sm font-semibold text-white truncate">${displayName}</span>
                   <span class="text-[10px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${isViu ? '🌱' : '†'} ${p.stare}</span>
                   ${p.necesitaAtentie ? '<span class="text-[9px] bg-rose-950 border border-rose-800 text-rose-300 px-1 py-0.2 rounded font-bold">⚠️ Atenție</span>' : ''}
                   ${p.bolnav ? '<span class="text-[9px] bg-amber-950 border border-amber-800 text-amber-300 px-1 py-0.2 rounded font-bold">🏥 Bolnav</span>' : ''}
                   ${p.pomelnicAndreea ? '<span class="text-[9px] bg-fuchsia-950 border border-fuchsia-800 text-fuchsia-300 px-1 py-0.2 rounded font-bold" title="Inclus în Pomelnicul Andreei">🌸 Andreea</span>' : ''}
                 </div>
-                ${p.grad ? `<p class="text-[11px] text-slate-400 truncate">${p.grad}</p>` : ''}
+                ${displayGrad ? `<p class="text-[11px] text-slate-400 truncate">${displayGrad}</p>` : ''}
+                ${datesText ? `<p class="text-[10px] text-slate-400 truncate">${datesText}</p>` : ''}
+                ${ageSummary ? `<p class="text-[10px] ${isViu ? 'text-emerald-300' : 'text-amber-200'} font-medium truncate">${ageSummary}</p>` : ''}
               </div>
             </div>
-            <div class="flex items-center space-x-1">
+            <div class="flex items-center space-x-1 shrink-0">
               ${!isSelectModeActive ? `
                 <button onclick="event.stopPropagation(); quickToggleAtentie(${p.rowId})" class="p-1.5 rounded-lg border ${p.necesitaAtentie ? 'border-rose-800 text-rose-300 bg-rose-950/60' : 'border-slate-700 text-slate-500 hover:text-white'} text-xs">⚠️</button>
               ` : ''}
@@ -6134,18 +6442,42 @@
       { id: 'pomelnic', label: '📿 Pomelnicul de Astăzi' },
       { id: 'school', label: '🎓 Școală & Activități' },
       { id: 'shopping', label: '🛒 Cumpărături' },
-      { id: 'ganduri', label: '💡 Gândul Zilei' },
+      { id: 'gandul_zilei', label: '💡 Gândul Zilei (Citate & Înțelepciune)' },
+      { id: 'notite', label: '📝 Notițe' },
       { id: 'inventory', label: '📦 Inventar' }
     ];
 
     function getOwnerWidgetsOrder() {
       try {
-        const saved = JSON.parse(localStorage.getItem('diih_owner_widgets_order') || '[]');
+        const currentUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : '';
+        const profile = (typeof getUserProfileSettings === 'function' && currentUser) ? getUserProfileSettings(currentUser) : null;
+        const saved = (profile && Array.isArray(profile.widgetsOrder) && profile.widgetsOrder.length > 0)
+          ? profile.widgetsOrder
+          : JSON.parse(localStorage.getItem('diih_owner_widgets_order') || '[]');
         const defaultIds = ALL_OWNER_WIDGET_DEFS.map(w => w.id);
-        const combined = Array.from(new Set([...saved, ...defaultIds])).filter(id => defaultIds.includes(id));
+        let expanded = [];
+        saved.forEach(id => {
+          if (id === 'ganduri') {
+            if (!expanded.includes('notite')) expanded.push('notite');
+            if (!expanded.includes('gandul_zilei')) expanded.push('gandul_zilei');
+          } else {
+            expanded.push(id);
+          }
+        });
+        const combined = Array.from(new Set([...expanded, ...defaultIds])).filter(id => defaultIds.includes(id));
         return combined.length > 0 ? combined : defaultIds;
       } catch (e) {
         return ALL_OWNER_WIDGET_DEFS.map(w => w.id);
+      }
+    }
+
+    function setOwnerWidgetsOrder(order) {
+      localStorage.setItem('diih_owner_widgets_order', JSON.stringify(order));
+      const currentUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : '';
+      if (typeof getUserProfileSettings === 'function' && typeof saveUserProfileSettings === 'function' && currentUser) {
+        const profile = getUserProfileSettings(currentUser);
+        profile.widgetsOrder = order;
+        saveUserProfileSettings(currentUser, profile);
       }
     }
 
@@ -6158,7 +6490,7 @@
       const temp = order[idx];
       order[idx] = order[newIdx];
       order[newIdx] = temp;
-      localStorage.setItem('diih_owner_widgets_order', JSON.stringify(order));
+      setOwnerWidgetsOrder(order);
       applyOwnerWidgetsVisibility();
       showToast("Ordinea chenarelor a fost actualizată!");
     }
@@ -6171,21 +6503,46 @@
       } else {
         updated = active.filter(id => id !== widgetId);
       }
-      localStorage.setItem('diih_owner_widgets', JSON.stringify(updated));
+      setOwnerWidgetsConfig(updated);
       applyOwnerWidgetsVisibility();
     }
 
     function getOwnerWidgetsConfig() {
       try {
-        return JSON.parse(localStorage.getItem('diih_owner_widgets') || '["psaltire","biblia360","scriptura","anniversaries","pomelnic","school","shopping","ganduri","inventory"]');
+        const currentUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : '';
+        const profile = (typeof getUserProfileSettings === 'function' && currentUser) ? getUserProfileSettings(currentUser) : null;
+        if (profile && Array.isArray(profile.widgets)) {
+          let list = [...profile.widgets];
+          if (list.includes('ganduri') && !list.includes('notite')) list.push('notite');
+          if (list.includes('ganduri') && !list.includes('gandul_zilei')) list.push('gandul_zilei');
+          return list;
+        }
+        const saved = JSON.parse(localStorage.getItem('diih_owner_widgets') || 'null');
+        if (Array.isArray(saved)) {
+          let list = [...saved];
+          if (list.includes('ganduri') && !list.includes('notite')) list.push('notite');
+          if (list.includes('ganduri') && !list.includes('gandul_zilei')) list.push('gandul_zilei');
+          return list;
+        }
+        return ALL_OWNER_WIDGET_DEFS.map(w => w.id);
       } catch (e) {
-        return ["psaltire","biblia360","scriptura","anniversaries","pomelnic","school","shopping","ganduri","inventory"];
+        return ALL_OWNER_WIDGET_DEFS.map(w => w.id);
+      }
+    }
+
+    function setOwnerWidgetsConfig(updated) {
+      localStorage.setItem('diih_owner_widgets', JSON.stringify(updated));
+      const currentUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : '';
+      if (typeof getUserProfileSettings === 'function' && typeof saveUserProfileSettings === 'function' && currentUser) {
+        const profile = getUserProfileSettings(currentUser);
+        profile.widgets = updated;
+        saveUserProfileSettings(currentUser, profile);
       }
     }
 
     function toggleAllOwnerWidgets(state) {
       const defaultIds = ALL_OWNER_WIDGET_DEFS.map(w => w.id);
-      localStorage.setItem('diih_owner_widgets', JSON.stringify(state ? defaultIds : []));
+      setOwnerWidgetsConfig(state ? defaultIds : []);
       applyOwnerWidgetsVisibility();
     }
 
@@ -6301,19 +6658,42 @@
     // 16. PERSONALIZARE BARĂ DE NAVIGARE JOS (OWNER & SHARED)
     function getOwnerNavConfig() {
       try {
-        return JSON.parse(localStorage.getItem('diih_owner_nav') || '["today","pomelnic","calendar","ganduri","cumparaturi"]');
+        const currentUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : '';
+        const profile = (typeof getUserProfileSettings === 'function' && currentUser) ? getUserProfileSettings(currentUser) : null;
+        if (profile && Array.isArray(profile.nav)) {
+          let nav = [...profile.nav];
+          if (nav.includes('ganduri') && !nav.includes('notite')) {
+            nav = nav.map(x => x === 'ganduri' ? 'notite' : x);
+          }
+          return nav;
+        }
+        const saved = JSON.parse(localStorage.getItem('diih_owner_nav') || 'null');
+        if (Array.isArray(saved)) {
+          let nav = [...saved];
+          if (nav.includes('ganduri') && !nav.includes('notite')) {
+            nav = nav.map(x => x === 'ganduri' ? 'notite' : x);
+          }
+          return nav;
+        }
+        return ["today","pomelnic","calendar","notite","cumparaturi"];
       } catch (e) {
-        return ["today","pomelnic","calendar","ganduri","cumparaturi"];
+        return ["today","pomelnic","calendar","notite","cumparaturi"];
       }
     }
 
     function saveOwnerNavConfig() {
       const list = ['today'];
-      ['pomelnic','calendar','ganduri','cumparaturi','scriptura','inventar'].forEach(id => {
+      ['pomelnic','calendar','notite','cumparaturi','scriptura','inventar'].forEach(id => {
         const el = document.getElementById(`navOpt_${id}`);
         if (el && el.checked) list.push(id);
       });
       localStorage.setItem('diih_owner_nav', JSON.stringify(list));
+      const currentUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : '';
+      if (typeof getUserProfileSettings === 'function' && typeof saveUserProfileSettings === 'function' && currentUser) {
+        const profile = getUserProfileSettings(currentUser);
+        profile.nav = list;
+        saveUserProfileSettings(currentUser, profile);
+      }
       applyOwnerNavLayout();
       showToast("Bara de meniu a fost actualizată!");
     }
@@ -6321,7 +6701,7 @@
     function applyOwnerNavLayout() {
       if (isInActiveSharedMode()) return;
       const navList = getOwnerNavConfig();
-      const allMods = ['today','pomelnic','calendar','ganduri','cumparaturi','scriptura','inventar'];
+      const allMods = ['today','pomelnic','calendar','notite','cumparaturi','scriptura','inventar'];
       let visibleCount = 0;
       allMods.forEach(m => {
         const btn = document.getElementById(`nav-${m}`);
@@ -6582,7 +6962,7 @@
           : `<div class="w-14 h-14 rounded-lg border border-dashed border-bordercol flex items-center justify-center text-xl text-slate-600 shrink-0">📦</div>`;
 
         return `
-          <div class="p-3 bg-cardbg border border-bordercol rounded-2xl flex items-start space-x-3">
+          <div onclick="openInventoryDetailModal('${it.id}')" class="p-3 bg-cardbg border border-bordercol rounded-2xl flex items-start space-x-3 cursor-pointer hover:border-violet-600/70 active:scale-[0.99] transition shadow-sm">
             ${photoHtml}
             <div class="flex-1 overflow-hidden">
               <div class="flex items-center justify-between">
@@ -6592,7 +6972,8 @@
               <p class="text-[11px] text-slate-400 truncate">${it.category} • Cant: ${it.qty}</p>
               <p class="text-[11px] text-violet-300 truncate">📍 ${it.space}</p>
               ${overdue ? `<p class="text-[10px] text-rose-400 font-bold">⚠️ Mentenanță depășită (${it.nextMaintenance})</p>` : ''}
-              <div class="flex items-center space-x-1.5 pt-1.5">
+              <div class="flex items-center space-x-1.5 pt-1.5" onclick="event.stopPropagation()">
+                <button onclick="openInventoryDetailModal('${it.id}')" class="text-[10px] px-2 py-1 bg-darkbg border border-violet-700/60 rounded-lg text-violet-200 hover:text-white">👁️ Detalii</button>
                 <button onclick="openInventoryItemModal('${it.id}')" class="text-[10px] px-2 py-1 bg-darkbg border border-bordercol rounded-lg text-slate-300 hover:text-white">✏️ Editează</button>
                 <button onclick="openInventoryMoveModal('${it.id}')" class="text-[10px] px-2 py-1 bg-darkbg border border-violet-800 rounded-lg text-violet-300 hover:text-white">📦 Mută</button>
               </div>
@@ -6600,6 +6981,106 @@
           </div>
         `;
       }).join('');
+    }
+
+    function openInventoryDetailModal(id) {
+      const item = allInventory.find(x => x.id === id);
+      if (!item) return;
+      const modal = document.getElementById('inventoryDetailModal');
+      if (!modal) return;
+
+      const titleEl = document.getElementById('invDetailTitle');
+      if (titleEl) titleEl.textContent = item.name || 'Obiect fără nume';
+      const catEl = document.getElementById('invDetailCategoryBadge');
+      if (catEl) catEl.textContent = item.category || 'Diverse';
+      const spaceEl = document.getElementById('invDetailSpace');
+      if (spaceEl) spaceEl.textContent = item.space ? item.space : 'Nespecificat';
+      const qtyEl = document.getElementById('invDetailQty');
+      if (qtyEl) qtyEl.textContent = `${item.qty || 1} buc.`;
+
+      const statusEl = document.getElementById('invDetailStatus');
+      if (statusEl) {
+        const statusColors = {
+          'Funcțional': 'bg-emerald-950 border-emerald-800 text-emerald-300',
+          'Necesită reparație': 'bg-amber-950 border-amber-800 text-amber-300',
+          'În service/mentenanță': 'bg-cyan-950 border-cyan-800 text-cyan-300',
+          'Defect/Casat': 'bg-rose-950 border-rose-800 text-rose-300'
+        };
+        statusEl.className = `text-[10px] font-bold px-1.5 py-0.5 rounded border ${statusColors[item.status] || 'bg-slate-800 border-slate-700 text-slate-300'}`;
+        statusEl.textContent = item.status || 'Funcțional';
+      }
+
+      const valEl = document.getElementById('invDetailValue');
+      if (valEl) valEl.textContent = item.value ? `${item.value} Lei` : 'Nespecificat';
+      const pDateEl = document.getElementById('invDetailPurchaseDate');
+      if (pDateEl) pDateEl.textContent = item.purchaseDate || 'Nespecificat';
+
+      // Photo
+      const photoEl = document.getElementById('invDetailPhoto');
+      const photoCont = document.getElementById('invDetailPhotoContainer');
+      if (photoEl && photoCont) {
+        if (item.photoBase64) {
+          photoEl.src = item.photoBase64;
+          photoCont.classList.remove('hidden');
+        } else {
+          photoCont.classList.add('hidden');
+        }
+      }
+
+      // Maintenance
+      const mContent = document.getElementById('invDetailMaintenanceContent');
+      if (mContent) {
+        if (item.nextMaintenance) {
+          const overdue = isMaintenanceOverdue(item);
+          mContent.innerHTML = overdue
+            ? `<span class="text-rose-400 font-bold">⚠️ Termen depășit: ${item.nextMaintenance}</span>`
+            : `<span class="text-cyan-300">${item.nextMaintenance}</span>`;
+        } else {
+          mContent.innerHTML = `<span class="text-slate-400 font-normal">Nu este setată o dată de mentenanță</span>`;
+        }
+      }
+
+      // Notes
+      const notesEl = document.getElementById('invDetailNotes');
+      if (notesEl) {
+        notesEl.textContent = item.notes ? item.notes : 'Fără descriere sau observații.';
+      }
+
+      // History
+      const histBox = document.getElementById('invDetailHistoryBox');
+      const histList = document.getElementById('invDetailHistoryList');
+      const history = item.history || [];
+      if (histBox && histList) {
+        if (history.length > 0) {
+          histList.innerHTML = history.map(h => `<div class="p-1.5 bg-cardbg rounded border border-bordercol/50">• <span class="text-slate-400 font-mono text-[10px]">${h.date}</span>: <span class="text-slate-300">${h.from}</span> → <span class="text-violet-300 font-bold">${h.to}</span></div>`).join('');
+          histBox.classList.remove('hidden');
+        } else {
+          histBox.classList.add('hidden');
+        }
+      }
+
+      // Edit and Move buttons wiring
+      const btnEdit = document.getElementById('btnInvDetailEdit');
+      if (btnEdit) {
+        btnEdit.onclick = () => {
+          closeInventoryDetailModal();
+          openInventoryItemModal(item.id);
+        };
+      }
+      const btnMove = document.getElementById('btnInvDetailMove');
+      if (btnMove) {
+        btnMove.onclick = () => {
+          closeInventoryDetailModal();
+          openInventoryMoveModal(item.id);
+        };
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeInventoryDetailModal() {
+      const modal = document.getElementById('inventoryDetailModal');
+      if (modal) modal.classList.add('hidden');
     }
 
     function openInventoryItemModal(id) {
