@@ -804,6 +804,25 @@
       <div id="scripturaBooksContainer" class="space-y-2"></div>
     </section>
 
+    <!-- TAB: NOTA ZILEI (Comasare Verset + Note Anania, Fișă Integrală 1:1) -->
+    <section id="tab-notazilei" class="tab-content hidden space-y-4">
+      <div class="flex items-center justify-between pb-1">
+        <button onclick="switchTab('today')" class="text-xs text-cyan-300 hover:text-cyan-200 flex items-center space-x-1 font-medium bg-cardbg px-2.5 py-1.5 rounded-xl border border-bordercol transition active:scale-95 shadow-sm">
+          <span>←</span>
+          <span>Înapoi la Astăzi</span>
+        </button>
+        <div class="flex items-center space-x-1">
+          <button onclick="setBibliaMoment('dimineata')" id="tabNotaMom_dimineata" class="px-2 py-1 rounded text-[10px] font-bold bg-amber-900/70 text-amber-200 border border-amber-700">☀️ Dimineața</button>
+          <button onclick="setBibliaMoment('seara')" id="tabNotaMom_seara" class="px-2 py-1 rounded text-[10px] font-bold bg-darkbg text-slate-400 border border-bordercol hover:text-white">🌙 Seara</button>
+          <button onclick="navBiblia(-1)" class="px-2 py-1 bg-darkbg border border-bordercol rounded text-[10px] text-slate-300 hover:text-white" title="Precedentul">◀</button>
+          <button onclick="navBiblia(1)" class="px-2 py-1 bg-darkbg border border-bordercol rounded text-[10px] text-slate-300 hover:text-white" title="Următorul">▶</button>
+        </div>
+      </div>
+
+      <!-- Container Dinamic Fișă Completă 1:1 generat de updateBibliaQuoteDisplay() -->
+      <div id="notaZileiFullCardContainer" class="space-y-3"></div>
+    </section>
+
     <!-- TAB 6: MAI MULTE (Grup Psaltire, Notificări 3 Praguri, Setări, Widget) -->
     <section id="tab-more" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
@@ -836,6 +855,10 @@
           <button onclick="switchTab('scriptura')" id="btnSubScriptura" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
             <span class="text-lg">📖</span>
             <span class="text-[9px] font-bold">Scriptură</span>
+          </button>
+          <button onclick="switchTab('notazilei')" id="btnSubNotazilei" class="p-2.5 bg-darkbg border border-amber-900/60 rounded-xl flex flex-col items-center space-y-1 text-amber-300 hover:text-white">
+            <span class="text-lg">📜</span>
+            <span class="text-[9px] font-bold">Nota Zilei</span>
           </button>
           <button onclick="switchTab('pomelnic')" id="btnSubPomelnic" class="hidden p-2.5 bg-darkbg border border-rose-900/60 rounded-xl flex flex-col items-center space-y-1 text-rose-300 hover:text-white">
             <span class="text-lg">📜</span>
@@ -1167,6 +1190,10 @@
                 <span class="text-[11px] text-slate-200">📖 Scriptură</span>
               </label>
               <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
+                <input type="checkbox" id="navOpt_notazilei" onchange="saveOwnerNavConfig()" class="rounded text-cyan-500 focus:ring-0">
+                <span class="text-[11px] text-slate-200">📜 Nota Zilei</span>
+              </label>
+              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
                 <input type="checkbox" id="navOpt_inventar" onchange="saveOwnerNavConfig()" class="rounded text-cyan-500 focus:ring-0">
                 <span class="text-[11px] text-slate-200">📦 Inventar</span>
               </label>
@@ -1429,6 +1456,10 @@
       <button onclick="switchTab('scriptura')" id="nav-scriptura" class="hidden flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
         <span class="text-base">📖</span>
         <span>Scriptură</span>
+      </button>
+      <button onclick="switchTab('notazilei')" id="nav-notazilei" class="hidden flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
+        <span class="text-base">📜</span>
+        <span>Nota Zilei</span>
       </button>
       <button onclick="switchTab('inventar')" id="nav-inventar" class="hidden flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
         <span class="text-base">📦</span>
@@ -3212,7 +3243,7 @@
       const targetTab = document.getElementById(`tab-${tabId}`) || (tabId === 'notite' ? document.getElementById('tab-ganduri') : null);
       if (targetTab) targetTab.classList.remove('hidden');
 
-      const tabs = ['today', 'pomelnic', 'calendar', 'notite', 'ganduri', 'cumparaturi', 'scriptura', 'inventar', 'more'];
+      const tabs = ['today', 'pomelnic', 'calendar', 'notite', 'ganduri', 'cumparaturi', 'scriptura', 'notazilei', 'inventar', 'more'];
       tabs.forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
         if (!btn) return;
@@ -3233,6 +3264,9 @@
       }
       if (tabId === 'scriptura') {
         updateScripturaDisplays();
+      }
+      if (tabId === 'notazilei') {
+        updateBibliaQuoteDisplay();
       }
       if (tabId === 'more') {
         if (!isInActiveSharedMode()) {
@@ -3415,6 +3449,7 @@
           localStorage.setItem('diih_people', JSON.stringify(allPeople));
         }
         if (data.cumparaturi && Array.isArray(data.cumparaturi)) {
+          checkShoppingNotifications(data.cumparaturi);
           allShopping = data.cumparaturi;
           localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
         }
@@ -3475,6 +3510,7 @@
         applyCloudSettings(data.settings);
 
         if (data.cumparaturi && Array.isArray(data.cumparaturi)) {
+          checkShoppingNotifications(data.cumparaturi);
           allShopping = data.cumparaturi;
           localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
         }
@@ -3664,17 +3700,19 @@
 
     function setBibliaMoment(moment) {
       currentBibliaMoment = moment;
-      const btnM = document.getElementById('btnBibliaMom_dimineata');
-      const btnS = document.getElementById('btnBibliaMom_seara');
-      if (btnM && btnS) {
-        if (moment === 'dimineata') {
-          btnM.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/70 text-amber-200 border border-amber-700";
-          btnS.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-darkbg text-slate-400 border border-bordercol hover:text-white";
-        } else {
-          btnS.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/70 text-amber-200 border border-amber-700";
-          btnM.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-darkbg text-slate-400 border border-bordercol hover:text-white";
+      ['btnBibliaMom_', 'tabNotaMom_'].forEach(prefix => {
+        const btnM = document.getElementById(prefix + 'dimineata');
+        const btnS = document.getElementById(prefix + 'seara');
+        if (btnM && btnS) {
+          if (moment === 'dimineata') {
+            btnM.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/70 text-amber-200 border border-amber-700";
+            btnS.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-darkbg text-slate-400 border border-bordercol hover:text-white";
+          } else {
+            btnS.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/70 text-amber-200 border border-amber-700";
+            btnM.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-darkbg text-slate-400 border border-bordercol hover:text-white";
+          }
         }
-      }
+      });
       updateBibliaQuoteDisplay();
     }
 
@@ -3683,43 +3721,130 @@
       updateBibliaQuoteDisplay();
     }
 
+    function getGroupedAnaniaVersesList() {
+      const rawList = (allNoteAnania && allNoteAnania.length > 0) ? allNoteAnania : DEFAULT_ANANIA_VERSES_NOTES;
+      if (rawList.length > 0 && Array.isArray(rawList[0].notes)) {
+        return rawList;
+      }
+
+      const verseMap = new Map();
+      const verseList = [];
+
+      for (let i = 0; i < rawList.length; i++) {
+        const raw = rawList[i];
+        const cartea = (raw.cartea || '').trim();
+        if (!cartea && !raw.moment && !raw.nota && !raw.explicatie) continue;
+
+        let rawCap = (raw.capitol || '').toString().trim();
+        let capNum = "1";
+        let totCap = "";
+        const capMatch = rawCap.match(/(\d+)(?:\s*\/\s*(\d+))?/);
+        if (capMatch) {
+          capNum = capMatch[1];
+          if (capMatch[2]) totCap = capMatch[2];
+        }
+        if (!totCap) totCap = BIBLE_BOOKS_TOTAL_CHAPTERS[cartea] || "50";
+        const capitolDisplay = `Capitol ${capNum}/${totCap}`;
+
+        let versetul = (raw.versetul || '').toString().trim();
+        let verseText = "";
+        let noteLetter = "A";
+        let anchorText = "";
+        let noteBody = "";
+
+        // Identificare flexibilă a coloanelor din Google Sheets (compatibilă cu ambele mapări de coloane)
+        if (raw.indice && raw.indice.length > 15 && (!raw.textVerset || raw.textVerset.length <= 10)) {
+          verseText = raw.indice;
+          noteLetter = (raw.textVerset || raw.marcaj || 'A').replace(/[\(\)\[\]]/g, '').trim() || 'A';
+          anchorText = (raw.context || raw.explicatie || '').trim();
+          noteBody = (raw.nota || raw.moment || '').trim();
+        } else if (raw.textVerset && raw.textVerset.length > 15) {
+          verseText = raw.textVerset;
+          noteLetter = (raw.marcaj || raw.indice || 'A').replace(/[\(\)\[\]]/g, '').trim() || 'A';
+          anchorText = (raw.context || raw.explicatie || '').trim();
+          noteBody = (raw.nota || raw.moment || raw.explicatie || '').trim();
+        } else {
+          verseText = raw.textVerset || raw.indice || '';
+          noteLetter = (raw.marcaj || raw.textVerset || raw.indice || 'A').replace(/[\(\)\[\]]/g, '').trim() || 'A';
+          anchorText = (raw.context || raw.explicatie || '').trim();
+          noteBody = (raw.nota || raw.moment || raw.explicatie || '').trim();
+        }
+
+        if (!versetul) {
+          const vm = verseText.match(/^(\d+)/);
+          if (vm) versetul = vm[1];
+          else versetul = "1";
+        }
+
+        const verseKey = `${cartea}_${capNum}_${versetul}`.toLowerCase();
+
+        if (anchorText) {
+          anchorText = anchorText.replace(/^(\d+)[\s\-]*/, '').trim();
+        }
+        if (noteBody && !noteBody.startsWith('[Nota')) {
+          noteBody = `[Nota ${noteLetter.toUpperCase()}] ${noteBody}`;
+        }
+
+        const noteObj = {
+          indice: noteLetter.toUpperCase(),
+          titluAnchor: anchorText,
+          textNota: noteBody.replace(/^\[Nota\s+[A-Za-z0-9]+\]\s*/i, '').trim(),
+          body: noteBody
+        };
+
+        if (verseMap.has(verseKey)) {
+          const existing = verseMap.get(verseKey);
+          if (verseText && (!existing.verseText || existing.verseText.length < verseText.length)) {
+            existing.verseText = verseText;
+          }
+          if (!existing.notes.some(n => n.indice === noteObj.indice && n.textNota === noteObj.textNota)) {
+            existing.notes.push(noteObj);
+            if (!existing.indices.includes(noteObj.indice)) {
+              existing.indices.push(noteObj.indice);
+            }
+          }
+        } else {
+          let testament = raw.colectie || (raw.id && raw.id.includes('Testament') ? raw.id.trim() : (isOldTestamentBook(cartea) ? "Vechiul Testament" : "Noul Testament"));
+          const derventUrl = raw.derventUrl || generateBibliaDerventUrl(cartea, capNum);
+
+          const item = {
+            testament,
+            cartea,
+            capitol: capNum,
+            totalCapitole: totCap,
+            capitolDisplay,
+            versetul,
+            verseText,
+            textVerset: verseText,
+            indices: [noteObj.indice],
+            notes: [noteObj],
+            derventUrl
+          };
+          verseMap.set(verseKey, item);
+          verseList.push(item);
+        }
+      }
+
+      return verseList.length > 0 ? verseList : DEFAULT_ANANIA_VERSES_NOTES;
+    }
+
     function getActiveBibliaEntry() {
       const now = new Date();
       const start = new Date(now.getFullYear(), 0, 0);
       const diff = now - start;
       const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-      // 1. Dacă utilizatorul are note încărcate în Google Sheets (noteBIBLIA_Anania)
-      if (allNoteAnania && allNoteAnania.length > 0) {
-        const slot = (currentBibliaMoment === 'dimineata') ? 0 : 1;
-        const targetIdx = Math.abs((dayOfYear * 2 + slot + currentBibliaOffset) % allNoteAnania.length);
-        const item = allNoteAnania[targetIdx];
-        const cartea = item.cartea || "Sfânta Scriptură";
-        const cap = String(item.capitol || "1");
-        const totCap = item.totalCapitole || BIBLE_BOOKS_TOTAL_CHAPTERS[cartea] || "50";
-        return {
-          cartea,
-          capitol: cap,
-          totalCapitole: totCap,
-          versetul: String(item.versetul || "1"),
-          textVerset: item.textVerset || `1 Verset din cartea ${cartea} ${item.versetul || ''}`,
-          indices: item.indices || (item.indice ? item.indice.split(/[,;\s]+/).filter(Boolean) : ["A"]),
-          explicatie: item.explicatie || "",
-          notes: item.notesDetail || null,
-          testament: item.testament || (isOldTestamentBook(cartea) ? "Vechiul Testament" : "Noul Testament"),
-          derventUrl: item.derventUrl || generateBibliaDerventUrl(cartea, cap),
-          dayIndex: dayOfYear
-        };
-      }
+      const list = getGroupedAnaniaVersesList();
+      if (!list || list.length === 0) return null;
 
-      // 2. Fallback din selecția canonică a Ediției Bartolomeu Anania
-      const pool = DEFAULT_ANANIA_VERSES_NOTES.filter(x => !x.moment || x.moment === currentBibliaMoment);
-      const usePool = pool.length > 0 ? pool : DEFAULT_ANANIA_VERSES_NOTES;
-      const targetIdx = Math.abs((dayOfYear + currentBibliaOffset) % usePool.length);
-      const item = usePool[targetIdx];
+      const slot = (currentBibliaMoment === 'dimineata') ? 0 : 1;
+      const targetIdx = Math.abs((dayOfYear * 2 + slot + currentBibliaOffset) % list.length);
+      const item = list[targetIdx];
       return {
         ...item,
-        dayIndex: dayOfYear
+        dayIndex: dayOfYear,
+        itemIndex: targetIdx + 1,
+        totalItems: list.length
       };
     }
 
@@ -3735,19 +3860,18 @@
       const capNum = String(parseInt(capitol, 10) || 1).padStart(2, '0');
       const b = cartea.toLowerCase();
       let code = "Fc";
-      let test = "VT";
-      if (b.includes("facere")) { code = "Fc"; test = "VT"; }
-      else if (b.includes("ieși") || b.includes("iesi")) { code = "Ies"; test = "VT"; }
-      else if (b.includes("psalm")) { code = "Ps"; test = "VT"; }
-      else if (b.includes("matei")) { code = "Mt"; test = "NT"; }
-      else if (b.includes("marcu")) { code = "Mc"; test = "NT"; }
-      else if (b.includes("luca")) { code = "Lc"; test = "NT"; }
-      else if (b.includes("ioan")) { code = "In"; test = "NT"; }
-      else if (b.includes("romani")) { code = "Rm"; test = "NT"; }
-      else if (b.includes("filipeni")) { code = "Flp"; test = "NT"; }
+      let test = isOldTestamentBook(cartea) ? "VT" : "NT";
+      if (b.includes("facere")) { code = "Fc"; }
+      else if (b.includes("ieși") || b.includes("iesi")) { code = "Ies"; }
+      else if (b.includes("psalm")) { code = "Ps"; }
+      else if (b.includes("matei")) { code = "Mt"; }
+      else if (b.includes("marcu")) { code = "Mc"; }
+      else if (b.includes("luca")) { code = "Lc"; }
+      else if (b.includes("ioan")) { code = "In"; }
+      else if (b.includes("romani")) { code = "Rm"; }
+      else if (b.includes("filipeni")) { code = "Flp"; }
       else {
-        test = isOldTestamentBook(cartea) ? "VT" : "NT";
-        code = cartea.slice(0, 2);
+        code = cartea.slice(0, 3);
       }
       return `https://biblia.dervent.ro/${test}-${code}-${capNum}`;
     }
@@ -3761,7 +3885,7 @@
         }));
       }
 
-      const explicatie = entry.explicatie || '';
+      const explicatie = entry.explicatie || entry.body || '';
       const regex = /\[Nota\s+([A-Za-z0-9]+)\]\s*([\s\S]*?)(?=(?:\[Nota\s+[A-Za-z0-9]+\]|$))/gi;
       const parsed = [];
       let match;
@@ -3802,12 +3926,30 @@
       return parsed;
     }
 
-    function formatBiblicalVerseText(text) {
-      if (!text) return '';
-      // Transform ^a, ^b, ^c into high-visibility inline markers
-      return text.replace(/\^([A-Za-z0-9]+)/g, (match, letter) => {
-        return `<sup class="inline-flex items-center justify-center font-bold text-amber-300 bg-amber-950/90 border border-amber-600/70 rounded px-1 py-0.2 text-[10px] mx-0.5 align-super select-none not-italic shadow-sm">${letter}</sup>`;
+    function formatBiblicalVerseText(rawText, vNum) {
+      if (!rawText) return '';
+      let text = rawText.trim();
+      // 1. Spatiu și cratimă între numărul versetului și versetul în sine
+      text = text.replace(/^(\d+)(?=[^\d\s\-])/, '$1 - ');
+      // 2. Spațiu după tagurile [A], [B], [14VOI] dacă sunt lipite de cuvântul următor
+      text = text.replace(/(\[[A-Za-z0-9]+\])(?=[^\s\].,;:!?'"”’\)])/g, '$1 ');
+      // 3. Transformare [A] în marker vizibil roșu bold cu paranteze rotunde
+      text = text.replace(/\[([A-Za-z0-9]+)\]/g, (m, letter) => {
+        return ` <strong class="text-rose-500 font-bold not-italic">(${letter})</strong>`;
       });
+      // 4. Suport pentru markere de tip ^a
+      text = text.replace(/\^([A-Za-z0-9]+)/g, (match, letter) => {
+        return ` <strong class="text-rose-500 font-bold not-italic">(${letter.toUpperCase()})</strong>`;
+      });
+      return text;
+    }
+
+    function formatBiblicalNoteBody(rawBody) {
+      if (!rawBody) return '';
+      let body = rawBody.replace(/^\[Nota\s+[A-Za-z0-9]+\]\s*/i, '').trim();
+      // Bolding termeni cheie teologici / grecești / ebraici
+      body = body.replace(/\b(en arhé|principium|bara'|poiéo|thaumastá|kósmos|tohu-bohu|tohû-bohû)\b/gi, '<strong class="font-bold text-amber-200">$1</strong>');
+      return body;
     }
 
     function updateBibliaQuoteDisplay() {
@@ -3819,79 +3961,113 @@
         dayBadge.textContent = `Ziua ${entry.dayIndex} • ${currentBibliaMoment === 'dimineata' ? '☀️ Dimineața' : '🌙 Seara'}`;
       }
 
-      const container = document.getElementById('bibliaRenderContainer');
-      if (!container) return;
-
       const testament = entry.testament || (isOldTestamentBook(entry.cartea) ? "Vechiul Testament" : "Noul Testament");
       const cartea = entry.cartea || "Facerea";
       const capitol = entry.capitol || "1";
       const totalCapitole = entry.totalCapitole || BIBLE_BOOKS_TOTAL_CHAPTERS[cartea] || "50";
+      const capitolDisplay = entry.capitolDisplay || `Capitol ${capitol}/${totalCapitole}`;
       const versetul = entry.versetul || "1";
       const derventUrl = entry.derventUrl || generateBibliaDerventUrl(cartea, capitol);
 
       const notesList = parseAnaniaNotes(entry);
       const letterTags = notesList.map(n => `(${n.indice})`).join(', ');
 
-      const formattedVerseText = formatBiblicalVerseText(entry.textVerset);
+      const formattedVerseText = formatBiblicalVerseText(entry.verseText || entry.textVerset, versetul);
 
-      const notesBlocksHtml = notesList.map(note => {
-        const titleAnchor = note.titluAnchor ? `${note.titluAnchor} [${note.indice}]` : `Nota [${note.indice}]`;
-        const bodyText = `[Nota ${note.indice}] ${note.textNota}`;
-        return `
-          <div class="p-3 bg-darkbg/90 rounded-xl border border-amber-900/40 space-y-1 shadow-sm">
-            <div class="text-xs font-bold text-amber-300 tracking-wide flex items-center space-x-1.5">
-              <span>📌</span>
-              <span>${titleAnchor}</span>
+      // 1. RANDARE COMPACTĂ ÎN WIDGET-UL DIN ASTĂZI
+      const widgetContainer = document.getElementById('bibliaRenderContainer');
+      if (widgetContainer) {
+        widgetContainer.innerHTML = `
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between text-[11px] text-amber-300 font-semibold border-b border-bordercol/50 pb-1.5">
+              <span>${testament} — ${cartea}</span>
+              <span class="bg-amber-950 border border-amber-800 text-amber-200 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">${capitolDisplay}</span>
             </div>
-            <div class="text-xs text-slate-200 leading-relaxed font-sans pl-1">
-              ${bodyText}
+
+            <div onclick="switchTab('notazilei')" class="p-3 bg-darkbg/90 rounded-xl border border-amber-900/50 hover:border-amber-500 cursor-pointer transition shadow-sm space-y-1.5 active:scale-[0.99] group">
+              <div class="flex items-center justify-between">
+                <div class="text-xs font-bold text-amber-200 group-hover:text-amber-100 flex items-center space-x-1.5 truncate pr-1">
+                  <span>📖</span>
+                  <span class="truncate">${cartea} ${capitolDisplay}, Versetul ${versetul}</span>
+                  <span class="text-rose-400 font-bold shrink-0">${letterTags}</span>
+                </div>
+                <span class="px-2 py-0.5 rounded-full bg-rose-950/80 border border-rose-800 text-rose-300 text-[10px] font-bold shrink-0">
+                  ${notesList.length} ${notesList.length === 1 ? 'notă' : 'note'}
+                </span>
+              </div>
+              <div class="text-xs text-slate-300 italic line-clamp-2 leading-relaxed font-serif pl-1">
+                ${formattedVerseText}
+              </div>
+            </div>
+
+            <button onclick="switchTab('notazilei')" class="w-full bg-gradient-to-r from-amber-950 via-slate-900 to-amber-950 hover:from-amber-900 hover:to-amber-900 border border-amber-700/80 text-amber-200 text-xs font-bold py-2 rounded-xl transition flex items-center justify-between px-3 shadow-md active:scale-98">
+              <span class="flex items-center space-x-1.5">
+                <span>📜</span>
+                <span>Deschide Nota Zilei (Text integral + ${notesList.length} ${notesList.length === 1 ? 'notă' : 'note'})</span>
+              </span>
+              <span>➔</span>
+            </button>
+          </div>
+        `;
+      }
+
+      // 2. RANDARE COMPLETĂ ÎN TABUL DEDICAT NOTA ZILEI (1:1 conform pozei anexate)
+      const fullTabContainer = document.getElementById('notaZileiFullCardContainer');
+      if (fullTabContainer) {
+        const fullNotesHtml = notesList.map((note, idx) => {
+          const anchorDisplay = note.titluAnchor || `Nota ${note.indice}`;
+          const formattedBody = formatBiblicalNoteBody(note.textNota);
+          return `
+            <div class="space-y-1.5 pt-3 border-t border-bordercol/60 first:border-t-0 first:pt-0">
+              <div class="text-sm font-bold text-emerald-400 flex items-center space-x-1">
+                <span class="italic underline text-emerald-400">${anchorDisplay}</span>
+                <span class="text-rose-500 font-bold not-italic">[${note.indice}]</span>
+              </div>
+              <div class="text-xs sm:text-sm text-slate-200 leading-relaxed font-sans pl-1">
+                <strong class="text-rose-500 font-bold">[Nota ${note.indice}]</strong> ${formattedBody}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        fullTabContainer.innerHTML = `
+          <div class="bg-cardbg border border-amber-800/80 rounded-2xl p-4 sm:p-5 shadow-lg space-y-4">
+            <!-- Header cu Colecția și Cartea (albastru / cyan conform modelului) -->
+            <div class="space-y-1 border-b border-bordercol/60 pb-3">
+              <h2 class="text-base sm:text-lg font-bold text-sky-400 leading-snug">${testament} — ${cartea}</h2>
+              <h3 class="text-sm sm:text-base font-bold text-sky-300">${capitolDisplay}</h3>
+              <div class="text-sm font-bold pt-0.5">
+                <span class="text-emerald-400 font-extrabold">${cartea} ${capitolDisplay}, ${versetul}</span>
+                <span class="text-rose-500 font-bold ml-1">${letterTags}</span>
+              </div>
+            </div>
+
+            <!-- Textul integral al versetului cu numărul separat și marcajele notelor evidențiate -->
+            <div class="p-3.5 bg-darkbg rounded-xl border border-slate-700/80 text-sm sm:text-base text-slate-100 font-serif leading-relaxed shadow-inner">
+              ${formattedVerseText}
+            </div>
+
+            <!-- Secțiunea notelor de subsol rânduite (afișate secvențial cu ancora subliniată și corpul notei) -->
+            <div class="space-y-3 pt-1">
+              ${fullNotesHtml}
+            </div>
+
+            <!-- Footer cu link direct și buton Deschide spre biblia.dervent.ro -->
+            <div class="pt-3 border-t border-bordercol/60 flex items-center justify-between text-[11px] text-slate-400">
+              <div class="truncate mr-2">
+                <span class="text-slate-400">Sursă: </span>
+                <a href="${derventUrl}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 underline font-mono break-all">
+                  ${derventUrl}
+                </a>
+              </div>
+              <a href="${derventUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 text-amber-300 hover:text-white bg-darkbg px-3 py-1.5 rounded-xl border border-amber-800/60 transition shrink-0 font-bold active:scale-95 text-xs shadow-sm">
+                <span>Deschide</span>
+                <span>↗</span>
+              </a>
             </div>
           </div>
         `;
-      }).join('');
-
-      container.innerHTML = `
-        <div class="space-y-3">
-          <!-- 1. Header Line 1 & 2. Header Line 2 -->
-          <div class="flex items-center justify-between border-b border-bordercol/60 pb-2">
-            <div class="text-xs font-extrabold text-amber-200 uppercase tracking-wider">
-              ${testament} — ${cartea}
-            </div>
-            <div class="text-[11px] font-mono text-slate-300 bg-darkbg px-2.5 py-0.5 rounded-full border border-bordercol">
-              Capitol ${capitol}/${totalCapitole}
-            </div>
-          </div>
-
-          <!-- 3. Header Line 3 -->
-          <div class="text-xs font-bold text-amber-300">
-            ${cartea} Capitol ${capitol}/${totalCapitole}, ${versetul}${letterTags ? ' ' + letterTags : ''}
-          </div>
-
-          <!-- 4. Verse Text with inline highlighted note markers -->
-          <div class="p-3.5 bg-gradient-to-br from-darkbg via-cardbg to-[#2a1d17] rounded-xl border border-amber-900/60 text-sm text-slate-100 italic leading-relaxed shadow-inner">
-            ${formattedVerseText}
-          </div>
-
-          <!-- 5. Footnote Commentary Blocks (rendered sequentially below the verse text) -->
-          <div class="space-y-2 pt-1">
-            ${notesBlocksHtml}
-          </div>
-
-          <!-- 6. Footer Source with possibility to open directly the link -->
-          <div class="pt-2 border-t border-bordercol/60 flex items-center justify-between text-[11px] text-slate-400">
-            <div class="truncate mr-2">
-              <span class="text-slate-400">Sursă: </span>
-              <a href="${derventUrl}" target="_blank" rel="noopener noreferrer" class="text-amber-400 hover:text-amber-300 underline font-mono break-all">
-                ${derventUrl}
-              </a>
-            </div>
-            <a href="${derventUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 text-amber-300 hover:text-white bg-darkbg px-2.5 py-1 rounded-lg border border-amber-800/60 transition shrink-0 font-bold active:scale-95 text-xs shadow-sm">
-              <span>Deschide</span>
-              <span>↗</span>
-            </a>
-          </div>
-        </div>
-      `;
+      }
     }
 
     // 1. ANIVERSĂRI
@@ -5564,6 +5740,77 @@
       }
     }
 
+    function getShoppingItemKey(it) {
+      if (!it) return '';
+      return `${it.id || ''}_${(it.produs || '').trim().toLowerCase()}_${(it.magazin || '').trim().toLowerCase()}_${(it.cantitate || '1').trim()}`;
+    }
+
+    function markShoppingItemAsLocallyKnown(it) {
+      try {
+        const rawKnown = localStorage.getItem('diih_known_shopping_keys');
+        let knownSet = new Set(rawKnown ? JSON.parse(rawKnown) : []);
+        knownSet.add(getShoppingItemKey(it));
+        localStorage.setItem('diih_known_shopping_keys', JSON.stringify(Array.from(knownSet)));
+      } catch(e) {}
+    }
+
+    function checkShoppingNotifications(incomingList) {
+      if (!incomingList || !Array.isArray(incomingList)) return;
+      const curUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : 'Andreea Murar';
+
+      const rawKnown = localStorage.getItem('diih_known_shopping_keys');
+      if (rawKnown === null) {
+        // Prima deschidere pe acest dispozitiv: memorăm elementele curente fără a trimite alerte
+        const initialKeys = incomingList.map(it => getShoppingItemKey(it));
+        localStorage.setItem('diih_known_shopping_keys', JSON.stringify(initialKeys));
+        return;
+      }
+
+      let knownSet = new Set();
+      try {
+        knownSet = new Set(JSON.parse(rawKnown || '[]'));
+      } catch(e) {
+        knownSet = new Set();
+      }
+
+      const itemsToAlert = [];
+
+      incomingList.forEach(it => {
+        const key = getShoppingItemKey(it);
+        if (!knownSet.has(key)) {
+          knownSet.add(key);
+          const isPrivate = it.nuPartaja === true || it.nuPartaja === 'true' || it.nuPartaja === 'TRUE' || it.nuPartaja === 'DA' || it.nuPartaja === 1;
+          if (!isPrivate) {
+            const itemOwner = (it.owner || it.author || '').trim();
+            // Verificăm dacă elementul a fost adăugat de celălalt utilizator
+            const isSelf = itemOwner && (
+              (curUser.toLowerCase().includes('bogdan') && itemOwner.toLowerCase().includes('bogdan')) ||
+              (curUser.toLowerCase().includes('andreea') && itemOwner.toLowerCase().includes('andreea'))
+            );
+            if (!isSelf) {
+              itemsToAlert.push(it);
+            }
+          }
+        }
+      });
+
+      localStorage.setItem('diih_known_shopping_keys', JSON.stringify(Array.from(knownSet)));
+
+      if (itemsToAlert.length > 0) {
+        itemsToAlert.forEach(it => {
+          const isFromAndreea = (it.owner && it.owner.toLowerCase().includes('andreea')) || (!curUser.toLowerCase().includes('andreea') && it.author && it.author.toLowerCase().includes('andreea'));
+          const senderName = isFromAndreea ? 'Andreea' : 'Bogdan';
+          const cantitateStr = it.cantitate ? ` (${it.cantitate} buc.)` : '';
+          const magazinStr = it.magazin ? ` la magazinul ${it.magazin}` : '';
+          const title = `🛒 Cumpărături • ${senderName}`;
+          const msg = `${senderName} a adăugat pe listă: ${it.produs}${cantitateStr}${magazinStr}.`;
+          triggerNotification(title, msg);
+          showToast(`🛒 ${msg}`);
+          logEventToCloud('SHOPPING_NOTIF', 'shopping', it.produs, `Notificare cumpărături partajate: ${title} - ${msg}`);
+        });
+      }
+    }
+
     function addShoppingItem() {
       const magazin = document.getElementById('shopMagazin').value.trim() || 'General';
       const produs = document.getElementById('shopProdus').value.trim();
@@ -5573,8 +5820,11 @@
       if (!produs) return;
 
       const newRowId = allShopping.length + 2;
-      allShopping.push({ rowId: newRowId, magazin, produs, cantitate, nuPartaja, owner: curUser });
+      const shopId = 'SHOP-' + Date.now();
+      const newItem = { id: shopId, rowId: newRowId, magazin, produs, cantitate, nuPartaja, owner: curUser };
+      allShopping.push(newItem);
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
+      markShoppingItemAsLocallyKnown(newItem);
       renderShoppingList();
       updateTodayWidgetView();
       showToast(nuPartaja ? "Produs adăugat (privat, doar pentru tine)!" : "Produs adăugat!");
@@ -5585,7 +5835,7 @@
       document.getElementById('shopProdus').focus(); // Cursorul revine automat!
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&author=${encodeURIComponent(deviceName)}&nuPartaja=${nuPartaja ? 'true' : 'false'}&owner=${encodeURIComponent(curUser)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&author=${encodeURIComponent(deviceName)}&nuPartaja=${nuPartaja ? 'true' : 'false'}&owner=${encodeURIComponent(curUser)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -7087,7 +7337,7 @@
 
     function saveOwnerNavConfig() {
       const list = ['today'];
-      ['pomelnic','calendar','notite','cumparaturi','scriptura','inventar'].forEach(id => {
+      ['pomelnic','calendar','notite','cumparaturi','scriptura','notazilei','inventar'].forEach(id => {
         const el = document.getElementById(`navOpt_${id}`);
         if (el && el.checked) list.push(id);
       });
@@ -7105,7 +7355,7 @@
     function applyOwnerNavLayout() {
       if (isInActiveSharedMode()) return;
       const navList = getOwnerNavConfig();
-      const allMods = ['today','pomelnic','calendar','notite','cumparaturi','scriptura','inventar'];
+      const allMods = ['today','pomelnic','calendar','notite','cumparaturi','scriptura','notazilei','inventar'];
       let visibleCount = 0;
       allMods.forEach(m => {
         const btn = document.getElementById(`nav-${m}`);

@@ -741,6 +741,7 @@ function getCumparaturiData(ss) {
   const hasIdCol = (header === "ID");
   const rows = sh.getRange(2, 1, maxRows - 1, maxCols).getValues();
   return rows.map((r, i) => {
+    let id = hasIdCol ? (r[0] || ("SHOP-" + (i + 2))) : ("SHOP-" + (i + 2));
     let magazin = hasIdCol ? (r[1] || "General") : (r[0] || "General");
     let produs = hasIdCol ? (r[2] || "") : (r[1] || "");
     let cantitate = hasIdCol ? (r[3] || "1") : (r[2] || "1");
@@ -748,6 +749,7 @@ function getCumparaturiData(ss) {
     let nuPartaja = (nuPartajaVal === true || nuPartajaVal.toString().trim().toUpperCase() === "DA" || nuPartajaVal.toString().trim().toLowerCase() === "true");
     let owner = hasIdCol ? (r[6] || "").toString().trim() : (r[4] || "").toString().trim();
     return {
+      id: id.toString().trim(),
       rowId: i + 2,
       magazin: magazin.toString().trim(),
       produs: produs.toString().trim(),
@@ -788,78 +790,56 @@ function getNoteAnaniaData(ss) {
   const maxCols = Math.min(Math.max(sh.getLastColumn(), 4), 10);
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, maxCols).getValues();
 
-  // Grupare pe Carte + Capitol + Verset conform specificațiilor din secțiunea 2:
-  // "A single verse can contain multiple note indices (e.g., indices a, b, c in Verse 1).
-  // In Google Sheets/Excel, the note cell for a given verse must concatenate ALL notes belonging to that verse.
-  // Each note inside the single cell must be delimited by its note index tag: [Nota A] Text for note A... [Nota B] Text for note B..."
-  const verseMap = new Map();
+  // Structură coloane registru (9 coloane conform foii noteBIBLIA_Anania):
+  // Col A (0): Colecție (ex: Vechiul Testament)
+  // Col B (1): Carte (ex: Facerea)
+  // Col C (2): Capitol (ex: Capitol 1/50)
+  // Col D (3): Verset (ex: 1)
+  // Col E (4): Marcaj (ex: (A))
+  // Col F (5): Text verset complet (ex: 1Întru'nceput[A]a făcut[B]Dumnezeu cerul și pământul[C].)
+  // Col G (6): Context / fragment adnotat (ex: 1Întru'nceput)
+  // Col H (7): Nota de subsol (ex: [Nota A] În interiorul...)
+  // Col I (8): URL sursă (ex: https://biblia.dervent.ro/VT-Fc-01)
+  return rows.map((r, idx) => {
+    let colectie = "", cartea = "", capitol = "", versetul = "", marcaj = "", textVerset = "", context = "", nota = "", derventUrl = "";
 
-  rows.forEach((r, idx) => {
-    let cartea = "", capitol = "", versetul = "", textVerset = "", indice = "", explicatie = "", moment = "", derventUrl = "";
-
-    if (maxCols >= 7 && r[4]) {
+    if (maxCols >= 8) {
+      colectie = (r[0] || "Vechiul Testament").toString().trim();
       cartea = (r[1] || "").toString().trim();
       capitol = (r[2] || "").toString().trim();
       versetul = (r[3] || "").toString().trim();
-      textVerset = (r[4] || "").toString().trim();
-      indice = (r[5] || "").toString().trim();
-      explicatie = (r[6] || "").toString().trim();
-      moment = (r[7] || "").toString().trim();
+      marcaj = (r[4] || "").toString().trim();
+      textVerset = (r[5] || "").toString().trim();
+      context = (r[6] || "").toString().trim();
+      nota = (r[7] || "").toString().trim();
       derventUrl = (r[8] || "").toString().trim();
     } else {
       cartea = (r[0] || "").toString().trim();
       versetul = (r[1] || "").toString().trim();
-      indice = (r[2] || "").toString().trim();
-      explicatie = (r[3] || "").toString().trim();
+      marcaj = (r[2] || "").toString().trim();
+      nota = (r[3] || "").toString().trim();
       if (maxCols >= 5 && r[4]) textVerset = (r[4] || "").toString().trim();
     }
 
-    if (!cartea && !explicatie) return;
+    if (!cartea && !nota) return null;
 
-    if (!capitol && versetul) {
-      const cvMatch = versetul.match(/(\d+)[:,\s]+(\d+.*)/);
-      if (cvMatch) {
-        capitol = cvMatch[1];
-        versetul = cvMatch[2];
-      }
-    }
-
-    const key = `${cartea}_${capitol}_${versetul}`.toLowerCase();
-    const cleanIndice = (indice || "A").toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const noteTag = `[Nota ${cleanIndice}]`;
-
-    if (verseMap.has(key)) {
-      const existing = verseMap.get(key);
-      if (textVerset && !existing.textVerset) existing.textVerset = textVerset;
-      let noteBody = explicatie.replace(/^\[Nota\s+[A-Za-z0-9]+\]\s*/i, '').trim();
-      if (!existing.explicatie.includes(noteTag)) {
-        existing.explicatie = `${existing.explicatie.trim()} ${noteTag} ${noteBody}`.trim();
-      }
-      if (existing.indices.indexOf(cleanIndice) === -1) {
-        existing.indices.push(cleanIndice);
-      }
-    } else {
-      let finalExplicatie = explicatie.trim();
-      if (!finalExplicatie.startsWith("[Nota")) {
-        finalExplicatie = `${noteTag} ${finalExplicatie}`.trim();
-      }
-      const item = {
-        id: idx + 1,
-        cartea: cartea,
-        capitol: capitol,
-        versetul: versetul,
-        textVerset: textVerset,
-        indice: cleanIndice,
-        indices: [cleanIndice],
-        explicatie: finalExplicatie,
-        moment: moment,
-        derventUrl: derventUrl
-      };
-      verseMap.set(key, item);
-    }
-  });
-
-  return Array.from(verseMap.values());
+    return {
+      id: idx + 1,
+      colectie: colectie,
+      cartea: cartea,
+      capitol: capitol,
+      versetul: versetul,
+      marcaj: marcaj,
+      textVerset: textVerset,
+      context: context,
+      nota: nota,
+      derventUrl: derventUrl,
+      // Păstrăm și denumirile istorice pentru compatibilitate inversă totală:
+      indice: textVerset || marcaj,
+      explicatie: context || nota,
+      moment: nota
+    };
+  }).filter(x => x !== null);
 }
 
 function getInventoryData(ss) {
