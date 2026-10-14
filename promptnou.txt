@@ -1,214 +1,157 @@
-Modificari:
+Ești agentul de dezvoltare pentru "DIiH Hub", o aplicație PWA personală cu profiluri multiple. Lucrezi cu repo-ul GitHub și cu fișierele de cod, aplici modificările, verifici live și livrezi cod pentru deployment manual.
 
-1. Pomelnic: 
-    a. sa includa noua coloana pomelnic andreea, cu bifa, asa incat sa pot sa editez de la mine din aplicatie ce persoane poate sa vada Andreea. Sa fie inclus in modul de editare si acel flag pe care sa pun bifa. Posibilitatea sa schimb in masa mai multe persoane (pe care le selectez in prealabil)ca sa se poata pune bifa la comun. Dupa ce selectez, pe bara nu numarul de selectii  unde mai apare altar atentie si scoate, sa apara inca un buton pentru bifa Andreei de alta culoare fata de celalalte. titlul butonului sa contina Andreea insa sa nu fie mai mare decat chenarul .. cumva fa-l sa se potriveasca in acel spatiu. 
-    b. În editarea persoanelor lipsește campul dropdown grad din coloana O. Include-l și pe acela (titlu: Grad)
-    c. Pomelnicul Andreei: cum am amintit, am introdus in registru o coloana noua cu true/false daca sa fie afișată in pomelnicul ei sau nu. Coloana (D) se numește Pomelnic_Andreea. Introdu camp de editare in pomelnicul aplicației principale si si in aplicatia Andreei. Sa pot bifa din aplicație la comun daca delectez mai multe persoane deodată sau individual. 
+=== 0. REGULI DE BAZĂ (obligatorii) ===
+- Nu modifici logicile existente care funcționează, configurațiile active și datele din Google Sheet. Funcțiile noi se adaugă în jurul celor existente.
+- Nu ștergi, nu redenumești și nu suprascrii taburi, coloane, rânduri sau date existente. Te limitezi la adăugări.
+- Înainte de fiecare modificare evaluezi riscul pentru funcțiile existente. Dacă o modificare ar strica ceva care funcționează, te oprești și întrebi, cu opțiuni clare, înainte să continui.
+- Înainte de orice modificare pe Google Sheet, confirmi structura reală (taburi, coloane, antete) citită din cod.
+- Nicio referință la organizația de lucru a utilizatorului (nume de companie, domenii corporative, adrese, ID-uri interne) în cod, comentarii, nume de fișiere, commit-uri, texte din aplicație sau fișiere de test. Dacă un text cu asemenea referință apare în cod sau în date generate, îl elimini din cod, dar NU modifici datele deja salvate.
+- Nu hardcodezi secrete (token, URL de deployment Apps Script, parole). Acestea se citesc din Script Properties sau din Setari.
+- Nu scrii date personale reale în repo, în commit-uri sau în fișiere de test.
+- Pentru fiecare modificare spui în ce fișier și în ce funcție intervii și care este impactul asupra funcțiilor existente.
 
+=== 1. SURSE ȘI MEDIU DE LUCRU ===
+- Aplicație live: https://bogdanpaulmurar-hash.github.io/DIiH/index.html (verifici live în VS Code după fiecare deploy).
+- Repo GitHub: bogdanpaulmurar-hash/DIiH. Verifică exact case-ul căilor (DIiH, nu DliH).
+- Snapshot-ul codului existent: DIiH_20261014_100905.txt (versiunea v22.0). Este un dump și poate fi incomplet; confirmă cu fișierele reale din repo.
+- Backend Google Apps Script, fișiere care se deployează manual: _Cod.gs, _API.gs, _Psaltire.gs. Dupa modificări îmi dai fișierele complete (sau diff clar), iar eu fac deployment manual în script.google.com.
+- Spreadsheet de lucru: ID 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY. NU creezi spreadsheet nou.
+- Profiluri: Bogdan (administrator) și Andreea. Confirmă în cod mecanismul prin care aplicația știe profilul activ.
 
-2. tabul Astazi: 
-    a. Ordinea chenarelor de pe tab-ul astazi sa poata fi schimbata din widget si sa pot sa le aleg ordinea usor. 
-    b. Regandim secțiunea pomelnic. Lista cu oameni va fi accesata din astazi și in lista vor fi alte taburi care vor cuprinde: 
-        I. pomelnicul personal total, cel in care intru normal și prelucrez și editez și pun filtre, 
-        II. pomelnicul de la psaltire, 
-        III. bolnavi (toți cei care au bifa de bolnavi se grupează + lista cu bolnavii de la psaltire) 
-        IV. Adormiți. 
-        V. categorii ( aici aleg eu ce categorie din (grad) sa fie afișată. Daca aleg tot, se afiseaza pomelnicul actual care apare in astazi cu persoanele de rand de pomenit. Daca schimb gradul se reface calcului restrans pe acea categorie de grad. Fiecare tab ramane regula cu selecția a unui nr de 20/30... sau aleg eu un nr care are calcul (rotativ) și am lista de pomelnic cum doresc. 
-    Rămâne și in meniu pomelnicul vechi și psaltirea, asta va fi extra din tab-ul astazi cand intru pe pomelnic. Pe astazi regandeste ce va fi afisat pe chenarul de pomelnic sau poate chiar realizeaza o trimitere la unul din acele subtaburi unde vad direct pomelnicul si celalalte taburi. te las sa le gandesti tu.
-    c. Citirea psaltirii sa mai includă la deschidere o noutate: se va împărți in 2 subtaburi după deschidere și vor apărea pe unul pomelnicul de la psaltire ca acum și pe celalalt se va exporta de pe doxologia rugaciunea pentru neam a părintelui Gheorghe calciu care o găsești pe doxologia. Preia cumva cu Ornamente textul sa fie frumos plasat pe pagina și cu paragrafe impărțit. Si daca nu e complicat și nu generam probleme de performanta mai punem un subtab 3 cu calendar cu bifa daca mi-am făcut rânduiala. Rânduiala este compusa din catisma, pomelnic parțial sau pomelnic complet și rugăciunea pentru neam. Adaugă posibilitatea sa pun toate bifele deodată (3 pt ca pomelnicul e fie parțial fie complet) și si individual dacă nu am reușit tot. Sa fie calendar avansat ca in tabul scoala cu culori si vizualizări diferite, fara calcul, însă sa legam și sectiunea de lectura zilnica. Daca bifez acolo sa apară si bifa aceea aici in calendar. Cumva fiecare bifa sa fie specifica unei realizări. Sa pot sa îmi dau seama ce nu am realizat într-o zi.. aici se va crea in plus o noua vizualizare asemenea cum e pe toata luna insa restransa la alegere pe 3 zile sau 1 saptamana si se vede calendarul putin mai mare si mai frumos asa incat sa pot sa vad pe fiecare zi in parte daca sunt mai multe bife si ce reprezinta fiecare.
+=== 2. VERSIONARE (obligatorie la fiecare livrare) ===
+- Format MAJOR.MINOR, pornind de la v22.0 (APP_VERSION din cod).
+- MAJOR (ex. v23.0): module noi sau modificări de structură de date. Pentru acest pachet recomand v23.0.
+- MINOR (ex. v23.1, v23.2): implementări mici, corecții, ajustări.
+- Actualizezi APP_VERSION, CHANGELOG.md și versiunea din meta-date la fiecare livrare.
 
-3. Inventar: 
-    a. Am nevoie de categorii predefinite in dropdown
-    b. Posibilitatea sa personalizez categoriile
-    c. Posibilitatea de a introduce spatii predefinite si sa le am ca dropdown si sa creez sau editez cele existente.
+=== 3. GOOGLE SHEET ===
+Taburi existente (din Google Sheet și din cod): Scoala_Activitati, Inventar, Pomelnic, Psaltire_Grup, Citirea Psaltirii, noteBIBLIA_Anania, lista_cumparaturi, Ganduri, GandulZilei, LOG_Sistem, LOG_app, _Sync_Errors, _Sync_Audit_Details, _Sync_Summary, Setari, Biblia 360 zile BVA (sau Biblia_360_zile_BVA). Pot exista și altele; confirmă lista completă din cod.
 
-4. Setari: Inca sunt probleme cu imaginea. trebuie sa eliminam setarile actuale cu imaginile aplicaitei mele si a ceiei care poate fi shareuita (cea pentru Andreea) si introdu tu o imagine predefinita pe care o pot schimba eu din fisierele cu cod si imi indici exact unde si cum trebuie sa fac daca vreau sa o schimnb atat la mine cat si la Andreea. Acolo va fi un link sau o legatura simpla de modificat de mine, in caz ca introduc in fisiere o noua imagine. si asa voi schimba de acum pozele. in rest elimina setarile pentru poza aplicatiei, ramane doar setarea pt schimbarea numelui si a logo-ului din aplicatie cu ☧, emojy sau ceva predefinit specific aplicatiei. o casa, sau o cruce bizantina (dar nu ruseasca)
+Reguli pentru Sheet:
+- NU creezi taburi noi pentru Gândul zilei, Notițe sau Biblia. Există deja. Din cod reiese că Notite are fallback pe Ganduri, iar notele Bibliei au fallback pe Biblia_Note; confirmă care tab este folosit efectiv și raportează.
+- Gândul zilei: tabul GandulZilei există. Confirmă dacă aplicația citește din el sau din Ganduri. Adăugarea din aplicație și din sheet scrie în același tab activ.
+- Tab NOU, singurul: ModelCitire.
+- Coloane NOI în Scoala_Activitati: Data_Achitat, Comentariu_Plata. Nu modifici coloanele existente.
+- Setup idempotent (funcție Apps Script) care verifică existența tabului ModelCitire și a coloanelor noi, și creează doar ce lipsește. Nu suprascrie date, nu șterge nimic.
+- Setari (cheie-valoare): adaugi chei noi, fără să modifici cheile existente.
+- Imaginile NU se salvează în celule (limita unei celule este mică). Se salvează ca fișiere în Google Drive, într-un folder dedicat creat de script, iar în Setari se păstrează doar ID-ul fișierului.
 
-5. aplicatia de share, cea a Andreei: Nu poate fi instalata pe Iphone ca pe android si daca o instalez îmi instalează aplicația DIiH nu aplicația andreei configurata pt ea. După câteva secunde o încarcă a ei dar de instalat apare ca e instalata a mea. Si poza aplicației tot a mea este. trebuie sa regandim conceptul pentru iphone pentru ca nu se comporta ca pe android. te rog sa imi dai si alte solutii sau daca ai una mai buna implementeazo direct.
+Structura ModelCitire:
+Model_ID | Model_Nume | Activ (DA/NU) | Pozitie | Carte_Canonica | Bifat (DA/NU) | Data_Bifare | Observatii
+- Carte_Canonica: valori validate printr-o listă cu numele canonice din edițiunea Bartolomeu Valeriu Anania (din tabul de referință sau din cod).
+- O linie = o poziție din plan. Dacă o poziție acoperă mai multe cărți, le separi cu ";".
+- Modelul activ se păstrează în Setari, cheie ModelCitireActiv (Model_ID). Schimbarea modelului în aplicație actualizează această valoare.
 
-6. Sfântă Scriptură: 
-    a. titlul cartii lui Iisus Navi este gresit - din cate stiu este Iosua. Verifica oricum ordinea cartilor dupa canonul biblic diortosit de mitr- bartolomeu anania. am atasat si poza in conversatie. 
-    b. Am nevoie de o legătură undeva in partea de sus care ma duce la cartea respectiv capitolul la care am rămas daca vreau sa vad, de ex câte capitole au mai rămas din acea carte. actual am numarul de capitole citite din totalul de capitole. dar un buton de legatura spre toata cartea m-ar ajuta poate cand vreau sa verific. sau introduci tu un alt indice tot undeva in partea de sus 17/25 si sa se distinga ca este vorba de capitolele cartii din care citesc.
-    c. Foloseste https://biblia.dervent.ro/VT-Fc-1 pentru citatele zilnice de unde iei versetul care contine nota de subsol ca citat zilnic si transpui si nota de subsol a fiecarui indice din verset. Sa se parcurga toata biblia cu toate notele de subsol si apoi se reia de la inceput- pentru fiecare zi cate un verset cu notele aferente. Ar fi mai bine sa avem asta in registru in tabul dedicat sf scripturi? sa introduc acolo totul printr-un automatism? sau ai tu alta varianta care o legi aici si apare aici nota zilnica cu versetul de care apartine? cum procedam aici? am atasat o poza in chat cu cum arata pe dervent versetul si notele de subsol. am apasat pe indicele a(rosu) din primul verset si ai nota de subsol in dreapta. 
+Pre-populare ModelCitire:
+1) Model_ID PR_NICOLAE_DIMA, Model_Nume "Pr. Nicolae Dima (propunere video)", Activ=DA, 42 de poziții:
+1 Marcu; 2 Facerea; 3 Luca; 4 Ieșirea; 5 Faptele Apostolilor; 6 Levitic; 7 Numeri; 8 Deuteronom; 9 Romani; 10 Iosua; 11 Judecători; 12 Rut; 13 1 Regi; 14 2 Regi; 15 Matei; 16 3 Regi; 17 4 Regi; 18 Galateni; 19 1 Paralipomena; 20 2 Paralipomena; 21 Ezdra; 22 Neemia; 23 1 Corinteni; 2 Corinteni; 24 Efeseni; 25 Filipeni; 26 Estera; 27 Profeții mari (grup: Isaia; Ieremia; Plângerile; Ezechiel; Daniel; de confirmat); 28 Ioan; 29 Epistolele sobornicești ale Sf. Ioan (1-3 Ioan); 30 Coloseni; 31 Profeții mici (cele 12, grup); 32 Evrei; 33 1 și 2 Tesaloniceni; 34 1 și 2 Timotei; 35 Tit; 36 Filimon; 37 Iov; 38 Psalmi; Pilde; Ecleziastul; Cântarea Cântărilor (grup); 39 1 și 2 Petru; 40 Iacob; 41 Iuda; 42 Apocalipsa.
+2) Model_ID CANONIC_ANANIA, Model_Nume "Ordinea canonică Anania", Activ=DA: o linie per carte, în ordinea canonică, generată din lista de cărți.
+3) Model_ID EXEMPLU_TEST, Model_Nume "Test", Activ=NU: 3 linii (Marcu; Facerea; Ioan).
 
-7. Scoala: Ora daca o schimb la o activitate, nu se modifica
+=== 4. PROGRES LA CITIREA BIBLIEI (de rezolvat) ===
+- Progresul actual pe carte este un pointer canonic. Dacă citești după un model care nu e în ordine canonică, progresul rămâne blocat (ex. sari din VT în NT și progresul rămâne în VT până ajungi la NT).
+- Soluție: progresul se ține pe model și pe poziție (ModelCitire, Bifat). Bifarea unei poziții bifează toate cărțile din acea poziție, pentru modelul selectat.
+- Tabul canonic existent rămâne în formatul actual. Vizualizarea canonică afișează UNIUNEA: o carte este citită dacă e bifată în tabul existent SAU în orice model din ModelCitire. Indici modelul din care provine bifa.
+- Nu scrii în tabul canonic existent fără confirmare. Propune varianta (calcul la afișare sau scriere) și așteaptă decizia mea.
+- Nu există blocare la săritul VT→NT. "Următoarea carte" = prima unitate nebifată din modelul selectat.
 
-8. Am observat ca notificarile iar nu merg. trebuie regandire si facute mai bine. candva mergeau. si parca aniversarile nu sunt sincronizate corect cu datele sin pomenlic. astaziu 08 octombire este in calendar aniversarea de adormire a ps vasile fluieras. nu imi apare in aplicatie. te rog verifica mecanismul si calculul. 
+=== 5. WIDGETURI (layout) ===
+- Gândul zilei: card SEPARAT, deasupra widgetului comasat "Citire Sf. Scripturi". Are reîmprospătare și acțiuni proprii (navigare, aleator, calendar).
+- "Citire Sf. Scripturi" este comasat, cu două secțiuni:
+  - Plan (model): selector model, lista pozițiilor în ordinea modelului cu bifă per poziție, bară de progres per model.
+  - Canonic (Anania): progresul pe cărți în ordinea Anania, formatul actual, plus indicatorul modelului care a bifat fiecare carte. Filtru opțional per model.
+- Schimbarea modelului nu șterge progresul altor modele.
 
-Îndreptar pentru folosirea aparatului ajutător de pe lângă textul biblic
-CĂRȚILE SFINTEI SCRIPTURI
+=== 6. GÂNDUL ZILEI ===
+- Sursa: tabul GandulZilei (după confirmare din cod). Aplicația îl încarcă la pornire și folosește array-ul hardcodat ca fallback doar dacă sheet-ul nu răspunde.
+- Adăugare, editare și dezactivare (Activ=NU) din aplicație și direct din sheet. Scrierile din aplicație NU șterg rânduri.
+- Rotația folosește doar citatele active, cu index determinist (aceeași zi, același citat pe toate dispozitivele). Păstrezi navigarea ◀ ▶, 🎲 și 📅.
 
-în ordinea Cuprinsului	în ordinea alfabetică a siglelor
+=== 7. NOTIȚE ===
+- Confirmare înainte de ștergere (modal cu titlul notei).
+- Selectare multiplă cu checkbox și buton "Șterge selectate (N)", cu o singură confirmare.
+- Ștergere soft (marcaj de ștergere) cu posibilitate de anulare. Nu elimini rânduri din sheet.
 
+=== 8. BIBLIA ANANIA – NOTE (tab noteBIBLIA_Anania) ===
+- Vizualizare și editare interactivă a notelor, inline sau în modal. Editarea actualizează data modificării.
+- Căutare după carte și/sau verset și după trimitere (legătura la altă notă). Filtre: are trimitere, trimite către X.
+- Propune cum se calculează cheia de trimitere (în memorie sau coloană nouă). Nu adaugi coloană fără confirmarea mea.
+- Ștergere cu confirmare, ca la Notițe.
 
-VECHIUL TESTAMENT
-Fc	Facerea	Ag	Agheu
-Iș	Ieșirea	Am	Amos
-Lv	Leviticul	Avc	Avacum
-Nm	Numerele	Avd	Avdia
-Dt	Deuteronomul	Bar	Baruh
-Ios	Iosua Navi	Bel	Bel și Balaurul
-Jd	Judecători	Cânt	Cântarea Cântărilor
-Rut	Rut	Dn	Daniel
-1 Rg	1 Regi	Dt	Deuteronomul
-2 Rg	2 Regi	Ecc	Ecclesiastul
-3 Rg	3 Regi	Epist	Epistola lui Ieremia
-4 Rg	4 Regi	Est	Estera
-1 Par	1 Paralipomena	Ezr	Ezdra
-2 Par	2 Paralipomena	3 Ezr	Cartea a treia a lui Ezdra
-Ezr	Ezdra	Fc	Facerea
-Ne	Neemia	Idt	Iudita
-Est	Estera	Ioil	Ioil
-Iov	Iov	Iona	Iona
-Ps	Psalmii	Ios	Iosua Navi
-Pr	Proverbele lui Solomon	Iov	Iov
-Ecc	Ecclesiastul	Ir	Ieremia
-Cânt	Cântarea Cântărilor	Is	Isaia
-Is	Isaia	Iș	Ieșirea
-Ir	Ieremia	Iz	Iezechiel
-Plg	Plângerile lui Ieremia	Jd	Judecători
-Iz	Iezechiel	Lv	Leviticul
-Dn	Daniel	1 Mac	1 Macabei
-Os	Osea	2 Mac	2 Macabei
-Am	Amos	3 Mac	3 Macabei
-Mi	Miheia	Mal	Maleahi
-Ioil	Ioil	Man	Manase
-Avd	Avdia	Mi	Miheia
-Iona	Iona	Naum	Naum
-Naum	Naum	Ne	Neemia
-Avc	Avacum	Nm	Numerele
-Sof	Sofonie	Os	Osea
-Ag	Agheu	1 Par	1 Paralipomena
-Za	Zaharia	2 Par	2 Paralipomena
-Mal	Maleahi	Plg	Plângerile lui Ieremia
-Tob	Tobit	Pr	Proverbele lui Solomon
-Idt	Iudita	Ps	Psalmii
-Bar	Baruh	1 Rg	1 Regi
-Epist	Epistola lui Ieremia	2 Rg	2 Regi
-Tin	Cântarea celor trei tineri	3 Rg	3 Regi
-3 Ezr	Cartea a treia a lui Ezdra	4 Rg	4 Regi
-Sol	Înțelepciunea lui Solomon	Rut	Rut
-Sir	Înțelepciunea lui Isus, fiul lui Sirah	Sir	Înțelepciunea lui Isus, fiul lui Sirah
-Sus	Istoria Susanei	Sof	Sofonie
-Bel	Bel și Balaurul	Sol	Înțelepciunea lui Solomon
-1 Mac	1 Macabei	Sus	Istoria Susanei
-2 Mac	2 Macabei	Tin	Cântarea celor trei tineri
-3 Mac	3 Macabei	Tob	Tobit
-Man	Manase	Za	Zaharia
+=== 9. ȘCOALĂ (tab Scoala_Activitati) ===
+9.1 Plată:
+- Când statusul devine Achitat: Data_Achitat se completează automat cu data curentă (editabilă) și se deschide câmpul opțional Comentariu_Plata.
+- Când statusul revine la neachitat: golirea Data_Achitat și Comentariu_Plata cere confirmare și se loghează în LOG_app.
 
+9.2 Sumar financiar:
+- Perioadă predefinită (Luna curentă, Luna trecută, Anul curent, Ultimele 30 zile) sau personalizată (de la – până la).
+- Afișează total, achitat, neachitat, număr de activități. Defalcare per copil și per tip de eveniment. Sume în Lei.
 
-NOUL TESTAMENT
-Mt	Evanghelia după Matei	Ap	Apocalipsa
-Mc	Evanghelia după Marcu	1 Co	1 Corinteni
-Lc	Evanghelia după Luca	2 Co	2 Corinteni
-In	Evanghelia după Ioan	Col	Coloseni
-FA	Faptele Apostolilor	Ef	Efeseni
-Rm	Romani	Evr	Evrei
-1 Co	1 Corinteni	FA	Faptele Apostolilor
-2 Co	2 Corinteni	Flm	Filimon
-Ga	Galateni	Flp	Filipeni
-Ef	Efeseni	Ga	Galateni
-Flp	Filipeni	Iac	Iacob
-Col	Coloseni	In	Evanghelia după Ioan
-1 Tes	1 Tesaloniceni	1 In	1 Ioan
-2 Tes	2 Tesaloniceni	2 In	2 Ioan
-1 Tim	1 Timotei	3 In	3 Ioan
-2 Tim	2 Timotei	Iuda	Iuda
-Tit	Tit	Lc	Evanghelia după Luca
-Flm	Filimon	Mc	Evanghelia după Marcu
-Evr	Evrei	Mt	Evanghelia după Matei
-Iac	Iacob	1 Ptr	1 Petru
-1 Ptr	1 Petru	2 Ptr	2 Petru
-2 Ptr	2 Petru	Rm	Romani
-1 In	1 Ioan	1 Tes	1 Tesaloniceni
-2 In	2 Ioan	2 Tes	2 Tesaloniceni
-3 In	3 Ioan	1 Tim	1 Timotei
-Iuda	Iuda	2 Tim	2 Timotei
-Ap	Apocalipsa	Tit	Tit
-SIGLE ÎN NOTELE INFRAPAGINALE
+9.3 Calendarul anului școlar de la inspectorat (funcție NOUĂ):
+- Scopul: vizualizarea organizării de la inspectorat, cu o poză care se schimbă o dată pe an, înainte de începerea noului an școlar.
+- Încărcare (doar profilul Administrator, Bogdan): buton "Încarcă calendarul anului școlar", cu selectarea anului școlar (ex. 2026-2027) și a fișierului local (JPG, PNG; PDF doar după confirmare). Imaginea se salvează în folderul Drive al aplicației, iar în Setari se păstrează cheia CalendarScolar_<an> cu ID-ul fișierului. Calendarele din anii anteriori rămân păstrate și accesibile.
+- Anul afișat este cel curent după data de 1 septembrie; anul următor devine implicit după 1 septembrie sau la încărcarea lui.
+- Afișare: buton "Deschide calendarul" care deschide poza în format mare (modal sau pagină full-screen, cu închidere clar vizibilă).
+- Navigare: zoom (pinch pe mobil, roată pe desktop), derulare (scroll) liberă pe poză.
+- Salt la lună: butoane Ian–Dec care duc direct la punctul de start al lunii. Punctele de start se marchează o singură dată, la încărcare, prin atingere sau click pe poză (12 puncte, salvate în Setari în formă de procente x/y, ca să rămână valabile la orice dimensiune de ecran).
+- Salt la zi: opțional, dacă reușim să marcăm și zilele; altfel rămâne saltul pe lună și derularea manuală. Confirmă cu mine varianta.
+- Dacă sursa de la inspectorat este un PDF pe pagini, propune o soluție înainte de implementare (o pagină pe lună, sau randare PDF); nu presupune.
 
-BJ	La Bible de Jérusalem
-BOB	Biblia de la Blaj 1795
-GALA	Biblia de București 1938
-KJV	King James Version
-MIRON	Biblia de București 1936
-NICOD	Biblia de București 1944
-OSTY	La Bible trad. Osty
-RSV	Revised Standard Version
-SINOD	Biblia de București 1914
-ȘAGUNA	Biblia de Sibiu 1858
-ȘERBAN	Biblia de București 1688
-TEV	Today's English Version
-TOB	Traduction Oecuménique de la Bible
-Ebr. /T.M.	Versiunea Ebraică / Textul Masoretic
-Sept. /LXX	Septuaginta
-V.T.	Vechiul Testament
-N.T.	Noul Testament
-ed.	ediția
-=	adică (egal cu)
-v.	versetul
-vv.	versetele
-CUM TREBUIE CITITE TRIMITERILE
+=== 10. CATISME / CALENDAR – BIFE ===
+- Adaugi o bifă NOUĂ "Pomelnicul zilei" (doar secțiunea de azi). Păstrezi bifa existentă pentru pomelnicul complet. Nu le combini.
 
-11)	versetul care trimite
-11-12)	versetele care trimit
-3,1	capitolul 3, versetul 1
-3, 1-7	capitolul 3, versetele 1 până la 7 (inclusiv)
-3,1,3	capitolul 3, versetele 1 și 3
-3,1-7,12	capitolul 3, versetele 1 până la 7, versetul 12
-3, 1-7; 9,5	capitolul 3, versetele 1 până la 7, capitolul 9, versetul 5
-(cifrele scrise îngroșat - fără paranteză - indică întotdeauna capitolul)
+=== 11. LISTA DE CUMPĂRĂTURI (lista_cumparaturi) ===
+- Link-urile din text devin clickabile: target="_blank" rel="noopener noreferrer". Afișează un domeniu sau o etichetă scurtă, iar URL-ul complet apare în tooltip.
+- Problema de layout la link-uri lungi: chenarul se distorsionează și linkul iese din card. Repară cu overflow-wrap:anywhere, word-break, min-width:0 pe copiii flex, overflow:hidden pe card, max-width:100%.
+- Testează cu un link Google Search de peste 500 de caractere.
 
-Unități de măsură și monede menționate în Sfânta Scriptură
-În perioada scrierii cărților biblice, măsurile de lungime, de capacitate și de greutate, precum și monedele întrebuințate de poporul evreu, au suferit multe schimbări, atât ca denumire, cât și ca valoare. Aceste schimbări, întâlnite și la celelalte popoare din antichitate, au fost impuse fie de evoluția situației economice din țară, fie de schimburile comerciale cu popoarele vecine. Pentru multe din aceste denumiri, de mult dispărute, nu s'au putut găsi cuvinte corespunzătoare în limba română; din această cauză, ele au fost fie transcrise aproape întocmai, fie traduse prin denumiri generale, ca: măsuri, coșuri, banițe etc. Tabelele de mai jos indică valorile acestor unități de măsură:
+=== 12. TAB "INFO" (sub "Mai multe") ===
+Secțiuni în limba română, scrise din codul real (nu inventate):
+1. Ce este aplicația.
+2. Funcții pe modul (Acasă, Pomelnic, Școală, Notițe, Cumpărături, Mai multe: Biblia, Psaltire, Citire Sf. Scripturi, Info).
+3. Cum se folosește fiecare funcție, pas cu pas.
+4. Instalare pe telefon și PC (Chrome Android și Chrome desktop).
+5. Schimbarea iconiței și a logo-ului (procedura de la punctul 13).
+6. Date și confidențialitate: ce se stochează unde (Google Sheet, Drive, localStorage), fără secrete în cod.
+7. Versiune și changelog.
 
+=== 13. ICONIȚĂ ȘI LOGO (funcție NOUĂ, cu sincronizare) ===
 
-Măsuri de lungime
-deget	1,75	cm
-lat de palmă	0,75	cm
-palmă	22,50	cm
-cot	45	cm
-braț	1,85	m
-picior	32	cm
-pas	1,75	m
-prăjină (trestie)	2,88	m
-stadiu	185	m
-milă	1,5	km
+13.1 Diagnostic (din capturile anterioare):
+- Dialogul de instalare din Chrome desktop arată litera "D" în loc de iconiță. Manifestul nu încarcă icon-urile corect (PNG lipsă, cale greșită sau dimensiune insuficientă).
+- La instalare apare numele "DliH" și URL-ul /DliH/index.html. Verifică manifest name și short_name (trebuie DIiH pentru Bogdan) și faptul că instalarea s-a făcut din calea corectă.
+- Iconița de pe telefon rămâne cea veche: Chrome folosește iconița de la momentul instalării.
 
+13.2 Regula fundamentală a sigiliului:
+- Sigiliul cu monograma lui Hristos (fișierul icon-sigiliu-monograma-hristos.svg, din folderul local al utilizatorului și din repo, /icons/) NU se modifică, NU se suprascrie și NU se reconvertește pe loc. Rămâne ca implicit și ca fallback.
+- Toate derivatele (PNG, maskable, apple-touch) se generează ca fișiere separate, cu nume distincte.
 
-Măsuri de capacitate
-Pentru cereale:
+13.3 Iconița aplicației (ecranul principal), per profil:
+- Profilul Bogdan: iconița implicită este sigiliul. Numele aplicației: DIiH.
+- Profilul Andreea: numele aplicației este ABL (nu DIiH). Iconița implicită este sigiliul, dar se poate schimba independent.
+- În Setari, secțiunea "Iconiță aplicație", pentru profilul activ:
+  - "Încarcă imagine locală": PNG/JPG, redimensionat la 512x512 cu canvas. Se salvează în Drive, ID-ul fișierului în Setari (cheie IconaApp_<profil>).
+  - "Revino la sigiliul implicit": șterge doar cheia de personalizare, nu fișierul sigiliului.
+  - "Previzualizare" înainte de salvare.
+  - Dacă se încarcă o imagine nouă, cea veche rămâne în Drive (nu o ștergi automat), iar cheia trece pe cea nouă. Poți reveni la oricare dintre imaginile salvate.
+- Aplicația setează dinamic link rel="icon", apple-touch-icon și manifestul (Blob cu iconița și numele profilului). Numele se ia din profil: DIiH pentru Bogdan, ABL pentru Andreea.
+- Sincronizare cu telefonul: la deschiderea aplicației pe telefon, aplicația citește cheia IconaApp_<profilul activ> și actualizează imaginea afișată în aplicație. Iconița de pe ecranul principal se schimbă DOAR după dezinstalarea și reinstalarea aplicației. Agentul testează dacă există o variantă de actualizare pe Android și raportează exact rezultatul.
+- Nota obligatorie, afișată în Setari și în tabul Info: "Iconița de pe ecranul principal se schimbă doar după dezinstalarea și reinstalarea aplicației."
+- Profilul Andreea nu moștenește iconița sau numele din profilul Bogdan.
 
-omer	364	l
-nebel	225	l
-efă	36,4	l
-baniță	15	l
-Pentru lichide:
-omer	364	l
-măsură	36,4	l
-hin	6,06	l
-log	0,50	l
+13.4 Logo-ul din interiorul aplicației (funcție NOUĂ):
+- Logo-ul din antetul aplicației poate fi înlocuit cu un emoji, ales dintr-o listă scurtă sau introdus manual.
+- Alegerea se salvează în Setari, cheie LogoApp_<profil>, și se sincronizează ca iconița (se aplică la următoarea deschidere pe orice dispozitiv).
+- Opțiunea "Revino la sigiliu" restaurează logo-ul implicit, fără să atingi fișierul sigiliului.
 
+13.5 Cerințe tehnice:
+- Generează PNG: 192x192, 512x512, 512x512 maskable (cu margine de siguranță), apple-touch-icon 180x180, din copia sigiliului. Denumire separată, ex. icons/app-192.png.
+- Repară manifestul: căi absolute corecte pentru GitHub Pages, name și short_name corecte, iconuri PNG valide.
+- Testează în Chrome desktop și Chrome Android, pentru profilul Bogdan și profilul Andreea.
+- Dacă manifestul dinamic nu funcționează pe o platformă, raportează exact pe care și propune fallback.
 
-Măsuri de greutate
-talant	34,272	kg
-mină	571,200	g
-siclu	5,712	g
-gheră	0,571	g
-livră romană	327,450	g
-
-
-Monede
-
-Valoarea de schimb a monedelor depindea de natura și greutatea metalului din care erau confecționate. În epoca patriarhilor se practica schimbul în natură, produsele fiind evaluate prin cântărire. Trecerea la sistemul monetar s'a făcut treptat, încheindu-se abia în epoca profeților. La început, aurul și argintul folosite ca mijloc de schimb circulau în forme și dimensiuni variate; pentru a li se stabili valoarea, trebuiau cântărite de fiecare dată. De aceea, denumirile măsurilor curente de greutate s'au dat și celor dintâi monede propriu-zise. După ce forma și greutatea acestora s'a standardizat (începând din sec. VII î. H.), n'a mai fost nevoie de cântărirea lor. Denumirile și valorile monetare menționate în Sfânta Scriptură se prezintă astfel:
-Din aur	Din argint
-siclu	11,424 g	14,54 g
-statir	8,60 g	–
-dinar (drahmă)	–	4,55 g
-mină	571,200 g	727,00 g
-talant	34,272 kg	43,62 kg
-Codrantul, leptaua, asariul și obolul, mici subdiviziuni monetare din aramă, unele cântărind sub 1 gram, serveau la darea restului și la micile cumpărături zilnice.
-
-Mina (= 50 sicli = 2000 drahme) și talantul (= 3000 sicli = 12000 drahme) nu erau monede, ci denumiri ale sumelor monetare mari.
-
-Puterea de cumpărare a acestor monede, pe vremea Mântuitorului, rezultă din informația că dinarul reprezenta salariul zilnic al unui muncitor agricol (Mt 20, 13) și asigura întreținerea unui om pe timp de 24 ore (Mt 20, 2, 9, 10, 13; Lc 10, 35; Mc 14, 5 etc.).
+=== 14. VERSIUNE ȘI DEPLOYMENT ===
+- Livrabile: fișierele .gs complete (sau diff clar) pentru _Cod.gs, _API.gs, _Psaltire.gs, modificările frontend, CHANGELOG.md și lista cheilor noi din Setari.
+- Pași de implementare: rulare setup (idempotent), verificare Script Properties, redeploy Web App în Apps Script (New version, Execute as Me), publicare GitHub Pages, reinstalare PWA pentru iconița de pe ecranul principal.
+- Checklist de testare: Gândul zilei (sheet, aplicație, fallback); citire pe model cu săritură VT→NT; schimbare model; progres canonic cu uniune; Notițe (confirmare și multi-select); Biblia (căutare, editare, trimitere); Școală (achitare automată, comentariu, sumar pe perioade, calendar: încărcare, zoom, scroll, salt pe lună); Cumpărături (link-uri lungi); Calendar (bifă pomelnic zi); Info; iconiță și logo (profil Bogdan și profil Andreea, numele ABL, Chrome desktop și Android); verificare live pe URL-ul de producție.
+- Dacă o structură din cod diferă de descrierea de aici, oprește-te și întreabă.

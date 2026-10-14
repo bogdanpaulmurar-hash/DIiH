@@ -44,6 +44,18 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
+  // 1b. AUDIT LA NIVEL DE APLICAȚIE ÎN LOG_app (separat de LOG_Sistem; folosit ex. la revenirea unei plăți pe neachitat)
+  if (action === "logAppEvent") {
+    logToAppSheet(ss, {
+      modul: e.parameter.modul || "General",
+      actiune: e.parameter.actiune || "-",
+      status: e.parameter.status || "INFO",
+      detalii: e.parameter.detalii || "",
+      user: e.parameter.user || "-"
+    });
+    return returnResponse(e, { success: true });
+  }
+
   // 2. SETĂRI GLOBALE (Inclusiv Număr Persoane Pomelnic Zilnic, Iconiță & Configurare Partajare)
   if (action === "updateGlobalSettings") {
     let sh = ss.getSheetByName("Setari");
@@ -63,7 +75,30 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
-  // 3. SALVARE ACTIVITĂȚI ȘCOALĂ (Păstrează structura de 14 coloane a foii existente + stocare metadate în Col 13)
+  // 2b. SETARE / CITIRE CHEIE ARBITRARĂ ÎN Setari (folosit de funcții noi: ModelCitire activ, iconiță/logo per profil,
+  //     calendar școlar per an, repere zoom, date Săptămâna Verde/Altfel) — fără să modifice cheile cunoscute existente
+  if (action === "setSettingRaw") {
+    let sh = ss.getSheetByName("Setari");
+    if (!sh) {
+      sh = ss.insertSheet("Setari");
+      sh.appendRow(["Cheie", "Valoare", "UltimaModificare"]);
+      sh.getRange("A1:C1").setFontWeight("bold");
+    }
+    if (e.parameter.key) setSettingValue(sh, e.parameter.key, e.parameter.value || "");
+    return returnResponse(e, { success: true });
+  }
+
+  if (action === "getSettingsRaw") {
+    return returnResponse(e, { settingsRaw: getAllSettingsRaw(ss) });
+  }
+
+  // Returnează o imagine salvată în Drive (calendar școlar, iconiță/logo custom) ca base64, pentru <img src="data:...">
+  if (action === "getDriveImage") {
+    return returnResponse(e, getDriveImageAsBase64(ss, e.parameter.fileId));
+  }
+
+  // 3. SALVARE ACTIVITĂȚI ȘCOALĂ (Păstrează structura de 14 coloane a foii existente + stocare metadate în Col 13
+  //    + coloane NOI O/P: Data_Achitat, Comentariu_Plata)
   if (action === "saveSchoolActivities") {
     let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
     if (!sh) {
@@ -71,6 +106,7 @@ function doGet(e) {
       sh.appendRow(["ID", "Data", "Copil", "Institutie", "Titlu", "TipPlata", "Ore", "TarifOra", "TotalPlata", "StatusPlata", "TermenPlata", "MesajZi", "RemindereJson", "DataCreare"]);
       sh.getRange("A1:N1").setFontWeight("bold");
     }
+    ensureSheetColumns(sh, ["Data_Achitat", "Comentariu_Plata"]);
     const activities = JSON.parse(e.parameter.data || "[]");
     const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
 
@@ -99,7 +135,9 @@ function doGet(e) {
         item.deadline || "-",
         item.dayMessage || "",
         JSON.stringify(metaObj),
-        dataCreare
+        dataCreare,
+        item.dataAchitat || "",
+        item.comentariuPlata || ""
       ]);
     });
     return returnResponse(e, { success: true, count: activities.length });
@@ -116,13 +154,19 @@ function doGet(e) {
     let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
     const ids = JSON.parse(e.parameter.ids || "[]");
     const newStatus = e.parameter.status || "Achitat";
+    // dataAchitat/comentariuPlata: completate la achitare; golite (string gol) la revenire la neachitat
+    const dataAchitat = e.parameter.dataAchitat !== undefined ? e.parameter.dataAchitat : null;
+    const comentariuPlata = e.parameter.comentariuPlata !== undefined ? e.parameter.comentariuPlata : null;
     if (sh && ids.length > 0) {
+      const cols = ensureSheetColumns(sh, ["Data_Achitat", "Comentariu_Plata"]);
       const maxRows = sh.getLastRow();
       if (maxRows >= 2) {
         const idCol = sh.getRange(2, 1, maxRows - 1, 1).getValues();
         for (let i = 0; i < idCol.length; i++) {
           if (ids.indexOf(String(idCol[i][0]).trim()) !== -1) {
             sh.getRange(i + 2, 10).setValue(newStatus); // Col J = StatusPlata
+            if (dataAchitat !== null) sh.getRange(i + 2, cols["Data_Achitat"]).setValue(dataAchitat);
+            if (comentariuPlata !== null) sh.getRange(i + 2, cols["Comentariu_Plata"]).setValue(comentariuPlata);
           }
         }
       }
@@ -244,6 +288,24 @@ function doGet(e) {
     }
 
     return returnResponse(e, { success: true, deleted: deleted });
+  }
+
+  // 5b. ȘTERGERE SOFT NOTIȚE (marcaj Sters=DA/NU, nu elimină rânduri; suportă selecție multiplă via rowIds="2,5,7")
+  if (action === "softDeleteGand" || action === "restoreGand") {
+    let sh = ss.getSheetByName("Notite") || ss.getSheetByName("Ganduri");
+    if (!sh) return returnResponse(e, { success: true });
+    const cols = getNoteStersColumns(sh);
+    const isDelete = (action === "softDeleteGand");
+    const timestamp = isDelete ? Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss") : "";
+    const rowIdsStr = e.parameter.rowIds || e.parameter.rowId || "";
+    const ids = rowIdsStr.toString().split(",").map(x => parseInt(x.trim(), 10)).filter(n => !isNaN(n));
+    ids.forEach(rId => {
+      if (rId >= 2 && rId <= sh.getLastRow()) {
+        sh.getRange(rId, cols.stersCol).setValue(isDelete ? "DA" : "NU");
+        sh.getRange(rId, cols.dataStergereCol).setValue(timestamp);
+      }
+    });
+    return returnResponse(e, { success: true, count: ids.length });
   }
 
   // 6. CUMPĂRĂTURI (Structură suportată: cu ID pe Col 1 sau direct Magazin pe Col 1; suport autor & opțiune "Nu partaja")
@@ -515,15 +577,115 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
+  // 8c. GÂNDUL ZILEI (tab nou GandulZilei; adăugare/editare/dezactivare — niciodată ștergere de rând)
+  if (action === "getGandulZileiData") {
+    return returnResponse(e, { gandulZilei: getGandulZileiData(ss) });
+  }
+
+  if (action === "addGandulZilei") {
+    let sh = getOrCreateGandulZileiSheet(ss);
+    const now = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+    const newId = "GZ-" + Date.now();
+    sh.appendRow([newId, e.parameter.text || "", e.parameter.autor || "", e.parameter.tema || "Înțelepciune", "DA", now, now]);
+    return returnResponse(e, { success: true, id: newId });
+  }
+
+  if (action === "updateGandulZilei") {
+    let sh = getOrCreateGandulZileiSheet(ss);
+    const id = e.parameter.id;
+    const maxRows = sh.getLastRow();
+    if (sh && id && maxRows >= 2) {
+      const ids = sh.getRange(2, 1, maxRows - 1, 1).getValues();
+      for (let i = 0; i < ids.length; i++) {
+        if ((ids[i][0] || "").toString().trim() === id.toString().trim()) {
+          const r = i + 2;
+          if (e.parameter.text !== undefined) sh.getRange(r, 2).setValue(e.parameter.text);
+          if (e.parameter.autor !== undefined) sh.getRange(r, 3).setValue(e.parameter.autor);
+          if (e.parameter.tema !== undefined) sh.getRange(r, 4).setValue(e.parameter.tema);
+          if (e.parameter.activ !== undefined) sh.getRange(r, 5).setValue(e.parameter.activ === "true" || e.parameter.activ === true ? "DA" : "NU");
+          sh.getRange(r, 7).setValue(Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss"));
+          break;
+        }
+      }
+    }
+    return returnResponse(e, { success: true });
+  }
+
+  // 8d. MODEL CITIRE (Secțiunea 4-5): tab NOU ModelCitire, singurul tab complet nou cerut — populat
+  //     idempotent cu cele 3 modele predefinite DOAR dacă foaia e goală la prima utilizare
+  if (action === "getModelCitireData") {
+    return returnResponse(e, { modelCitire: getModelCitireData(ss) });
+  }
+
+  if (action === "setModelCitirePozitieBifat") {
+    let sh = getOrCreateModelCitireSheet(ss);
+    const rowId = parseInt(e.parameter.rowId, 10);
+    const bifat = (e.parameter.bifat === "true" || e.parameter.bifat === true);
+    if (sh && rowId >= 2 && rowId <= sh.getLastRow()) {
+      sh.getRange(rowId, 6).setValue(bifat ? "DA" : "NU");
+      sh.getRange(rowId, 7).setValue(bifat ? Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss") : "");
+    }
+    return returnResponse(e, { success: true });
+  }
+
+  // 8e. EDITARE NOTE BIBLIA ANANIA — actualizează doar câmpurile trimise, completează DataModificare
+  if (action === "updateNoteAnania") {
+    let sh = ss.getSheetByName("noteBIBLIA_Anania") || ss.getSheetByName("Biblia_Note");
+    const rowId = parseInt(e.parameter.rowId, 10);
+    if (sh && rowId >= 2 && rowId <= sh.getLastRow()) {
+      const cols = ensureSheetColumns(sh, ["Sters", "DataStergere", "DataModificare"]);
+      if (e.parameter.textVerset !== undefined) sh.getRange(rowId, 6).setValue(e.parameter.textVerset);
+      if (e.parameter.context !== undefined) sh.getRange(rowId, 7).setValue(e.parameter.context);
+      if (e.parameter.nota !== undefined) sh.getRange(rowId, 8).setValue(e.parameter.nota);
+      if (e.parameter.derventUrl !== undefined) sh.getRange(rowId, 9).setValue(e.parameter.derventUrl);
+      if (e.parameter.capitolProgres !== undefined) sh.getRange(rowId, 10).setValue(e.parameter.capitolProgres);
+      sh.getRange(rowId, cols["DataModificare"]).setValue(Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss"));
+    }
+    return returnResponse(e, { success: true });
+  }
+
+  // 8f. ȘTERGERE SOFT NOTE BIBLIA ANANIA (ca la Notițe: marcaj Sters=DA/NU, nu elimină rânduri)
+  if (action === "softDeleteNoteAnania" || action === "restoreNoteAnania") {
+    let sh = ss.getSheetByName("noteBIBLIA_Anania") || ss.getSheetByName("Biblia_Note");
+    if (!sh) return returnResponse(e, { success: true });
+    const cols = ensureSheetColumns(sh, ["Sters", "DataStergere"]);
+    const isDelete = (action === "softDeleteNoteAnania");
+    const timestamp = isDelete ? Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss") : "";
+    const ids = (e.parameter.rowIds || e.parameter.rowId || "").toString().split(",").map(x => parseInt(x.trim(), 10)).filter(n => !isNaN(n));
+    ids.forEach(rId => {
+      if (rId >= 2 && rId <= sh.getLastRow()) {
+        sh.getRange(rId, cols["Sters"]).setValue(isDelete ? "DA" : "NU");
+        sh.getRange(rId, cols["DataStergere"]).setValue(timestamp);
+      }
+    });
+    return returnResponse(e, { success: true, count: ids.length });
+  }
+
+  // Populare inițială unică: scrie citatele trimise doar dacă foaia GandulZilei este încă goală (nu suprascrie date reale)
+  if (action === "seedGandulZileiIfEmpty") {
+    let sh = getOrCreateGandulZileiSheet(ss);
+    if (sh.getLastRow() < 2) {
+      const items = JSON.parse(e.parameter.itemsJson || "[]");
+      const now = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+      const rows = items.map((it, idx) => ["GZ-SEED-" + idx, it.quote || it.text || "", it.author || it.autor || "", it.tema || "Înțelepciune", "DA", now, now]);
+      if (rows.length > 0) sh.getRange(2, 1, rows.length, 7).setValues(rows);
+      return returnResponse(e, { success: true, seeded: rows.length });
+    }
+    return returnResponse(e, { success: true, seeded: 0 });
+  }
+
   // 9. PRELUARE COMPLETĂ DATE PENTRU APLICAȚIE (RĂSPUNS 1:1)
   if (action === "getLiveData") {
     // Sincronizare ușoară/rapidă (fără Pomelnic 990 rânduri și fără Biblia 360) - folosită la polling frecvent
     const notesList = getGanduriData(ss);
     const liveData = {
       settings: getSettingsData(ss),
+      settingsRaw: getAllSettingsRaw(ss),
       cumparaturi: getCumparaturiData(ss),
       ganduri: notesList,
       notite: notesList,
+      gandulZilei: getGandulZileiData(ss),
+      modelCitire: getModelCitireData(ss),
       schoolActivities: getSchoolActivitiesData(ss),
       psaltireGrup: getPsaltireGrupData(ss)
     };
@@ -533,10 +695,13 @@ function doGet(e) {
   const notesList = getGanduriData(ss);
   const responseData = {
     settings: getSettingsData(ss),
+    settingsRaw: getAllSettingsRaw(ss),
     pomelnic: getPomelnicData(ss),
     cumparaturi: getCumparaturiData(ss),
     ganduri: notesList,
     notite: notesList,
+    gandulZilei: getGandulZileiData(ss),
+    modelCitire: getModelCitireData(ss),
     noteAnania: getNoteAnaniaData(ss),
     bibliaBVA: getBiblia360Data(ss),
     schoolActivities: getSchoolActivitiesData(ss),
@@ -558,6 +723,20 @@ function returnResponse(e, data) {
   }
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Returnează TOATE perechile cheie-valoare din Setari, inclusiv chei noi dinamice (ex. CalendarScolar_2026-2027,
+// IconaApp_Bogdan Murar) pe care getSettingsData nu le cunoaște explicit
+function getAllSettingsRaw(ss) {
+  let sh = ss.getSheetByName("Setari");
+  const out = {};
+  if (!sh || sh.getLastRow() < 2) return out;
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
+  rows.forEach(r => {
+    const k = (r[0] || "").toString().trim();
+    if (k) out[k] = (r[1] === undefined || r[1] === null) ? "" : r[1].toString();
+  });
+  return out;
 }
 
 function getSettingsData(ss) {
@@ -620,10 +799,52 @@ function getBiblia360Data(ss) {
   })).filter(x => x.cartea);
 }
 
+// Helper generic: citește header-ul unei foi, creează (idempotent) coloanele lipsă din listă la finalul foii
+// fără să atingă coloanele existente. Returnează un obiect { numeColoana: indexColoana(1-based) }.
+function ensureSheetColumns(sheet, columnNames) {
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => (h || "").toString().trim());
+  const result = {};
+  let nextCol = lastCol;
+  columnNames.forEach(name => {
+    const idx = headers.indexOf(name);
+    if (idx !== -1) {
+      result[name] = idx + 1;
+    } else {
+      nextCol += 1;
+      sheet.getRange(1, nextCol).setValue(name);
+      headers.push(name);
+      result[name] = nextCol;
+    }
+  });
+  return result;
+}
+
+// Scrie un eveniment de audit la nivel de aplicație în tabul LOG_app (separat de LOG_Sistem, folosit de sincronizarea Pomelnic)
+function logToAppSheet(ss, d) {
+  let sh = ss.getSheetByName("LOG_app");
+  if (!sh) {
+    sh = ss.insertSheet("LOG_app");
+    sh.appendRow(["Timestamp", "Modul", "Actiune", "Status", "Detalii", "User"]);
+    sh.getRange("A1:F1").setFontWeight("bold");
+  }
+  sh.appendRow([
+    Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss"),
+    d.modul || "General",
+    d.actiune || "-",
+    d.status || "INFO",
+    d.detalii || "",
+    d.user || "-"
+  ]);
+  if (sh.getLastRow() > 2000) sh.deleteRows(2, 500);
+}
+
 function getSchoolActivitiesData(ss) {
   let sh = ss.getSheetByName("Scoala_Activitati") || ss.getSheetByName("Activitati_Scoala");
   if (!sh || sh.getLastRow() < 2) return [];
-  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 14).getValues();
+  const cols = ensureSheetColumns(sh, ["Data_Achitat", "Comentariu_Plata"]);
+  const maxCol = Math.max(14, cols["Data_Achitat"], cols["Comentariu_Plata"]);
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, maxCol).getValues();
   return rows.map(r => {
     let dateVal = r[1];
     let dateStr = "";
@@ -657,7 +878,9 @@ function getSchoolActivitiesData(ss) {
       color: color,
       startHour: startHour,
       endHour: endHour,
-      author: author
+      author: author,
+      dataAchitat: r[cols["Data_Achitat"] - 1] ? parseDateToText(r[cols["Data_Achitat"] - 1]) : "",
+      comentariuPlata: r[cols["Comentariu_Plata"] - 1] || ""
     };
   });
 }
@@ -764,44 +987,68 @@ function getGanduriData(ss) {
   const sh = ss.getSheetByName("Notite") || ss.getSheetByName("Ganduri");
   if (!sh || sh.getLastRow() < 2) return [];
   const maxRows = sh.getLastRow();
-  const maxCols = Math.min(Math.max(sh.getLastColumn(), 3), 6);
+  const maxCols = Math.min(Math.max(sh.getLastColumn(), 3), 8);
   const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
   const hasIdCol = (header === "ID");
-  const rows = sh.getRange(2, 1, maxRows - 1, maxCols).getValues();
+  const cols = getNoteStersColumns(sh);
+  const rows = sh.getRange(2, 1, maxRows - 1, Math.max(maxCols, cols.stersCol)).getValues();
   return rows.map((r, i) => {
     let gand = hasIdCol ? (r[1] || "") : (r[0] || "");
     let sursa = hasIdCol ? (r[2] || "Personal") : (r[1] || "Personal");
     let dataVal = hasIdCol ? r[3] : r[2];
     let user = hasIdCol ? (r[4] || "").toString().trim() : (r[3] || "").toString().trim();
+    let sters = (r[cols.stersCol - 1] || "").toString().trim().toUpperCase() === "DA";
     return {
       rowId: i + 2,
       gand: gand.toString().trim(),
       nota: gand.toString().trim(),
       sursa: sursa.toString().trim(),
       data: dataVal ? parseDateToText(dataVal) : "",
-      user: user
+      user: user,
+      sters: sters
     };
-  }).filter(x => x.gand !== "");
+  }).filter(x => x.gand !== "" && !x.sters);
+}
+
+// Returnează indicii coloanelor Sters / DataStergere pentru foaia Notite/Ganduri, creându-le idempotent dacă lipsesc
+function getNoteStersColumns(sheet) {
+  const lastCol = Math.max(sheet.getLastColumn(), 1);
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(h => (h || "").toString().trim().toUpperCase());
+  let stersCol = headers.indexOf("STERS") + 1;
+  let dataStergereCol = headers.indexOf("DATASTERGERE") + 1;
+  if (stersCol === 0) {
+    stersCol = lastCol + 1;
+    sheet.getRange(1, stersCol).setValue("Sters");
+  }
+  if (dataStergereCol === 0) {
+    dataStergereCol = Math.max(lastCol, stersCol) + 1;
+    sheet.getRange(1, dataStergereCol).setValue("DataStergere");
+  }
+  return { stersCol: stersCol, dataStergereCol: dataStergereCol };
 }
 
 function getNoteAnaniaData(ss) {
   const sh = ss.getSheetByName("noteBIBLIA_Anania") || ss.getSheetByName("Biblia_Note");
   if (!sh || sh.getLastRow() < 2) return [];
-  const maxCols = Math.min(Math.max(sh.getLastColumn(), 4), 10);
+  // Sters/DataStergere/DataModificare: coloane adăugate idempotent la finalul foii
+  // (pentru ștergere cu confirmare și editare, ca la Notițe)
+  const stersCols = ensureSheetColumns(sh, ["Sters", "DataStergere", "DataModificare"]);
+  const maxCols = Math.max(Math.min(Math.max(sh.getLastColumn(), 4), 10), stersCols["Sters"], stersCols["DataStergere"], stersCols["DataModificare"]);
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, maxCols).getValues();
 
-  // Structură coloane registru (9 coloane conform foii noteBIBLIA_Anania):
+  // Structură coloane registru (10 coloane conform foii noteBIBLIA_Anania):
   // Col A (0): Colecție (ex: Vechiul Testament)
   // Col B (1): Carte (ex: Facerea)
-  // Col C (2): Capitol (ex: Capitol 1/50)
+  // Col C (2): Capitol (ex: Capitol 1)
   // Col D (3): Verset (ex: 1)
   // Col E (4): Marcaj (ex: (A))
   // Col F (5): Text verset complet (ex: 1Întru'nceput[A]a făcut[B]Dumnezeu cerul și pământul[C].)
   // Col G (6): Context / fragment adnotat (ex: 1Întru'nceput)
   // Col H (7): Nota de subsol (ex: [Nota A] În interiorul...)
   // Col I (8): URL sursă (ex: https://biblia.dervent.ro/VT-Fc-01)
+  // Col J (9): Capitol # / # (ex: 1/50) — progres capitol curent/total din carte
   return rows.map((r, idx) => {
-    let colectie = "", cartea = "", capitol = "", versetul = "", marcaj = "", textVerset = "", context = "", nota = "", derventUrl = "";
+    let colectie = "", cartea = "", capitol = "", versetul = "", marcaj = "", textVerset = "", context = "", nota = "", derventUrl = "", capitolProgres = "";
 
     if (maxCols >= 8) {
       colectie = (r[0] || "Vechiul Testament").toString().trim();
@@ -813,6 +1060,7 @@ function getNoteAnaniaData(ss) {
       context = (r[6] || "").toString().trim();
       nota = (r[7] || "").toString().trim();
       derventUrl = (r[8] || "").toString().trim();
+      capitolProgres = (r[9] || "").toString().trim();
     } else {
       cartea = (r[0] || "").toString().trim();
       versetul = (r[1] || "").toString().trim();
@@ -822,9 +1070,12 @@ function getNoteAnaniaData(ss) {
     }
 
     if (!cartea && !nota) return null;
+    const sters = (r[stersCols["Sters"] - 1] || "").toString().trim().toUpperCase() === "DA";
+    if (sters) return null;
 
     return {
       id: idx + 1,
+      rowId: idx + 2,
       colectie: colectie,
       cartea: cartea,
       capitol: capitol,
@@ -834,12 +1085,201 @@ function getNoteAnaniaData(ss) {
       context: context,
       nota: nota,
       derventUrl: derventUrl,
+      capitolProgres: capitolProgres,
+      dataModificare: r[stersCols["DataModificare"] - 1] ? parseDateToText(r[stersCols["DataModificare"] - 1]) : "",
       // Păstrăm și denumirile istorice pentru compatibilitate inversă totală:
       indice: textVerset || marcaj,
       explicatie: context || nota,
       moment: nota
     };
   }).filter(x => x !== null);
+}
+
+// Tab NOU "GandulZilei" — creat idempotent (doar dacă lipsește), nu suprascrie/șterge date existente
+// Tab NOU "ModelCitire" (Secțiunea 3-5 din prompt) — creat și populat idempotent, doar dacă lipsește/e gol.
+// Nu suprascrie și nu șterge date existente; cele 3 modele predefinite (Pr. Nicolae Dima, Ordinea canonică
+// Anania, Test) se scriu o singură dată, la prima accesare a foii.
+const MODEL_CITIRE_SEED = [
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 1, "Evanghelia după Marcu", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 2, "Facerea", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 3, "Evanghelia după Luca", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 4, "Ieșirea", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 5, "Faptele Apostolilor", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 6, "Leviticul", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 7, "Numerii", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 8, "Deuteronomul", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 9, "Epistola către Romani", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 10, "Cartea lui Iosua Navi", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 11, "Cartea Judecătorilor", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 12, "Cartea Rut", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 13, "Cartea întâi a Regilor", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 14, "Cartea a doua a Regilor", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 15, "Evanghelia după Matei", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 16, "Cartea a treia a Regilor", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 17, "Cartea a patra a Regilor", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 18, "Epistola către Galateni", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 19, "Cartea întâi Paralipomena (întâi a Cronicilor)", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 20, "Cartea a doua Paralipomena (a doua a Cronicilor)", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 21, "Cartea întâi a lui Ezdra", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 22, "Cartea lui Neemia (a doua a lui Ezdra)", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 23, "Epistola întâia către Corinteni;Epistola a doua către Corinteni", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 24, "Epistola către Efeseni", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 25, "Epistola către Filipeni", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 26, "Cartea Esterei", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 27, "Isaia;Ieremia;Plângerile lui Ieremia;Iezechiel;Daniel", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 28, "Evanghelia după Ioan", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 29, "Epistola întâia a Sfântului Apostol Ioan;Epistola a doua a Sfântului Apostol Ioan;Epistola a treia a Sfântului Apostol Ioan", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 30, "Epistola către Coloseni", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 31, "Osea;Amos;Miheia;Ioil;Avdie;Iona;Naum;Avacum;Sofonie;Agheu;Zaharia;Maleahi", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 32, "Epistola către Evrei", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 33, "Epistola întâia către Tesaloniceni;Epistola a doua către Tesaloniceni", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 34, "Epistola întâia către Timotei;Epistola a doua către Timotei", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 35, "Epistola către Tit", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 36, "Epistola către Filimon", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 37, "Cartea lui Iov", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 38, "Psalmii;Pildele lui Solomon;Eclesiastul;Cântarea Cântărilor", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 39, "Epistola întâia a Sfântului Apostol Petru;Epistola a doua a Sfântului Apostol Petru", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 40, "Epistola Sfântului Apostol Iacob", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 41, "Epistola Sfântului Apostol Iuda", "NU", "", ""],
+    ["PR_NICOLAE_DIMA", "Pr. Nicolae Dima (propunere video)", "DA", 42, "Apocalipsa", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 1, "Facerea", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 2, "Ieșirea", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 3, "Leviticul", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 4, "Numerii", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 5, "Deuteronomul", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 6, "Cartea lui Iosua Navi", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 7, "Cartea Judecătorilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 8, "Cartea Rut", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 9, "Cartea întâi a Regilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 10, "Cartea a doua a Regilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 11, "Cartea a treia a Regilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 12, "Cartea a patra a Regilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 13, "Cartea întâi Paralipomena (întâi a Cronicilor)", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 14, "Cartea a doua Paralipomena (a doua a Cronicilor)", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 15, "Cartea întâi a lui Ezdra", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 16, "Cartea lui Neemia (a doua a lui Ezdra)", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 17, "Cartea Esterei", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 18, "Cartea lui Iov", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 19, "Psalmii", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 20, "Pildele lui Solomon", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 21, "Eclesiastul", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 22, "Cântarea Cântărilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 23, "Isaia", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 24, "Ieremia", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 25, "Plângerile lui Ieremia", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 26, "Iezechiel", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 27, "Daniel", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 28, "Osea", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 29, "Amos", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 30, "Miheia", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 31, "Ioil", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 32, "Avdie", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 33, "Iona", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 34, "Naum", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 35, "Avacum", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 36, "Sofonie", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 37, "Agheu", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 38, "Zaharia", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 39, "Maleahi", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 40, "Cartea lui Tobit", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 41, "Cartea Iuditei", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 42, "Cartea lui Baruh", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 43, "Epistola lui Ieremia", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 44, "Cântarea celor trei tineri", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 45, "Cântarea a treia a lui Ezdra", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 46, "Cartea înțelepciunii lui Solomon", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 47, "Cartea înțelepciunii lui Isus, fiul lui Sirah (Ecclesiasticul)", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 48, "Istoria Susanei", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 49, "Istoria omorârii balaurului și a sfărâmării lui Bel", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 50, "Cartea întâi a Macabeilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 51, "Cartea a doua a Macabeilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 52, "Cartea a treia a Macabeilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 53, "Rugăciunea regelui Manase", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 54, "Evanghelia după Matei", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 55, "Evanghelia după Marcu", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 56, "Evanghelia după Luca", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 57, "Evanghelia după Ioan", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 58, "Faptele Apostolilor", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 59, "Epistola către Romani", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 60, "Epistola întâia către Corinteni", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 61, "Epistola a doua către Corinteni", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 62, "Epistola către Galateni", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 63, "Epistola către Efeseni", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 64, "Epistola către Filipeni", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 65, "Epistola către Coloseni", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 66, "Epistola întâia către Tesaloniceni", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 67, "Epistola a doua către Tesaloniceni", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 68, "Epistola întâia către Timotei", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 69, "Epistola a doua către Timotei", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 70, "Epistola către Tit", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 71, "Epistola către Filimon", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 72, "Epistola către Evrei", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 73, "Epistola Sfântului Apostol Iacob", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 74, "Epistola întâia a Sfântului Apostol Petru", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 75, "Epistola a doua a Sfântului Apostol Petru", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 76, "Epistola întâia a Sfântului Apostol Ioan", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 77, "Epistola a doua a Sfântului Apostol Ioan", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 78, "Epistola a treia a Sfântului Apostol Ioan", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 79, "Epistola Sfântului Apostol Iuda", "NU", "", ""],
+    ["CANONIC_ANANIA", "Ordinea canonică Anania", "DA", 80, "Apocalipsa", "NU", "", ""],
+    ["EXEMPLU_TEST", "Test", "NU", 1, "Evanghelia după Marcu", "NU", "", ""],
+    ["EXEMPLU_TEST", "Test", "NU", 2, "Facerea", "NU", "", ""],
+    ["EXEMPLU_TEST", "Test", "NU", 3, "Evanghelia după Ioan", "NU", "", ""]
+];
+
+function getOrCreateModelCitireSheet(ss) {
+  let sh = ss.getSheetByName("ModelCitire");
+  if (!sh) {
+    sh = ss.insertSheet("ModelCitire");
+    sh.appendRow(["Model_ID", "Model_Nume", "Activ", "Pozitie", "Carte_Canonica", "Bifat", "Data_Bifare", "Observatii"]);
+    sh.getRange("A1:H1").setFontWeight("bold");
+  }
+  if (sh.getLastRow() < 2) {
+    sh.getRange(2, 1, MODEL_CITIRE_SEED.length, 8).setValues(MODEL_CITIRE_SEED);
+  }
+  return sh;
+}
+
+function getModelCitireData(ss) {
+  const sh = getOrCreateModelCitireSheet(ss);
+  if (sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 8).getValues();
+  return rows.map((r, i) => ({
+    rowId: i + 2,
+    modelId: (r[0] || "").toString().trim(),
+    modelNume: (r[1] || "").toString().trim(),
+    activ: (r[2] || "DA").toString().trim().toUpperCase() !== "NU",
+    pozitie: r[3],
+    carteCanonica: (r[4] || "").toString().split(";").map(s => s.trim()).filter(s => s),
+    bifat: (r[5] || "NU").toString().trim().toUpperCase() === "DA",
+    dataBifare: r[6] ? parseDateToText(r[6]) : "",
+    observatii: (r[7] || "").toString().trim()
+  })).filter(x => x.modelId);
+}
+
+function getOrCreateGandulZileiSheet(ss) {
+  let sh = ss.getSheetByName("GandulZilei");
+  if (!sh) {
+    sh = ss.insertSheet("GandulZilei");
+    sh.appendRow(["ID", "Text", "Autor", "Tema", "Activ", "DataCreare", "DataModificare"]);
+    sh.getRange("A1:G1").setFontWeight("bold");
+  }
+  return sh;
+}
+
+function getGandulZileiData(ss) {
+  const sh = getOrCreateGandulZileiSheet(ss);
+  if (sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 7).getValues();
+  return rows.map(r => ({
+    id: (r[0] || "").toString().trim(),
+    text: (r[1] || "").toString().trim(),
+    autor: (r[2] || "").toString().trim(),
+    tema: (r[3] || "Înțelepciune").toString().trim(),
+    activ: (r[4] || "DA").toString().trim().toUpperCase() !== "NU",
+    dataCreare: r[5] ? parseDateToText(r[5]) : "",
+    dataModificare: r[6] ? parseDateToText(r[6]) : ""
+  })).filter(x => x.text !== "");
 }
 
 function getInventoryData(ss) {
@@ -912,4 +1352,80 @@ function parseDateToISO(val) {
     return Utilities.formatDate(val, "Europe/Bucharest", "yyyy-MM-dd");
   }
   return val.toString().trim().substring(0, 10);
+}
+
+/**
+ * ====== STOCARE FIȘIERE ÎN GOOGLE DRIVE (imagini: calendar școlar, iconițe/logo aplicație) ======
+ * Imaginile NU se salvează niciodată în celule — doar ca fișiere în acest folder dedicat,
+ * iar în Setari se păstrează DOAR ID-ul fișierului (ex. CalendarScolar_2026-2027 -> fileId).
+ */
+function getOrCreateAppDriveFolder(ss) {
+  const sh = ss.getSheetByName("Setari");
+  const FOLDER_KEY = "drive_folder_id";
+  if (sh) {
+    const rows = sh.getLastRow() >= 2 ? sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues() : [];
+    for (let i = 0; i < rows.length; i++) {
+      if ((rows[i][0] || "").toString().trim() === FOLDER_KEY && rows[i][1]) {
+        try {
+          return DriveApp.getFolderById(rows[i][1].toString().trim());
+        } catch (e) { /* folder ID invalid/șters — recreăm mai jos */ }
+      }
+    }
+  }
+  const folder = DriveApp.createFolder("DIiH_App_Fisiere");
+  const settingsSheet = sh || ss.insertSheet("Setari");
+  if (!sh) {
+    settingsSheet.appendRow(["Cheie", "Valoare", "UltimaModificare"]);
+    settingsSheet.getRange("A1:C1").setFontWeight("bold");
+  }
+  setSettingValue(settingsSheet, FOLDER_KEY, folder.getId());
+  return folder;
+}
+
+/**
+ * Primește fișiere binare (imagini) prin POST, fiindcă URL-urile GET au o limită de lungime
+ * prea mică pentru poze reale. Token-ul se verifică la fel ca la doGet.
+ */
+function doPost(e) {
+  const token = e.parameter.token;
+  if (token !== API_SECURITY_TOKEN) {
+    return ContentService.createTextOutput(JSON.stringify({ error: "Acces neautorizat!" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const ss = getSpreadsheet();
+  const action = e.parameter.action;
+
+  if (action === "uploadDriveFile") {
+    try {
+      const folder = getOrCreateAppDriveFolder(ss);
+      const bytes = Utilities.base64Decode(e.parameter.base64Data);
+      const blob = Utilities.newBlob(bytes, e.parameter.mimeType || "image/png", e.parameter.fileName || ("file_" + Date.now()));
+      const file = folder.createFile(blob);
+      return ContentService.createTextOutput(JSON.stringify({ success: true, fileId: file.getId() }))
+        .setMimeType(ContentService.MimeType.JSON);
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.message || String(err) }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ error: "Acțiune POST necunoscută" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Returnează conținutul unui fișier din Drive ca base64, pentru afișare în <img> cu data: URI
+// (evită partajarea publică a fișierului; accesul rămâne protejat de tokenul aplicației)
+function getDriveImageAsBase64(ss, fileId) {
+  try {
+    const file = DriveApp.getFileById(fileId);
+    const blob = file.getBlob();
+    return {
+      success: true,
+      mimeType: blob.getContentType(),
+      base64: Utilities.base64Encode(blob.getBytes())
+    };
+  } catch (e) {
+    return { success: false, error: e.message || String(e) };
+  }
 }

@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title id="htmlAppTitle">Andreea</title>
+  <title id="htmlAppTitle">ABL - Andreea</title>
   
   <link id="manifestLink" rel="manifest" href="./manifest-andreea.json">
-  <link rel="apple-touch-icon" href="./icons/icon-heart-ekg.png">
+  <link id="appAppleTouchIcon" rel="apple-touch-icon" href="./icons/icon-heart-ekg.png">
   <link id="appFavicon" rel="icon" type="image/png" href="./icons/icon-heart-ekg.png">
   <meta name="theme-color" content="#090d16">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Andreea">
+  <meta name="apple-mobile-web-app-title" content="ABL - Andreea">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -53,6 +53,128 @@
   <div id="toastSuccess" class="fixed top-4 right-4 z-50 bg-emerald-900 border border-emerald-600 text-emerald-100 text-xs px-3 py-2 rounded-xl shadow-xl flex items-center space-x-2 transition-all opacity-0 pointer-events-none transform -translate-y-2">
     <span>✔</span>
     <span id="toastMsg">Salvat</span>
+  </div>
+
+  <!-- TOAST CU ANULARE (ȘTERGERE SOFT) -->
+  <div id="undoToast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] bg-slate-900 border border-rose-700 text-slate-100 text-xs px-3 py-2.5 rounded-xl shadow-xl flex items-center space-x-3 max-w-[92vw]">
+    <span id="undoToastMsg">Șters.</span>
+    <button onclick="triggerPendingUndo()" class="bg-rose-800 hover:bg-rose-700 text-white font-bold px-2.5 py-1 rounded-lg whitespace-nowrap">↩ Anulează</button>
+  </div>
+
+  <!-- MODAL GENERIC DE CONFIRMARE (ȘTERGERI) -->
+  <div id="genericConfirmModal" class="hidden fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+    <div class="bg-cardbg border border-bordercol rounded-2xl p-4 max-w-sm w-full space-y-3 shadow-2xl">
+      <div class="flex items-center space-x-2 text-rose-300 font-bold text-sm">
+        <span>⚠️</span>
+        <span id="genericConfirmTitle">Confirmare ștergere</span>
+      </div>
+      <p id="genericConfirmMessage" class="text-xs text-slate-300 leading-relaxed"></p>
+      <div class="flex items-center justify-end space-x-2 pt-1">
+        <button onclick="closeGenericConfirm()" class="px-3 py-1.5 bg-slate-800 border border-bordercol text-slate-300 rounded-xl text-xs font-medium">Anulează</button>
+        <button id="genericConfirmBtn" onclick="runGenericConfirm()" class="px-3 py-1.5 bg-rose-800 hover:bg-rose-700 text-white rounded-xl text-xs font-bold">Șterge</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CALENDARUL ANULUI ȘCOLAR (SETĂRI / ÎNCĂRCARE) -->
+  <div id="schoolInspectorCalendarModal" class="hidden fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+    <div class="bg-cardbg border border-bordercol rounded-2xl p-4 max-w-md w-full space-y-3 shadow-2xl max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <span class="text-amber-300 font-bold text-sm">🗓️ Calendarul Anului Școlar</span>
+        <button onclick="closeSchoolInspectorCalendarModal()" class="text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <label class="text-[11px] text-slate-400 shrink-0">An școlar:</label>
+        <select id="schoolCalYearSelect" onchange="onSchoolCalYearChange()" class="flex-1 bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs"></select>
+      </div>
+
+      <div id="schoolCalAdminUploadBox" class="hidden space-y-1.5 p-2.5 bg-darkbg rounded-xl border border-bordercol">
+        <label class="text-[10px] text-slate-400 block uppercase font-bold">Încarcă calendarul (JPG/PNG)</label>
+        <input type="file" id="schoolCalFileInput" accept="image/*" class="w-full text-[11px] text-slate-300">
+        <button onclick="uploadSchoolInspectorCalendar()" class="w-full bg-amber-800 hover:bg-amber-700 text-white text-xs font-bold py-1.5 rounded-lg">⬆️ Încarcă în Drive</button>
+        <p id="schoolCalUploadStatus" class="text-[10px] text-slate-500"></p>
+      </div>
+
+      <button id="schoolCalOpenBtn" onclick="openSchoolInspectorCalendarViewer()" class="hidden w-full bg-cyan-800 hover:bg-cyan-700 text-white text-xs font-bold py-2 rounded-xl">🔍 Deschide Calendarul</button>
+      <p id="schoolCalNoImageMsg" class="text-xs text-slate-500 italic text-center py-2">Niciun calendar încărcat încă pentru acest an școlar.</p>
+
+      <div id="schoolCalAdminSpecialDatesBox" class="hidden space-y-2 p-2.5 bg-darkbg rounded-xl border border-bordercol">
+        <label class="text-[10px] text-slate-400 block uppercase font-bold">Date speciale an școlar (anunțate anual de inspectorat)</label>
+        <div class="space-y-1">
+          <span class="text-[10px] text-emerald-300 font-semibold">🌿 Săptămâna Verde</span>
+          <div class="flex items-center space-x-1.5">
+            <input type="date" id="schoolCalSaptVerdeStart" class="flex-1 bg-cardbg border border-bordercol rounded-lg p-1 text-white text-[10px]">
+            <span class="text-slate-500">–</span>
+            <input type="date" id="schoolCalSaptVerdeEnd" class="flex-1 bg-cardbg border border-bordercol rounded-lg p-1 text-white text-[10px]">
+          </div>
+        </div>
+        <div class="space-y-1">
+          <span class="text-[10px] text-violet-300 font-semibold">🎨 Săptămâna Altfel</span>
+          <div class="flex items-center space-x-1.5">
+            <input type="date" id="schoolCalSaptAltfelStart" class="flex-1 bg-cardbg border border-bordercol rounded-lg p-1 text-white text-[10px]">
+            <span class="text-slate-500">–</span>
+            <input type="date" id="schoolCalSaptAltfelEnd" class="flex-1 bg-cardbg border border-bordercol rounded-lg p-1 text-white text-[10px]">
+          </div>
+        </div>
+        <button onclick="saveSchoolSpecialWeeks()" class="w-full bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg">💾 Salvează și generează în calendar</button>
+        <p class="text-[9px] text-slate-500">Se creează automat activități (fără plată) pe fiecare zi din interval, vizibile în calendarul lunii.</p>
+      </div>
+
+      <p class="text-[9px] text-slate-500 text-center">Iconița de pe ecranul principal se schimbă doar după dezinstalarea și reinstalarea aplicației.</p>
+    </div>
+  </div>
+
+  <!-- MODAL: VIZUALIZATOR CALENDAR ȘCOLAR (ZOOM/PAN FULL-SCREEN) -->
+  <div id="schoolCalendarViewerModal" class="hidden fixed inset-0 bg-black z-[80] flex flex-col">
+    <div class="flex items-center justify-between p-2 bg-black/80 shrink-0">
+      <span id="schoolCalViewerYearLabel" class="text-amber-300 font-bold text-xs">🗓️ 2026-2027</span>
+      <div class="flex items-center space-x-1.5">
+        <button id="schoolCalMarkModeBtn" onclick="toggleSchoolCalMarkMode()" class="hidden text-[10px] px-2 py-1 bg-rose-800 text-white rounded-lg font-bold">📍 Marchează lunile</button>
+        <button onclick="closeSchoolInspectorCalendarViewer()" class="text-white bg-rose-700 hover:bg-rose-600 rounded-lg px-3 py-1.5 text-sm font-bold">✕ Închide</button>
+      </div>
+    </div>
+    <div id="schoolCalViewerContainer" class="flex-1 overflow-hidden relative bg-black touch-none">
+      <img id="schoolCalViewerImg" src="" class="absolute top-0 left-0 origin-top-left select-none" style="will-change: transform;" draggable="false">
+    </div>
+    <div class="shrink-0 bg-black/80 p-1.5 overflow-x-auto">
+      <div class="flex space-x-1 w-max">
+        <button onclick="jumpToSchoolCalMonth(0)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Ian</button>
+        <button onclick="jumpToSchoolCalMonth(1)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Feb</button>
+        <button onclick="jumpToSchoolCalMonth(2)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Mar</button>
+        <button onclick="jumpToSchoolCalMonth(3)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Apr</button>
+        <button onclick="jumpToSchoolCalMonth(4)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Mai</button>
+        <button onclick="jumpToSchoolCalMonth(5)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Iun</button>
+        <button onclick="jumpToSchoolCalMonth(6)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Iul</button>
+        <button onclick="jumpToSchoolCalMonth(7)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Aug</button>
+        <button onclick="jumpToSchoolCalMonth(8)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Sep</button>
+        <button onclick="jumpToSchoolCalMonth(9)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Oct</button>
+        <button onclick="jumpToSchoolCalMonth(10)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Noi</button>
+        <button onclick="jumpToSchoolCalMonth(11)" class="px-2.5 py-1.5 bg-darkbg border border-bordercol text-slate-300 rounded-lg text-[10px] font-bold whitespace-nowrap">Dec</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ADMINISTRARE GÂNDUL ZILEI -->
+  <div id="gandulZileiManagerModal" class="hidden fixed inset-0 bg-black/70 z-[70] flex items-center justify-center p-4">
+    <div class="bg-cardbg border border-bordercol rounded-2xl p-4 max-w-md w-full space-y-3 shadow-2xl max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between">
+        <span class="text-amber-300 font-bold text-sm">💡 Administrează Gândul Zilei</span>
+        <button onclick="closeGandulZileiManager()" class="text-slate-400 hover:text-white p-1">✕</button>
+      </div>
+      <div class="space-y-1.5 border-b border-bordercol pb-3">
+        <textarea id="gzManagerText" rows="2" placeholder="Textul citatului..." class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs"></textarea>
+        <div class="grid grid-cols-2 gap-1.5">
+          <input id="gzManagerAutor" type="text" placeholder="Autor" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+          <input id="gzManagerTema" type="text" placeholder="Temă (opțional)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+        </div>
+        <div class="flex items-center justify-end space-x-2">
+          <button onclick="cancelGandulZileiEdit()" class="text-[10px] px-2 py-1 bg-slate-800 border border-bordercol text-slate-300 rounded-lg">Golește</button>
+          <button id="gzManagerSaveBtn" onclick="saveGandulZileiFromManager()" class="text-[10px] px-2 py-1 bg-amber-800 hover:bg-amber-700 text-white font-bold rounded-lg">➕ Adaugă</button>
+        </div>
+      </div>
+      <div id="gzManagerList" class="space-y-1.5 overflow-y-auto flex-1"></div>
+    </div>
   </div>
 
   <!-- CONTEXT MENU CLICK DREAPTA -->
@@ -275,6 +397,7 @@
             <button onclick="navGrandThought(1)" class="p-1 text-slate-400 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition text-[10px]" title="Gândul următor">▶</button>
             <button onclick="randomGrandThought()" class="p-1 text-amber-300 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition text-[10px]" title="Gând aleator">🎲</button>
             <button onclick="resetGrandThoughtToToday()" class="p-1 text-slate-400 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition text-[10px]" title="Gândul de azi">📅</button>
+            <button onclick="openGandulZileiManager()" class="p-1 text-slate-400 hover:text-white bg-darkbg rounded border border-bordercol active:scale-95 transition text-[10px]" title="Administrează citatele">⚙️</button>
           </div>
         </div>
         <div id="ownerWidgetGrandThoughtQuote" class="text-xs text-slate-100 font-medium italic leading-relaxed pl-2.5 border-l-2 border-amber-500"></div>
@@ -509,6 +632,10 @@
           <button onclick="fetchDataFromSheet(true)" class="text-[10px] bg-darkbg border border-cyan-800 text-cyan-300 px-2 py-1 rounded-lg">🔄 Importă din Sheet</button>
         </div>
 
+        <button onclick="openSchoolInspectorCalendarModal()" class="w-full text-[11px] bg-amber-950 border border-amber-700 text-amber-200 px-2 py-1.5 rounded-lg font-bold hover:bg-amber-900 transition flex items-center justify-center space-x-1.5">
+          <span>🗓️</span><span>Calendarul Anului Școlar (Inspectorat)</span>
+        </button>
+
         <button onclick="openSchoolReportModal()" class="w-full text-[11px] bg-violet-950 border border-violet-700 text-violet-200 px-2 py-1.5 rounded-lg font-bold hover:bg-violet-900 transition">📊 Raport Detaliat pe Perioadă</button>
 
 
@@ -524,30 +651,59 @@
           <button onclick="changeSchoolPeriod(1)" class="p-2 bg-darkbg rounded-xl border border-bordercol hover:text-cyan-400 text-xs">Înainte ▶</button>
         </div>
 
-        <!-- Filtru Sumar: Zi / Lună / An -->
-        <div class="flex items-center justify-between pt-1 border-t border-bordercol text-[11px]">
-          <span class="text-slate-400 font-semibold">Sumar Financiar:</span>
-          <div class="flex space-x-1">
-            <button onclick="setSummaryFilter('day')" id="sumBtnDay" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-400">Zi</button>
-            <button onclick="setSummaryFilter('month')" id="sumBtnMonth" class="px-2 py-0.5 rounded bg-cyan-900 text-cyan-200 font-bold">Lună</button>
-            <button onclick="setSummaryFilter('year')" id="sumBtnYear" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-400">An</button>
+        <!-- Filtru Sumar: Zi / Lună / An / Luna trecută / Ultimele 30 zile / Personalizat -->
+        <div class="space-y-1.5 pt-1 border-t border-bordercol text-[11px]">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 font-semibold">Sumar Financiar:</span>
+            <div class="flex flex-wrap justify-end gap-1">
+              <button onclick="setSummaryFilter('day')" id="sumBtnDay" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-400">Zi</button>
+              <button onclick="setSummaryFilter('month')" id="sumBtnMonth" class="px-2 py-0.5 rounded bg-cyan-900 text-cyan-200 font-bold">Luna curentă</button>
+              <button onclick="setSummaryFilter('lastMonth')" id="sumBtnLastMonth" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-400">Luna trecută</button>
+              <button onclick="setSummaryFilter('year')" id="sumBtnYear" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-400">Anul curent</button>
+              <button onclick="setSummaryFilter('last30')" id="sumBtnLast30" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-400">Ultimele 30 zile</button>
+              <button onclick="setSummaryFilter('custom')" id="sumBtnCustom" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-400">Personalizat</button>
+            </div>
+          </div>
+          <div id="schoolCustomRangeBox" class="hidden flex items-center space-x-1.5">
+            <input type="date" id="schoolCustomRangeStart" onchange="applyCustomSchoolRange()" class="bg-darkbg border border-bordercol rounded-lg p-1 text-white text-[10px] flex-1">
+            <span class="text-slate-500">–</span>
+            <input type="date" id="schoolCustomRangeEnd" onchange="applyCustomSchoolRange()" class="bg-darkbg border border-bordercol rounded-lg p-1 text-white text-[10px] flex-1">
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+        <div class="grid grid-cols-2 gap-2 text-center text-xs">
           <div onclick="openSchoolDrillDownModal('hours')" class="p-2 rounded-xl bg-darkbg border border-bordercol hover:border-cyan-500 cursor-pointer active:scale-95 transition" title="Apasă pentru detalii activități">
             <span class="text-[10px] text-slate-400 block uppercase">Total Ore 🔍</span>
             <span id="sumTotalHours" class="text-sm font-bold text-cyan-400">0 h</span>
           </div>
           <div onclick="openSchoolDrillDownModal('amount')" class="p-2 rounded-xl bg-darkbg border border-bordercol hover:border-emerald-500 cursor-pointer active:scale-95 transition" title="Apasă pentru detalii financiare">
-            <span class="text-[10px] text-slate-400 block uppercase">Total Sumă 🔍</span>
+            <span class="text-[10px] text-slate-400 block uppercase">Total 🔍</span>
             <span id="sumTotalAmount" class="text-sm font-bold text-emerald-400">0 Lei</span>
+          </div>
+          <div class="p-2 rounded-xl bg-darkbg border border-bordercol">
+            <span class="text-[10px] text-slate-400 block uppercase">Achitat</span>
+            <span id="sumPaidAmount" class="text-sm font-bold text-emerald-300">0 Lei</span>
           </div>
           <div onclick="openSchoolDrillDownModal('unpaid')" class="p-2 rounded-xl bg-darkbg border border-bordercol hover:border-amber-500 cursor-pointer active:scale-95 transition" title="Apasă pentru lista restanțelor și marcare achitat">
             <span class="text-[10px] text-slate-400 block uppercase">Restanță ⚠️</span>
             <span id="sumUnpaidAmount" class="text-sm font-bold text-amber-400">0 Lei</span>
           </div>
         </div>
+        <p id="sumActivityCount" class="text-[10px] text-slate-500 text-center">0 activități</p>
+
+        <details class="text-[11px]">
+          <summary class="text-slate-400 font-semibold cursor-pointer select-none">📊 Defalcare pe copil și pe tip activitate</summary>
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <div>
+              <p class="text-[10px] text-slate-500 uppercase font-bold pb-1">Pe copil</p>
+              <div id="sumBreakdownChild" class="space-y-1"></div>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-500 uppercase font-bold pb-1">Pe tip activitate</p>
+              <div id="sumBreakdownType" class="space-y-1"></div>
+            </div>
+          </div>
+        </details>
       </div>
 
       <!-- Container Dinamic Calendar / Săptămână / Listă -->
@@ -608,7 +764,7 @@
             </div>
             <div>
               <label class="text-[9px] text-slate-400 block">Status Plată:</label>
-              <select id="schoolPaymentStatus" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+              <select id="schoolPaymentStatus" onchange="onSchoolPaymentStatusChange()" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
                 <option value="În așteptare">În așteptare</option>
                 <option value="Achitat">Achitat</option>
                 <option value="Fără plată">Fără plată</option>
@@ -618,6 +774,17 @@
             <div>
               <label class="text-[9px] text-slate-400 block">Termen Limită:</label>
               <input type="date" id="schoolDeadline" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs" title="Termen Limită Plată">
+            </div>
+          </div>
+
+          <div id="schoolPaidDetailsBox" class="hidden grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[9px] text-slate-400 block">Data Achitării:</label>
+              <input type="date" id="schoolDataAchitat" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-400 block">Comentariu Plată (opțional):</label>
+              <input type="text" id="schoolComentariuPlata" placeholder="Ex: plătit cash, transfer..." class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
             </div>
           </div>
 
@@ -678,6 +845,7 @@
           <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Notițe salvate</h4>
           <button onclick="toggleGanduriGrouping()" id="btnToggleGanduriGroup" class="text-[10px] bg-slate-800 px-2 py-0.5 rounded-lg border border-bordercol text-slate-300">Grupate: DA</button>
         </div>
+        <div id="ganduriSelectionBar" class="hidden flex items-center justify-between px-2 py-1.5 bg-rose-950/30 border border-rose-800/60 rounded-xl"></div>
         <div id="savedGanduriList" class="space-y-2"></div>
       </div>
     </section>
@@ -788,8 +956,31 @@
         </div>
       </div>
 
+      <!-- Plan de Citire (Model) — poziții în ordinea modelului selectat, cu bifă proprie și progres propriu -->
+      <div class="bg-cardbg border border-violet-800/80 rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-bordercol pb-2">
+          <div class="flex items-center space-x-2">
+            <span class="text-xl">🗺️</span>
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Plan de Citire (Model)</h3>
+          </div>
+          <span id="modelCitireProgressBadge" class="bg-violet-950 border border-violet-700 text-violet-200 text-[11px] px-2.5 py-0.5 rounded-full font-mono font-bold">0 / 0</span>
+        </div>
+        <select id="modelCitireSelect" onchange="setActiveModelCitire(this.value)" class="w-full bg-darkbg border border-bordercol rounded-xl p-2 text-white text-xs font-bold"></select>
+        <div class="w-full bg-darkbg rounded-full h-2 overflow-hidden border border-bordercol">
+          <div id="modelCitireProgressBar" class="bg-gradient-to-r from-violet-600 to-fuchsia-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <div id="modelCitirePositionsList" class="space-y-1.5 max-h-96 overflow-y-auto"></div>
+      </div>
+
       <!-- Filtre Cărți Scriptură -->
       <div class="space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">📜 Canonic (Anania)</span>
+          <label class="flex items-center space-x-1.5 text-[10px] text-slate-400 cursor-pointer">
+            <input type="checkbox" id="modelCitireCanonicFilterToggle" onchange="renderScripturaBooksList()" class="rounded text-violet-500 focus:ring-0">
+            <span>Doar modelul activ</span>
+          </label>
+        </div>
         <div class="flex items-center space-x-1 overflow-x-auto pb-1 text-xs">
           <button onclick="filterScripturaTestament('ALL')" id="btnScripturaFilterAll" class="px-3 py-1.5 rounded-xl bg-cyan-900 text-cyan-200 font-bold whitespace-nowrap">Toate (76)</button>
           <button onclick="filterScripturaTestament('VT')" id="btnScripturaFilterVT" class="px-3 py-1.5 rounded-xl bg-darkbg border border-bordercol text-slate-400 hover:text-white whitespace-nowrap">Vechiul Testament (49)</button>
@@ -859,6 +1050,14 @@
           <button onclick="switchTab('notazilei')" id="btnSubNotazilei" class="p-2.5 bg-darkbg border border-amber-900/60 rounded-xl flex flex-col items-center space-y-1 text-amber-300 hover:text-white">
             <span class="text-lg">📜</span>
             <span class="text-[9px] font-bold">Nota Zilei</span>
+          </button>
+          <button onclick="switchSubTab('notebiblia')" id="btnSubNoteBiblia" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">🔎</span>
+            <span class="text-[9px] font-bold">Note Biblia</span>
+          </button>
+          <button onclick="switchSubTab('info')" id="btnSubInfo" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+            <span class="text-lg">ℹ️</span>
+            <span class="text-[9px] font-bold">Info</span>
           </button>
           <button onclick="switchTab('pomelnic')" id="btnSubPomelnic" class="hidden p-2.5 bg-darkbg border border-rose-900/60 rounded-xl flex flex-col items-center space-y-1 text-rose-300 hover:text-white">
             <span class="text-lg">📜</span>
@@ -1148,6 +1347,7 @@
                   <button type="button" onclick="selectAppSymbol('🌿')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol hover:bg-slate-800 text-sm">🌿</button>
                   <button type="button" onclick="selectAppSymbol('📖')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol hover:bg-slate-800 text-sm">📖</button>
                   <button type="button" onclick="selectAppSymbol('🌸')" class="w-8 h-8 rounded-lg bg-darkbg border border-bordercol hover:bg-slate-800 text-sm">🌸</button>
+                  <button type="button" onclick="revertToDefaultAppLogo()" class="px-2 h-8 rounded-lg bg-slate-800 border border-bordercol text-slate-300 hover:bg-slate-700 text-[10px] font-bold" title="Revino la sigiliul implicit">↩ Implicit</button>
                 </div>
               </div>
             </div>
@@ -1158,6 +1358,23 @@
             </div>
 
             <button onclick="saveGlobalCustomSettings()" class="w-full bg-cyan-900 border border-cyan-700 text-cyan-100 py-2.5 rounded-xl font-bold text-xs active:scale-95 transition">💾 Salvează în Cloud</button>
+          </div>
+
+          <!-- Iconiță aplicație (per profil, încărcare locală + revenire la implicit) -->
+          <div class="border-b border-bordercol pb-3 space-y-2.5">
+            <h4 class="font-bold text-white uppercase tracking-wider text-xs">🖼️ Iconiță Aplicație (profilul curent)</h4>
+            <div class="flex items-center space-x-3">
+              <img id="iconUploadPreview" src="" class="w-16 h-16 rounded-xl border border-bordercol bg-darkbg object-cover">
+              <div class="flex-1 space-y-1.5">
+                <input type="file" id="iconUploadFileInput" accept="image/*" onchange="previewCustomAppIcon()" class="w-full text-[10px] text-slate-300">
+                <div class="flex space-x-1.5">
+                  <button onclick="saveCustomAppIcon()" class="flex-1 bg-amber-800 hover:bg-amber-700 text-white text-[11px] font-bold py-1.5 rounded-lg">💾 Salvează Iconiță</button>
+                  <button onclick="revertToDefaultAppIcon()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 text-[11px] font-bold py-1.5 rounded-lg">↩ Implicit</button>
+                </div>
+              </div>
+            </div>
+            <p id="iconUploadStatus" class="text-[10px] text-slate-500"></p>
+            <p class="text-[9px] text-slate-500">Imaginea se redimensionează automat la 512×512 și se salvează în Drive. Iconița de pe ecranul principal se schimbă doar după dezinstalarea și reinstalarea aplicației.</p>
           </div>
 
           <!-- Personalizare Meniu Principal Jos (Setări Utilizator) -->
@@ -1348,6 +1565,93 @@
       </div>
 
       <!-- SUB-TAB 6: INVENTAR PERSONAL (Spații de depozitare, poze, mentenanță) -->
+      <!-- SUB-TAB: INFO (Secțiunea 12) -->
+      <div id="subtab-info" class="subtab-content hidden space-y-3">
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
+          <div class="border-b border-bordercol pb-2">
+            <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">ℹ️ Despre aplicație</span>
+            <p id="infoVersionLine" class="text-[10px] text-slate-400 mt-0.5"></p>
+          </div>
+
+          <details open class="text-xs text-slate-300 space-y-1.5">
+            <summary class="font-bold text-white cursor-pointer select-none">1. Ce este aplicația</summary>
+            <p class="pt-1.5 leading-relaxed">Aceasta este aplicația personală de uz familial (PWA — instalabilă pe telefon și calculator, funcționează și offline), pentru rânduiala duhovnicească, pomenire, organizarea școlii copiilor și gospodărie. Datele se sincronizează printr-un Google Sheet privat, propriu familiei.</p>
+          </details>
+
+          <details class="text-xs text-slate-300 space-y-1.5">
+            <summary class="font-bold text-white cursor-pointer select-none">2. Funcții pe modul</summary>
+            <ul class="pt-1.5 space-y-1 leading-relaxed list-disc list-inside">
+              <li><strong>Astăzi:</strong> rezumat zilnic — Catisma, Biblia Anania, Continuitate Scriptură, Plan de citire, aniversări, pomelnicul zilei, școală, cumpărături, notițe, Gândul Zilei, inventar.</li>
+              <li><strong>Pomelnic:</strong> evidența completă a persoanelor pomenite (vii/adormiți), grupate pe categorii.</li>
+              <li><strong>Școală:</strong> calendar activități copii, plăți (automat/manual), sumar financiar pe perioade, calendarul anual de la inspectorat.</li>
+              <li><strong>Notițe:</strong> notițe personale cu sursă/etichetă, editare, ștergere cu confirmare și anulare.</li>
+              <li><strong>Cumpărături:</strong> listă pe magazine, cu linkuri clickabile pentru produse căutate online.</li>
+              <li><strong>Mai multe → Psaltire:</strong> pomelnicul grupului de Psaltire pe 20 de catisme.</li>
+              <li><strong>Mai multe → Scriptură:</strong> evidența lecturii Sfintei Scripturi, pe capitole și pe modele de citire.</li>
+              <li><strong>Mai multe → Nota Zilei / Note Biblia:</strong> versetul și nota zilei din ediția Anania, și registrul de căutare al tuturor notelor.</li>
+              <li><strong>Mai multe → Info:</strong> această secțiune.</li>
+            </ul>
+          </details>
+
+          <details class="text-xs text-slate-300 space-y-1.5">
+            <summary class="font-bold text-white cursor-pointer select-none">3. Cum se folosește fiecare funcție</summary>
+            <div class="pt-1.5 space-y-2 leading-relaxed">
+              <p><strong>Pomelnicul zilei:</strong> din „Astăzi”, apasă „Deschide Pomelnicul Zilei”.</p>
+              <p><strong>Plan de citire (Scriptură):</strong> alege modelul din meniul derulant, bifează poziția citită — se bifează automat și toate capitolele cărților acelei poziții în evidența canonică.</p>
+              <p><strong>Școală — plată:</strong> când schimbi statusul pe „Achitat”, apare automat data de azi (editabilă) și un câmp opțional de comentariu. Revenirea pe neachitat cere confirmare.</p>
+              <p><strong>Calendarul anului școlar:</strong> din tab-ul Școală, „Calendarul Anului Școlar”. Poate fi deschis, mărit (pinch/roată) și navigat pe luni; încărcarea unei poze noi este rezervată administratorului.</p>
+              <p><strong>Notițe / Note Biblia:</strong> ștergerea cere confirmare și poate fi anulată imediat după (fereastră scurtă), fără ca rândul să fie eliminat definitiv din foaia de calcul.</p>
+              <p><strong>Gândul Zilei:</strong> navigare cu ◀ ▶, 🎲 pentru un gând aleator, 📅 pentru a reveni la gândul rânduit zilei, ⚙️ pentru a adăuga/edita/dezactiva citate.</p>
+            </div>
+          </details>
+
+          <details class="text-xs text-slate-300 space-y-1.5">
+            <summary class="font-bold text-white cursor-pointer select-none">4. Instalare pe telefon și PC</summary>
+            <p class="pt-1.5 leading-relaxed">
+              <strong>Chrome Android:</strong> apasă butonul „Instalează Aplicația” din Setări, sau meniul Chrome (⋮) → „Instalează aplicația”.<br>
+              <strong>Chrome desktop:</strong> apasă iconița de instalare din bara de adresă, sau meniul (⋮) → „Instalează...”.<br>
+              <strong>iPhone (Safari):</strong> buton Share (pătrat cu săgeată) → „Add to Home Screen”.
+            </p>
+          </details>
+
+          <details class="text-xs text-slate-300 space-y-1.5">
+            <summary class="font-bold text-white cursor-pointer select-none">5. Schimbarea iconiței și a logo-ului</summary>
+            <p class="pt-1.5 leading-relaxed">Din Setări → „Iconiță Aplicație”, poți încărca o imagine proprie (se redimensionează automat la 512×512 și se salvează în Drive) sau reveni la implicit. Logo-ul din antet (emoji) se schimbă din câmpul „Simbol / Logo Aplicație”, cu buton de revenire la implicit. <strong>Important:</strong> iconița de pe ecranul principal al telefonului se schimbă doar după dezinstalarea și reinstalarea aplicației — restul aplicației (favicon, antet) se actualizează imediat.</p>
+          </details>
+
+          <details class="text-xs text-slate-300 space-y-1.5">
+            <summary class="font-bold text-white cursor-pointer select-none">6. Date și confidențialitate</summary>
+            <p class="pt-1.5 leading-relaxed">Toate datele (pomelnic, notițe, școală, cumpărături etc.) sunt stocate într-un Google Sheet privat al familiei. Imaginile (iconițe, calendar școlar) se salvează ca fișiere separate în Google Drive — niciodată în celule. Pe dispozitiv, aplicația păstrează o copie locală (localStorage) pentru funcționare offline și încărcare rapidă. Nu există chei secrete sau token-uri de acces vizibile în interfață.</p>
+          </details>
+
+          <details class="text-xs text-slate-300 space-y-1.5">
+            <summary class="font-bold text-white cursor-pointer select-none">7. Versiune și changelog</summary>
+            <p class="pt-1.5 leading-relaxed">Versiunea curentă: <span id="infoVersionBadge" class="font-mono font-bold text-cyan-300"></span>. Istoricul complet al modificărilor este păstrat în fișierul <code class="bg-darkbg px-1 rounded">CHANGELOG.md</code> din repository.</p>
+          </details>
+        </div>
+      </div>
+
+      <!-- SUB-TAB: NOTE BIBLIA (registru de căutare pe Note Anania, Secțiunea 8) -->
+      <div id="subtab-notebiblia" class="subtab-content hidden space-y-3">
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b border-bordercol pb-2">
+            <div>
+              <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">🔎 Note Biblia Anania</span>
+              <p class="text-[10px] text-slate-400">Căutare după carte, capitol sau verset</p>
+            </div>
+            <span id="noteBibliaCountBadge" class="bg-amber-950 border border-amber-800 text-amber-300 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">0</span>
+          </div>
+
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">🔍</span>
+            <input type="text" id="noteBibliaSearchInput" oninput="renderNoteBibliaList()" placeholder="Caută carte, capitol, verset sau text..." class="w-full bg-darkbg border border-bordercol rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+          </div>
+
+          <div id="noteBibliaSelectionBar" class="hidden flex items-center justify-between px-2 py-1.5 bg-rose-950/30 border border-rose-800/60 rounded-xl"></div>
+          <div id="noteBibliaListContainer" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
+        </div>
+      </div>
+
       <div id="subtab-inventar" class="subtab-content hidden space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
           <div class="flex items-center justify-between border-b border-bordercol pb-2">
@@ -2160,7 +2464,7 @@
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
     const API_TOKEN = "diih_secret_2026_bm";
-    const APP_VERSION = "v22.0";
+    const APP_VERSION = "v23.0";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2222,7 +2526,7 @@
       },
       "Andreea Murar": {
         pass: "Ber.lin",
-        defaultTitle: "Andreea",
+        defaultTitle: "ABL - Andreea",
         defaultLogo: "🌸",
         defaultIcon: DEFAULT_SHARED_APP_ICON,
         isOwner: true
@@ -2341,28 +2645,47 @@
     ];
 
     let grandThoughtManualOffset = 0;
+    // Citate încărcate din tabul cloud GandulZilei; array-ul GRAND_THOUGHTS de mai sus rămâne folosit DOAR ca fallback
+    // dacă sheet-ul nu răspunde (nicio cerere live sau cache local disponibil)
+    let allGandulZilei = [];
+
+    // Returnează lista activă de citate: cea din cloud dacă există, altfel fallback-ul hardcodat
+    function getActiveGandulZileiItems() {
+      const activeCloud = allGandulZilei.filter(g => g.activ !== false);
+      if (activeCloud.length > 0) {
+        return activeCloud.map(g => ({ quote: g.text, author: g.autor, tema: g.tema || 'Înțelepciune', id: g.id }));
+      }
+      return GRAND_THOUGHTS.map(g => ({ quote: g.quote, author: g.author, tema: 'Înțelepciune', id: null }));
+    }
 
     function getDailyGrandThoughtIndex(offset = 0) {
+      const items = getActiveGandulZileiItems();
       const baseDate = new Date('2024-01-01T00:00:00');
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const diffTime = today.getTime() - baseDate.getTime();
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      const total = GRAND_THOUGHTS.length;
+      const total = items.length || 1;
       return ((diffDays + offset) % total + total) % total;
     }
 
     function updateGrandThoughtDisplay() {
-      const quoteEl = document.getElementById('gandulZileiQuoteText');
-      const authorEl = document.getElementById('gandulZileiAuthorText');
-      const numBadge = document.getElementById('gandulZileiNumBadge');
+      const quoteEl = document.getElementById('ownerWidgetGrandThoughtQuote');
+      const authorEl = document.getElementById('ownerWidgetGrandThoughtAuthor');
+      const numBadge = document.getElementById('gandulZileiIndexBadge');
+      const themeBadge = document.getElementById('gandulZileiThemeBadge');
       if (!quoteEl || !authorEl) return;
+      const items = getActiveGandulZileiItems();
+      if (items.length === 0) return;
       const idx = getDailyGrandThoughtIndex(grandThoughtManualOffset);
-      const item = GRAND_THOUGHTS[idx];
+      const item = items[idx];
       quoteEl.textContent = `„${item.quote}”`;
       authorEl.textContent = `— ${item.author}`;
       if (numBadge) {
-        numBadge.textContent = `${idx + 1}/${GRAND_THOUGHTS.length}${grandThoughtManualOffset !== 0 ? ' • Navigat' : ''}`;
+        numBadge.textContent = `${idx + 1}/${items.length}${grandThoughtManualOffset !== 0 ? ' • Navigat' : ''}`;
+      }
+      if (themeBadge) {
+        themeBadge.textContent = item.tema || 'Înțelepciune';
       }
     }
 
@@ -2378,10 +2701,105 @@
     }
 
     function randomGrandThought() {
-      const rnd = Math.floor(Math.random() * GRAND_THOUGHTS.length);
+      const items = getActiveGandulZileiItems();
+      const rnd = Math.floor(Math.random() * items.length);
       const baseIdx = getDailyGrandThoughtIndex(0);
       grandThoughtManualOffset = rnd - baseIdx;
       updateGrandThoughtDisplay();
+    }
+
+    // Trimite citatele hardcodate spre Sheet o singură dată, doar dacă tabul GandulZilei este încă gol
+    // (sheet-ul rămâne sursa de adevăr după aceea; array-ul local devine fallback pur pentru offline/eroare)
+    function seedGandulZileiIfNeeded() {
+      if (localStorage.getItem('diih_gandul_zilei_seed_done') === '1') return;
+      const items = GRAND_THOUGHTS.map(g => ({ quote: g.quote, author: g.author }));
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=seedGandulZileiIfEmpty&itemsJson=${encodeURIComponent(JSON.stringify(items))}&callback=void`;
+      document.body.appendChild(script);
+      localStorage.setItem('diih_gandul_zilei_seed_done', '1');
+    }
+
+    // ADMINISTRARE GÂNDUL ZILEI: adăugare, editare, dezactivare (fără ștergere de rânduri)
+    let editingGandulZileiId = null;
+
+    function openGandulZileiManager() {
+      document.getElementById('gandulZileiManagerModal').classList.remove('hidden');
+      cancelGandulZileiEdit();
+      renderGandulZileiManagerList();
+    }
+    function closeGandulZileiManager() {
+      document.getElementById('gandulZileiManagerModal').classList.add('hidden');
+    }
+    function cancelGandulZileiEdit() {
+      editingGandulZileiId = null;
+      document.getElementById('gzManagerText').value = '';
+      document.getElementById('gzManagerAutor').value = '';
+      document.getElementById('gzManagerTema').value = '';
+      document.getElementById('gzManagerSaveBtn').textContent = '➕ Adaugă';
+    }
+    function startEditGandulZilei(id) {
+      const item = allGandulZilei.find(g => g.id === id);
+      if (!item) return;
+      editingGandulZileiId = id;
+      document.getElementById('gzManagerText').value = item.text;
+      document.getElementById('gzManagerAutor').value = item.autor;
+      document.getElementById('gzManagerTema').value = item.tema || '';
+      document.getElementById('gzManagerSaveBtn').textContent = '💾 Actualizează';
+    }
+    function saveGandulZileiFromManager() {
+      const text = document.getElementById('gzManagerText').value.trim();
+      const autor = document.getElementById('gzManagerAutor').value.trim();
+      const tema = document.getElementById('gzManagerTema').value.trim() || 'Înțelepciune';
+      if (!text || !autor) { showToast("Completează citatul și autorul!"); return; }
+
+      const script = document.createElement('script');
+      if (editingGandulZileiId) {
+        const item = allGandulZilei.find(g => g.id === editingGandulZileiId);
+        if (item) { item.text = text; item.autor = autor; item.tema = tema; }
+        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGandulZilei&id=${encodeURIComponent(editingGandulZileiId)}&text=${encodeURIComponent(text)}&autor=${encodeURIComponent(autor)}&tema=${encodeURIComponent(tema)}&callback=void`;
+        showToast("Gând actualizat!");
+      } else {
+        const tempId = "GZ-LOCAL-" + Date.now();
+        allGandulZilei.unshift({ id: tempId, text, autor, tema, activ: true });
+        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addGandulZilei&text=${encodeURIComponent(text)}&autor=${encodeURIComponent(autor)}&tema=${encodeURIComponent(tema)}&callback=void`;
+        showToast("Gând adăugat!");
+      }
+      document.body.appendChild(script);
+      localStorage.setItem('diih_gandul_zilei', JSON.stringify(allGandulZilei));
+      cancelGandulZileiEdit();
+      renderGandulZileiManagerList();
+      updateGrandThoughtDisplay();
+    }
+    function toggleGandulZileiActiv(id, activ) {
+      const item = allGandulZilei.find(g => g.id === id);
+      if (item) item.activ = activ;
+      localStorage.setItem('diih_gandul_zilei', JSON.stringify(allGandulZilei));
+      renderGandulZileiManagerList();
+      updateGrandThoughtDisplay();
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGandulZilei&id=${encodeURIComponent(id)}&activ=${activ}&callback=void`;
+      document.body.appendChild(script);
+    }
+    function renderGandulZileiManagerList() {
+      const cont = document.getElementById('gzManagerList');
+      if (!cont) return;
+      if (allGandulZilei.length === 0) {
+        cont.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">Niciun citat încărcat încă din cloud (se va popula automat din lista implicită).</p>`;
+        return;
+      }
+      cont.innerHTML = allGandulZilei.map(g => `
+        <div class="p-2 bg-darkbg border ${g.activ ? 'border-bordercol' : 'border-slate-800 opacity-50'} rounded-xl text-xs space-y-1">
+          <p class="text-slate-200">${g.text}</p>
+          <div class="flex items-center justify-between text-[10px] text-slate-400">
+            <span class="text-amber-400 font-semibold">— ${g.autor} · ${g.tema || 'Înțelepciune'}</span>
+            <div class="flex items-center space-x-1">
+              <button onclick="startEditGandulZilei('${g.id}')" class="text-slate-400 hover:text-cyan-300 p-1">✏️</button>
+              <button onclick="toggleGandulZileiActiv('${g.id}', ${!g.activ})" class="px-1.5 py-0.5 rounded ${g.activ ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-slate-800 text-slate-400 border border-bordercol'}">${g.activ ? 'Activ' : 'Dezactivat'}</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
     }
 
     function applyUserUIState() {
@@ -2706,6 +3124,97 @@
       if (batchSelect) batchSelect.value = pomelnicBatchSize.toString();
       const activeIconCard = document.getElementById('activeIconPreview');
       if (activeIconCard) activeIconCard.src = appIconPath;
+      const iconPreview = document.getElementById('iconUploadPreview');
+      if (iconPreview) iconPreview.src = appIconPath;
+      applyDynamicManifest();
+    }
+
+    // Construiește dinamic manifest.json (nume + iconiță per profil) ca Blob, pentru ca dialogul de
+    // instalare să arate numele/iconița profilului activ. NU afectează instalarea deja existentă pe
+    // ecranul principal — aceea se schimbă doar la dezinstalare/reinstalare.
+    function applyDynamicManifest() {
+      const mLink = document.getElementById('manifestLink');
+      if (!mLink) return;
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.has('share')) return; // păstrăm manifestele statice de partajare, neatinse
+
+      const uName = getCurrentLoggedInUser();
+      const shortName = appTitle || 'ABL - Andreea';
+      const iconSrc = (appIconPath && appIconPath.startsWith('data:image')) ? appIconPath : DEFAULT_SHARED_APP_ICON;
+      const manifest = {
+        id: `diih-${uName.replace(/\s+/g, '-').toLowerCase()}-pwa`,
+        name: shortName,
+        short_name: shortName,
+        description: "Agenda și rânduiala Andreei",
+        start_url: "./andreea.html",
+        scope: "./",
+        display: "standalone",
+        background_color: "#090d16",
+        theme_color: "#090d16",
+        orientation: "portrait",
+        icons: [
+          { src: iconSrc, sizes: "192x192", type: iconSrc.startsWith('data:') ? "image/png" : "image/svg+xml", purpose: "any" },
+          { src: iconSrc, sizes: "512x512", type: iconSrc.startsWith('data:') ? "image/png" : "image/svg+xml", purpose: "any" }
+        ]
+      };
+      try {
+        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+        if (mLink.dataset.blobUrl) URL.revokeObjectURL(mLink.dataset.blobUrl);
+        const url = URL.createObjectURL(blob);
+        mLink.href = url;
+        mLink.dataset.blobUrl = url;
+      } catch (e) { /* fallback: manifestul static rămâne activ */ }
+    }
+
+    // ====== ICONIȚĂ APLICAȚIE CUSTOM (încărcare locală -> Drive, per profil) ======
+    let pendingCustomIconDataUrl = null;
+
+    async function previewCustomAppIcon() {
+      const fileInput = document.getElementById('iconUploadFileInput');
+      const statusEl = document.getElementById('iconUploadStatus');
+      if (!fileInput.files || fileInput.files.length === 0) return;
+      try {
+        const { dataUrl } = await resizeImageFileToDataUrl(fileInput.files[0], 512, 'image/png', 0.92);
+        pendingCustomIconDataUrl = dataUrl;
+        document.getElementById('iconUploadPreview').src = dataUrl;
+        statusEl.textContent = 'Previzualizare — apasă „Salvează Iconiță” pentru a o aplica.';
+      } catch (err) {
+        statusEl.textContent = '✗ Eroare: ' + err.message;
+      }
+    }
+
+    async function saveCustomAppIcon() {
+      const statusEl = document.getElementById('iconUploadStatus');
+      if (!pendingCustomIconDataUrl) { statusEl.textContent = 'Alege mai întâi o imagine.'; return; }
+      const uName = getCurrentLoggedInUser();
+      statusEl.textContent = 'Se salvează în Drive...';
+      try {
+        const fileId = await uploadImageDataUrlToDrive(pendingCustomIconDataUrl, `IconaApp_${uName}_${Date.now()}.png`);
+        saveSettingRaw(`IconaApp_${uName}`, fileId);
+        appIconPath = pendingCustomIconDataUrl;
+        localStorage.setItem('diih_app_icon_path', appIconPath);
+        saveUserProfileSettings(uName, { appIconPath: appIconPath });
+        applyAppBrandUI();
+        statusEl.textContent = '✔ Iconiță salvată! Fișierele vechi rămân păstrate în Drive.';
+        showToast('Iconiță aplicație actualizată!');
+      } catch (err) {
+        statusEl.textContent = '✗ Eroare: ' + err.message;
+      }
+    }
+
+    function revertToDefaultAppIcon() {
+      const uName = getCurrentLoggedInUser();
+      const uConfig = APP_USERS[uName] || APP_USERS['Bogdan Murar'];
+      appIconPath = uConfig.defaultIcon;
+      pendingCustomIconDataUrl = null;
+      localStorage.setItem('diih_app_icon_path', appIconPath);
+      saveUserProfileSettings(uName, { appIconPath: appIconPath });
+      // Ștergem doar cheia de personalizare din Setari — fișierul din Drive NU se șterge
+      saveSettingRaw(`IconaApp_${uName}`, '');
+      document.getElementById('iconUploadFileInput').value = '';
+      applyAppBrandUI();
+      document.getElementById('iconUploadStatus').textContent = '✔ Revenit la sigiliul implicit.';
+      showToast('Iconiță resetată la implicit!');
     }
 
     function handlePomelnicBatchChange(val) {
@@ -2721,6 +3230,8 @@
       document.body.appendChild(script);
     }
 
+    const APPLE_TOUCH_ICON_FALLBACK = './icons/icon-heart-apple-180.png';
+
     function updateDynamicFavicon(emoji, customPath = null) {
       const link = document.getElementById('appFavicon') || document.createElement('link');
       link.id = 'appFavicon';
@@ -2732,6 +3243,12 @@
         link.href = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${emoji}</text></svg>`;
       }
       document.head.appendChild(link);
+
+      const appleLink = document.getElementById('appAppleTouchIcon') || document.createElement('link');
+      appleLink.id = 'appAppleTouchIcon';
+      appleLink.rel = 'apple-touch-icon';
+      appleLink.href = (storedPath && storedPath.startsWith('data:image')) ? storedPath : APPLE_TOUCH_ICON_FALLBACK;
+      document.head.appendChild(appleLink);
     }
 
     function saveGlobalCustomSettings(skipFormRead = false) {
@@ -2828,6 +3345,435 @@
           el.classList.remove('opacity-100', 'translate-y-0');
           el.classList.add('opacity-0', '-translate-y-2');
         }, 1800);
+      }
+    }
+
+    // MODAL GENERIC DE CONFIRMARE — folosit la Notițe și Note Biblia (ștergere cu confirmare obligatorie)
+    let pendingGenericConfirmAction = null;
+    function showGenericConfirm(message, onConfirm, title = "Confirmare ștergere") {
+      document.getElementById('genericConfirmTitle').textContent = title;
+      document.getElementById('genericConfirmMessage').textContent = message;
+      pendingGenericConfirmAction = onConfirm;
+      document.getElementById('genericConfirmModal').classList.remove('hidden');
+    }
+    function closeGenericConfirm() {
+      pendingGenericConfirmAction = null;
+      document.getElementById('genericConfirmModal').classList.add('hidden');
+    }
+    function runGenericConfirm() {
+      const fn = pendingGenericConfirmAction;
+      closeGenericConfirm();
+      if (typeof fn === 'function') fn();
+    }
+
+    // TOAST CU ANULARE — folosit după o ștergere soft, oferă o fereastră scurtă de revenire
+    let pendingUndoAction = null;
+    let pendingUndoTimer = null;
+    function showUndoToast(message, onUndo, durationMs = 6000) {
+      const el = document.getElementById('undoToast');
+      const txt = document.getElementById('undoToastMsg');
+      if (!el || !txt) return;
+      if (pendingUndoTimer) clearTimeout(pendingUndoTimer);
+      txt.textContent = message;
+      pendingUndoAction = onUndo;
+      el.classList.remove('hidden');
+      pendingUndoTimer = setTimeout(() => {
+        el.classList.add('hidden');
+        pendingUndoAction = null;
+      }, durationMs);
+    }
+    function triggerPendingUndo() {
+      const fn = pendingUndoAction;
+      document.getElementById('undoToast').classList.add('hidden');
+      if (pendingUndoTimer) clearTimeout(pendingUndoTimer);
+      pendingUndoAction = null;
+      if (typeof fn === 'function') fn();
+    }
+
+    // Scriere defensivă în localStorage: seturi mari de date (ex. Note Anania, Biblia 360) pot depăși
+    // cota per-origine a browserului; fără acest wrapper, eroarea oprea restul handler-ului de sincronizare.
+    // ====== HELPERE GENERICE SETARI (cheie arbitrară) + UPLOAD FIȘIERE ÎN DRIVE ======
+    // settingsRaw conține TOATE perechile cheie-valoare din tab-ul Setari (inclusiv chei noi dinamice,
+    // ex. CalendarScolar_2026-2027), populat la fiecare sincronizare prin getSettingsRaw/getLiveData.
+    let settingsRaw = JSON.parse(localStorage.getItem('diih_settings_raw') || '{}');
+
+    function saveSettingRaw(key, value) {
+      settingsRaw[key] = value;
+      safeLocalStorageSetItem('diih_settings_raw', JSON.stringify(settingsRaw));
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=setSettingRaw&key=${encodeURIComponent(key)}&value=${encodeURIComponent(value)}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    // Redimensionează o imagine locală pe canvas (păstrează proporțiile) și întoarce un data URL JPEG/PNG
+    function resizeImageFileToDataUrl(file, maxDim, mimeType = 'image/jpeg', quality = 0.88) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Nu s-a putut citi fișierul.'));
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => reject(new Error('Fișierul nu este o imagine validă.'));
+          img.onload = () => {
+            let w = img.naturalWidth, h = img.naturalHeight;
+            if (maxDim && Math.max(w, h) > maxDim) {
+              const ratio = maxDim / Math.max(w, h);
+              w = Math.round(w * ratio);
+              h = Math.round(h * ratio);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve({ dataUrl: canvas.toDataURL(mimeType, quality), width: w, height: h });
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Urcă un data URL (imagine) în Drive prin doPost (POST, nu are limita de lungime a unui GET) și întoarce fileId
+    async function uploadImageDataUrlToDrive(dataUrl, fileName) {
+      const commaIdx = dataUrl.indexOf(',');
+      const meta = dataUrl.substring(5, dataUrl.indexOf(';'));
+      const base64Data = dataUrl.substring(commaIdx + 1);
+      const body = new URLSearchParams({
+        token: API_TOKEN,
+        action: 'uploadDriveFile',
+        fileName: fileName,
+        mimeType: meta,
+        base64Data: base64Data
+      });
+      const res = await fetch(GOOGLE_SCRIPT_API_URL, { method: 'POST', body: body });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Eroare necunoscută la urcare în Drive.');
+      return json.fileId;
+    }
+
+    // Preia conținutul unei imagini din Drive ca data URL, prin JSONP (consistent cu restul aplicației)
+    function fetchDriveImageAsDataUrl(fileId) {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'handleDriveImg_' + Date.now() + Math.floor(Math.random() * 1000);
+        window[callbackName] = function(data) {
+          delete window[callbackName];
+          if (data && data.success) {
+            resolve(`data:${data.mimeType};base64,${data.base64}`);
+          } else {
+            reject(new Error((data && data.error) || 'Nu s-a putut încărca imaginea din Drive.'));
+          }
+        };
+        const script = document.createElement('script');
+        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getDriveImage&fileId=${encodeURIComponent(fileId)}&callback=${callbackName}`;
+        script.onerror = () => reject(new Error('Eroare de rețea la încărcarea imaginii din Drive.'));
+        document.body.appendChild(script);
+      });
+    }
+
+    // ====== CALENDARUL ANULUI ȘCOLAR DE LA INSPECTORAT (Secțiunea 9.3) ======
+    let schoolCalSelectedYear = '';
+    let schoolCalImageCache = {};
+    let schoolCalPoints = {};
+    let schoolCalMarkMode = false;
+    let schoolCalMarkingIdx = 0;
+    const SCHOOL_CAL_MONTHS = ['Ian','Feb','Mar','Apr','Mai','Iun','Iul','Aug','Sep','Oct','Noi','Dec'];
+
+    function getDefaultSchoolYear() {
+      const now = new Date();
+      const y = now.getFullYear();
+      // Anul școlar afișat implicit este cel curent după 1 septembrie
+      return (now.getMonth() >= 8) ? `${y}-${y + 1}` : `${y - 1}-${y}`;
+    }
+
+    function isCurrentUserAdmin() {
+      return getCurrentLoggedInUser() === 'Bogdan Murar';
+    }
+
+    function getAllSchoolCalYears() {
+      const years = new Set([getDefaultSchoolYear()]);
+      Object.keys(settingsRaw).forEach(k => {
+        const m = k.match(/^CalendarScolar_(\d{4}-\d{4})$/);
+        if (m) years.add(m[1]);
+      });
+      return Array.from(years).sort();
+    }
+
+    function openSchoolInspectorCalendarModal() {
+      const sel = document.getElementById('schoolCalYearSelect');
+      const years = getAllSchoolCalYears();
+      sel.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+      schoolCalSelectedYear = getDefaultSchoolYear();
+      sel.value = schoolCalSelectedYear;
+      onSchoolCalYearChange();
+      document.getElementById('schoolInspectorCalendarModal').classList.remove('hidden');
+    }
+    function closeSchoolInspectorCalendarModal() {
+      document.getElementById('schoolInspectorCalendarModal').classList.add('hidden');
+    }
+
+    function onSchoolCalYearChange() {
+      schoolCalSelectedYear = document.getElementById('schoolCalYearSelect').value;
+      const fileId = settingsRaw[`CalendarScolar_${schoolCalSelectedYear}`];
+      const admin = isCurrentUserAdmin();
+
+      document.getElementById('schoolCalAdminUploadBox').classList.toggle('hidden', !admin);
+      document.getElementById('schoolCalAdminSpecialDatesBox').classList.toggle('hidden', !admin);
+      document.getElementById('schoolCalOpenBtn').classList.toggle('hidden', !fileId);
+      document.getElementById('schoolCalNoImageMsg').classList.toggle('hidden', !!fileId);
+
+      const [vStart, vEnd] = (settingsRaw[`SaptamanaVerde_${schoolCalSelectedYear}`] || '_').split('_');
+      const [aStart, aEnd] = (settingsRaw[`SaptamanaAltfel_${schoolCalSelectedYear}`] || '_').split('_');
+      document.getElementById('schoolCalSaptVerdeStart').value = vStart || '';
+      document.getElementById('schoolCalSaptVerdeEnd').value = vEnd || '';
+      document.getElementById('schoolCalSaptAltfelStart').value = aStart || '';
+      document.getElementById('schoolCalSaptAltfelEnd').value = aEnd || '';
+
+      try { schoolCalPoints[schoolCalSelectedYear] = JSON.parse(settingsRaw[`CalendarScolarPuncte_${schoolCalSelectedYear}`] || 'null') || {}; } catch (e) { schoolCalPoints[schoolCalSelectedYear] = {}; }
+    }
+
+    async function uploadSchoolInspectorCalendar() {
+      const fileInput = document.getElementById('schoolCalFileInput');
+      const statusEl = document.getElementById('schoolCalUploadStatus');
+      if (!fileInput.files || fileInput.files.length === 0) { statusEl.textContent = 'Alege un fișier mai întâi.'; return; }
+      const file = fileInput.files[0];
+      statusEl.textContent = 'Se procesează imaginea...';
+      try {
+        const { dataUrl } = await resizeImageFileToDataUrl(file, 2200, 'image/jpeg', 0.9);
+        statusEl.textContent = 'Se urcă în Drive...';
+        const fileId = await uploadImageDataUrlToDrive(dataUrl, `CalendarScolar_${schoolCalSelectedYear}.jpg`);
+        saveSettingRaw(`CalendarScolar_${schoolCalSelectedYear}`, fileId);
+        schoolCalImageCache[schoolCalSelectedYear] = dataUrl;
+        // Resetăm punctele lunilor — imaginea nouă poate avea alt layout
+        saveSettingRaw(`CalendarScolarPuncte_${schoolCalSelectedYear}`, '');
+        schoolCalPoints[schoolCalSelectedYear] = {};
+        statusEl.textContent = '✔ Calendar încărcat cu succes!';
+        onSchoolCalYearChange();
+        showToast('Calendar școlar încărcat!');
+      } catch (err) {
+        statusEl.textContent = '✗ Eroare: ' + err.message;
+      }
+    }
+
+    async function openSchoolInspectorCalendarViewer() {
+      const fileId = settingsRaw[`CalendarScolar_${schoolCalSelectedYear}`];
+      if (!fileId) return;
+      document.getElementById('schoolCalViewerYearLabel').textContent = `🗓️ ${schoolCalSelectedYear}`;
+      document.getElementById('schoolCalMarkModeBtn').classList.toggle('hidden', !isCurrentUserAdmin());
+      document.getElementById('schoolCalendarViewerModal').classList.remove('hidden');
+      closeSchoolInspectorCalendarModal();
+      initSchoolCalViewerEvents();
+
+      const img = document.getElementById('schoolCalViewerImg');
+      img.src = schoolCalImageCache[schoolCalSelectedYear] || '';
+      if (!schoolCalImageCache[schoolCalSelectedYear]) {
+        img.src = APP_PLACEHOLDER_1PX;
+        try {
+          const dataUrl = await fetchDriveImageAsDataUrl(fileId);
+          schoolCalImageCache[schoolCalSelectedYear] = dataUrl;
+          img.src = dataUrl;
+        } catch (err) {
+          showToast('Eroare la încărcarea calendarului din Drive.');
+          return;
+        }
+      }
+      img.onload = () => {
+        resetSchoolCalZoom();
+        const points = schoolCalPoints[schoolCalSelectedYear] || {};
+        if (Object.keys(points).length < 12 && isCurrentUserAdmin()) {
+          showToast('Atinge imaginea pentru a marca începutul fiecărei luni (Ian → Dec).');
+          schoolCalMarkMode = true;
+          schoolCalMarkingIdx = Object.keys(points).length;
+        }
+      };
+    }
+
+    function closeSchoolInspectorCalendarViewer() {
+      document.getElementById('schoolCalendarViewerModal').classList.add('hidden');
+      schoolCalMarkMode = false;
+    }
+
+    function toggleSchoolCalMarkMode() {
+      schoolCalMarkMode = !schoolCalMarkMode;
+      schoolCalMarkingIdx = 0;
+      showToast(schoolCalMarkMode ? 'Mod marcare: atinge începutul lunii Ianuarie.' : 'Mod marcare oprit.');
+    }
+
+    // --- Pan & Zoom (wheel desktop, pinch + drag mobil) ---
+    let scZoom = { scale: 1, x: 0, y: 0 };
+    let scPointers = new Map();
+    let scLastPinchDist = null;
+    let scDragStart = null;
+
+    function resetSchoolCalZoom() {
+      scZoom = { scale: 1, x: 0, y: 0 };
+      applySchoolCalTransform();
+    }
+    function applySchoolCalTransform() {
+      const img = document.getElementById('schoolCalViewerImg');
+      if (img) img.style.transform = `translate(${scZoom.x}px, ${scZoom.y}px) scale(${scZoom.scale})`;
+    }
+
+    function jumpToSchoolCalMonth(monthIdx) {
+      const points = schoolCalPoints[schoolCalSelectedYear] || {};
+      const p = points[monthIdx];
+      const img = document.getElementById('schoolCalViewerImg');
+      const container = document.getElementById('schoolCalViewerContainer');
+      if (!p || !img || !img.naturalWidth) { showToast('Punctul acestei luni nu a fost marcat încă.'); return; }
+      const targetScale = 2.2;
+      const targetImgX = (p.x / 100) * img.naturalWidth;
+      const targetImgY = (p.y / 100) * img.naturalHeight;
+      scZoom.scale = targetScale;
+      scZoom.x = (container.clientWidth / 2) - targetImgX * targetScale;
+      scZoom.y = (container.clientHeight / 2) - targetImgY * targetScale;
+      applySchoolCalTransform();
+    }
+
+    function initSchoolCalViewerEvents() {
+      const container = document.getElementById('schoolCalViewerContainer');
+      if (!container || container.__scInit) return;
+      container.__scInit = true;
+
+      container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const rect = container.getBoundingClientRect();
+        const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+        const delta = e.deltaY < 0 ? 1.12 : 0.89;
+        const newScale = Math.min(6, Math.max(0.5, scZoom.scale * delta));
+        scZoom.x = cx - ((cx - scZoom.x) / scZoom.scale) * newScale;
+        scZoom.y = cy - ((cy - scZoom.y) / scZoom.scale) * newScale;
+        scZoom.scale = newScale;
+        applySchoolCalTransform();
+      }, { passive: false });
+
+      container.addEventListener('pointerdown', (e) => {
+        container.setPointerCapture(e.pointerId);
+        scPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (scPointers.size === 1) {
+          scDragStart = { x: e.clientX, y: e.clientY, zx: scZoom.x, zy: scZoom.y };
+        } else {
+          scLastPinchDist = null;
+        }
+      });
+      container.addEventListener('pointermove', (e) => {
+        if (!scPointers.has(e.pointerId)) return;
+        scPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (scPointers.size === 2) {
+          const pts = Array.from(scPointers.values());
+          const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+          const midX = (pts[0].x + pts[1].x) / 2, midY = (pts[0].y + pts[1].y) / 2;
+          const rect = container.getBoundingClientRect();
+          const cx = midX - rect.left, cy = midY - rect.top;
+          if (scLastPinchDist) {
+            const ratio = dist / scLastPinchDist;
+            const newScale = Math.min(6, Math.max(0.5, scZoom.scale * ratio));
+            scZoom.x = cx - ((cx - scZoom.x) / scZoom.scale) * newScale;
+            scZoom.y = cy - ((cy - scZoom.y) / scZoom.scale) * newScale;
+            scZoom.scale = newScale;
+            applySchoolCalTransform();
+          }
+          scLastPinchDist = dist;
+        } else if (scPointers.size === 1 && scDragStart) {
+          scZoom.x = scDragStart.zx + (e.clientX - scDragStart.x);
+          scZoom.y = scDragStart.zy + (e.clientY - scDragStart.y);
+          applySchoolCalTransform();
+        }
+      });
+      const endPointer = (e) => {
+        scPointers.delete(e.pointerId);
+        scLastPinchDist = null;
+        if (scPointers.size === 0) scDragStart = null;
+      };
+      container.addEventListener('pointerup', endPointer);
+      container.addEventListener('pointercancel', endPointer);
+
+      container.addEventListener('click', (e) => {
+        if (!schoolCalMarkMode) return;
+        const img = document.getElementById('schoolCalViewerImg');
+        const rect = img.getBoundingClientRect();
+        const xPct = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPct = ((e.clientY - rect.top) / rect.height) * 100;
+        if (!schoolCalPoints[schoolCalSelectedYear]) schoolCalPoints[schoolCalSelectedYear] = {};
+        schoolCalPoints[schoolCalSelectedYear][schoolCalMarkingIdx] = { x: xPct, y: yPct };
+        showToast(`✓ Marcat: ${SCHOOL_CAL_MONTHS[schoolCalMarkingIdx]}`);
+        schoolCalMarkingIdx++;
+        if (schoolCalMarkingIdx >= 12) {
+          schoolCalMarkMode = false;
+          saveSettingRaw(`CalendarScolarPuncte_${schoolCalSelectedYear}`, JSON.stringify(schoolCalPoints[schoolCalSelectedYear]));
+          showToast('✔ Toate cele 12 luni au fost marcate!');
+        }
+      });
+    }
+
+    function saveSchoolSpecialWeeks() {
+      const vStart = document.getElementById('schoolCalSaptVerdeStart').value;
+      const vEnd = document.getElementById('schoolCalSaptVerdeEnd').value;
+      const aStart = document.getElementById('schoolCalSaptAltfelStart').value;
+      const aEnd = document.getElementById('schoolCalSaptAltfelEnd').value;
+
+      const payload = [];
+      if (vStart && vEnd) {
+        saveSettingRaw(`SaptamanaVerde_${schoolCalSelectedYear}`, `${vStart}_${vEnd}`);
+        payload.push(...buildSpecialWeekActivities('Săptămâna Verde', vStart, vEnd, `SAPTVERDE-${schoolCalSelectedYear}`));
+      }
+      if (aStart && aEnd) {
+        saveSettingRaw(`SaptamanaAltfel_${schoolCalSelectedYear}`, `${aStart}_${aEnd}`);
+        payload.push(...buildSpecialWeekActivities('Săptămâna Altfel', aStart, aEnd, `SAPTALTFEL-${schoolCalSelectedYear}`));
+      }
+      if (payload.length === 0) { showToast('Completează cel puțin un interval de date.'); return; }
+
+      payload.forEach(item => {
+        const existingIdx = schoolActivities.findIndex(a => a.id === item.id);
+        if (existingIdx !== -1) schoolActivities[existingIdx] = item; else schoolActivities.push(item);
+      });
+      localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+      renderSchoolDisplay();
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(payload))}&callback=void`;
+      document.body.appendChild(script);
+
+      showToast('Date speciale salvate și generate în calendar!');
+    }
+
+    function buildSpecialWeekActivities(title, startStr, endStr, idPrefix) {
+      const items = [];
+      let d = new Date(startStr + 'T00:00:00');
+      const end = new Date(endStr + 'T00:00:00');
+      while (d <= end) {
+        const dStr = d.toISOString().split('T')[0];
+        items.push({
+          id: `${idPrefix}-${dStr}`,
+          date: dStr,
+          child: 'Toți',
+          institution: 'Inspectorat',
+          title: title,
+          startHour: '08:00',
+          endHour: '16:00',
+          hours: 0,
+          rate: 0,
+          total: 0,
+          paymentType: 'Fără plată',
+          paymentStatus: 'Fără plată',
+          deadline: '-',
+          dayMessage: title,
+          color: (title === 'Săptămâna Verde') ? '#10b981' : '#8b5cf6',
+          reminders: [],
+          author: deviceName,
+          dataAchitat: '',
+          comentariuPlata: ''
+        });
+        d.setDate(d.getDate() + 1);
+      }
+      return items;
+    }
+
+    const APP_PLACEHOLDER_1PX = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7';
+
+    function safeLocalStorageSetItem(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch (e) {
+        console.warn(`Nu s-a putut salva local '${key}' (posibil cotă depășită):`, e);
       }
     }
 
@@ -2945,12 +3891,12 @@
 
     function getRanduialaDay(dateStr) {
       const data = getRanduialaTrackerData();
-      return data[dateStr] || { catisma: false, pomelnic: false, rugaciune: false, scriptura: false };
+      return data[dateStr] || { catisma: false, pomelnic: false, pomelnicZi: false, rugaciune: false, scriptura: false };
     }
 
     function setRanduialaDayItem(dateStr, item, val) {
       const data = getRanduialaTrackerData();
-      if (!data[dateStr]) data[dateStr] = { catisma: false, pomelnic: false, rugaciune: false, scriptura: false };
+      if (!data[dateStr]) data[dateStr] = { catisma: false, pomelnic: false, pomelnicZi: false, rugaciune: false, scriptura: false };
       if (item === 'all') {
         const isCurrentlyAll = !!(data[dateStr].catisma && data[dateStr].pomelnic && data[dateStr].rugaciune && data[dateStr].scriptura);
         const nextState = (val !== undefined && typeof val === 'boolean') ? val : !isCurrentlyAll;
@@ -3047,6 +3993,7 @@
         const activeIcons = [];
         if (dayData.catisma) activeIcons.push('<span class="text-rose-400 font-bold">📖</span>');
         if (dayData.pomelnic) activeIcons.push('<span class="text-emerald-400 font-bold">📿</span>');
+        if (dayData.pomelnicZi) activeIcons.push('<span class="text-sky-400 font-bold">📿</span>');
         if (dayData.rugaciune) activeIcons.push('<span class="text-amber-400 font-bold">🕊️</span>');
         if (dayData.scriptura) activeIcons.push('<span class="text-cyan-400 font-bold">📜</span>');
         const iconsHtml = activeIcons.length > 0
@@ -3111,6 +4058,11 @@
               <input type="checkbox" onchange="setRanduialaDayItem('${randuialaSelectedDayStr}', 'scriptura', this.checked)" ${dayData.scriptura ? 'checked' : ''} class="rounded text-cyan-600 focus:ring-0">
               <span class="font-bold truncate">📜 Scriptură</span>
             </label>
+
+            <label class="flex items-center space-x-2 p-2 bg-darkbg rounded-xl border ${dayData.pomelnicZi ? 'border-emerald-700 bg-emerald-950/30 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer" title="Bifă separată pentru Pomelnicul zilei (doar secțiunea de azi), distinctă de Pomelnicul complet">
+              <input type="checkbox" onchange="setRanduialaDayItem('${randuialaSelectedDayStr}', 'pomelnicZi', this.checked)" ${dayData.pomelnicZi ? 'checked' : ''} class="rounded text-sky-500 focus:ring-0">
+              <span class="font-bold truncate">📿 Pomelnicul Zilei</span>
+            </label>
           </div>
         </div>
       `;
@@ -3153,6 +4105,7 @@
           const activeIcons = [];
           if (sdData.catisma) activeIcons.push('<span class="text-rose-300">📖</span>');
           if (sdData.pomelnic) activeIcons.push('<span class="text-emerald-300">📿</span>');
+          if (sdData.pomelnicZi) activeIcons.push('<span class="text-sky-300">📿</span>');
           if (sdData.rugaciune) activeIcons.push('<span class="text-amber-300">🕊️</span>');
           if (sdData.scriptura) activeIcons.push('<span class="text-cyan-300">📜</span>');
           const iconsHtml = activeIcons.length > 0
@@ -3198,6 +4151,9 @@
                 </button>
                 <button onclick="setRanduialaDayItem('${dStr}', 'pomelnic', ${dData.pomelnic ? 'false' : "'complet'"})" title="📿 Pomelnic" class="p-1 rounded border transition active:scale-95 ${dData.pomelnic ? 'bg-emerald-950 border-emerald-700 text-emerald-300 font-bold' : 'bg-cardbg border-bordercol text-slate-500 opacity-60'}">
                   📿
+                </button>
+                <button onclick="setRanduialaDayItem('${dStr}', 'pomelnicZi', ${!dData.pomelnicZi})" title="📿 Pomelnicul Zilei" class="p-1 rounded border transition active:scale-95 ${dData.pomelnicZi ? 'bg-sky-950 border-sky-700 text-sky-300 font-bold' : 'bg-cardbg border-bordercol text-slate-500 opacity-60'}">
+                  📿<sub class="text-[7px]">Z</sub>
                 </button>
                 <button onclick="setRanduialaDayItem('${dStr}', 'rugaciune', ${!dData.rugaciune})" title="🕊️ Pt. Neam" class="p-1 rounded border transition active:scale-95 ${dData.rugaciune ? 'bg-amber-950 border-amber-700 text-amber-300 font-bold' : 'bg-cardbg border-bordercol text-slate-500 opacity-60'}">
                   🕊️
@@ -3320,6 +4276,15 @@
       if (subId === 'notificari') initNotificationInputs();
       if (subId === 'admin') renderAdminSharingForm();
       if (subId === 'inventar') loadInventoryIfNeeded();
+      if (subId === 'notebiblia') renderNoteBibliaList();
+      if (subId === 'info') renderInfoVersion();
+    }
+
+    function renderInfoVersion() {
+      const line = document.getElementById('infoVersionLine');
+      const badge = document.getElementById('infoVersionBadge');
+      if (line) line.textContent = `Versiune aplicație: ${APP_VERSION}`;
+      if (badge) badge.textContent = APP_VERSION;
     }
 
     // SINCRONIZARE LIVE 1:1 CU GOOGLE SHEETS
@@ -3443,6 +4408,10 @@
         const dur = Date.now() - startT;
 
         applyCloudSettings(data.settings);
+        if (data.settingsRaw && typeof data.settingsRaw === 'object') {
+          settingsRaw = data.settingsRaw;
+          safeLocalStorageSetItem('diih_settings_raw', JSON.stringify(settingsRaw));
+        }
 
         if (data.pomelnic && Array.isArray(data.pomelnic)) {
           allPeople = data.pomelnic.map(normalizePersonRecord);
@@ -3467,13 +4436,25 @@
         }
         if (data.bibliaBVA && Array.isArray(data.bibliaBVA)) {
           biblia360List = data.bibliaBVA;
-          localStorage.setItem('diih_biblia360', JSON.stringify(biblia360List));
+          safeLocalStorageSetItem('diih_biblia360', JSON.stringify(biblia360List));
         }
         if (data.noteAnania && Array.isArray(data.noteAnania)) {
           allNoteAnania = data.noteAnania;
-          localStorage.setItem('diih_note_anania', JSON.stringify(allNoteAnania));
+          safeLocalStorageSetItem('diih_note_anania', JSON.stringify(allNoteAnania));
         }
+        if (data.gandulZilei && Array.isArray(data.gandulZilei)) {
+          allGandulZilei = data.gandulZilei;
+          localStorage.setItem('diih_gandul_zilei', JSON.stringify(allGandulZilei));
+          if (allGandulZilei.length === 0) seedGandulZileiIfNeeded();
+        }
+        if (data.modelCitire && Array.isArray(data.modelCitire)) {
+          allModelCitire = data.modelCitire;
+          localStorage.setItem('diih_model_citire', JSON.stringify(allModelCitire));
+        }
+        updateGrandThoughtDisplay();
         updateBibliaQuoteDisplay();
+        renderModelCitirePanel();
+        updateScripturaDisplays();
 
         populateCategoryDropdown();
         renderAll();
@@ -3508,6 +4489,10 @@
         const dur = Date.now() - startT;
 
         applyCloudSettings(data.settings);
+        if (data.settingsRaw && typeof data.settingsRaw === 'object') {
+          settingsRaw = data.settingsRaw;
+          safeLocalStorageSetItem('diih_settings_raw', JSON.stringify(settingsRaw));
+        }
 
         if (data.cumparaturi && Array.isArray(data.cumparaturi)) {
           checkShoppingNotifications(data.cumparaturi);
@@ -3526,11 +4511,23 @@
           psaltireGrupData = data.psaltireGrup;
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
         }
+        if (data.gandulZilei && Array.isArray(data.gandulZilei)) {
+          allGandulZilei = data.gandulZilei;
+          localStorage.setItem('diih_gandul_zilei', JSON.stringify(allGandulZilei));
+          if (allGandulZilei.length === 0) seedGandulZileiIfNeeded();
+        }
+        if (data.modelCitire && Array.isArray(data.modelCitire)) {
+          allModelCitire = data.modelCitire;
+          localStorage.setItem('diih_model_citire', JSON.stringify(allModelCitire));
+        }
 
         renderShoppingList();
         renderGanduriList();
         renderSchoolDisplay();
         renderPsaltireGrupList();
+        renderModelCitirePanel();
+        updateScripturaDisplays();
+        updateGrandThoughtDisplay();
         updateTodayWidgetView();
 
         if (showFeedback) showToast("Sincronizare rapidă finalizată!");
@@ -3554,9 +4551,13 @@
       psaltireGrupData = JSON.parse(localStorage.getItem('diih_psaltire_grup') || '[]');
       biblia360List = JSON.parse(localStorage.getItem('diih_biblia360') || '[]');
       allNoteAnania = JSON.parse(localStorage.getItem('diih_note_anania') || '[]');
+      allGandulZilei = JSON.parse(localStorage.getItem('diih_gandul_zilei') || '[]');
+      allModelCitire = JSON.parse(localStorage.getItem('diih_model_citire') || '[]');
       populateCategoryDropdown();
       renderAll();
+      updateGrandThoughtDisplay();
       updateBibliaQuoteDisplay();
+      renderModelCitirePanel();
     }
 
 
@@ -3738,12 +4739,19 @@
         let rawCap = (raw.capitol || '').toString().trim();
         let capNum = "1";
         let totCap = "";
-        const capMatch = rawCap.match(/(\d+)(?:\s*\/\s*(\d+))?/);
-        if (capMatch) {
-          capNum = capMatch[1];
-          if (capMatch[2]) totCap = capMatch[2];
+        // Preferăm coloana nouă "Capitol # / #" (ex. "3/17") din sheet — e sursa reală, nu o estimare din cod
+        const progresMatch = (raw.capitolProgres || '').toString().trim().match(/(\d+)\s*\/\s*(\d+)/);
+        if (progresMatch) {
+          capNum = progresMatch[1];
+          totCap = progresMatch[2];
+        } else {
+          const capMatch = rawCap.match(/(\d+)(?:\s*\/\s*(\d+))?/);
+          if (capMatch) {
+            capNum = capMatch[1];
+            if (capMatch[2]) totCap = capMatch[2];
+          }
+          if (!totCap) totCap = BIBLE_BOOKS_TOTAL_CHAPTERS[cartea] || "50";
         }
-        if (!totCap) totCap = BIBLE_BOOKS_TOTAL_CHAPTERS[cartea] || "50";
         const capitolDisplay = `Capitol ${capNum}/${totCap}`;
 
         let versetul = (raw.versetul || '').toString().trim();
@@ -3874,6 +4882,167 @@
         code = cartea.slice(0, 3);
       }
       return `https://biblia.dervent.ro/${test}-${code}-${capNum}`;
+    }
+
+    // ====== REGISTRU NOTE BIBLIA ANANIA (Secțiunea 8): căutare + ștergere soft cu confirmare ======
+    let selectedNoteBibliaIds = new Set();
+    let editingNoteBibliaRowId = null;
+
+    function getFilteredNoteBiblia() {
+      const q = (document.getElementById('noteBibliaSearchInput') ? document.getElementById('noteBibliaSearchInput').value : '').toLowerCase().trim();
+      if (!q) return allNoteAnania;
+      return allNoteAnania.filter(n => {
+        const hay = `${n.cartea || ''} ${n.capitol || ''} ${n.versetul || ''} ${n.textVerset || ''} ${n.nota || ''} ${n.context || ''}`.toLowerCase();
+        return hay.includes(q);
+      });
+    }
+
+    function toggleNoteBibliaSelect(rowId, checked) {
+      if (checked) selectedNoteBibliaIds.add(rowId); else selectedNoteBibliaIds.delete(rowId);
+      renderNoteBibliaSelectionBar();
+    }
+    function clearNoteBibliaSelection() {
+      selectedNoteBibliaIds.clear();
+      renderNoteBibliaSelectionBar();
+      renderNoteBibliaList();
+    }
+    function deleteOneNoteBiblia(rowId) {
+      const item = allNoteAnania.find(n => n.rowId === rowId);
+      const preview = item ? `${item.cartea} ${item.capitol} ${item.versetul}`.trim() : '';
+      showGenericConfirm(`Ștergi nota pentru „${preview}”? O poți anula imediat după ștergere.`, () => softDeleteManyNoteBiblia([rowId]), "Șterge nota");
+    }
+    function deleteSelectedNoteBiblia() {
+      const ids = Array.from(selectedNoteBibliaIds);
+      if (ids.length === 0) return;
+      showGenericConfirm(`Ștergi cele ${ids.length} note selectate? Le poți anula imediat după ștergere.`, () => softDeleteManyNoteBiblia(ids), "Șterge notele selectate");
+    }
+    function softDeleteManyNoteBiblia(rowIds) {
+      const removed = allNoteAnania.filter(n => rowIds.includes(n.rowId));
+      allNoteAnania = allNoteAnania.filter(n => !rowIds.includes(n.rowId));
+      selectedNoteBibliaIds.clear();
+      safeLocalStorageSetItem('diih_note_anania', JSON.stringify(allNoteAnania));
+      renderNoteBibliaList();
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=softDeleteNoteAnania&rowIds=${rowIds.join(',')}&callback=void`;
+      document.body.appendChild(script);
+
+      const msg = rowIds.length === 1 ? "Notă ștearsă." : `${rowIds.length} note șterse.`;
+      showUndoToast(msg, () => undoDeleteNoteBiblia(rowIds, removed));
+    }
+    function undoDeleteNoteBiblia(rowIds, removed) {
+      allNoteAnania = allNoteAnania.concat(removed);
+      safeLocalStorageSetItem('diih_note_anania', JSON.stringify(allNoteAnania));
+      renderNoteBibliaList();
+      showToast("Ștergere anulată!");
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=restoreNoteAnania&rowIds=${rowIds.join(',')}&callback=void`;
+      document.body.appendChild(script);
+    }
+    function renderNoteBibliaSelectionBar() {
+      const bar = document.getElementById('noteBibliaSelectionBar');
+      if (!bar) return;
+      if (selectedNoteBibliaIds.size === 0) { bar.classList.add('hidden'); return; }
+      bar.classList.remove('hidden');
+      bar.innerHTML = `
+        <span class="text-xs text-slate-300">${selectedNoteBibliaIds.size} selectate</span>
+        <div class="flex items-center space-x-1.5">
+          <button onclick="clearNoteBibliaSelection()" class="text-[10px] px-2 py-1 bg-slate-800 border border-bordercol text-slate-300 rounded-lg">Anulează selecția</button>
+          <button onclick="deleteSelectedNoteBiblia()" class="text-[10px] px-2 py-1 bg-rose-800 hover:bg-rose-700 text-white font-bold rounded-lg">🗑️ Șterge selectate (${selectedNoteBibliaIds.size})</button>
+        </div>
+      `;
+    }
+    function startEditNoteBiblia(rowId) {
+      editingNoteBibliaRowId = rowId;
+      renderNoteBibliaList();
+    }
+    function cancelEditNoteBiblia() {
+      editingNoteBibliaRowId = null;
+      renderNoteBibliaList();
+    }
+    function saveEditNoteBiblia(rowId) {
+      const item = allNoteAnania.find(n => n.rowId === rowId);
+      if (!item) return;
+      const textVerset = document.getElementById(`noteBibliaEditVerset_${rowId}`).value;
+      const context = document.getElementById(`noteBibliaEditContext_${rowId}`).value;
+      const nota = document.getElementById(`noteBibliaEditNota_${rowId}`).value;
+      const capitolProgres = document.getElementById(`noteBibliaEditCapitol_${rowId}`).value.trim();
+      const derventUrl = document.getElementById(`noteBibliaEditUrl_${rowId}`).value.trim();
+
+      item.textVerset = textVerset;
+      item.context = context;
+      item.nota = nota;
+      item.capitolProgres = capitolProgres;
+      item.derventUrl = derventUrl;
+      item.dataModificare = new Date().toLocaleString('ro-RO');
+      safeLocalStorageSetItem('diih_note_anania', JSON.stringify(allNoteAnania));
+      editingNoteBibliaRowId = null;
+      renderNoteBibliaList();
+      showToast('Notă actualizată!');
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateNoteAnania&rowId=${rowId}&textVerset=${encodeURIComponent(textVerset)}&context=${encodeURIComponent(context)}&nota=${encodeURIComponent(nota)}&capitolProgres=${encodeURIComponent(capitolProgres)}&derventUrl=${encodeURIComponent(derventUrl)}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    function renderNoteBibliaList() {
+      const container = document.getElementById('noteBibliaListContainer');
+      if (!container) return;
+      renderNoteBibliaSelectionBar();
+      const list = getFilteredNoteBiblia();
+      const badge = document.getElementById('noteBibliaCountBadge');
+      if (badge) badge.textContent = list.length;
+      if (list.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Nicio notă găsită.</p>`;
+        return;
+      }
+      container.innerHTML = list.map(n => {
+        if (editingNoteBibliaRowId === n.rowId) {
+          return `
+            <div class="p-2.5 bg-darkbg border border-cyan-700 rounded-xl text-xs space-y-1.5">
+              <span class="font-bold text-amber-300">${n.cartea || ''} ${n.capitol || ''}${n.versetul ? ', v.' + n.versetul : ''}</span>
+              <label class="text-[10px] text-slate-400 block">Capitol # / # (ex: 3/17)</label>
+              <input id="noteBibliaEditCapitol_${n.rowId}" type="text" value="${n.capitolProgres || ''}" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+              <label class="text-[10px] text-slate-400 block">Text verset complet</label>
+              <textarea id="noteBibliaEditVerset_${n.rowId}" rows="2" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${n.textVerset || ''}</textarea>
+              <label class="text-[10px] text-slate-400 block">Context</label>
+              <textarea id="noteBibliaEditContext_${n.rowId}" rows="2" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${n.context || ''}</textarea>
+              <label class="text-[10px] text-slate-400 block">Nota de subsol</label>
+              <textarea id="noteBibliaEditNota_${n.rowId}" rows="2" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${n.nota || ''}</textarea>
+              <label class="text-[10px] text-slate-400 block">URL sursă</label>
+              <input id="noteBibliaEditUrl_${n.rowId}" type="text" value="${n.derventUrl || ''}" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+              <div class="flex space-x-1.5 pt-1">
+                <button onclick="saveEditNoteBiblia(${n.rowId})" class="flex-1 bg-cyan-800 hover:bg-cyan-700 text-white font-bold py-1.5 rounded-lg">💾 Salvează</button>
+                <button onclick="cancelEditNoteBiblia()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 py-1.5 rounded-lg">Anulează</button>
+              </div>
+            </div>
+          `;
+        }
+        return `
+        <div class="p-2.5 bg-darkbg border border-bordercol rounded-xl text-xs space-y-1">
+          <div class="flex items-start justify-between">
+            <label class="flex items-start space-x-2 flex-1 min-w-0 cursor-pointer">
+              <input type="checkbox" onchange="toggleNoteBibliaSelect(${n.rowId}, this.checked)" ${selectedNoteBibliaIds.has(n.rowId) ? 'checked' : ''} class="rounded text-rose-500 focus:ring-0 mt-0.5 shrink-0">
+              <div class="min-w-0">
+                <div class="flex items-center space-x-1.5 flex-wrap">
+                  <span class="font-bold text-amber-300">${n.cartea || ''} ${n.capitol || ''}${n.versetul ? ', v.' + n.versetul : ''}</span>
+                  ${n.capitolProgres ? `<span class="bg-amber-950 border border-amber-800 text-amber-200 text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold">Capitol ${n.capitolProgres}</span>` : ''}
+                </div>
+                ${n.textVerset ? `<p class="text-slate-200 mt-0.5">${n.textVerset}</p>` : ''}
+                ${n.nota ? `<p class="text-slate-400 italic mt-0.5">${n.nota}</p>` : ''}
+                ${n.dataModificare ? `<p class="text-slate-600 text-[9px] mt-0.5">Modificat: ${n.dataModificare}</p>` : ''}
+              </div>
+            </label>
+            <div class="flex items-center space-x-1 shrink-0">
+              <button onclick="startEditNoteBiblia(${n.rowId})" class="text-slate-400 hover:text-cyan-300 p-1">✏️</button>
+              <button onclick="deleteOneNoteBiblia(${n.rowId})" class="text-slate-500 hover:text-rose-400 p-1">🗑️</button>
+            </div>
+          </div>
+          ${n.derventUrl ? `<a href="${n.derventUrl}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 underline text-[10px]">↗ sursă</a>` : ''}
+        </div>
+      `;
+      }).join('');
     }
 
     function parseAnaniaNotes(entry) {
@@ -4889,15 +6058,69 @@
       renderSchoolDisplay();
     }
 
+    let customSchoolRangeStart = '';
+    let customSchoolRangeEnd = '';
+
     function setSummaryFilter(mode) {
       schoolSummaryFilter = mode;
-      ['sumBtnDay', 'sumBtnMonth', 'sumBtnYear'].forEach(id => {
-        document.getElementById(id).className = "px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-400";
+      ['sumBtnDay', 'sumBtnMonth', 'sumBtnLastMonth', 'sumBtnYear', 'sumBtnLast30', 'sumBtnCustom'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.className = "px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-400";
       });
-      if (mode === 'day') document.getElementById('sumBtnDay').className = "px-2 py-0.5 rounded bg-cyan-900 text-cyan-200 font-bold";
-      if (mode === 'month') document.getElementById('sumBtnMonth').className = "px-2 py-0.5 rounded bg-cyan-900 text-cyan-200 font-bold";
-      if (mode === 'year') document.getElementById('sumBtnYear').className = "px-2 py-0.5 rounded bg-cyan-900 text-cyan-200 font-bold";
+      const activeMap = { day: 'sumBtnDay', month: 'sumBtnMonth', lastMonth: 'sumBtnLastMonth', year: 'sumBtnYear', last30: 'sumBtnLast30', custom: 'sumBtnCustom' };
+      const activeBtn = document.getElementById(activeMap[mode]);
+      if (activeBtn) activeBtn.className = "px-2 py-0.5 rounded bg-cyan-900 text-cyan-200 font-bold";
+
+      const rangeBox = document.getElementById('schoolCustomRangeBox');
+      if (rangeBox) rangeBox.classList.toggle('hidden', mode !== 'custom');
+
       renderSchoolDisplay();
+    }
+
+    function applyCustomSchoolRange() {
+      customSchoolRangeStart = document.getElementById('schoolCustomRangeStart').value || '';
+      customSchoolRangeEnd = document.getElementById('schoolCustomRangeEnd').value || '';
+      renderSchoolDisplay();
+    }
+
+    // Returnează intervalul [start, end] (yyyy-mm-dd, inclusiv) pentru filtrul curent de sumar financiar
+    function getSchoolSummaryDateRange() {
+      const year = currentSchoolDate.getFullYear();
+      const month = currentSchoolDate.getMonth();
+      const todayStr = new Date().toISOString().split('T')[0];
+      const pad = n => String(n).padStart(2, '0');
+
+      if (schoolSummaryFilter === 'day') {
+        return { start: todayStr, end: todayStr };
+      }
+      if (schoolSummaryFilter === 'month') {
+        const last = new Date(year, month + 1, 0).getDate();
+        return { start: `${year}-${pad(month + 1)}-01`, end: `${year}-${pad(month + 1)}-${pad(last)}` };
+      }
+      if (schoolSummaryFilter === 'lastMonth') {
+        const lm = new Date(year, month - 1, 1);
+        const ly = lm.getFullYear(), lmo = lm.getMonth();
+        const last = new Date(ly, lmo + 1, 0).getDate();
+        return { start: `${ly}-${pad(lmo + 1)}-01`, end: `${ly}-${pad(lmo + 1)}-${pad(last)}` };
+      }
+      if (schoolSummaryFilter === 'year') {
+        return { start: `${year}-01-01`, end: `${year}-12-31` };
+      }
+      if (schoolSummaryFilter === 'last30') {
+        const d = new Date();
+        d.setDate(d.getDate() - 29);
+        return { start: d.toISOString().split('T')[0], end: todayStr };
+      }
+      if (schoolSummaryFilter === 'custom') {
+        return { start: customSchoolRangeStart || '0000-01-01', end: customSchoolRangeEnd || '9999-12-31' };
+      }
+      return { start: '0000-01-01', end: '9999-12-31' };
+    }
+
+    function isDateInSchoolSummaryRange(dateStr) {
+      const { start, end } = getSchoolSummaryDateRange();
+      const d = (dateStr || '').substring(0, 10);
+      return d >= start && d <= end;
     }
 
     function changeSchoolPeriod(delta) {
@@ -4954,20 +6177,8 @@
       const selectAllCb = document.getElementById('drillDownSelectAll');
       if (selectAllCb) selectAllCb.checked = false;
 
-      const year = currentSchoolDate.getFullYear();
-      const month = currentSchoolDate.getMonth();
-      const currentYearStr = year.toString();
-      const currentMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-      const todayStr = new Date().toISOString().split('T')[0];
-
       // Filtrăm activitățile conform perioadei curente din sumar
-      let periodFiltered = schoolActivities.filter(a => {
-        const dStr = (a.date || "").substring(0, 10);
-        if (schoolSummaryFilter === 'day') return dStr === todayStr;
-        if (schoolSummaryFilter === 'month') return dStr.startsWith(currentMonthStr);
-        if (schoolSummaryFilter === 'year') return dStr.startsWith(currentYearStr);
-        return true;
-      });
+      let periodFiltered = schoolActivities.filter(a => isDateInSchoolSummaryRange(a.date));
 
       let title = "Toate Activitățile";
       let subtitle = `Filtru perioadă: ${schoolSummaryFilter.toUpperCase()}`;
@@ -5056,23 +6267,48 @@
     function toggleSingleActivityPaid(id) {
       const act = schoolActivities.find(a => a.id === id);
       if (!act) return;
-      act.paymentStatus = (act.paymentStatus === 'Achitat') ? 'În așteptare' : 'Achitat';
+
+      if (act.paymentStatus === 'Achitat') {
+        // Revenire pe neachitat: golirea Data_Achitat/Comentariu_Plata cere confirmare + se loghează în LOG_app
+        showGenericConfirm(
+          `Activitatea „${act.title}” era marcată Achitat la data ${act.dataAchitat || '-'}. Revii pe „În așteptare” și se golesc data achitării și comentariul. Continui?`,
+          () => {
+            logSchoolPaymentRevertToAppLog(act);
+            act.paymentStatus = 'În așteptare';
+            act.dataAchitat = '';
+            act.comentariuPlata = '';
+            localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+            renderSchoolDisplay();
+            renderDrillDownList();
+            showToast(`Status actualizat: ${act.paymentStatus}`);
+            const script = document.createElement('script');
+            script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify([id]))}&status=${encodeURIComponent(act.paymentStatus)}&dataAchitat=&comentariuPlata=&callback=void`;
+            document.body.appendChild(script);
+          },
+          "Revenire pe neachitat"
+        );
+        return;
+      }
+
+      act.paymentStatus = 'Achitat';
+      act.dataAchitat = new Date().toISOString().split('T')[0];
       localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
       renderSchoolDisplay();
       renderDrillDownList();
       showToast(`Status actualizat: ${act.paymentStatus}`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify([id]))}&status=${encodeURIComponent(act.paymentStatus)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify([id]))}&status=${encodeURIComponent(act.paymentStatus)}&dataAchitat=${encodeURIComponent(act.dataAchitat)}&callback=void`;
       document.body.appendChild(script);
     }
 
     function batchMarkSelectedAsPaid() {
       if (selectedDrillDownIds.size === 0) return showToast("Selectează cel puțin o activitate.");
       const ids = Array.from(selectedDrillDownIds);
+      const todayStr = new Date().toISOString().split('T')[0];
       ids.forEach(id => {
         const act = schoolActivities.find(a => a.id === id);
-        if (act) act.paymentStatus = 'Achitat';
+        if (act) { act.paymentStatus = 'Achitat'; act.dataAchitat = todayStr; }
       });
       localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
       renderSchoolDisplay();
@@ -5080,7 +6316,29 @@
       showToast(`${ids.length} activități marcate ca Achitat!`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify(ids))}&status=Achitat&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify(ids))}&status=Achitat&dataAchitat=${encodeURIComponent(todayStr)}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    // Când statusul devine Achitat: afișează Data Achitării (auto-completată, editabilă) + Comentariu opțional.
+    // Când revine la neachitat: golirea câmpurilor existente se face doar la salvare, cu confirmare (vezi saveSchoolActivity).
+    function onSchoolPaymentStatusChange() {
+      const status = document.getElementById('schoolPaymentStatus').value;
+      const box = document.getElementById('schoolPaidDetailsBox');
+      const dateInput = document.getElementById('schoolDataAchitat');
+      if (status === 'Achitat') {
+        box.classList.remove('hidden');
+        if (!dateInput.value) dateInput.value = new Date().toISOString().split('T')[0];
+      } else {
+        box.classList.add('hidden');
+      }
+    }
+
+    function logSchoolPaymentRevertToAppLog(act) {
+      const script = document.createElement('script');
+      const curUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : 'Bogdan Murar';
+      const detalii = `Activitate "${act.title}" (${act.child}, ${act.date}) revenită pe neachitat. Data achitării anterioară: ${act.dataAchitat || '-'}, comentariu anterior: ${act.comentariuPlata || '-'}.`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=logAppEvent&modul=Scoala&actiune=revert_plata&status=WARNING&detalii=${encodeURIComponent(detalii)}&user=${encodeURIComponent(curUser)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -5098,35 +6356,57 @@
 
       const year = currentSchoolDate.getFullYear();
       const month = currentSchoolDate.getMonth();
+      const todayStr = new Date().toISOString().split('T')[0];
       const monthNames = ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"];
       document.getElementById('calendarMonthTitle').textContent = `${monthNames[month]} ${year}`;
 
-      // Calcul Sumar în funcție de filtru (Zi / Lună / An)
+      // Calcul Sumar în funcție de filtru (Zi / Lună curentă / Luna trecută / An / Ultimele 30 zile / Personalizat)
       let totalHours = 0;
       let totalAmount = 0;
       let unpaidAmount = 0;
-
-      const todayStr = new Date().toISOString().split('T')[0];
-      const currentYearStr = year.toString();
-      const currentMonthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+      let activityCount = 0;
+      const byChild = {};
+      const byType = {};
 
       schoolActivities.forEach(a => {
-        let match = false;
-        if (schoolSummaryFilter === 'day' && a.date === todayStr) match = true;
-        if (schoolSummaryFilter === 'month' && a.date.startsWith(currentMonthStr)) match = true;
-        if (schoolSummaryFilter === 'year' && a.date.startsWith(currentYearStr)) match = true;
+        if (!isDateInSchoolSummaryRange(a.date)) return;
+        totalHours += a.hours || 0;
+        totalAmount += a.total || 0;
+        activityCount++;
+        if (!isActivitySettled(a.paymentStatus)) unpaidAmount += a.total || 0;
 
-        if (match) {
-          totalHours += a.hours || 0;
-          totalAmount += a.total || 0;
-          if (!isActivitySettled(a.paymentStatus)) unpaidAmount += a.total || 0;
-        }
+        const childKey = a.child || 'Nealocat';
+        if (!byChild[childKey]) byChild[childKey] = { total: 0, count: 0 };
+        byChild[childKey].total += a.total || 0;
+        byChild[childKey].count++;
+
+        const typeKey = a.title || a.paymentType || 'Altele';
+        if (!byType[typeKey]) byType[typeKey] = { total: 0, count: 0 };
+        byType[typeKey].total += a.total || 0;
+        byType[typeKey].count++;
       });
 
       document.getElementById('sumTotalHours').textContent = `${totalHours} h`;
       document.getElementById('sumTotalAmount').textContent = `${totalAmount} Lei`;
+      document.getElementById('sumPaidAmount').textContent = `${totalAmount - unpaidAmount} Lei`;
       document.getElementById('sumUnpaidAmount').textContent = `${unpaidAmount} Lei`;
+      document.getElementById('sumActivityCount').textContent = `${activityCount} activități`;
       document.getElementById('selectedDaysBadge').textContent = `${selectedSchoolDays.size} zile`;
+
+      const childBreakdownEl = document.getElementById('sumBreakdownChild');
+      if (childBreakdownEl) {
+        const entries = Object.entries(byChild).sort((a, b) => b[1].total - a[1].total);
+        childBreakdownEl.innerHTML = entries.length === 0
+          ? `<p class="text-slate-600 italic">—</p>`
+          : entries.map(([name, v]) => `<div class="flex items-center justify-between"><span class="text-slate-300">${name} <span class="text-slate-600">(${v.count})</span></span><span class="text-emerald-400 font-semibold">${v.total} Lei</span></div>`).join('');
+      }
+      const typeBreakdownEl = document.getElementById('sumBreakdownType');
+      if (typeBreakdownEl) {
+        const entries = Object.entries(byType).sort((a, b) => b[1].total - a[1].total);
+        typeBreakdownEl.innerHTML = entries.length === 0
+          ? `<p class="text-slate-600 italic">—</p>`
+          : entries.map(([name, v]) => `<div class="flex items-center justify-between"><span class="text-slate-300">${name} <span class="text-slate-600">(${v.count})</span></span><span class="text-emerald-400 font-semibold">${v.total} Lei</span></div>`).join('');
+      }
 
       if (schoolCurrentView === 'month') {
         const firstDay = new Date(year, month, 1).getDay();
@@ -5366,6 +6646,9 @@
       document.getElementById('schoolPaymentStatus').value = act.paymentStatus || 'În așteptare';
       document.getElementById('schoolDeadline').value = (act.deadline && act.deadline !== '-') ? act.deadline.substring(0, 10) : '';
       document.getElementById('schoolDayMessage').value = act.dayMessage || '';
+      document.getElementById('schoolDataAchitat').value = (act.dataAchitat || '').substring(0, 10);
+      document.getElementById('schoolComentariuPlata').value = act.comentariuPlata || '';
+      onSchoolPaymentStatusChange();
       if (document.getElementById('schoolColorSelect')) {
         document.getElementById('schoolColorSelect').value = act.color || 'auto';
       }
@@ -5406,12 +6689,33 @@
       document.getElementById('schoolStartHour').value = '08:00';
       document.getElementById('schoolEndHour').value = '16:00';
       document.getElementById('schoolDayMessage').value = '';
+      document.getElementById('schoolDataAchitat').value = '';
+      document.getElementById('schoolComentariuPlata').value = '';
+      document.getElementById('schoolPaymentStatus').value = 'În așteptare';
+      onSchoolPaymentStatusChange();
       calcSchoolAutoTotal();
     }
 
     function saveSchoolActivity() {
       if (selectedSchoolDays.size === 0) return showToast("Selectează cel puțin o zi.");
 
+      // Dacă e o editare și statusul revine de pe Achitat pe altceva, golirea Data_Achitat/Comentariu_Plata cere confirmare
+      if (editingSchoolActivity) {
+        const targetAct = schoolActivities.find(a => a.id === editingSchoolActivity.id);
+        const newStatus = document.getElementById('schoolPaymentStatus').value;
+        if (targetAct && targetAct.paymentStatus === 'Achitat' && newStatus !== 'Achitat' && (targetAct.dataAchitat || targetAct.comentariuPlata)) {
+          showGenericConfirm(
+            `Activitatea „${targetAct.title}” era marcată Achitat la data ${targetAct.dataAchitat || '-'}. Revenind pe „${newStatus}”, se golesc data achitării și comentariul de plată. Continui?`,
+            () => { logSchoolPaymentRevertToAppLog(targetAct); performSaveSchoolActivity(); },
+            "Revenire pe neachitat"
+          );
+          return;
+        }
+      }
+      performSaveSchoolActivity();
+    }
+
+    function performSaveSchoolActivity() {
       const child = document.getElementById('schoolChild').value.trim() || "Copil";
       const institution = document.getElementById('schoolInstitution').value.trim() || "-";
       const title = document.getElementById('schoolActTitle').value.trim() || "Activitate";
@@ -5425,6 +6729,8 @@
       const dayMessage = document.getElementById('schoolDayMessage').value.trim();
       const colorSelect = document.getElementById('schoolColorSelect');
       const chosenColor = colorSelect ? colorSelect.value : 'auto';
+      const dataAchitat = (paymentStatus === 'Achitat') ? (document.getElementById('schoolDataAchitat').value || new Date().toISOString().split('T')[0]) : '';
+      const comentariuPlata = (paymentStatus === 'Achitat') ? document.getElementById('schoolComentariuPlata').value.trim() : '';
 
       let total = (paymentType === 'Pe oră') ? (hours * rate) : rate;
 
@@ -5449,6 +6755,8 @@
           targetAct.color = chosenColor;
           targetAct.reminders = pickupReminders;
           targetAct.author = targetAct.author || deviceName;
+          targetAct.dataAchitat = dataAchitat;
+          targetAct.comentariuPlata = comentariuPlata;
         }
         localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
         showToast("Activitate modificată cu succes!");
@@ -5482,7 +6790,9 @@
           dayMessage: dayMessage,
           color: chosenColor,
           reminders: pickupReminders,
-          author: deviceName
+          author: deviceName,
+          dataAchitat: dataAchitat,
+          comentariuPlata: comentariuPlata
         };
         schoolActivities.push(item);
         payload.push(item);
@@ -5514,6 +6824,8 @@
       const colorSelect = document.getElementById('schoolColorSelect');
       const chosenColor = colorSelect ? colorSelect.value : 'auto';
       let total = (paymentType === 'Pe oră') ? (hours * rate) : rate;
+      const dataAchitat = (paymentStatus === 'Achitat') ? (document.getElementById('schoolDataAchitat').value || new Date().toISOString().split('T')[0]) : '';
+      const comentariuPlata = (paymentStatus === 'Achitat') ? document.getElementById('schoolComentariuPlata').value.trim() : '';
 
       const updatedPayload = [];
       schoolActivities.forEach(a => {
@@ -5529,6 +6841,8 @@
           a.deadline = deadline;
           a.dayMessage = dayMessage;
           a.color = chosenColor;
+          a.dataAchitat = dataAchitat;
+          a.comentariuPlata = comentariuPlata;
           updatedPayload.push(a);
         }
       });
@@ -5644,24 +6958,81 @@
       updateTodayWidgetView();
     }
 
+    // Ștergere soft (marcaj Sters=DA, nu elimină rândul din sheet) cu confirmare obligatorie și fereastră de anulare
+    let selectedGandIds = new Set();
+
     function deleteGand(rowId) {
       const targetItem = allGanduri.find(g => g.rowId === rowId);
       const gandText = targetItem ? targetItem.gand : '';
-      allGanduri = allGanduri.filter(g => g.rowId !== rowId);
-      allGanduri.forEach((g, idx) => { g.rowId = idx + 2; });
+      const preview = gandText.length > 80 ? gandText.slice(0, 80) + '…' : gandText;
+      showGenericConfirm(`Ștergi notița „${preview}”? O poți anula imediat după ștergere.`, () => softDeleteManyGanduri([rowId]), "Șterge notița");
+    }
+
+    function toggleGandSelect(rowId, checked) {
+      if (checked) selectedGandIds.add(rowId); else selectedGandIds.delete(rowId);
+      renderGanduriList();
+    }
+
+    function clearGandSelection() {
+      selectedGandIds.clear();
+      renderGanduriList();
+    }
+
+    function deleteSelectedGanduri() {
+      const ids = Array.from(selectedGandIds);
+      if (ids.length === 0) return;
+      showGenericConfirm(`Ștergi cele ${ids.length} notițe selectate? Le poți anula imediat după ștergere.`, () => softDeleteManyGanduri(ids), "Șterge notițele selectate");
+    }
+
+    function softDeleteManyGanduri(rowIds) {
+      const removedItems = allGanduri.filter(g => rowIds.includes(g.rowId));
+      allGanduri = allGanduri.filter(g => !rowIds.includes(g.rowId));
+      selectedGandIds.clear();
       localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
       renderGanduriList();
       updateTodayWidgetView();
-      showToast("Notiță ștearsă!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteGand&rowId=${rowId}&gand=${encodeURIComponent(gandText)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=softDeleteGand&rowIds=${rowIds.join(',')}&callback=void`;
       document.body.appendChild(script);
+
+      const msg = rowIds.length === 1 ? "Notiță ștearsă." : `${rowIds.length} notițe șterse.`;
+      showUndoToast(msg, () => undoDeleteGanduri(rowIds, removedItems));
+    }
+
+    function undoDeleteGanduri(rowIds, removedItems) {
+      allGanduri = allGanduri.concat(removedItems);
+      localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
+      renderGanduriList();
+      updateTodayWidgetView();
+      showToast("Ștergere anulată!");
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=restoreGand&rowIds=${rowIds.join(',')}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    function renderGanduriSelectionBar() {
+      const bar = document.getElementById('ganduriSelectionBar');
+      if (!bar) return;
+      if (selectedGandIds.size === 0) {
+        bar.classList.add('hidden');
+        return;
+      }
+      bar.classList.remove('hidden');
+      bar.innerHTML = `
+        <span class="text-xs text-slate-300">${selectedGandIds.size} selectate</span>
+        <div class="flex items-center space-x-1.5">
+          <button onclick="clearGandSelection()" class="text-[10px] px-2 py-1 bg-slate-800 border border-bordercol text-slate-300 rounded-lg">Anulează selecția</button>
+          <button onclick="deleteSelectedGanduri()" class="text-[10px] px-2 py-1 bg-rose-800 hover:bg-rose-700 text-white font-bold rounded-lg">🗑️ Șterge selectate (${selectedGandIds.size})</button>
+        </div>
+      `;
     }
 
     function renderGanduriList() {
       const container = document.getElementById('savedGanduriList');
       if (!container) return;
+      renderGanduriSelectionBar();
       const userGanduri = getCurrentUserGanduri();
       if (userGanduri.length === 0) {
         container.innerHTML = `<p class="text-xs text-slate-500 italic py-2 text-center">Nicio notiță salvată pentru profilul curent.</p>`;
@@ -5672,10 +7043,11 @@
         container.innerHTML = userGanduri.map(g => `
           <div class="p-3 bg-cardbg border border-bordercol rounded-xl text-xs space-y-1 relative">
             <div class="absolute top-2 right-2 flex items-center space-x-1">
+              <input type="checkbox" onchange="toggleGandSelect(${g.rowId}, this.checked)" ${selectedGandIds.has(g.rowId) ? 'checked' : ''} class="rounded text-rose-500 focus:ring-0 mr-1" title="Selectează">
               <button onclick="startEditGand(${g.rowId})" class="text-slate-400 hover:text-cyan-300 p-1">✏️</button>
               <button onclick="deleteGand(${g.rowId})" class="text-slate-500 hover:text-rose-400 p-1">🗑️</button>
             </div>
-            <p class="text-slate-200 leading-relaxed pr-16">${g.gand}</p>
+            <p class="text-slate-200 leading-relaxed pr-20">${g.gand}</p>
             <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
               <span class="text-amber-400 font-semibold">— ${g.sursa || 'Personal'}</span>
               <span>${g.data || ''}</span>
@@ -5701,7 +7073,10 @@
               <div class="space-y-2 divide-y divide-bordercol/30">
                 ${groups[sursa].map(g => `
                   <div class="pt-1.5 flex items-start justify-between text-xs">
-                    <p class="text-slate-200 leading-relaxed pr-2">${g.gand}</p>
+                    <div class="flex items-start space-x-1.5 pr-2">
+                      <input type="checkbox" onchange="toggleGandSelect(${g.rowId}, this.checked)" ${selectedGandIds.has(g.rowId) ? 'checked' : ''} class="rounded text-rose-500 focus:ring-0 mt-0.5 shrink-0" title="Selectează">
+                      <p class="text-slate-200 leading-relaxed">${g.gand}</p>
+                    </div>
                     <div class="flex items-center space-x-1 shrink-0">
                       <button onclick="startEditGand(${g.rowId})" class="text-slate-400 hover:text-cyan-300 p-1">✏️</button>
                       <button onclick="deleteGand(${g.rowId})" class="text-slate-500 hover:text-rose-400 p-1">🗑️</button>
@@ -5867,6 +7242,36 @@
       document.body.appendChild(script);
     }
 
+    function escapeHtmlText(str) {
+      return (str || '').toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Transformă URL-urile dintr-un text de produs în link-uri clickabile, cu etichetă scurtă (domeniu) și URL complet în tooltip
+    function linkifyProductText(text) {
+      const raw = (text || '').toString();
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      let lastIndex = 0;
+      let out = '';
+      let match;
+      while ((match = urlRegex.exec(raw)) !== null) {
+        out += escapeHtmlText(raw.slice(lastIndex, match.index));
+        const url = match[0];
+        let domainLabel = url;
+        try {
+          domainLabel = new URL(url).hostname.replace(/^www\./, '');
+        } catch (e) {}
+        out += `<a href="${escapeHtmlText(url)}" target="_blank" rel="noopener noreferrer" title="${escapeHtmlText(url)}" class="text-sky-400 hover:text-sky-300 underline [overflow-wrap:anywhere] break-all">🔗 ${escapeHtmlText(domainLabel)}</a>`;
+        lastIndex = match.index + url.length;
+      }
+      out += escapeHtmlText(raw.slice(lastIndex));
+      return out;
+    }
+
     function renderShoppingList() {
       const container = document.getElementById('shoppingListContainer');
       const visibleItems = getVisibleShoppingItems();
@@ -5879,15 +7284,15 @@
         container.innerHTML = visibleItems.map(item => {
           const isPriv = item.nuPartaja === true || item.nuPartaja === 'true' || item.nuPartaja === 'TRUE' || item.nuPartaja === 1;
           return `
-            <div class="p-2.5 bg-cardbg border border-bordercol rounded-xl flex items-center justify-between text-xs">
-              <div>
-                <div class="flex items-center space-x-1.5">
-                  <span class="font-semibold text-white">${item.produs}</span>
-                  ${isPriv ? '<span class="text-[9px] bg-amber-950/80 border border-amber-700/80 text-amber-300 px-1 py-0.2 rounded font-semibold">🔒 Nu partaja</span>' : ''}
+            <div class="p-2.5 bg-cardbg border border-bordercol rounded-xl flex items-center justify-between text-xs overflow-hidden">
+              <div class="min-w-0 flex-1 mr-2">
+                <div class="flex items-center space-x-1.5 flex-wrap">
+                  <span class="font-semibold text-white [overflow-wrap:anywhere]">${linkifyProductText(item.produs)}</span>
+                  ${isPriv ? '<span class="text-[9px] bg-amber-950/80 border border-amber-700/80 text-amber-300 px-1 py-0.2 rounded font-semibold shrink-0">🔒 Nu partaja</span>' : ''}
                 </div>
                 <span class="text-slate-400 text-[11px] block">${item.magazin} • Cantitate: ${item.cantitate}</span>
               </div>
-              <button onclick="removeShoppingItem(${item.rowId})" class="p-1.5 text-slate-400 hover:text-emerald-400 border border-slate-700 rounded-lg text-xs flex items-center space-x-1">
+              <button onclick="removeShoppingItem(${item.rowId})" class="p-1.5 text-slate-400 hover:text-emerald-400 border border-slate-700 rounded-lg text-xs flex items-center space-x-1 shrink-0">
                 <span>✔</span>
                 <span class="text-[10px]">Cumpărat</span>
               </button>
@@ -5905,7 +7310,7 @@
         let html = '';
         Object.keys(groups).forEach(magazin => {
           html += `
-            <div class="bg-cardbg border border-bordercol rounded-xl p-3 space-y-2">
+            <div class="bg-cardbg border border-bordercol rounded-xl p-3 space-y-2 overflow-hidden">
               <div class="flex items-center justify-between border-b border-bordercol pb-1">
                 <span class="text-xs font-bold text-emerald-400">🏪 ${magazin}</span>
                 <button onclick="markWholeStoreCompleted('${magazin}')" class="text-[10px] bg-emerald-950 border border-emerald-800 text-emerald-300 px-2 py-0.5 rounded-lg hover:bg-emerald-900">Bifează tot magazinul</button>
@@ -5914,15 +7319,15 @@
                 ${groups[magazin].map(item => {
                   const isPriv = item.nuPartaja === true || item.nuPartaja === 'true' || item.nuPartaja === 'TRUE' || item.nuPartaja === 1;
                   return `
-                    <div class="flex items-center justify-between text-xs py-1">
-                      <div>
-                        <div class="flex items-center space-x-1.5">
-                          <span class="text-white">${item.produs}</span>
-                          ${isPriv ? '<span class="text-[9px] bg-amber-950/80 border border-amber-700/80 text-amber-300 px-1 py-0.2 rounded font-semibold">🔒 Nu partaja</span>' : ''}
+                    <div class="flex items-center justify-between text-xs py-1 overflow-hidden">
+                      <div class="min-w-0 flex-1 mr-2">
+                        <div class="flex items-center space-x-1.5 flex-wrap">
+                          <span class="text-white [overflow-wrap:anywhere]">${linkifyProductText(item.produs)}</span>
+                          ${isPriv ? '<span class="text-[9px] bg-amber-950/80 border border-amber-700/80 text-amber-300 px-1 py-0.2 rounded font-semibold shrink-0">🔒 Nu partaja</span>' : ''}
                         </div>
                         <span class="text-slate-500 text-[10px] block">Cantitate: ${item.cantitate}</span>
                       </div>
-                      <button onclick="removeShoppingItem(${item.rowId})" class="p-1 text-slate-400 hover:text-emerald-400 border border-slate-800 rounded px-2">✔</button>
+                      <button onclick="removeShoppingItem(${item.rowId})" class="p-1 text-slate-400 hover:text-emerald-400 border border-slate-800 rounded px-2 shrink-0">✔</button>
                     </div>
                   `;
                 }).join('')}
@@ -6911,6 +8316,112 @@
       showToast(state ? `Toate cele ${caps} capitole din ${bookAbbr} marcate citite!` : `Capitolele din ${bookAbbr} resetate.`);
     }
 
+    // ====== PLAN DE CITIRE PE MODEL (ModelCitire) — Secțiunile 4-5 ======
+    // Progresul pe model e sursa de adevăr în Sheet (ModelCitire.Bifat), deci e cross-device.
+    // La bifarea unei poziții, se marchează "write-through" toate capitolele cărților acelei poziții
+    // în tracker-ul local existent (diih_scriptura_read), exact ca butonul "marchează toată cartea".
+    let allModelCitire = JSON.parse(localStorage.getItem('diih_model_citire') || '[]');
+
+    // Hartă Nume canonic complet -> abreviere, construită din SCRIPTURA_CANON (sursa unică de nume oficiale)
+    function getCanonicNameToAbbrMap() {
+      const map = {};
+      getAllScripturaBooks().forEach(b => { map[b.name] = b; });
+      return map;
+    }
+
+    function getModelCitireModelsList() {
+      const byId = {};
+      allModelCitire.forEach(p => {
+        if (!byId[p.modelId]) byId[p.modelId] = { modelId: p.modelId, modelNume: p.modelNume, activ: p.activ };
+      });
+      return Object.values(byId);
+    }
+
+    function getActiveModelCitireId() {
+      const models = getModelCitireModelsList();
+      const saved = settingsRaw['ModelCitireActiv'];
+      if (saved && models.some(m => m.modelId === saved)) return saved;
+      const firstActive = models.find(m => m.activ);
+      return firstActive ? firstActive.modelId : (models[0] ? models[0].modelId : '');
+    }
+
+    function setActiveModelCitire(modelId) {
+      saveSettingRaw('ModelCitireActiv', modelId);
+      renderModelCitirePanel();
+    }
+
+    function getModelCitirePositions(modelId) {
+      return allModelCitire.filter(p => p.modelId === modelId).sort((a, b) => a.pozitie - b.pozitie);
+    }
+
+    // Marchează (sau debifează) write-through toate capitolele cărților unei poziții, în tracker-ul local existent
+    function markBooksReadByName(bookNames, state) {
+      const nameMap = getCanonicNameToAbbrMap();
+      const readMap = getScripturaReadMap();
+      bookNames.forEach(name => {
+        const book = nameMap[name];
+        if (!book) return;
+        for (let c = 1; c <= book.caps; c++) {
+          setScripturaCapRead(readMap, book.abbr, c, state);
+        }
+      });
+      localStorage.setItem('diih_scriptura_read', JSON.stringify(readMap));
+    }
+
+    function toggleModelCitirePozitie(rowId, checked) {
+      const pos = allModelCitire.find(p => p.rowId === rowId);
+      if (!pos) return;
+      pos.bifat = checked;
+      pos.dataBifare = checked ? new Date().toLocaleDateString('ro-RO') : '';
+      localStorage.setItem('diih_model_citire', JSON.stringify(allModelCitire));
+      markBooksReadByName(pos.carteCanonica, checked);
+
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=setModelCitirePozitieBifat&rowId=${rowId}&bifat=${checked}&callback=void`;
+      document.body.appendChild(script);
+
+      renderModelCitirePanel();
+      updateScripturaDisplays();
+    }
+
+    function renderModelCitirePanel() {
+      const sel = document.getElementById('modelCitireSelect');
+      const listEl = document.getElementById('modelCitirePositionsList');
+      const badgeEl = document.getElementById('modelCitireProgressBadge');
+      const barEl = document.getElementById('modelCitireProgressBar');
+      if (!sel || !listEl) return;
+
+      const models = getModelCitireModelsList();
+      if (models.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">Niciun model încărcat încă (se populează automat din cloud).</p>`;
+        return;
+      }
+      const activeId = getActiveModelCitireId();
+      sel.innerHTML = models.map(m => `<option value="${m.modelId}" ${m.modelId === activeId ? 'selected' : ''}>${m.modelNume}${m.activ ? '' : ' (inactiv)'}</option>`).join('');
+
+      const positions = getModelCitirePositions(activeId);
+      const doneCount = positions.filter(p => p.bifat).length;
+      if (badgeEl) badgeEl.textContent = `${doneCount} / ${positions.length}`;
+      if (barEl) barEl.style.width = `${positions.length ? (doneCount / positions.length * 100) : 0}%`;
+
+      listEl.innerHTML = positions.map(p => `
+        <label class="flex items-center space-x-2 p-2 bg-darkbg rounded-xl border ${p.bifat ? 'border-emerald-700 bg-emerald-950/20 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
+          <input type="checkbox" onchange="toggleModelCitirePozitie(${p.rowId}, this.checked)" ${p.bifat ? 'checked' : ''} class="rounded text-violet-500 focus:ring-0 shrink-0">
+          <span class="text-[9px] font-mono text-slate-500 w-5 shrink-0">${p.pozitie}</span>
+          <span class="text-xs flex-1">${p.carteCanonica.join('; ')}</span>
+        </label>
+      `).join('');
+    }
+
+    // Returnează lista de modele (nume) care au bifat o poziție ce conține cartea dată — pentru indicatorul din Canonic
+    function getModelsForBook(bookName) {
+      const names = new Set();
+      allModelCitire.forEach(p => {
+        if (p.bifat && p.carteCanonica.includes(bookName)) names.add(p.modelNume);
+      });
+      return Array.from(names);
+    }
+
     function filterScripturaTestament(testament) {
       scripturaCurrentTestament = testament;
       ['btnScripturaFilterAll', 'btnScripturaFilterVT', 'btnScripturaFilterNT'].forEach(id => {
@@ -7018,13 +8529,23 @@
       if (q) {
         books = books.filter(b => b.name.toLowerCase().includes(q) || b.abbr.toLowerCase().includes(q));
       }
+      const onlyActiveModelFilter = document.getElementById('modelCitireCanonicFilterToggle');
+      if (onlyActiveModelFilter && onlyActiveModelFilter.checked) {
+        const activeId = getActiveModelCitireId();
+        const activeBookNames = new Set();
+        getModelCitirePositions(activeId).forEach(p => p.carteCanonica.forEach(n => activeBookNames.add(n)));
+        books = books.filter(b => activeBookNames.has(b.name));
+      }
 
       container.innerHTML = books.map(b => {
         let bookReadCount = 0;
         for (let c = 1; c <= b.caps; c++) {
           if (isScripturaCapRead(readMap, b.abbr, c)) bookReadCount++;
         }
-        const isCompleted = bookReadCount === b.caps;
+        // Uniune: cartea e considerată citită dacă toate capitolele sunt bifate local SAU dacă orice
+        // model din ModelCitire are bifată o poziție ce conține această carte (Secțiunea 4)
+        const modelBadges = getModelsForBook(b.name);
+        const isCompleted = (bookReadCount === b.caps) || modelBadges.length > 0;
         const isExpanded = scripturaExpandedBook === b.abbr;
         const bookPct = Math.round((bookReadCount / b.caps) * 100);
 
@@ -7072,6 +8593,7 @@
                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${b.testament === 'VT' ? 'bg-amber-950 border border-amber-800 text-amber-300' : 'bg-cyan-950 border border-cyan-800 text-cyan-300'} font-mono">${b.abbr}</span>
                 <span class="text-xs font-bold text-white truncate">${b.name}</span>
                 ${isCompleted ? '<span class="text-[10px] text-emerald-400 font-bold">✓ Încheiat</span>' : ''}
+                ${modelBadges.map(mn => `<span class="text-[8px] bg-violet-950 border border-violet-700 text-violet-300 px-1 py-0.2 rounded font-bold whitespace-nowrap" title="Bifat prin modelul: ${mn}">🗺️ ${mn}</span>`).join('')}
               </div>
               <div class="flex items-center space-x-2 shrink-0">
                 <span class="text-[10px] font-mono text-slate-400">${bookReadCount}/${b.caps} cap. (${bookPct}%)</span>
@@ -8162,6 +9684,16 @@
     function selectAppSymbol(symbol) {
       const input = document.getElementById('settingAppLogo');
       if (input) input.value = symbol;
+    }
+
+    // Revine la logo-ul (emoji) implicit al profilului curent — nu atinge fișierul sigiliului, doar textul/emoji-ul din antet
+    function revertToDefaultAppLogo() {
+      const uName = getCurrentLoggedInUser();
+      const uConfig = APP_USERS[uName] || APP_USERS['Bogdan Murar'];
+      const input = document.getElementById('settingAppLogo');
+      if (input) input.value = uConfig.defaultLogo;
+      saveGlobalCustomSettings();
+      showToast('Logo revenit la implicit!');
     }
 
     function copyShareLink() {

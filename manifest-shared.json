@@ -14,7 +14,13 @@
       "src": "./icons/icon-heart-ekg.png",
       "sizes": "512x512 192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-heart-ekg-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "./icons/icon-family-home.svg",
