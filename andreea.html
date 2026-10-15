@@ -1637,15 +1637,19 @@
           <div class="flex items-center justify-between border-b border-bordercol pb-2">
             <div>
               <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">🔎 Note Biblia Anania</span>
-              <p class="text-[10px] text-slate-400">Căutare după carte, capitol sau verset</p>
+              <p class="text-[10px] text-slate-400">Căutare după carte, capitol, verset sau trimitere</p>
             </div>
             <span id="noteBibliaCountBadge" class="bg-amber-950 border border-amber-800 text-amber-300 text-xs px-2.5 py-0.5 rounded-full font-mono font-bold">0</span>
           </div>
 
           <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">🔍</span>
-            <input type="text" id="noteBibliaSearchInput" oninput="renderNoteBibliaList()" placeholder="Caută carte, capitol, verset sau text..." class="w-full bg-darkbg border border-bordercol rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
+            <input type="text" id="noteBibliaSearchInput" oninput="onNoteBibliaSearchInput()" placeholder="Ex: Fc 3, 2 sau un cuvânt din notă" class="w-full bg-darkbg border border-bordercol rounded-xl pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500">
           </div>
+          <label class="flex items-center space-x-2 text-[11px] text-slate-300 cursor-pointer">
+            <input type="checkbox" id="noteBibliaOnlyRefs" onchange="renderNoteBibliaList()" class="rounded text-amber-500 focus:ring-0">
+            <span>Doar notele care au trimiteri („vezi …”)</span>
+          </label>
 
           <div id="noteBibliaSelectionBar" class="hidden flex items-center justify-between px-2 py-1.5 bg-rose-950/30 border border-rose-800/60 rounded-xl"></div>
           <div id="noteBibliaListContainer" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
@@ -4888,13 +4892,178 @@
     let selectedNoteBibliaIds = new Set();
     let editingNoteBibliaRowId = null;
 
-    function getFilteredNoteBiblia() {
-      const q = (document.getElementById('noteBibliaSearchInput') ? document.getElementById('noteBibliaSearchInput').value : '').toLowerCase().trim();
-      if (!q) return allNoteAnania;
-      return allNoteAnania.filter(n => {
-        const hay = `${n.cartea || ''} ${n.capitol || ''} ${n.versetul || ''} ${n.textVerset || ''} ${n.nota || ''} ${n.context || ''}`.toLowerCase();
-        return hay.includes(q);
+    // ---- Trimiteri între note (Secțiunea 8) ----
+    // O trimitere este un text din Nota de subsol (col. H) de forma „vezi Fc 3, 2”, „vezi nota de la 5, 22”
+    // (aceeași carte) sau „vezi v. 5” (același capitol). Nota-țintă se caută după Carte (col. B),
+    // Capitol (col. C) și Verset (col. D). Cheia se calculează în memorie, fără coloană nouă în sheet.
+    const NOTE_BIBLIA_ABREVIERI = {
+      "Fc": "Facerea", "Iș": "Ieşirea", "Ieș": "Ieşirea", "Lv": "Leviticul", "Nm": "Numerele", "Dt": "Deuteronomul",
+      "Ios": "Iosua Navi", "Jd": "Judecători", "Rut": "Rut", "Rt": "Rut",
+      "1 Rg": "Cartea Întâi a Regilor", "2 Rg": "Cartea a Doua a Regilor", "3 Rg": "Cartea a Treia a Regilor", "4 Rg": "Cartea a Patra a Regilor",
+      "1 Par": "1 Paralipomena", "2 Par": "2 Paralipomena", "Ezr": "Ezdra", "Ne": "Neemia", "Est": "Estera", "Iov": "Iov",
+      "Ps": "Psalmii", "Is": "Isaia"
+    };
+    // Cărți citate în note care nu sunt (încă) în colecția de note: se recunosc, dar nu devin link.
+    const NOTE_BIBLIA_ALTE_ABREVIERI = ["Mt", "Mc", "Lc", "In", "Fa", "Rm", "1 Co", "2 Co", "Ga", "Ef", "Flp", "Col", "1 Tes", "2 Tes",
+      "1 Tim", "2 Tim", "Tit", "Flm", "Evr", "Iac", "1 Ptr", "2 Ptr", "1 In", "2 In", "3 In", "Iuda", "Ap", "Pr", "Ecc", "Cânt",
+      "Ir", "Plg", "Iz", "Dn", "Os", "Il", "Amos", "Am", "Avd", "Iona", "Mi", "Naum", "Avc", "Sof", "Ag", "Za", "Mal", "Tob",
+      "Idt", "Sol", "Sir", "Bar", "1 Mac", "2 Mac", "3 Mac", "4 Mac"];
+
+    function normNoteBibliaBook(s) {
+      return (s || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+    function noteBibliaCapNum(n) { const m = (n.capitol || '').toString().match(/\d+/); return m ? parseInt(m[0], 10) : null; }
+    function noteBibliaVersNum(n) { const m = (n.versetul || '').toString().match(/\d+/); return m ? parseInt(m[0], 10) : null; }
+    function noteBibliaAbbrFor(carteNorm) {
+      const k = Object.keys(NOTE_BIBLIA_ABREVIERI).find(a => normNoteBibliaBook(NOTE_BIBLIA_ABREVIERI[a]) === carteNorm);
+      return k || carteNorm;
+    }
+
+    const NOTE_BIBLIA_REF_RE = (() => {
+      const all = Object.keys(NOTE_BIBLIA_ABREVIERI).concat(NOTE_BIBLIA_ALTE_ABREVIERI)
+        .sort((a, b) => b.length - a.length)
+        .map(a => a.replace(/ /g, '\\s'));
+      const L = '(?<![\\wăâîșțşţĂÂÎȘȚŞŢ])';
+      return new RegExp(
+        `${L}(?:(${all.join('|')})\\s+)?(\\d+)\\s*,\\s*(\\d+)(?:\\s*-\\s*(\\d+))?` +
+        `|${L}v(?:\\.|ersetul|ersetele)\\s*(\\d+)(?:\\s*-\\s*(\\d+))?`, 'g');
+    })();
+    const NOTE_BIBLIA_KEYWORD_RE = /(?<![\wăâîșțşţ])(vezi|vz\.|cf\.?|compară)(?![\wăâîșțşţ])/gi;
+
+    // Întoarce lista trimiterilor dintr-o notă: { start, end, carteNorm, inColectie, cap, v1, v2 }
+    const noteBibliaRefsCache = new WeakMap();
+    function parseNoteBibliaRefs(n) {
+      const nota = (n.nota || '').toString();
+      const cached = noteBibliaRefsCache.get(n);
+      if (cached && cached.nota === nota) return cached.refs;
+      const refs = [];
+      const ownBook = normNoteBibliaBook(n.cartea);
+      const ownCap = noteBibliaCapNum(n);
+      NOTE_BIBLIA_KEYWORD_RE.lastIndex = 0;
+      let kw;
+      while ((kw = NOTE_BIBLIA_KEYWORD_RE.exec(nota)) !== null) {
+        // Segmentul ține de la cuvântul-cheie până la „)” sau până la un punct urmat de o propoziție nouă
+        const from = kw.index + kw[0].length;
+        let to = Math.min(nota.length, from + 160);
+        const stop = nota.slice(from, to).search(/\)|\.\s+[A-ZĂÂÎȘȚŞŢ„]|\]/);
+        if (stop !== -1) to = from + stop;
+        const seg = nota.slice(from, to);
+        let book = ownBook, inColectie = true;
+        NOTE_BIBLIA_REF_RE.lastIndex = 0;
+        let m;
+        while ((m = NOTE_BIBLIA_REF_RE.exec(seg)) !== null) {
+          let r;
+          if (m[5]) {
+            if (!ownCap) continue;
+            r = { carteNorm: ownBook, inColectie: true, cap: ownCap, v1: parseInt(m[5], 10), v2: m[6] ? parseInt(m[6], 10) : null };
+          } else {
+            if (m[1]) {
+              const abbr = m[1].replace(/\s+/g, ' ');
+              if (NOTE_BIBLIA_ABREVIERI[abbr]) { book = normNoteBibliaBook(NOTE_BIBLIA_ABREVIERI[abbr]); inColectie = true; }
+              else { book = normNoteBibliaBook(abbr); inColectie = false; }
+            }
+            r = { carteNorm: book, inColectie, cap: parseInt(m[2], 10), v1: parseInt(m[3], 10), v2: m[4] ? parseInt(m[4], 10) : null };
+          }
+          r.start = from + m.index;
+          r.end = r.start + m[0].length;
+          refs.push(r);
+        }
+        NOTE_BIBLIA_KEYWORD_RE.lastIndex = Math.max(NOTE_BIBLIA_KEYWORD_RE.lastIndex, to);
+      }
+      noteBibliaRefsCache.set(n, { nota, refs });
+      return refs;
+    }
+
+    function noteBibliaRefLabel(r) {
+      return `${noteBibliaAbbrFor(r.carteNorm)} ${r.cap}${r.v1 ? ', ' + r.v1 + (r.v2 ? '-' + r.v2 : '') : ''}`;
+    }
+
+    // Nota de subsol cu trimiterile transformate în link-uri care deschid nota-țintă în registru
+    function renderNoteBibliaNotaHtml(n) {
+      const nota = (n.nota || '').toString();
+      const refs = parseNoteBibliaRefs(n);
+      let html = '', pos = 0;
+      refs.forEach(r => {
+        html += escapeHtmlText(nota.slice(pos, r.start));
+        const txt = escapeHtmlText(nota.slice(r.start, r.end));
+        html += r.inColectie
+          ? `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); jumpToNoteBibliaRef('${noteBibliaRefLabel(r)}')" class="text-sky-400 hover:text-sky-300 underline not-italic">${txt}</button>`
+          : `<span class="text-slate-300" title="Cartea nu este în colecția de note">${txt}</span>`;
+        pos = r.end;
       });
+      return html + escapeHtmlText(nota.slice(pos));
+    }
+
+    // Interpretează căutarea ca trimitere: „Fc 3, 2”, „Fc 3:2”, „Facerea 3 2”, „1 Rg 2”, „Iș 3, 13-15”
+    function parseNoteBibliaQuery(q) {
+      const m = (q || '').trim().match(/^(.*?[^\d\s].*?)\s+(?:cap(?:itol(?:ul)?)?\.?\s*)?(\d+)(?:\s*[,:\s]\s*(?:v(?:\.|ers(?:etul)?)?\s*)?(\d+)(?:\s*-\s*(\d+))?)?\s*$/i);
+      if (!m) return null;
+      const bookQ = m[1].trim().replace(/\s+/g, ' ');
+      let carteNorm = null;
+      const abbrKey = Object.keys(NOTE_BIBLIA_ABREVIERI).find(a => normNoteBibliaBook(a) === normNoteBibliaBook(bookQ));
+      if (abbrKey) carteNorm = normNoteBibliaBook(NOTE_BIBLIA_ABREVIERI[abbrKey]);
+      else {
+        const qn = normNoteBibliaBook(bookQ);
+        const books = Array.from(new Set(allNoteAnania.map(n => normNoteBibliaBook(n.cartea))));
+        carteNorm = books.find(b => b === qn) || books.find(b => b.startsWith(qn)) || null;
+      }
+      if (!carteNorm) return null;
+      return { carteNorm, cap: parseInt(m[2], 10), v1: m[3] ? parseInt(m[3], 10) : null, v2: m[4] ? parseInt(m[4], 10) : null };
+    }
+    function noteBibliaRangesOverlap(a1, a2, b1, b2) {
+      if (a1 == null || b1 == null) return true;
+      return a1 <= (b2 || b1) && b1 <= (a2 || a1);
+    }
+    function noteBibliaMatchesRef(n, ref) {
+      if (normNoteBibliaBook(n.cartea) !== ref.carteNorm || noteBibliaCapNum(n) !== ref.cap) return false;
+      const v = noteBibliaVersNum(n);
+      return noteBibliaRangesOverlap(ref.v1, ref.v2, v, null);
+    }
+
+    let noteBibliaJumpHistory = [];
+    function jumpToNoteBibliaRef(label) {
+      const input = document.getElementById('noteBibliaSearchInput');
+      if (!input) return;
+      noteBibliaJumpHistory.push(input.value);
+      input.value = label;
+      editingNoteBibliaRowId = null;
+      renderNoteBibliaList();
+      const box = document.getElementById('noteBibliaListContainer');
+      if (box) box.scrollTop = 0;
+    }
+    function backNoteBibliaJump() {
+      const input = document.getElementById('noteBibliaSearchInput');
+      if (!input || noteBibliaJumpHistory.length === 0) return;
+      input.value = noteBibliaJumpHistory.pop();
+      renderNoteBibliaList();
+    }
+    function onNoteBibliaSearchInput() {
+      noteBibliaJumpHistory = [];
+      renderNoteBibliaList();
+    }
+
+    // Rezultatul căutării: { ref, list, referrers } — referrers = notele care trimit către nota căutată
+    function getFilteredNoteBiblia() {
+      const q = (document.getElementById('noteBibliaSearchInput') ? document.getElementById('noteBibliaSearchInput').value : '').trim();
+      const onlyRefsEl = document.getElementById('noteBibliaOnlyRefs');
+      const onlyRefs = onlyRefsEl ? onlyRefsEl.checked : false;
+      const ref = parseNoteBibliaQuery(q);
+      let list, referrers = [];
+      if (ref) {
+        list = allNoteAnania.filter(n => noteBibliaMatchesRef(n, ref));
+        referrers = allNoteAnania.filter(n => parseNoteBibliaRefs(n).some(r =>
+          r.inColectie && r.carteNorm === ref.carteNorm && r.cap === ref.cap && noteBibliaRangesOverlap(ref.v1, ref.v2, r.v1, r.v2)));
+      } else if (q) {
+        const ql = q.toLowerCase();
+        list = allNoteAnania.filter(n => `${n.cartea || ''} ${n.capitol || ''} ${n.versetul || ''} ${n.textVerset || ''} ${n.nota || ''} ${n.context || ''}`.toLowerCase().includes(ql));
+      } else {
+        list = allNoteAnania;
+      }
+      if (onlyRefs) {
+        list = list.filter(n => parseNoteBibliaRefs(n).length > 0);
+        referrers = referrers.filter(n => parseNoteBibliaRefs(n).length > 0);
+      }
+      return { ref, list, referrers };
     }
 
     function toggleNoteBibliaSelect(rowId, checked) {
@@ -4986,40 +5155,29 @@
       document.body.appendChild(script);
     }
 
-    function renderNoteBibliaList() {
-      const container = document.getElementById('noteBibliaListContainer');
-      if (!container) return;
-      renderNoteBibliaSelectionBar();
-      const list = getFilteredNoteBiblia();
-      const badge = document.getElementById('noteBibliaCountBadge');
-      if (badge) badge.textContent = list.length;
-      if (list.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Nicio notă găsită.</p>`;
-        return;
-      }
-      container.innerHTML = list.map(n => {
-        if (editingNoteBibliaRowId === n.rowId) {
-          return `
-            <div class="p-2.5 bg-darkbg border border-cyan-700 rounded-xl text-xs space-y-1.5">
-              <span class="font-bold text-amber-300">${n.cartea || ''} ${n.capitol || ''}${n.versetul ? ', v.' + n.versetul : ''}</span>
-              <label class="text-[10px] text-slate-400 block">Capitol # / # (ex: 3/17)</label>
-              <input id="noteBibliaEditCapitol_${n.rowId}" type="text" value="${n.capitolProgres || ''}" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
-              <label class="text-[10px] text-slate-400 block">Text verset complet</label>
-              <textarea id="noteBibliaEditVerset_${n.rowId}" rows="2" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${n.textVerset || ''}</textarea>
-              <label class="text-[10px] text-slate-400 block">Context</label>
-              <textarea id="noteBibliaEditContext_${n.rowId}" rows="2" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${n.context || ''}</textarea>
-              <label class="text-[10px] text-slate-400 block">Nota de subsol</label>
-              <textarea id="noteBibliaEditNota_${n.rowId}" rows="2" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${n.nota || ''}</textarea>
-              <label class="text-[10px] text-slate-400 block">URL sursă</label>
-              <input id="noteBibliaEditUrl_${n.rowId}" type="text" value="${n.derventUrl || ''}" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
-              <div class="flex space-x-1.5 pt-1">
-                <button onclick="saveEditNoteBiblia(${n.rowId})" class="flex-1 bg-cyan-800 hover:bg-cyan-700 text-white font-bold py-1.5 rounded-lg">💾 Salvează</button>
-                <button onclick="cancelEditNoteBiblia()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 py-1.5 rounded-lg">Anulează</button>
-              </div>
-            </div>
-          `;
-        }
+    function renderNoteBibliaCard(n) {
+      if (editingNoteBibliaRowId === n.rowId) {
         return `
+          <div class="p-2.5 bg-darkbg border border-cyan-700 rounded-xl text-xs space-y-1.5">
+            <span class="font-bold text-amber-300">${n.cartea || ''} ${n.capitol || ''}${n.versetul ? ', v.' + n.versetul : ''}</span>
+            <label class="text-[10px] text-slate-400 block">Capitol # / # (ex: 3/17)</label>
+            <input id="noteBibliaEditCapitol_${n.rowId}" type="text" value="${n.capitolProgres || ''}" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            <label class="text-[10px] text-slate-400 block">Text verset complet</label>
+            <textarea id="noteBibliaEditVerset_${n.rowId}" rows="2" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${n.textVerset || ''}</textarea>
+            <label class="text-[10px] text-slate-400 block">Context</label>
+            <textarea id="noteBibliaEditContext_${n.rowId}" rows="2" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${n.context || ''}</textarea>
+            <label class="text-[10px] text-slate-400 block">Nota de subsol</label>
+            <textarea id="noteBibliaEditNota_${n.rowId}" rows="2" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${n.nota || ''}</textarea>
+            <label class="text-[10px] text-slate-400 block">URL sursă</label>
+            <input id="noteBibliaEditUrl_${n.rowId}" type="text" value="${n.derventUrl || ''}" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            <div class="flex space-x-1.5 pt-1">
+              <button onclick="saveEditNoteBiblia(${n.rowId})" class="flex-1 bg-cyan-800 hover:bg-cyan-700 text-white font-bold py-1.5 rounded-lg">💾 Salvează</button>
+              <button onclick="cancelEditNoteBiblia()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 py-1.5 rounded-lg">Anulează</button>
+            </div>
+          </div>
+        `;
+      }
+      return `
         <div class="p-2.5 bg-darkbg border border-bordercol rounded-xl text-xs space-y-1">
           <div class="flex items-start justify-between">
             <label class="flex items-start space-x-2 flex-1 min-w-0 cursor-pointer">
@@ -5027,10 +5185,11 @@
               <div class="min-w-0">
                 <div class="flex items-center space-x-1.5 flex-wrap">
                   <span class="font-bold text-amber-300">${n.cartea || ''} ${n.capitol || ''}${n.versetul ? ', v.' + n.versetul : ''}</span>
+                  ${n.marcaj ? `<span class="text-amber-500 font-mono text-[10px]">${escapeHtmlText(n.marcaj)}</span>` : ''}
                   ${n.capitolProgres ? `<span class="bg-amber-950 border border-amber-800 text-amber-200 text-[9px] px-1.5 py-0.2 rounded-full font-mono font-bold">Capitol ${n.capitolProgres}</span>` : ''}
                 </div>
                 ${n.textVerset ? `<p class="text-slate-200 mt-0.5">${n.textVerset}</p>` : ''}
-                ${n.nota ? `<p class="text-slate-400 italic mt-0.5">${n.nota}</p>` : ''}
+                ${n.nota ? `<p class="text-slate-400 italic mt-0.5">${renderNoteBibliaNotaHtml(n)}</p>` : ''}
                 ${n.dataModificare ? `<p class="text-slate-600 text-[9px] mt-0.5">Modificat: ${n.dataModificare}</p>` : ''}
               </div>
             </label>
@@ -5042,7 +5201,35 @@
           ${n.derventUrl ? `<a href="${n.derventUrl}" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 underline text-[10px]">↗ sursă</a>` : ''}
         </div>
       `;
-      }).join('');
+    }
+
+    function renderNoteBibliaList() {
+      const container = document.getElementById('noteBibliaListContainer');
+      if (!container) return;
+      renderNoteBibliaSelectionBar();
+      const { ref, list, referrers } = getFilteredNoteBiblia();
+      const badge = document.getElementById('noteBibliaCountBadge');
+      if (badge) badge.textContent = list.length;
+
+      const backBtn = noteBibliaJumpHistory.length > 0
+        ? `<button type="button" onclick="backNoteBibliaJump()" class="text-[11px] px-2 py-1 bg-slate-800 border border-bordercol text-slate-300 rounded-lg">← Înapoi${noteBibliaJumpHistory[noteBibliaJumpHistory.length - 1] ? ' la „' + escapeHtmlText(noteBibliaJumpHistory[noteBibliaJumpHistory.length - 1]) + '”' : ''}</button>`
+        : '';
+
+      if (!ref) {
+        container.innerHTML = backBtn + (list.length === 0
+          ? `<p class="text-xs text-slate-500 italic text-center py-4">Nicio notă găsită.</p>`
+          : list.map(renderNoteBibliaCard).join(''));
+        return;
+      }
+
+      const label = escapeHtmlText(noteBibliaRefLabel(ref));
+      container.innerHTML = `
+        ${backBtn}
+        <p class="text-[11px] font-bold text-amber-300 uppercase tracking-wider pt-1">Nota de la ${label} · ${list.length}</p>
+        ${list.length === 0 ? `<p class="text-xs text-slate-500 italic py-2">Nu există notă la ${label} în registru.</p>` : list.map(renderNoteBibliaCard).join('')}
+        <p class="text-[11px] font-bold text-sky-300 uppercase tracking-wider pt-2">↩ Note care trimit către ${label} · ${referrers.length}</p>
+        ${referrers.length === 0 ? `<p class="text-xs text-slate-500 italic py-2">Nicio notă nu trimite aici.</p>` : referrers.map(renderNoteBibliaCard).join('')}
+      `;
     }
 
     function parseAnaniaNotes(entry) {
