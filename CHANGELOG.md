@@ -1,5 +1,20 @@
 # CHANGELOG — DIiH Hub
 
+## v23.2 — 2026-10-15 — Conectare cu Google (aplicație)
+
+Doar `index.html`, `andreea.html`, `sw.js`. Backend-ul rămâne v23.1, deci nu e nevoie de deploy în Apps Script.
+
+### Adăugat
+- **Conectare cu Google**: butonul oficial Google apare în fereastra de autentificare și în Setări → Cont Google. Serverul verifică login-ul și deschide o sesiune de 30 de zile pe dispozitiv. Caseta arată emailul, rolul și data expirării, plus butonul „Deconectare Google”.
+- **Conectare cu cod de asociere**: pentru dispozitivele unde login-ul Google nu merge (ex. cont de copil cu restricții Family Link, aplicație instalată pe iPhone). Codul îl generează adminul.
+- **Admin → Profile și acces**: lista profilurilor (rol, activ, sesiuni active), adăugare și editare (email, nume, rol admin/membru/copil, activ, acces pe fiecare modul: implicit după rol / fără acces / doar vede / vede și editează), generare cod de asociere, închiderea tuturor sesiunilor unui profil, afișarea modului (tranziție/strict).
+- **Meniul și widgeturile** modulelor fără acces se ascund pentru profilurile non-admin. Datele lor oricum nu mai pleacă din server.
+- Profilul și permisiunile se reîmprospătează la fiecare sincronizare. Dacă sesiunea expiră sau e închisă de admin, aplicația o șterge și cere reconectarea.
+- Profilurile noi (ex. Luca) primesc automat un utilizator local separat, cu propriile setări. Numele din antet se ia din profil.
+
+### Tranziție
+- Fiecare cerere trimite acum și sesiunea Google, și tokenul vechi. Parola veche mai funcționează până la v23.3.
+
 ## v23.1 — 2026-10-15 — Autentificare (backend)
 
 Doar backend (`_API.gs`); aplicația funcționează exact ca înainte, prin modul de tranziție.

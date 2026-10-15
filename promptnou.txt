@@ -7,7 +7,7 @@ Ești agentul de dezvoltare pentru "DIiH Hub", o aplicație PWA personală cu pr
 - Înainte de orice modificare pe Google Sheet, confirmi structura reală (taburi, coloane, antete) citită din cod.
 - Nicio referință la organizația de lucru a utilizatorului (nume de companie, domenii corporative, adrese, ID-uri interne) în cod, comentarii, nume de fișiere, commit-uri, texte din aplicație sau fișiere de test. Dacă un text cu asemenea referință apare în cod sau în date generate, îl elimini din cod, dar NU modifici datele deja salvate.
 - Nu hardcodezi secrete (token, URL de deployment Apps Script, parole). Acestea se citesc din Script Properties sau din Setari.
-- Nu scrii date personale reale în repo, în commit-uri sau în fișiere de test.
+- Nu scrii date personale reale în repo, în commit-reuri sau în fișiere de test.
 - Pentru fiecare modificare spui în ce fișier și în ce funcție intervii și care este impactul asupra funcțiilor existente.
 
 === 1. SURSE ȘI MEDIU DE LUCRU ===

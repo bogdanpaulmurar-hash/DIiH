@@ -63,6 +63,7 @@
       }
     }
   </style>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="if (window.renderGoogleButtons) renderGoogleButtons()"></script>
 </head>
 <body class="bg-darkbg text-slate-100 font-sans pb-28 antialiased selection:bg-cyan-800" onclick="closeContextMenu()">
 
@@ -1292,6 +1293,9 @@
                 <span>Deconectare</span>
               </button>
             </div>
+            <!-- Cont Google (v23.2): stare conectare, buton Google, cod de asociere — completat de renderAuthPanels() -->
+            <div id="authStatusBox" class="p-3 bg-darkbg border border-bordercol rounded-xl space-y-2"></div>
+
             <!-- Poză de profil personalizată (Strict izolată per profil) -->
             <div class="pt-2 border-t border-bordercol/50 space-y-2">
               <span class="text-[10px] text-slate-400 block font-bold uppercase">Poză de Profil (Header Avatar):</span>
@@ -1310,7 +1314,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v23.1 (Build 2026-10-15)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v23.2 (Build 2026-10-15)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
             <a href="https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit" target="_blank" rel="noopener" class="w-full flex items-center justify-center space-x-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 py-2 rounded-xl font-bold hover:bg-emerald-900 transition">
@@ -1448,6 +1452,46 @@
 
       <!-- SUB-TAB 5: ADMIN & PARTAJARE ACCES -->
       <div id="subtab-admin" class="subtab-content hidden space-y-3">
+        <!-- PROFILE ȘI ACCES (v23.2): cine se poate conecta cu Google și la ce module are drept -->
+        <div class="bg-cardbg border border-cyan-800/70 rounded-2xl p-4 shadow-sm space-y-3 text-xs">
+          <div class="flex items-start justify-between gap-2 border-b border-bordercol pb-2">
+            <div>
+              <h3 class="font-bold text-white uppercase tracking-wider">👥 Profile și acces</h3>
+              <p class="text-[10px] text-slate-400 mt-1">Cine se poate conecta cu Google și ce vede. Datele unui modul fără acces nu mai pleacă din server.</p>
+              <span id="adminAuthModeLabel" class="text-[10px] font-bold text-slate-400"></span>
+            </div>
+            <button onclick="openAdminProfileForm(null)" class="shrink-0 text-[11px] px-2.5 py-1.5 bg-cyan-800 hover:bg-cyan-700 text-white font-bold rounded-lg">+ Profil</button>
+          </div>
+
+          <div id="adminProfileForm" class="hidden p-3 bg-darkbg border border-cyan-800 rounded-xl space-y-2">
+            <span id="adminProfFormTitle" class="font-bold text-cyan-300 block">Profil nou</span>
+            <label class="text-[10px] text-slate-400 block">Email cont Google</label>
+            <input id="adminProfEmail" type="email" autocomplete="off" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            <label class="text-[10px] text-slate-400 block">Nume (pentru Andreea scrie exact „Andreea Murar”, ca să-și păstreze setările)</label>
+            <input id="adminProfNume" type="text" autocomplete="off" class="w-full bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            <div class="flex items-center gap-3">
+              <label class="text-[10px] text-slate-400">Rol</label>
+              <select id="adminProfRol" onchange="renderAdminPermGrid()" class="bg-cardbg border border-bordercol rounded-lg p-1 text-white text-xs">
+                <option value="admin">Admin</option>
+                <option value="membru">Membru</option>
+                <option value="copil">Copil</option>
+              </select>
+              <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+                <input id="adminProfActiv" type="checkbox" class="rounded text-cyan-500 focus:ring-0"> Activ
+              </label>
+            </div>
+            <span class="text-[10px] text-slate-400 block font-bold uppercase pt-1">Acces pe module</span>
+            <div id="adminProfPermGrid" class="space-y-1"></div>
+            <div class="flex gap-1.5 pt-1">
+              <button onclick="saveAdminProfileForm()" class="flex-1 bg-cyan-800 hover:bg-cyan-700 text-white font-bold py-1.5 rounded-lg">💾 Salvează</button>
+              <button onclick="closeAdminProfileForm()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 py-1.5 rounded-lg">Anulează</button>
+            </div>
+          </div>
+
+          <div id="adminPairCodeBox" class="hidden p-3 bg-amber-950/30 border border-amber-800 rounded-xl space-y-1"></div>
+          <div id="adminProfilesList" class="space-y-2"></div>
+        </div>
+
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           <div class="border-b border-bordercol pb-2">
             <h3 class="font-bold text-white uppercase tracking-wider">🛡️ Admin — Partajare Acces</h3>
@@ -2447,8 +2491,17 @@
       <div class="text-center space-y-1">
         <span class="text-3xl block">🔐</span>
         <h3 id="userLoginModalTitle" class="text-base font-bold text-white">Autentificare Utilizator</h3>
-        <p class="text-[11px] text-slate-400">Alege profilul și introdu parola pentru a continua</p>
+        <p class="text-[11px] text-slate-400">Conectează-te cu contul Google</p>
       </div>
+
+      <div class="space-y-2 p-3 bg-darkbg border border-bordercol rounded-xl">
+        <div class="google-signin-slot flex justify-center"></div>
+        <div class="flex items-center gap-1.5">
+          <input id="authPairCodeModal" type="text" autocomplete="off" maxlength="8" placeholder="sau cod de la administrator" class="flex-1 min-w-0 bg-cardbg border border-bordercol rounded-lg p-2 text-white text-xs uppercase tracking-widest">
+          <button onclick="loginWithPairCode('authPairCodeModal')" class="shrink-0 text-[11px] px-2.5 py-2 bg-cyan-800 hover:bg-cyan-700 text-white font-bold rounded-lg">Conectează</button>
+        </div>
+      </div>
+      <p class="text-[10px] text-slate-500 text-center">Varianta veche, cu parolă, mai funcționează pentru scurt timp:</p>
 
       <div class="space-y-3">
         <div>
@@ -2561,6 +2614,336 @@
       return localStorage.getItem('diih_logged_user') || 'Bogdan Murar';
     }
 
+    // ====== AUTENTIFICARE GOOGLE (v23.2) ======
+    // Google confirmă doar identitatea; serverul (Apps Script) emite o sesiune de 30 de zile și verifică
+    // dreptul pe modul la fiecare cerere (tabul Profile). Cât timp backend-ul e în „mod tranziție”,
+    // tokenul vechi se trimite în paralel, ca aplicația să meargă și fără login Google.
+    const GOOGLE_CLIENT_ID = "958493435354-6287uhsb9a4qhq1hha44j02r1if1jjcr.apps.googleusercontent.com";
+    const AUTH_SESSION_KEY = 'diih_auth_session';
+    const AUTH_MODULE_LABELS = {
+      pomelnic: 'Pomelnic', scoala: 'Școală', psaltire: 'Psaltire', notite: 'Notițe', cumparaturi: 'Cumpărături',
+      inventar: 'Inventar', gandul: 'Gândul zilei', scriptura: 'Scriptură', biblia360: 'Biblia 360', setari: 'Setări'
+    };
+    const AUTH_NAV_MODULES = { pomelnic: 'pomelnic', calendar: 'scoala', notite: 'notite', cumparaturi: 'cumparaturi', scriptura: 'scriptura', notazilei: 'scriptura', inventar: 'inventar' };
+    const AUTH_WIDGET_MODULES = {
+      psaltire: 'psaltire', biblia360: 'biblia360', scriptura: 'scriptura', anniversaries: 'pomelnic', pomelnic: 'pomelnic',
+      school: 'scoala', shopping: 'cumparaturi', notite: 'notite', gandul_zilei: 'gandul', inventory: 'inventar'
+    };
+    const AUTH_ROLE_LABELS = { admin: 'Admin', membru: 'Membru', copil: 'Copil' };
+
+    function getAuthSession() {
+      try {
+        const s = JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || 'null');
+        return s && s.token ? s : null;
+      } catch (e) { return null; }
+    }
+    function setAuthSession(s) {
+      if (s) localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(s));
+      else localStorage.removeItem(AUTH_SESSION_KEY);
+    }
+
+    // Parametrii de autentificare trimiși la fiecare cerere către Apps Script
+    function apiAuthParams() {
+      const p = { token: API_TOKEN };
+      const s = getAuthSession();
+      if (s) p.session = s.token;
+      return p;
+    }
+    function apiAuthQuery() {
+      return new URLSearchParams(apiAuthParams()).toString();
+    }
+
+    function apiJsonp(params) {
+      return new Promise((resolve, reject) => {
+        const cb = 'authCb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+        const script = document.createElement('script');
+        const timer = setTimeout(() => { delete window[cb]; script.remove(); reject(new Error('Serverul nu a răspuns. Încearcă din nou.')); }, 30000);
+        window[cb] = (data) => { clearTimeout(timer); delete window[cb]; script.remove(); resolve(data); };
+        script.onerror = () => { clearTimeout(timer); delete window[cb]; reject(new Error('Nu s-a putut contacta serverul.')); };
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${new URLSearchParams({ ...params, callback: cb }).toString()}`;
+        document.body.appendChild(script);
+      });
+    }
+
+    function authRoleDefaultsClient(rol) {
+      const perms = {};
+      Object.keys(AUTH_MODULE_LABELS).forEach(m => { perms[m] = (rol === 'admin' || rol === 'membru') ? 'edit' : 'none'; });
+      if (rol === 'copil') { perms.scriptura = 'edit'; perms.gandul = 'view'; perms.biblia360 = 'view'; }
+      return perms;
+    }
+
+    // Profilul din sheet -> utilizatorul local al aplicației (setări, widgeturi, meniu păstrate per nume)
+    function resolveLocalUserForProfile(profile) {
+      if (APP_USERS[profile.nume]) return profile.nume;
+      if (profile.rol === 'admin') return 'Bogdan Murar';
+      if (/andreea/i.test(profile.nume || '')) return 'Andreea Murar';
+      const name = profile.nume || profile.email;
+      if (!APP_USERS[name]) {
+        APP_USERS[name] = { pass: null, defaultTitle: "DIiH", defaultLogo: "🙂", defaultIcon: DEFAULT_OWNER_APP_ICON, isOwner: false };
+      }
+      return name;
+    }
+    (function restoreAuthSessionUser() {
+      const s = getAuthSession();
+      if (s && s.profile) resolveLocalUserForProfile(s.profile);
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => renderAuthPanels());
+      else setTimeout(() => renderAuthPanels(), 0);
+    })();
+
+    async function completeAuthLogin(data) {
+      if (!data || !data.success) {
+        showToast(data && data.error ? data.error : 'Conectarea a eșuat.');
+        return;
+      }
+      setAuthSession({ token: data.sessionToken, expira: data.expira, profile: data.profile });
+      closeUserLoginModal();
+      executeUserSwitch(resolveLocalUserForProfile(data.profile));
+      renderAuthPanels();
+      applyAuthPermissionsUI();
+      fetchDataFromSheet(true);
+    }
+
+    async function onGoogleCredential(response) {
+      showToast('Se verifică contul Google...');
+      try {
+        completeAuthLogin(await apiJsonp({ action: 'authGoogle', idToken: response.credential, device: deviceName }));
+      } catch (e) { showToast(e.message); }
+    }
+
+    async function loginWithPairCode(inputId) {
+      const input = document.getElementById(inputId);
+      const code = (input ? input.value : '').trim();
+      if (!code) { showToast('Introdu codul primit de la administrator.'); return; }
+      try {
+        completeAuthLogin(await apiJsonp({ action: 'authPair', code: code, device: deviceName }));
+        if (input) input.value = '';
+      } catch (e) { showToast(e.message); }
+    }
+
+    function logoutGoogleSession() {
+      if (!getAuthSession()) return;
+      showGenericConfirm('Te deconectezi de la contul Google pe acest dispozitiv?', async () => {
+        try { await apiJsonp({ ...apiAuthParams(), action: 'authLogout' }); } catch (e) { /* sesiunea se șterge oricum local */ }
+        setAuthSession(null);
+        renderAuthPanels();
+        applyOwnerNavLayout();
+        applyOwnerWidgetsVisibility();
+        showToast('Deconectat de la contul Google.');
+      }, 'Deconectează');
+    }
+
+    let googleIdInitialized = false;
+    function renderGoogleButtons() {
+      if (!window.google || !google.accounts || !google.accounts.id) return;
+      if (!googleIdInitialized) {
+        google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleCredential, auto_select: false, cancel_on_tap_outside: true, ux_mode: 'popup' });
+        googleIdInitialized = true;
+      }
+      document.querySelectorAll('.google-signin-slot').forEach(el => {
+        if (el.dataset.rendered) return;
+        google.accounts.id.renderButton(el, { theme: 'filled_black', size: 'large', text: 'signin_with', shape: 'pill', locale: 'ro', width: 240 });
+        el.dataset.rendered = '1';
+      });
+    }
+
+    // Caseta „Cont Google” din Setări: stare conectare, buton Google, cod de asociere
+    function renderAuthPanels() {
+      const box = document.getElementById('authStatusBox');
+      if (!box) return;
+      const s = getAuthSession();
+      if (s && s.profile) {
+        box.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <span class="text-[10px] text-slate-400 block font-bold uppercase">Cont Google</span>
+              <span class="text-xs text-emerald-300 font-bold break-all">${escapeHtmlText(s.profile.email)}</span>
+              <p class="text-[10px] text-slate-400">${AUTH_ROLE_LABELS[s.profile.rol] || s.profile.rol} · sesiune valabilă până la ${escapeHtmlText((s.expira || '').slice(0, 10))}</p>
+            </div>
+            <button onclick="logoutGoogleSession()" class="shrink-0 text-[10px] px-2 py-1 bg-slate-800 border border-bordercol text-slate-300 rounded-lg hover:text-white">Deconectare Google</button>
+          </div>`;
+      } else {
+        box.innerHTML = `
+          <span class="text-[10px] text-slate-400 block font-bold uppercase">Cont Google</span>
+          <p class="text-[11px] text-amber-200">Nu ești conectat cu Google. În curând conectarea va fi obligatorie.</p>
+          <div class="google-signin-slot flex justify-center"></div>
+          <div class="flex items-center gap-1.5">
+            <input id="authPairCodeSettings" type="text" autocomplete="off" maxlength="8" placeholder="sau cod de la administrator" class="flex-1 min-w-0 bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs uppercase tracking-widest">
+            <button onclick="loginWithPairCode('authPairCodeSettings')" class="shrink-0 text-[11px] px-2.5 py-1.5 bg-cyan-800 hover:bg-cyan-700 text-white font-bold rounded-lg">Conectează</button>
+          </div>`;
+      }
+      renderGoogleButtons();
+    }
+
+    // Ascunde meniurile și widgeturile modulelor la care profilul nu are drept (serverul oricum nu trimite datele)
+    function applyAuthPermissionsUI() {
+      const s = getAuthSession();
+      if (!s || !s.profile || s.profile.rol === 'admin') return;
+      const perms = s.profile.permisiuni || {};
+      const hidden = mod => (perms[mod] || 'none') === 'none';
+      Object.keys(AUTH_NAV_MODULES).forEach(nav => {
+        if (!hidden(AUTH_NAV_MODULES[nav])) return;
+        const navBtn = document.getElementById(`nav-${nav}`);
+        if (navBtn) navBtn.classList.add('hidden');
+        const subBtn = document.getElementById(`btnSub${nav.charAt(0).toUpperCase() + nav.slice(1)}`);
+        if (subBtn) subBtn.classList.add('hidden');
+      });
+      Object.keys(AUTH_WIDGET_MODULES).forEach(w => {
+        const wgt = document.getElementById(`ownerWidget_${w}`);
+        if (wgt && hidden(AUTH_WIDGET_MODULES[w])) wgt.classList.add('hidden');
+      });
+      const adminBtn = document.getElementById('btnSubAdmin');
+      if (adminBtn) adminBtn.classList.add('hidden');
+      const navBar = document.getElementById('bottomNavBar');
+      if (navBar) {
+        const visible = Array.from(navBar.children).filter(c => !c.classList.contains('hidden')).length;
+        navBar.className = `max-w-lg mx-auto grid grid-cols-${Math.max(visible, 1)} text-center text-[9px] font-medium text-slate-400`;
+      }
+    }
+
+    // ---- Admin → Profile și acces ----
+    let adminProfilesData = null;
+    let adminEditingEmail = null;
+
+    async function loadAdminProfiles() {
+      const box = document.getElementById('adminProfilesList');
+      if (!box) return;
+      box.innerHTML = `<p class="text-[11px] text-slate-500 italic">Se încarcă profilurile...</p>`;
+      try {
+        const data = await apiJsonp({ ...apiAuthParams(), action: 'authListProfiles' });
+        if (!data.success) {
+          box.innerHTML = `<p class="text-[11px] text-rose-300">${escapeHtmlText(data.error || 'Nu ai acces la administrarea profilurilor.')}</p>`;
+          return;
+        }
+        adminProfilesData = data;
+        renderAdminProfiles();
+      } catch (e) {
+        box.innerHTML = `<p class="text-[11px] text-rose-300">${escapeHtmlText(e.message)}</p>`;
+      }
+    }
+
+    function renderAdminProfiles() {
+      const box = document.getElementById('adminProfilesList');
+      const modeEl = document.getElementById('adminAuthModeLabel');
+      const d = adminProfilesData;
+      if (!box || !d) return;
+      if (modeEl) {
+        modeEl.textContent = d.mode === 'strict' ? 'Strict: doar conectare Google' : 'Tranziție: merge și fără conectare Google';
+        modeEl.className = d.mode === 'strict' ? 'text-[10px] font-bold text-emerald-300' : 'text-[10px] font-bold text-amber-300';
+      }
+      if (d.profiles.length === 0) {
+        box.innerHTML = `<p class="text-[11px] text-slate-400">Niciun profil încă. Conectează-te cu Google (Setări → Cont Google): primul tău login te adaugă automat ca admin.</p>`;
+        return;
+      }
+      box.innerHTML = d.profiles.map(p => `
+        <div class="p-2.5 bg-darkbg border ${p.activ ? 'border-bordercol' : 'border-rose-900/70 opacity-70'} rounded-xl space-y-1.5">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-bold text-white">${escapeHtmlText(p.nume || '—')}</span>
+              <span class="text-[9px] px-1.5 py-0.5 rounded-full border border-cyan-800 text-cyan-300">${AUTH_ROLE_LABELS[p.rol] || p.rol}</span>
+              ${p.activ ? '' : '<span class="text-[9px] px-1.5 py-0.5 rounded-full border border-rose-800 text-rose-300">inactiv</span>'}
+            </div>
+            <p class="text-[10px] text-slate-400 break-all">${escapeHtmlText(p.email)}</p>
+            <p class="text-[10px] text-slate-500">Sesiuni active: ${p.sesiuniActive}</p>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <button data-email="${escapeHtmlText(p.email)}" onclick="openAdminProfileForm(this.dataset.email)" class="text-[10px] px-2 py-1 bg-slate-800 border border-bordercol text-slate-200 rounded-lg">✏️ Editează</button>
+            <button data-email="${escapeHtmlText(p.email)}" onclick="createPairCodeFor(this.dataset.email)" class="text-[10px] px-2 py-1 bg-slate-800 border border-bordercol text-slate-200 rounded-lg">🔑 Cod de asociere</button>
+            ${p.sesiuniActive > 0 ? `<button data-email="${escapeHtmlText(p.email)}" onclick="revokeSessionsFor(this.dataset.email)" class="text-[10px] px-2 py-1 bg-rose-950 border border-rose-800 text-rose-200 rounded-lg">⛔ Închide sesiunile</button>` : ''}
+          </div>
+        </div>`).join('');
+    }
+
+    function renderAdminPermGrid() {
+      const grid = document.getElementById('adminProfPermGrid');
+      if (!grid) return;
+      const rol = document.getElementById('adminProfRol').value;
+      const defaults = authRoleDefaultsClient(rol);
+      const p = adminEditingEmail && adminProfilesData ? adminProfilesData.profiles.find(x => x.email === adminEditingEmail) : null;
+      const custom = (p && p.permisiuniCustom) || {};
+      const current = {};
+      grid.querySelectorAll('select').forEach(sel => { current[sel.dataset.mod] = sel.value; });
+      const levelLabel = { none: 'fără acces', view: 'doar vede', edit: 'vede și editează' };
+      grid.innerHTML = Object.keys(AUTH_MODULE_LABELS).map(m => {
+        const val = (m in current) ? current[m] : (custom[m] || '');
+        return `
+          <label class="flex items-center justify-between gap-2 text-[11px] text-slate-300">
+            <span>${AUTH_MODULE_LABELS[m]}</span>
+            <select data-mod="${m}" class="bg-darkbg border border-bordercol rounded-lg p-1 text-white text-[10px]">
+              <option value="" ${val === '' ? 'selected' : ''}>implicit (${levelLabel[defaults[m]]})</option>
+              <option value="none" ${val === 'none' ? 'selected' : ''}>fără acces</option>
+              <option value="view" ${val === 'view' ? 'selected' : ''}>doar vede</option>
+              <option value="edit" ${val === 'edit' ? 'selected' : ''}>vede și editează</option>
+            </select>
+          </label>`;
+      }).join('');
+    }
+
+    function openAdminProfileForm(email) {
+      const p = email && adminProfilesData ? adminProfilesData.profiles.find(x => x.email === email) : null;
+      adminEditingEmail = p ? p.email : null;
+      const emailIn = document.getElementById('adminProfEmail');
+      emailIn.value = p ? p.email : '';
+      emailIn.disabled = !!p;
+      document.getElementById('adminProfNume').value = p ? p.nume : '';
+      document.getElementById('adminProfRol').value = p ? p.rol : 'membru';
+      document.getElementById('adminProfActiv').checked = p ? p.activ : true;
+      document.getElementById('adminProfFormTitle').textContent = p ? `Editează: ${p.nume || p.email}` : 'Profil nou';
+      const grid = document.getElementById('adminProfPermGrid');
+      if (grid) grid.innerHTML = '';
+      renderAdminPermGrid();
+      document.getElementById('adminProfileForm').classList.remove('hidden');
+    }
+
+    function closeAdminProfileForm() {
+      adminEditingEmail = null;
+      document.getElementById('adminProfileForm').classList.add('hidden');
+    }
+
+    async function saveAdminProfileForm() {
+      const email = document.getElementById('adminProfEmail').value.trim().toLowerCase();
+      const nume = document.getElementById('adminProfNume').value.trim();
+      if (!email || !nume) { showToast('Completează emailul și numele.'); return; }
+      const perms = {};
+      document.querySelectorAll('#adminProfPermGrid select').forEach(sel => { if (sel.value) perms[sel.dataset.mod] = sel.value; });
+      try {
+        const data = await apiJsonp({
+          ...apiAuthParams(), action: 'authSaveProfile', email: email, nume: nume,
+          rol: document.getElementById('adminProfRol').value,
+          activ: document.getElementById('adminProfActiv').checked ? 'DA' : 'NU',
+          permisiuni: JSON.stringify(perms)
+        });
+        if (!data.success) { showToast(data.error || 'Profilul nu a fost salvat.'); return; }
+        showToast('Profil salvat.');
+        closeAdminProfileForm();
+        loadAdminProfiles();
+      } catch (e) { showToast(e.message); }
+    }
+
+    async function createPairCodeFor(email) {
+      const out = document.getElementById('adminPairCodeBox');
+      try {
+        const data = await apiJsonp({ ...apiAuthParams(), action: 'authCreatePairCode', email: email });
+        if (!data.success) { showToast(data.error || 'Codul nu a putut fi generat.'); return; }
+        if (out) {
+          out.innerHTML = `
+            <p class="text-[10px] text-slate-400">Cod de asociere pentru <b class="text-slate-200">${escapeHtmlText(email)}</b>:</p>
+            <p class="text-xl font-mono font-bold tracking-[0.3em] text-amber-300 text-center select-all">${escapeHtmlText(data.code)}</p>
+            <p class="text-[10px] text-slate-400">Valabil ${data.expiraMinute} minute, o singură folosire. Pe dispozitivul lui: Mai multe → Setări → Cont Google → câmpul „cod de la administrator”.</p>`;
+          out.classList.remove('hidden');
+        }
+      } catch (e) { showToast(e.message); }
+    }
+
+    function revokeSessionsFor(email) {
+      showGenericConfirm(`Închizi toate sesiunile pentru ${email}? Va trebui să se conecteze din nou pe fiecare dispozitiv.`, async () => {
+        try {
+          const data = await apiJsonp({ ...apiAuthParams(), action: 'authRevokeSessions', email: email });
+          showToast(data.success ? `${data.revocate} sesiuni închise.` : (data.error || 'Eroare.'));
+          loadAdminProfiles();
+        } catch (e) { showToast(e.message); }
+      }, 'Închide sesiunile');
+    }
+
     function getUserProfileSettings(username) {
       try {
         const raw = localStorage.getItem(`diih_user_profile_${username}`);
@@ -2599,7 +2982,7 @@
         allProfiles[username] = updated;
         localStorage.setItem('diih_user_profiles', JSON.stringify(allProfiles));
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&userProfilesJson=${encodeURIComponent(JSON.stringify(allProfiles))}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&userProfilesJson=${encodeURIComponent(JSON.stringify(allProfiles))}&callback=void`;
         document.body.appendChild(script);
       } catch(e) {}
     }
@@ -2738,7 +3121,7 @@
       if (localStorage.getItem('diih_gandul_zilei_seed_done') === '1') return;
       const items = GRAND_THOUGHTS.map(g => ({ quote: g.quote, author: g.author }));
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=seedGandulZileiIfEmpty&itemsJson=${encodeURIComponent(JSON.stringify(items))}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=seedGandulZileiIfEmpty&itemsJson=${encodeURIComponent(JSON.stringify(items))}&callback=void`;
       document.body.appendChild(script);
       localStorage.setItem('diih_gandul_zilei_seed_done', '1');
     }
@@ -2780,12 +3163,12 @@
       if (editingGandulZileiId) {
         const item = allGandulZilei.find(g => g.id === editingGandulZileiId);
         if (item) { item.text = text; item.autor = autor; item.tema = tema; }
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGandulZilei&id=${encodeURIComponent(editingGandulZileiId)}&text=${encodeURIComponent(text)}&autor=${encodeURIComponent(autor)}&tema=${encodeURIComponent(tema)}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGandulZilei&id=${encodeURIComponent(editingGandulZileiId)}&text=${encodeURIComponent(text)}&autor=${encodeURIComponent(autor)}&tema=${encodeURIComponent(tema)}&callback=void`;
         showToast("Gând actualizat!");
       } else {
         const tempId = "GZ-LOCAL-" + Date.now();
         allGandulZilei.unshift({ id: tempId, text, autor, tema, activ: true });
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addGandulZilei&text=${encodeURIComponent(text)}&autor=${encodeURIComponent(autor)}&tema=${encodeURIComponent(tema)}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGandulZilei&text=${encodeURIComponent(text)}&autor=${encodeURIComponent(autor)}&tema=${encodeURIComponent(tema)}&callback=void`;
         showToast("Gând adăugat!");
       }
       document.body.appendChild(script);
@@ -2802,7 +3185,7 @@
       updateGrandThoughtDisplay();
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGandulZilei&id=${encodeURIComponent(id)}&activ=${activ}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGandulZilei&id=${encodeURIComponent(id)}&activ=${activ}&callback=void`;
       document.body.appendChild(script);
     }
     function renderGandulZileiManagerList() {
@@ -2842,7 +3225,7 @@
       if (bRole) bRole.textContent = uConfig.isOwner ? "Proprietar" : "Familie";
 
       const hName = document.getElementById('headerUserName');
-      if (hName) hName.textContent = (uName === "Bogdan Murar") ? "Bogdan" : "Andreea";
+      if (hName) hName.textContent = uName.split(" ")[0];
       
       const userPhoto = document.getElementById('headerUserPhoto');
       const userIcon = document.getElementById('headerUserIcon');
@@ -2855,7 +3238,7 @@
       } else {
         if (userPhoto) userPhoto.classList.add('hidden');
         if (userIcon) {
-          userIcon.textContent = (uName === "Bogdan Murar") ? "👤" : "🌸";
+          userIcon.textContent = (uName === "Bogdan Murar") ? "👤" : (uName === "Andreea Murar" ? "🌸" : (uConfig.defaultLogo || "🙂"));
           userIcon.classList.remove('hidden');
         }
       }
@@ -3250,7 +3633,7 @@
       showToast(`Pomenire setată la ${pomelnicBatchSize} persoane/zi`);
       logEventToCloud('update_pomelnic_batch', 'pomelnic', 'batchSize', `Număr persoane/zi setat la ${pomelnicBatchSize}`);
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&pomelnicBatchSize=${pomelnicBatchSize}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&pomelnicBatchSize=${pomelnicBatchSize}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -3301,7 +3684,7 @@
       if (!skipFormRead) showToast("Setări salvate și trimise în Cloud!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&appTitle=${encodeURIComponent(appTitle)}&appLogo=${encodeURIComponent(appLogo)}&appIconPath=${encodeURIComponent(appIconPath)}&pomelnicBatchSize=${pomelnicBatchSize}&psaltireBatchSize=${psaltireBatchSize}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&appTitle=${encodeURIComponent(appTitle)}&appLogo=${encodeURIComponent(appLogo)}&appIconPath=${encodeURIComponent(appIconPath)}&pomelnicBatchSize=${pomelnicBatchSize}&psaltireBatchSize=${psaltireBatchSize}&callback=void`;
       script.onerror = () => showToast("Eroare rețea la salvare! Verifică conexiunea.");
       document.body.appendChild(script);
     }
@@ -3434,7 +3817,7 @@
       settingsRaw[key] = value;
       safeLocalStorageSetItem('diih_settings_raw', JSON.stringify(settingsRaw));
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=setSettingRaw&key=${encodeURIComponent(key)}&value=${encodeURIComponent(value)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=setSettingRaw&key=${encodeURIComponent(key)}&value=${encodeURIComponent(value)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -3471,7 +3854,7 @@
       const meta = dataUrl.substring(5, dataUrl.indexOf(';'));
       const base64Data = dataUrl.substring(commaIdx + 1);
       const body = new URLSearchParams({
-        token: API_TOKEN,
+        ...apiAuthParams(),
         action: 'uploadDriveFile',
         fileName: fileName,
         mimeType: meta,
@@ -3496,7 +3879,7 @@
           }
         };
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getDriveImage&fileId=${encodeURIComponent(fileId)}&callback=${callbackName}`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=getDriveImage&fileId=${encodeURIComponent(fileId)}&callback=${callbackName}`;
         script.onerror = () => reject(new Error('Eroare de rețea la încărcarea imaginii din Drive.'));
         document.body.appendChild(script);
       });
@@ -3762,7 +4145,7 @@
       renderSchoolDisplay();
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(payload))}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(payload))}&callback=void`;
       document.body.appendChild(script);
 
       showToast('Date speciale salvate și generate în calendar!');
@@ -3825,7 +4208,7 @@
 
       const script = document.createElement('script');
       const params = new URLSearchParams({
-        token: API_TOKEN,
+        ...apiAuthParams(),
         action: 'logEvent',
         deviceId: deviceId,
         deviceName: deviceName,
@@ -3917,7 +4300,7 @@
       localStorage.setItem('diih_randuiala_tracker', JSON.stringify(data));
       try {
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&randuialaTrackerJson=${encodeURIComponent(JSON.stringify(data))}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&randuialaTrackerJson=${encodeURIComponent(JSON.stringify(data))}&callback=void`;
         document.body.appendChild(script);
       } catch (e) {}
     }
@@ -4310,6 +4693,8 @@
       if (subId === 'admin') renderAdminSharingForm();
       if (subId === 'inventar') loadInventoryIfNeeded();
       if (subId === 'notebiblia') renderNoteBibliaList();
+      if (subId === 'admin') loadAdminProfiles();
+      if (subId === 'setari') renderAuthPanels();
       if (subId === 'info') renderInfoVersion();
     }
 
@@ -4440,6 +4825,24 @@
         handled = true;
         const dur = Date.now() - startT;
 
+        // Sesiune Google expirată sau revocată: o ștergem și reîncercăm cu modul vechi (cât timp serverul e în tranziție)
+        if (data && data.authRequired && getAuthSession()) {
+          setAuthSession(null);
+          renderAuthPanels();
+          showToast('Sesiunea Google a expirat. Conectează-te din nou din Setări.');
+          if (icon) icon.classList.remove('animate-spin');
+          delete window[callbackName];
+          setTimeout(() => fetchDataFromSheet(showFeedback), 300);
+          return;
+        }
+        // Profilul (rol, permisiuni) se actualizează la fiecare sincronizare, ca schimbările făcute de admin să ajungă aici
+        if (data && data.auth && data.auth.profile && getAuthSession()) {
+          const authSess = getAuthSession();
+          authSess.profile = data.auth.profile;
+          setAuthSession(authSess);
+          applyAuthPermissionsUI();
+        }
+
         applyCloudSettings(data.settings);
         if (data.settingsRaw && typeof data.settingsRaw === 'object') {
           settingsRaw = data.settingsRaw;
@@ -4507,7 +4910,7 @@
       };
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getAllData&_rnd=${Date.now()}&callback=${callbackName}`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=getAllData&_rnd=${Date.now()}&callback=${callbackName}`;
       script.onerror = function() {
         if (icon) icon.classList.remove('animate-spin');
         logEventToCloud('sync_error', 'database', 'all', 'Eroare descărcare date din Sheets', 'ERROR');
@@ -4525,6 +4928,13 @@
         if (handled) return;
         handled = true;
         const dur = Date.now() - startT;
+
+        if (data && data.authRequired && getAuthSession()) {
+          setAuthSession(null);
+          renderAuthPanels();
+          delete window[callbackName];
+          return;
+        }
 
         applyCloudSettings(data.settings);
         if (data.settingsRaw && typeof data.settingsRaw === 'object') {
@@ -4574,7 +4984,7 @@
       };
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getLiveData&_rnd=${Date.now()}&callback=${callbackName}`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=getLiveData&_rnd=${Date.now()}&callback=${callbackName}`;
       script.onerror = function() {
         logEventToCloud('sync_error', 'database', 'live', 'Eroare sincronizare rapidă', 'ERROR');
       };
@@ -5127,7 +5537,7 @@
       renderNoteBibliaList();
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=softDeleteNoteAnania&rowIds=${rowIds.join(',')}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=softDeleteNoteAnania&rowIds=${rowIds.join(',')}&callback=void`;
       document.body.appendChild(script);
 
       const msg = rowIds.length === 1 ? "Notă ștearsă." : `${rowIds.length} note șterse.`;
@@ -5140,7 +5550,7 @@
       showToast("Ștergere anulată!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=restoreNoteAnania&rowIds=${rowIds.join(',')}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=restoreNoteAnania&rowIds=${rowIds.join(',')}&callback=void`;
       document.body.appendChild(script);
     }
     function renderNoteBibliaSelectionBar() {
@@ -5185,7 +5595,7 @@
       showToast('Notă actualizată!');
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateNoteAnania&rowId=${rowId}&textVerset=${encodeURIComponent(textVerset)}&context=${encodeURIComponent(context)}&nota=${encodeURIComponent(nota)}&capitolProgres=${encodeURIComponent(capitolProgres)}&derventUrl=${encodeURIComponent(derventUrl)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateNoteAnania&rowId=${rowId}&textVerset=${encodeURIComponent(textVerset)}&context=${encodeURIComponent(context)}&nota=${encodeURIComponent(nota)}&capitolProgres=${encodeURIComponent(capitolProgres)}&derventUrl=${encodeURIComponent(derventUrl)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -6037,7 +6447,7 @@
       logEventToCloud('update_psaltire_batch', 'psaltire', 'batchSize', `Număr pomenire psaltire setat la ${val}`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&psaltireBatchSize=${encodeURIComponent(psaltireBatchSize)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&psaltireBatchSize=${encodeURIComponent(psaltireBatchSize)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -6211,7 +6621,7 @@
         }
         showToast("Persoană actualizată!");
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePsaltirePerson&rowId=${editingPsaltireRowId}&nume=${encodeURIComponent(nume)}§iune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updatePsaltirePerson&rowId=${editingPsaltireRowId}&nume=${encodeURIComponent(nume)}§iune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&callback=void`;
         document.body.appendChild(script);
       } else {
         const newRowId = psaltireGrupData.length + 2;
@@ -6226,7 +6636,7 @@
         });
         showToast("Persoană adăugată în grup!");
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addPsaltirePerson&nume=${encodeURIComponent(nume)}§iune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&numarRand=${psaltireGrupData.length}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addPsaltirePerson&nume=${encodeURIComponent(nume)}§iune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&numarRand=${psaltireGrupData.length}&callback=void`;
         document.body.appendChild(script);
       }
 
@@ -6242,7 +6652,7 @@
       showToast("Persoană ștearsă din grup!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deletePsaltirePerson&rowId=${rowId}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deletePsaltirePerson&rowId=${rowId}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -6503,7 +6913,7 @@
             renderDrillDownList();
             showToast(`Status actualizat: ${act.paymentStatus}`);
             const script = document.createElement('script');
-            script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify([id]))}&status=${encodeURIComponent(act.paymentStatus)}&dataAchitat=&comentariuPlata=&callback=void`;
+            script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify([id]))}&status=${encodeURIComponent(act.paymentStatus)}&dataAchitat=&comentariuPlata=&callback=void`;
             document.body.appendChild(script);
           },
           "Revenire pe neachitat"
@@ -6519,7 +6929,7 @@
       showToast(`Status actualizat: ${act.paymentStatus}`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify([id]))}&status=${encodeURIComponent(act.paymentStatus)}&dataAchitat=${encodeURIComponent(act.dataAchitat)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify([id]))}&status=${encodeURIComponent(act.paymentStatus)}&dataAchitat=${encodeURIComponent(act.dataAchitat)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -6537,7 +6947,7 @@
       showToast(`${ids.length} activități marcate ca Achitat!`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify(ids))}&status=Achitat&dataAchitat=${encodeURIComponent(todayStr)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=batchUpdateSchoolStatus&ids=${encodeURIComponent(JSON.stringify(ids))}&status=Achitat&dataAchitat=${encodeURIComponent(todayStr)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -6559,7 +6969,7 @@
       const script = document.createElement('script');
       const curUser = (typeof getCurrentLoggedInUser === 'function') ? getCurrentLoggedInUser() : 'Bogdan Murar';
       const detalii = `Activitate "${act.title}" (${act.child}, ${act.date}) revenită pe neachitat. Data achitării anterioară: ${act.dataAchitat || '-'}, comentariu anterior: ${act.comentariuPlata || '-'}.`;
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=logAppEvent&modul=Scoala&actiune=revert_plata&status=WARNING&detalii=${encodeURIComponent(detalii)}&user=${encodeURIComponent(curUser)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=logAppEvent&modul=Scoala&actiune=revert_plata&status=WARNING&detalii=${encodeURIComponent(detalii)}&user=${encodeURIComponent(curUser)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -6983,7 +7393,7 @@
         showToast("Activitate modificată cu succes!");
 
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify([targetAct]))}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify([targetAct]))}&callback=void`;
         document.body.appendChild(script);
 
         cancelSchoolActivityEdit();
@@ -7023,7 +7433,7 @@
       showToast("Activitate salvată!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(payload))}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(payload))}&callback=void`;
       document.body.appendChild(script);
 
       renderSchoolDisplay();
@@ -7072,7 +7482,7 @@
       showToast(`${updatedPayload.length} activități actualizate la calup!`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(updatedPayload))}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(updatedPayload))}&callback=void`;
       document.body.appendChild(script);
 
       cancelSchoolActivityEdit();
@@ -7085,7 +7495,7 @@
       showToast("Activitate ștearsă!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteSchoolActivity&id=${encodeURIComponent(id)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deleteSchoolActivity&id=${encodeURIComponent(id)}&callback=void`;
       document.body.appendChild(script);
 
       renderSchoolDisplay();
@@ -7156,7 +7566,7 @@
         showToast("Notiță actualizată!");
 
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGand&rowId=${editingGandRowId}&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGand&rowId=${editingGandRowId}&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&callback=void`;
         document.body.appendChild(script);
 
         cancelGandEdit();
@@ -7171,7 +7581,7 @@
         document.getElementById('gandInput').focus(); // Cursorul revine automat!
 
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&callback=void`;
         document.body.appendChild(script);
       }
 
@@ -7214,7 +7624,7 @@
       updateTodayWidgetView();
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=softDeleteGand&rowIds=${rowIds.join(',')}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=softDeleteGand&rowIds=${rowIds.join(',')}&callback=void`;
       document.body.appendChild(script);
 
       const msg = rowIds.length === 1 ? "Notiță ștearsă." : `${rowIds.length} notițe șterse.`;
@@ -7229,7 +7639,7 @@
       showToast("Ștergere anulată!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=restoreGand&rowIds=${rowIds.join(',')}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=restoreGand&rowIds=${rowIds.join(',')}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -7431,7 +7841,7 @@
       document.getElementById('shopProdus').focus(); // Cursorul revine automat!
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&author=${encodeURIComponent(deviceName)}&nuPartaja=${nuPartaja ? 'true' : 'false'}&owner=${encodeURIComponent(curUser)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&author=${encodeURIComponent(deviceName)}&nuPartaja=${nuPartaja ? 'true' : 'false'}&owner=${encodeURIComponent(curUser)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -7447,7 +7857,7 @@
       showToast("Cumpărat!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteCumparaturi&rowId=${rowId}&produs=${encodeURIComponent(produsText)}&magazin=${encodeURIComponent(magazinText)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deleteCumparaturi&rowId=${rowId}&produs=${encodeURIComponent(produsText)}&magazin=${encodeURIComponent(magazinText)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -7459,7 +7869,7 @@
       showToast(`Tot magazinul ${magazin} cumpărat!`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteMagazinCumparaturi&magazin=${encodeURIComponent(magazin)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deleteMagazinCumparaturi&magazin=${encodeURIComponent(magazin)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -7617,7 +8027,7 @@
       showToast("Toate notificările au fost salvate!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=saveNotificationConfigs&configJson=${encodeURIComponent(JSON.stringify(config))}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveNotificationConfigs&configJson=${encodeURIComponent(JSON.stringify(config))}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -8042,7 +8452,7 @@
       showToast(`${idsArray.length} persoane actualizate!`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateAtentie&rowIds=${idsArray.join(',')}&necesitaAtentie=${flagValue}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=batchUpdateAtentie&rowIds=${idsArray.join(',')}&necesitaAtentie=${flagValue}&callback=void`;
       document.body.appendChild(script);
 
       cancelSelection();
@@ -8061,7 +8471,7 @@
       showToast(`${idsArray.length} persoane ${newFlag ? 'adăugate în' : 'scoase din'} Pomelnicul Andreei!`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=batchUpdateAndreea&rowIds=${idsArray.join(',')}&pomelnicAndreea=${newFlag}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=batchUpdateAndreea&rowIds=${idsArray.join(',')}&pomelnicAndreea=${newFlag}&callback=void`;
       document.body.appendChild(script);
 
       cancelSelection();
@@ -8108,7 +8518,7 @@
       showToast(p.necesitaAtentie ? "Setat: Atenție!" : "Scos!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${rowId}&necesitaAtentie=${p.necesitaAtentie}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updatePerson&rowId=${rowId}&necesitaAtentie=${p.necesitaAtentie}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -8258,7 +8668,7 @@
       showToast("Modificări salvate!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(selectedPersonForEdit.prenume)}&nume=${encodeURIComponent(selectedPersonForEdit.nume)}&grad=${encodeURIComponent(selectedPersonForEdit.grad)}&info=${encodeURIComponent(selectedPersonForEdit.info)}&stare=${encodeURIComponent(selectedPersonForEdit.stare)}&necesitaAtentie=${selectedPersonForEdit.necesitaAtentie}&dn=${encodeURIComponent(selectedPersonForEdit.dn)}&dnAprox=${selectedPersonForEdit.dnAprox}&da=${encodeURIComponent(selectedPersonForEdit.da)}&daAprox=${selectedPersonForEdit.daAprox}&istoricMedical=${encodeURIComponent(selectedPersonForEdit.istoricMedical)}&bolnav=${selectedPersonForEdit.bolnav}&pomelnicAndreea=${selectedPersonForEdit.pomelnicAndreea}&copii=${encodeURIComponent(selectedPersonForEdit.copii)}&sot=${encodeURIComponent(selectedPersonForEdit.sot)}&parinti=${encodeURIComponent(selectedPersonForEdit.parinti)}&apropiati=${encodeURIComponent(selectedPersonForEdit.apropiati)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updatePerson&rowId=${selectedPersonForEdit.rowId}&prenume=${encodeURIComponent(selectedPersonForEdit.prenume)}&nume=${encodeURIComponent(selectedPersonForEdit.nume)}&grad=${encodeURIComponent(selectedPersonForEdit.grad)}&info=${encodeURIComponent(selectedPersonForEdit.info)}&stare=${encodeURIComponent(selectedPersonForEdit.stare)}&necesitaAtentie=${selectedPersonForEdit.necesitaAtentie}&dn=${encodeURIComponent(selectedPersonForEdit.dn)}&dnAprox=${selectedPersonForEdit.dnAprox}&da=${encodeURIComponent(selectedPersonForEdit.da)}&daAprox=${selectedPersonForEdit.daAprox}&istoricMedical=${encodeURIComponent(selectedPersonForEdit.istoricMedical)}&bolnav=${selectedPersonForEdit.bolnav}&pomelnicAndreea=${selectedPersonForEdit.pomelnicAndreea}&copii=${encodeURIComponent(selectedPersonForEdit.copii)}&sot=${encodeURIComponent(selectedPersonForEdit.sot)}&parinti=${encodeURIComponent(selectedPersonForEdit.parinti)}&apropiati=${encodeURIComponent(selectedPersonForEdit.apropiati)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -8322,7 +8732,7 @@
       showToast("Persoană adăugată în Pomelnic!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=addPerson&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&dn=${encodeURIComponent(dn)}&dnAprox=${dnAprox}&da=${encodeURIComponent(da)}&daAprox=${daAprox}&istoricMedical=${encodeURIComponent(istoricMedical)}&bolnav=${bolnav}&pomelnicAndreea=${pomelnicAndreea}&copii=${encodeURIComponent(copii)}&sot=${encodeURIComponent(sot)}&parinti=${encodeURIComponent(parinti)}&apropiati=${encodeURIComponent(apropiati)}&isActivPomelnic=${isActivPomelnic}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addPerson&prenume=${encodeURIComponent(prenume)}&nume=${encodeURIComponent(nume)}&grad=${encodeURIComponent(grad)}&info=${encodeURIComponent(info)}&stare=${encodeURIComponent(stare)}&necesitaAtentie=${necesitaAtentie}&dn=${encodeURIComponent(dn)}&dnAprox=${dnAprox}&da=${encodeURIComponent(da)}&daAprox=${daAprox}&istoricMedical=${encodeURIComponent(istoricMedical)}&bolnav=${bolnav}&pomelnicAndreea=${pomelnicAndreea}&copii=${encodeURIComponent(copii)}&sot=${encodeURIComponent(sot)}&parinti=${encodeURIComponent(parinti)}&apropiati=${encodeURIComponent(apropiati)}&isActivPomelnic=${isActivPomelnic}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -8598,7 +9008,7 @@
       markBooksReadByName(pos.carteCanonica, checked);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=setModelCitirePozitieBifat&rowId=${rowId}&bifat=${checked}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=setModelCitirePozitieBifat&rowId=${rowId}&bifat=${checked}&callback=void`;
       document.body.appendChild(script);
 
       renderModelCitirePanel();
@@ -9029,6 +9439,7 @@
       }
       applyPomelnicNamesInWidgetVisibility();
       renderOwnerWidgetsSettingsList();
+      applyAuthPermissionsUI();
     }
 
     function toggleAllSharedWidgets(state) {
@@ -9048,7 +9459,7 @@
       localStorage.setItem('diih_sharing_config', JSON.stringify(sharingConfig));
       showToast("Configurația widget-urilor pentru familie salvată!");
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&sharingConfigJson=${encodeURIComponent(JSON.stringify(sharingConfig))}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&sharingConfigJson=${encodeURIComponent(JSON.stringify(sharingConfig))}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -9127,6 +9538,7 @@
         const el = document.getElementById(`navOpt_${m}`);
         if (el && m !== 'today') el.checked = navList.includes(m);
       });
+      applyAuthPermissionsUI();
     }
 
     function registerServiceWorker() {
@@ -9158,7 +9570,7 @@
         delete window[callbackName];
       };
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=getInventoryData&_rnd=${Date.now()}&callback=${callbackName}`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=getInventoryData&_rnd=${Date.now()}&callback=${callbackName}`;
       script.onerror = () => showToast("Eroare la încărcarea inventarului.");
       document.body.appendChild(script);
     }
@@ -9696,7 +10108,7 @@
       showToast(editingInventoryId ? "Obiect actualizat!" : "Obiect adăugat în inventar!");
 
       const params = new URLSearchParams({
-        token: API_TOKEN, action, id: itemId, name, category, space, qty, status, value,
+        ...apiAuthParams(), action, id: itemId, name, category, space, qty, status, value,
         purchaseDate, nextMaintenance, notes, photoBase64, historyJson: JSON.stringify(history), callback: 'void'
       });
       const script = document.createElement('script');
@@ -9713,7 +10125,7 @@
       showToast("Obiect șters din inventar!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=deleteInventoryItem&id=${encodeURIComponent(editingInventoryId)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deleteInventoryItem&id=${encodeURIComponent(editingInventoryId)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -9750,7 +10162,7 @@
       showToast(`Obiect mutat în: ${newSpace}`);
 
       const params = new URLSearchParams({
-        token: API_TOKEN, action: 'updateInventoryItem', id: item.id, name: item.name, category: item.category,
+        ...apiAuthParams(), action: 'updateInventoryItem', id: item.id, name: item.name, category: item.category,
         space: newSpace, qty: item.qty, status: item.status, value: item.value, purchaseDate: item.purchaseDate,
         nextMaintenance: item.nextMaintenance, notes: item.notes, photoBase64: item.photoBase64 || '',
         historyJson: JSON.stringify(history), callback: 'void'
@@ -9898,7 +10310,7 @@
       logEventToCloud('admin_sharing_update', 'admin', existingToken, `Partajare actualizată: module [${modules.join(', ')}]`);
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?token=${API_TOKEN}&action=updateGlobalSettings&sharingConfigJson=${encodeURIComponent(JSON.stringify(sharingConfig))}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&sharingConfigJson=${encodeURIComponent(JSON.stringify(sharingConfig))}&callback=void`;
       document.body.appendChild(script);
     }
 
