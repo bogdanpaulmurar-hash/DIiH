@@ -1291,7 +1291,8 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v22.0 (Build 2026-10-08)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v23.0 (Build 2026-10-15)</span>
+            <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
             <a href="https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit" target="_blank" rel="noopener" class="w-full flex items-center justify-center space-x-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 py-2 rounded-xl font-bold hover:bg-emerald-900 transition">
               <span>📑</span>
@@ -3075,7 +3076,7 @@
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'DIiH v22 pornit');
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH v23 pornit');
 
       applySharedModeIfNeeded();
 
@@ -4450,6 +4451,11 @@
           allGandulZilei = data.gandulZilei;
           localStorage.setItem('diih_gandul_zilei', JSON.stringify(allGandulZilei));
           if (allGandulZilei.length === 0) seedGandulZileiIfNeeded();
+        }
+        const backendLabel = document.getElementById('backendVersionLabel');
+        if (backendLabel) {
+          backendLabel.textContent = data.backendVersion ? `v${data.backendVersion} ✅` : 'versiune veche (fără v23) — fă deploy la _API.gs';
+          backendLabel.className = data.backendVersion ? 'font-mono text-emerald-400' : 'font-mono text-amber-400';
         }
         if (data.modelCitire && Array.isArray(data.modelCitire)) {
           allModelCitire = data.modelCitire;
@@ -8311,7 +8317,7 @@
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
-      a.download = `diih_backup_v21_${Date.now()}.json`;
+      a.download = `diih_backup_v23_${Date.now()}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

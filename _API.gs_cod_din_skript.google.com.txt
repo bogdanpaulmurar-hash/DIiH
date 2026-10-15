@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v18
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v23.0
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -8,6 +8,7 @@
  */
 
 const API_SECURITY_TOKEN = "diih_secret_2026_bm";
+const BACKEND_VERSION = "23.0";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -694,6 +695,7 @@ function doGet(e) {
 
   const notesList = getGanduriData(ss);
   const responseData = {
+    backendVersion: BACKEND_VERSION,
     settings: getSettingsData(ss),
     settingsRaw: getAllSettingsRaw(ss),
     pomelnic: getPomelnicData(ss),
