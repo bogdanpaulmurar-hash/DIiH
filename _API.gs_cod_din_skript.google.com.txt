@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v23.0
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v23.1
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -8,7 +8,7 @@
  */
 
 const API_SECURITY_TOKEN = "diih_secret_2026_bm";
-const BACKEND_VERSION = "23.0";
+const BACKEND_VERSION = "23.1";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -20,14 +20,16 @@ function getSpreadsheet() {
 }
 
 function doGet(e) {
-  const token = e.parameter.token;
-  if (token !== API_SECURITY_TOKEN) {
-    return ContentService.createTextOutput(JSON.stringify({ error: "Acces neautorizat!" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
   const ss = getSpreadsheet();
   const action = e.parameter.action;
+
+  // 0. AUTENTIFICARE (v23.1): login Google / cod de asociere sunt publice; restul cere sesiune
+  //    (sau tokenul vechi, cât timp modul e "tranzitie") și dreptul pe modulul acțiunii
+  if (AUTH_PUBLIC_ACTIONS.indexOf(action) !== -1) return authHandleAction(ss, e, action, null);
+  const auth = authenticateRequest(ss, e);
+  if (!auth.ok) return returnResponse(e, { error: auth.error, authRequired: true });
+  if (!authIsActionAllowed(auth, action)) return returnResponse(e, { error: "Nu ai drept pentru această acțiune.", forbidden: true });
+  if (action && action.indexOf("auth") === 0) return authHandleAction(ss, e, action, auth);
 
   // 1. AUDIT AVANSAT ÎN LOG_Sistem
   if (action === "logEvent") {
@@ -85,6 +87,8 @@ function doGet(e) {
       sh.appendRow(["Cheie", "Valoare", "UltimaModificare"]);
       sh.getRange("A1:C1").setFontWeight("bold");
     }
+    // Cheile auth_* (ex. auth_mode) se schimbă doar prin acțiunile de autentificare
+    if (e.parameter.key && e.parameter.key.indexOf("auth_") === 0) return returnResponse(e, { success: false, error: "Cheie rezervată." });
     if (e.parameter.key) setSettingValue(sh, e.parameter.key, e.parameter.value || "");
     return returnResponse(e, { success: true });
   }
@@ -690,7 +694,7 @@ function doGet(e) {
       schoolActivities: getSchoolActivitiesData(ss),
       psaltireGrup: getPsaltireGrupData(ss)
     };
-    return returnResponse(e, liveData);
+    return returnResponse(e, authFilterResponse(liveData, auth, ss));
   }
 
   const notesList = getGanduriData(ss);
@@ -710,7 +714,7 @@ function doGet(e) {
     psaltireGrup: getPsaltireGrupData(ss)
   };
 
-  return returnResponse(e, responseData);
+  return returnResponse(e, authFilterResponse(responseData, auth, ss));
 }
 
 function returnResponse(e, data) {
@@ -1389,14 +1393,13 @@ function getOrCreateAppDriveFolder(ss) {
  * prea mică pentru poze reale. Token-ul se verifică la fel ca la doGet.
  */
 function doPost(e) {
-  const token = e.parameter.token;
-  if (token !== API_SECURITY_TOKEN) {
-    return ContentService.createTextOutput(JSON.stringify({ error: "Acces neautorizat!" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
   const ss = getSpreadsheet();
   const action = e.parameter.action;
+  const auth = authenticateRequest(ss, e);
+  if (!auth.ok || !authIsActionAllowed(auth, action)) {
+    return ContentService.createTextOutput(JSON.stringify({ error: auth.ok ? "Nu ai drept pentru această acțiune." : auth.error, authRequired: !auth.ok }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 
   if (action === "uploadDriveFile") {
     try {
@@ -1417,10 +1420,16 @@ function doPost(e) {
 }
 
 // Returnează conținutul unui fișier din Drive ca base64, pentru afișare în <img> cu data: URI
-// (evită partajarea publică a fișierului; accesul rămâne protejat de tokenul aplicației)
+// (evită partajarea publică a fișierului). Doar fișierele din folderul aplicației (DIiH_App_Fisiere) pot fi citite,
+// altfel oricine cu acces la API ar putea citi orice fișier din Drive-ul proprietarului, știindu-i ID-ul.
 function getDriveImageAsBase64(ss, fileId) {
   try {
     const file = DriveApp.getFileById(fileId);
+    const appFolderId = getOrCreateAppDriveFolder(ss).getId();
+    const parents = file.getParents();
+    let inAppFolder = false;
+    while (parents.hasNext()) { if (parents.next().getId() === appFolderId) inAppFolder = true; }
+    if (!inAppFolder) return { success: false, error: "Fișierul nu aparține folderului aplicației." };
     const blob = file.getBlob();
     return {
       success: true,
@@ -1430,4 +1439,373 @@ function getDriveImageAsBase64(ss, fileId) {
   } catch (e) {
     return { success: false, error: e.message || String(e) };
   }
+}
+
+// =====================================================================================================
+// AUTENTIFICARE (v23.1): login cu Google + sesiuni + permisiuni pe profil
+// - Google confirmă DOAR identitatea (emailul). Cine are acces și la ce se decide în tabul "Profile".
+// - Sesiunile se țin în tabul "Sesiuni" (doar hash-ul tokenului, nu tokenul în clar).
+// - Mod "tranzitie" (implicit): tokenul vechi API_SECURITY_TOKEN mai funcționează, ca admin.
+//   Mod "strict" (cheia auth_mode din Setari, se schimbă doar de un admin logat): doar sesiuni Google.
+// =====================================================================================================
+const GOOGLE_CLIENT_ID = "958493435354-6287uhsb9a4qhq1hha44j02r1if1jjcr.apps.googleusercontent.com";
+const SESSION_DAYS = 30;
+const PAIR_CODE_MINUTES = 15;
+const AUTH_MODULES = ["pomelnic", "scoala", "psaltire", "notite", "cumparaturi", "inventar", "gandul", "scriptura", "biblia360", "setari"];
+const AUTH_PUBLIC_ACTIONS = ["authGoogle", "authPair"];
+const AUTH_ADMIN_ACTIONS = ["authListProfiles", "authSaveProfile", "authRevokeSessions", "authCreatePairCode", "authSetMode"];
+
+// Acțiune -> [modul, nivel minim]. "*" = orice utilizator logat. Acțiunile nelistate cer rol de admin.
+const AUTH_ACTION_RULES = {
+  getAllData: ["*", "view"], getLiveData: ["*", "view"], getSettingsRaw: ["*", "view"], getDriveImage: ["*", "view"],
+  logEvent: ["*", "view"], logAppEvent: ["*", "view"], authMe: ["*", "view"], authLogout: ["*", "view"],
+  updateGlobalSettings: ["setari", "edit"], setSettingRaw: ["setari", "edit"], saveNotificationConfigs: ["setari", "edit"],
+  uploadDriveFile: ["setari", "edit"],
+  saveSchoolActivities: ["scoala", "edit"], deleteSchoolActivity: ["scoala", "edit"], batchUpdateSchoolStatus: ["scoala", "edit"],
+  addPsaltirePerson: ["psaltire", "edit"], updatePsaltirePerson: ["psaltire", "edit"], deletePsaltirePerson: ["psaltire", "edit"],
+  addNotita: ["notite", "edit"], updateNotita: ["notite", "edit"], deleteNotita: ["notite", "edit"],
+  restoreGand: ["notite", "edit"], softDeleteGand: ["notite", "edit"],
+  addCumparaturi: ["cumparaturi", "edit"], deleteCumparaturi: ["cumparaturi", "edit"], deleteMagazinCumparaturi: ["cumparaturi", "edit"],
+  addPerson: ["pomelnic", "edit"], updatePerson: ["pomelnic", "edit"], batchUpdateAndreea: ["pomelnic", "edit"], batchUpdateAtentie: ["pomelnic", "edit"],
+  getInventoryData: ["inventar", "view"], addInventoryItem: ["inventar", "edit"], updateInventoryItem: ["inventar", "edit"], deleteInventoryItem: ["inventar", "edit"],
+  getGandulZileiData: ["gandul", "view"], addGandulZilei: ["gandul", "edit"], updateGandulZilei: ["gandul", "edit"], seedGandulZileiIfEmpty: ["gandul", "edit"],
+  getModelCitireData: ["scriptura", "view"], setModelCitirePozitieBifat: ["scriptura", "edit"],
+  updateNoteAnania: ["scriptura", "edit"], restoreNoteAnania: ["scriptura", "edit"], softDeleteNoteAnania: ["scriptura", "edit"]
+};
+
+// Ce cheie din răspunsul de sincronizare ține de ce modul (cheile nelistate, ex. settings, se trimit tuturor)
+const AUTH_RESPONSE_MODULES = {
+  pomelnic: "pomelnic", cumparaturi: "cumparaturi", ganduri: "notite", notite: "notite", gandulZilei: "gandul",
+  modelCitire: "scriptura", noteAnania: "scriptura", bibliaBVA: "biblia360", schoolActivities: "scoala", psaltireGrup: "psaltire"
+};
+
+function authRoleDefaults(rol) {
+  const perms = {};
+  AUTH_MODULES.forEach(m => { perms[m] = (rol === "admin" || rol === "membru") ? "edit" : "none"; });
+  if (rol === "copil") {
+    perms.scriptura = "edit";
+    perms.gandul = "view";
+    perms.biblia360 = "view";
+  }
+  return perms;
+}
+
+function authLevelOk(have, need) {
+  const order = { none: 0, view: 1, edit: 2 };
+  return (order[have] || 0) >= (order[need] || 0);
+}
+
+function authSha256(text) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, text, Utilities.Charset.UTF_8)
+    .map(b => ((b + 256) % 256).toString(16).padStart(2, "0")).join("");
+}
+
+function authNow() {
+  return Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+}
+
+function getOrCreateProfileSheet(ss) {
+  let sh = ss.getSheetByName("Profile");
+  if (!sh) {
+    sh = ss.insertSheet("Profile");
+    sh.appendRow(["Email", "Nume", "Rol", "Activ", "Permisiuni", "Widgeturi", "Meniu", "Titlu", "Logo", "PozaFileId", "IconaFileId", "ActualizatLa"]);
+    sh.getRange("A1:L1").setFontWeight("bold");
+  }
+  return sh;
+}
+
+function getOrCreateSessionSheet(ss) {
+  let sh = ss.getSheetByName("Sesiuni");
+  if (!sh) {
+    sh = ss.insertSheet("Sesiuni");
+    sh.appendRow(["TokenHash", "Email", "Creat", "Expira", "Dispozitiv", "Revocat"]);
+    sh.getRange("A1:F1").setFontWeight("bold");
+  }
+  return sh;
+}
+
+function authGetProfiles(ss) {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get("auth_profiles");
+  if (cached) return JSON.parse(cached);
+  const sh = getOrCreateProfileSheet(ss);
+  const out = [];
+  if (sh.getLastRow() >= 2) {
+    sh.getRange(2, 1, sh.getLastRow() - 1, 12).getValues().forEach((r, i) => {
+      const email = (r[0] || "").toString().trim().toLowerCase();
+      if (!email) return;
+      const rol = ["admin", "membru", "copil"].indexOf((r[2] || "").toString().trim().toLowerCase()) !== -1
+        ? (r[2] || "").toString().trim().toLowerCase() : "membru";
+      let custom = {};
+      try { custom = r[4] ? JSON.parse(r[4].toString()) : {}; } catch (err) { custom = {}; }
+      out.push({
+        rowId: i + 2,
+        email: email,
+        nume: (r[1] || "").toString().trim(),
+        rol: rol,
+        activ: (r[3] || "DA").toString().trim().toUpperCase() !== "NU",
+        permisiuni: Object.assign(authRoleDefaults(rol), custom),
+        permisiuniCustom: custom,
+        widgeturi: (r[5] || "").toString().split(",").map(s => s.trim()).filter(s => s),
+        meniu: (r[6] || "").toString().split(",").map(s => s.trim()).filter(s => s),
+        titlu: (r[7] || "").toString(),
+        logo: (r[8] || "").toString(),
+        pozaFileId: (r[9] || "").toString(),
+        iconaFileId: (r[10] || "").toString(),
+        actualizatLa: r[11] ? r[11].toString() : ""
+      });
+    });
+  }
+  cache.put("auth_profiles", JSON.stringify(out), 300);
+  return out;
+}
+
+function authFindProfile(ss, email) {
+  const e = (email || "").toString().trim().toLowerCase();
+  return authGetProfiles(ss).find(p => p.email === e) || null;
+}
+
+function authPublicProfile(p) {
+  return {
+    email: p.email, nume: p.nume, rol: p.rol, permisiuni: p.permisiuni, widgeturi: p.widgeturi, meniu: p.meniu,
+    titlu: p.titlu, logo: p.logo, pozaFileId: p.pozaFileId, iconaFileId: p.iconaFileId
+  };
+}
+
+function authGetMode(ss) {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get("auth_mode");
+  if (cached) return cached;
+  const mode = (getAllSettingsRaw(ss)["auth_mode"] || "tranzitie") === "strict" ? "strict" : "tranzitie";
+  cache.put("auth_mode", mode, 60);
+  return mode;
+}
+
+function authCreateSession(ss, email, device) {
+  const token = Utilities.getUuid().replace(/-/g, "") + Utilities.getUuid().replace(/-/g, "");
+  const exp = new Date(Date.now() + SESSION_DAYS * 24 * 3600 * 1000);
+  const expStr = Utilities.formatDate(exp, "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+  getOrCreateSessionSheet(ss).appendRow([authSha256(token), email, authNow(), expStr, (device || "").toString().slice(0, 80), "NU"]);
+  return { token: token, expira: expStr };
+}
+
+function authFindSession(ss, token) {
+  const hash = authSha256(token);
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get("sess_" + hash);
+  if (cached) {
+    const c = JSON.parse(cached);
+    if (c.exp > Date.now()) return c;
+  }
+  const sh = getOrCreateSessionSheet(ss);
+  if (sh.getLastRow() < 2) return null;
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 6).getValues();
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (rows[i][0] !== hash) continue;
+    if ((rows[i][5] || "").toString().toUpperCase() === "DA") return null;
+    const exp = rows[i][3] instanceof Date ? rows[i][3].getTime() : new Date(rows[i][3].toString().replace(" ", "T")).getTime();
+    if (!exp || exp < Date.now()) return null;
+    const s = { email: rows[i][1].toString().toLowerCase(), exp: exp };
+    cache.put("sess_" + hash, JSON.stringify(s), Math.max(60, Math.min(21600, Math.floor((exp - Date.now()) / 1000))));
+    return s;
+  }
+  return null;
+}
+
+// Revocă sesiunile: după email (toate ale lui) sau după hash-ul unei singure sesiuni
+function authRevoke(ss, email, onlyHash) {
+  const sh = getOrCreateSessionSheet(ss);
+  if (sh.getLastRow() < 2) return 0;
+  const cache = CacheService.getScriptCache();
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 6).getValues();
+  let n = 0;
+  rows.forEach((r, i) => {
+    const match = onlyHash ? r[0] === onlyHash : r[1].toString().toLowerCase() === (email || "").toLowerCase();
+    if (match && (r[5] || "").toString().toUpperCase() !== "DA") {
+      sh.getRange(i + 2, 6).setValue("DA");
+      cache.remove("sess_" + r[0]);
+      n++;
+    }
+  });
+  return n;
+}
+
+// Verifică la Google că ID token-ul e valid, emis pentru aplicația noastră, cu email confirmat
+function authVerifyGoogleIdToken(idToken) {
+  if (!idToken) return null;
+  const res = UrlFetchApp.fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(idToken), { muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) return null;
+  const p = JSON.parse(res.getContentText());
+  if (p.aud !== GOOGLE_CLIENT_ID) return null;
+  if (p.iss !== "accounts.google.com" && p.iss !== "https://accounts.google.com") return null;
+  if (String(p.email_verified) !== "true") return null;
+  if (!p.exp || parseInt(p.exp, 10) * 1000 < Date.now()) return null;
+  return { email: (p.email || "").toLowerCase(), name: p.name || "" };
+}
+
+function authenticateRequest(ss, e) {
+  const p = e.parameter || {};
+  if (p.session) {
+    const s = authFindSession(ss, p.session);
+    if (!s) return { ok: false, error: "Sesiune expirată sau invalidă. Conectează-te din nou." };
+    const prof = authFindProfile(ss, s.email);
+    if (!prof || !prof.activ) return { ok: false, error: "Profilul nu există sau a fost dezactivat." };
+    return { ok: true, legacy: false, sessionHash: authSha256(p.session), profile: prof };
+  }
+  if (p.token && p.token === API_SECURITY_TOKEN && authGetMode(ss) !== "strict") {
+    return { ok: true, legacy: true, profile: { email: "", nume: "(token vechi)", rol: "admin", activ: true, permisiuni: authRoleDefaults("admin") } };
+  }
+  return { ok: false, error: "Acces neautorizat! Conectează-te cu Google." };
+}
+
+function authIsActionAllowed(auth, action) {
+  if (auth.profile.rol === "admin") return true;
+  if (AUTH_ADMIN_ACTIONS.indexOf(action) !== -1) return false;
+  const rule = AUTH_ACTION_RULES[action || "getAllData"];
+  if (!rule) return false;
+  if (rule[0] === "*") return true;
+  return authLevelOk(auth.profile.permisiuni[rule[0]], rule[1]);
+}
+
+// Scoate din răspunsul de sincronizare modulele la care profilul nu are drept de vizualizare
+function authFilterResponse(data, auth, ss) {
+  if (auth.profile.rol !== "admin") {
+    Object.keys(AUTH_RESPONSE_MODULES).forEach(k => {
+      if (k in data && !authLevelOk(auth.profile.permisiuni[AUTH_RESPONSE_MODULES[k]], "view")) data[k] = [];
+    });
+  }
+  data.auth = { legacy: auth.legacy, mode: authGetMode(ss), profile: auth.legacy ? null : authPublicProfile(auth.profile) };
+  return data;
+}
+
+function authHandleAction(ss, e, action, auth) {
+  const p = e.parameter || {};
+
+  if (action === "authGoogle") {
+    const g = authVerifyGoogleIdToken(p.idToken);
+    if (!g) return returnResponse(e, { success: false, error: "Login Google invalid sau expirat." });
+    let prof = authFindProfile(ss, g.email);
+    // Primul admin: dacă tabul Profile e gol, proprietarul scriptului devine admin (fără email scris în cod)
+    if (!prof && authGetProfiles(ss).length === 0 && g.email === (Session.getEffectiveUser().getEmail() || "").toLowerCase()) {
+      getOrCreateProfileSheet(ss).appendRow([g.email, g.name || "Admin", "admin", "DA", "", "", "", "", "", "", "", authNow()]);
+      CacheService.getScriptCache().remove("auth_profiles");
+      prof = authFindProfile(ss, g.email);
+    }
+    if (!prof || !prof.activ) {
+      logToAppSheet(ss, { modul: "Auth", actiune: "login_refuzat", status: "WARN", detalii: g.email, user: g.email });
+      return returnResponse(e, { success: false, error: "Contul " + g.email + " nu are acces. Cere-i administratorului să te adauge." });
+    }
+    const s = authCreateSession(ss, prof.email, p.device);
+    logToAppSheet(ss, { modul: "Auth", actiune: "login_google", status: "OK", detalii: p.device || "", user: prof.email });
+    return returnResponse(e, { success: true, sessionToken: s.token, expira: s.expira, profile: authPublicProfile(prof) });
+  }
+
+  if (action === "authPair") {
+    const code = (p.code || "").toString().trim().toUpperCase();
+    const cache = CacheService.getScriptCache();
+    const email = code ? cache.get("pair_" + authSha256(code)) : null;
+    if (!email) return returnResponse(e, { success: false, error: "Cod invalid sau expirat." });
+    cache.remove("pair_" + authSha256(code));
+    const prof = authFindProfile(ss, email);
+    if (!prof || !prof.activ) return returnResponse(e, { success: false, error: "Profilul nu există sau a fost dezactivat." });
+    const s = authCreateSession(ss, prof.email, p.device);
+    logToAppSheet(ss, { modul: "Auth", actiune: "login_cod", status: "OK", detalii: p.device || "", user: prof.email });
+    return returnResponse(e, { success: true, sessionToken: s.token, expira: s.expira, profile: authPublicProfile(prof) });
+  }
+
+  if (action === "authMe") {
+    return returnResponse(e, { success: true, mode: authGetMode(ss), legacy: auth.legacy, profile: auth.legacy ? null : authPublicProfile(auth.profile) });
+  }
+
+  if (action === "authLogout") {
+    if (auth.sessionHash) authRevoke(ss, null, auth.sessionHash);
+    return returnResponse(e, { success: true });
+  }
+
+  if (action === "authListProfiles") {
+    const counts = {};
+    const sh = getOrCreateSessionSheet(ss);
+    if (sh.getLastRow() >= 2) {
+      sh.getRange(2, 1, sh.getLastRow() - 1, 6).getValues().forEach(r => {
+        const exp = r[3] instanceof Date ? r[3].getTime() : new Date(r[3].toString().replace(" ", "T")).getTime();
+        if ((r[5] || "").toString().toUpperCase() !== "DA" && exp > Date.now()) {
+          const k = r[1].toString().toLowerCase();
+          counts[k] = (counts[k] || 0) + 1;
+        }
+      });
+    }
+    const list = authGetProfiles(ss).map(pr => Object.assign(authPublicProfile(pr), { activ: pr.activ, permisiuniCustom: pr.permisiuniCustom, sesiuniActive: counts[pr.email] || 0 }));
+    return returnResponse(e, { success: true, mode: authGetMode(ss), modules: AUTH_MODULES, profiles: list });
+  }
+
+  if (action === "authSaveProfile") {
+    const email = (p.email || "").toString().trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return returnResponse(e, { success: false, error: "Email invalid." });
+    const existing = authFindProfile(ss, email);
+    const rol = ["admin", "membru", "copil"].indexOf(p.rol) !== -1 ? p.rol : (existing ? existing.rol : "membru");
+    const activ = p.activ !== undefined ? (p.activ === "NU" ? "NU" : "DA") : (existing && !existing.activ ? "NU" : "DA");
+    if (!auth.legacy && email === auth.profile.email && (rol !== "admin" || activ === "NU")) {
+      return returnResponse(e, { success: false, error: "Nu îți poți scoate singur rolul de admin sau dezactiva propriul profil." });
+    }
+    let perms = "";
+    if (p.permisiuni) {
+      try {
+        const parsed = JSON.parse(p.permisiuni);
+        const clean = {};
+        Object.keys(parsed).forEach(k => { if (AUTH_MODULES.indexOf(k) !== -1 && ["none", "view", "edit"].indexOf(parsed[k]) !== -1) clean[k] = parsed[k]; });
+        perms = JSON.stringify(clean);
+      } catch (err) { return returnResponse(e, { success: false, error: "Permisiuni invalide." }); }
+    }
+    const sh = getOrCreateProfileSheet(ss);
+    const row = [email, (p.nume || "").toString(), rol, activ, perms, (p.widgeturi || "").toString(), (p.meniu || "").toString(),
+      (p.titlu || "").toString(), (p.logo || "").toString(), (p.pozaFileId || "").toString(), (p.iconaFileId || "").toString(), authNow()];
+    if (existing) {
+      // Câmpurile netrimise își păstrează valoarea existentă
+      const old = sh.getRange(existing.rowId, 1, 1, 12).getValues()[0];
+      const keys = ["email", "nume", "rol", "activ", "permisiuni", "widgeturi", "meniu", "titlu", "logo", "pozaFileId", "iconaFileId"];
+      keys.forEach((k, i) => { if (i > 3 && p[k] === undefined) row[i] = old[i]; });
+      if (p.nume === undefined) row[1] = old[1];
+      sh.getRange(existing.rowId, 1, 1, 12).setValues([row]);
+    } else {
+      sh.appendRow(row);
+    }
+    CacheService.getScriptCache().remove("auth_profiles");
+    if (activ === "NU") authRevoke(ss, email, null);
+    logToAppSheet(ss, { modul: "Auth", actiune: existing ? "profil_modificat" : "profil_adaugat", status: "OK", detalii: email + " / " + rol + " / " + activ, user: auth.profile.email || "token" });
+    return returnResponse(e, { success: true });
+  }
+
+  if (action === "authRevokeSessions") {
+    const n = authRevoke(ss, (p.email || "").toString(), null);
+    logToAppSheet(ss, { modul: "Auth", actiune: "sesiuni_revocate", status: "OK", detalii: (p.email || "") + " (" + n + ")", user: auth.profile.email || "token" });
+    return returnResponse(e, { success: true, revocate: n });
+  }
+
+  if (action === "authCreatePairCode") {
+    const prof = authFindProfile(ss, p.email);
+    if (!prof || !prof.activ) return returnResponse(e, { success: false, error: "Profil inexistent sau inactiv." });
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 8; i++) code += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+    CacheService.getScriptCache().put("pair_" + authSha256(code), prof.email, PAIR_CODE_MINUTES * 60);
+    logToAppSheet(ss, { modul: "Auth", actiune: "cod_asociere", status: "OK", detalii: prof.email, user: auth.profile.email || "token" });
+    return returnResponse(e, { success: true, code: code, expiraMinute: PAIR_CODE_MINUTES });
+  }
+
+  if (action === "authSetMode") {
+    const mode = p.mode === "strict" ? "strict" : "tranzitie";
+    // Modul strict se poate porni doar dintr-o sesiune Google de admin, ca să nu te blochezi singur pe dinafară
+    if (mode === "strict" && auth.legacy) return returnResponse(e, { success: false, error: "Pornește modul strict după ce te-ai conectat cu Google." });
+    let sh = ss.getSheetByName("Setari");
+    if (!sh) {
+      sh = ss.insertSheet("Setari");
+      sh.appendRow(["Cheie", "Valoare", "UltimaModificare"]);
+    }
+    setSettingValue(sh, "auth_mode", mode);
+    CacheService.getScriptCache().remove("auth_mode");
+    logToAppSheet(ss, { modul: "Auth", actiune: "mod_" + mode, status: "OK", detalii: "", user: auth.profile.email || "token" });
+    return returnResponse(e, { success: true, mode: mode });
+  }
+
+  return returnResponse(e, { success: false, error: "Acțiune de autentificare necunoscută." });
 }

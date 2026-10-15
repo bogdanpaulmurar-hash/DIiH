@@ -1,5 +1,21 @@
 # CHANGELOG — DIiH Hub
 
+## v23.1 — 2026-10-15 — Autentificare (backend)
+
+Doar backend (`_API.gs`); aplicația funcționează exact ca înainte, prin modul de tranziție.
+
+### Adăugat
+- **Login cu Google verificat pe server**: acțiunea `authGoogle` verifică la Google ID token-ul (client OAuth DIiH, email confirmat) și emite o sesiune de 30 de zile. În tabul `Sesiuni` se păstrează doar hash-ul tokenului.
+- **Tab nou `Profile`** (creat automat): `Email, Nume, Rol, Activ, Permisiuni, Widgeturi, Meniu, Titlu, Logo, PozaFileId, IconaFileId, ActualizatLa`. Roluri: admin / membru / copil. Permisiuni pe modul: none / view / edit (pomelnic, scoala, psaltire, notite, cumparaturi, inventar, gandul, scriptura, biblia360, setari).
+- **Primul admin fără email în cod**: dacă `Profile` e gol, proprietarul scriptului devine admin la primul login Google.
+- **Verificare la fiecare cerere**: acțiunile cer dreptul pe modulul lor; acțiunile necunoscute cer admin; sincronizarea nu mai trimite modulele fără drept de vizualizare.
+- **Administrare** (doar admin): `authListProfiles`, `authSaveProfile`, `authRevokeSessions`, `authCreatePairCode` (cod de asociere de 8 caractere, valabil 15 minute, pentru dispozitive fără login Google), `authSetMode`.
+- **Mod tranziție / strict** (cheia `auth_mode` din `Setari`): în tranziție tokenul vechi mai funcționează; modul strict se poate porni doar dintr-o sesiune Google de admin. Cheile `auth_*` nu se mai pot scrie prin `setSettingRaw`.
+- Login-urile, refuzurile și modificările de profil se scriu în `LOG_app`.
+
+### Corectat (securitate)
+- `getDriveImage` putea citi orice fișier din Drive-ul proprietarului, dacă i se știa ID-ul. Acum citește doar fișierele din folderul aplicației (`DIiH_App_Fisiere`).
+
 ## v23.0 — 2026-10-14
 
 Actualizare majoră: structuri noi de date (tab ModelCitire, tab GandulZilei, coloane noi în Scoala_Activitati), stocare de imagini în Google Drive, și o serie de corecturi și completări cerute pe modulele existente. Nu s-a modificat, șters sau redenumit nicio dată existentă — toate modificările pe Sheet sunt adăugări idempotente (verifică dacă lipsesc, apoi le creează).
