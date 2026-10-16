@@ -53,37 +53,36 @@ function adsLogin() {
   // cookie-urile inițiale ale site-ului (unele servere cer sesiunea înainte de login)
   try { adsCookiesFrom(UrlFetchApp.fetch(ADSERVIO_BASE + "/ro/auth", { muteHttpExceptions: true, followRedirects: false }), jar); } catch (e) {}
 
-  // Adservio cere și câmpul „intent” (pus de aplicația lor din cod). Încercăm valorile probabile;
-  // cea care merge se reține în Proprietăți script (ADSERVIO_INTENT) și se folosește prima data viitoare.
+  // Exact câmpurile trimise de aplicația Adservio din browser (intent=auth, setCookie=1 → sesiune prin cookie)
   const props = PropertiesService.getScriptProperties();
-  const saved = props.getProperty("ADSERVIO_INTENT");
-  const intents = [saved, "login", "auth", "signin", "sign_in", "authenticate", "authentication", "password", "credentials", "web"]
-    .filter((v, i, arr) => v && arr.indexOf(v) === i);
-  let last = "";
-  for (let i = 0; i < intents.length; i++) {
-    const fields = { uaUserName: cred.user, uaPassword: cred.pass, tokenLifetime: "1", intent: intents[i] };
-    const resp = UrlFetchApp.fetch(ADSERVIO_BASE + "/api/v2/auth", {
-      method: "post",
-      contentType: "application/x-www-form-urlencoded",
-      payload: fields,
-      headers: { Accept: "application/json", Cookie: adsCookieHeader(jar) },
-      muteHttpExceptions: true,
-      followRedirects: false
-    });
-    const code = resp.getResponseCode();
-    const text = resp.getContentText();
-    adsCookiesFrom(resp, jar);
-    let js = {};
-    try { js = JSON.parse(text); } catch (e) {}
-    if (code === 200 && js.atToken) {
-      if (saved !== intents[i]) props.setProperty("ADSERVIO_INTENT", intents[i]);
-      return { jar: jar, token: js.atToken, uaID: js.uaID, mode: null };
-    }
-    last = "HTTP " + code + ": " + text.substring(0, 200);
-    // altă eroare decât „intent” (ex. parolă greșită): nu mai insistăm, ca să nu blocăm contul
-    const errs = Array.isArray(js) ? js : [];
-    if (!errs.some(x => x && x.errorField === "intent")) break;
+  const tfaCookie = props.getProperty("ADSERVIO_TFA_TOKEN"); // opțional: dispozitiv de încredere, dacă va fi nevoie de 2FA
+  if (tfaCookie) jar.tfaToken = tfaCookie;
+  const fields = {
+    intent: "auth", uaUserName: cred.user, uaPassword: cred.pass, setCookie: "1",
+    tfaSave: "false", tfaOptID: "", tfaResponse: "", uaNewPassword: "", uaNewPassword2: "",
+    tokenLifetime: "1", recaptcha: ""
+  };
+  const resp = UrlFetchApp.fetch(ADSERVIO_BASE + "/api/v2/auth", {
+    method: "post",
+    contentType: "application/x-www-form-urlencoded",
+    payload: fields,
+    headers: { Accept: "application/json", Cookie: adsCookieHeader(jar) },
+    muteHttpExceptions: true,
+    followRedirects: false
+  });
+  const code = resp.getResponseCode();
+  const text = resp.getContentText();
+  adsCookiesFrom(resp, jar);
+  let js = {};
+  try { js = JSON.parse(text); } catch (e) {}
+  if (code === 200 && js.atToken) return { jar: jar, token: js.atToken, uaID: js.uaID, mode: null };
+  const errs = Array.isArray(js) ? js : [];
+  if (errs.some(x => x && String(x.errorCode) === "107")) {
+    // pentru pasul următor: tot răspunsul + numele cookie-urilor primite (fără valori)
+    Logger.log("2FA cerut. Răspuns complet: " + text + " | cookie-uri: " + Object.keys(jar).join(", "));
+    throw new Error("Adservio cere verificare în doi pași (2FA) pentru acest login. Trimite jurnalul complet ca să adăugăm pasul cu codul.");
   }
+  const last = "HTTP " + code + ": " + text.substring(0, 200);
   throw new Error("Login Adservio eșuat (" + last + "). Verifică utilizatorul și parola din Proprietăți script.");
 }
 
