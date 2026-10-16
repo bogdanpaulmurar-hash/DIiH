@@ -1817,3 +1817,17 @@ function autorizeazaVerificareaGoogle() {
   const res = UrlFetchApp.fetch("https://oauth2.googleapis.com/tokeninfo?id_token=test", { muteHttpExceptions: true });
   Logger.log("Verificare Google OK (cod " + res.getResponseCode() + ")");
 }
+
+// Rulează O DATĂ din editor (Run) după orice schimbare de permisiuni. Google cere acordul doar pentru serviciile
+// atinse de funcția rulată, așa că aceasta le atinge pe toate cele folosite de aplicație, fără să modifice nimic.
+// În fereastra de autorizare, bifează TOATE permisiunile („Select all”) înainte de Continue.
+function autorizeazaToatePermisiunile() {
+  Logger.log("Sheets: " + getSpreadsheet().getName());
+  Logger.log("Drive: " + DriveApp.getRootFolder().getName());
+  Logger.log("Calendar: " + CalendarApp.getDefaultCalendar().getName());
+  Logger.log("Email: cotă zilnică " + MailApp.getRemainingDailyQuota());
+  Logger.log("Triggere: " + ScriptApp.getProjectTriggers().length);
+  Logger.log("Cont: " + Session.getEffectiveUser().getEmail());
+  Logger.log("Verificare Google: cod " + UrlFetchApp.fetch("https://oauth2.googleapis.com/tokeninfo?id_token=test", { muteHttpExceptions: true }).getResponseCode());
+  Logger.log("Toate permisiunile sunt acordate.");
+}
