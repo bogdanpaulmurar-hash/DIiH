@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.0
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.0.1
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.0";
+const BACKEND_VERSION = "24.0.1";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -524,14 +524,14 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
-  // 8. SALVARE CONFIGURĂRI NOTIFICĂRI ÎN SHEET
+  // 8. SALVARE CONFIGURĂRI NOTIFICĂRI ÎN SHEET — per profil (cheia notif_cfg_<email>), fiecare doar pe ale lui
   if (action === "saveNotificationConfigs") {
     let sh = ss.getSheetByName("Setari");
     if (!sh) {
       sh = ss.insertSheet("Setari");
       sh.appendRow(["Cheie", "Valoare", "UltimaModificare"]);
     }
-    setSettingValue(sh, "notifications_config_json", e.parameter.configJson);
+    setSettingValue(sh, "notif_cfg_" + auth.profile.email, e.parameter.configJson);
     return returnResponse(e, { success: true });
   }
 
@@ -741,10 +741,21 @@ function getAllSettingsRaw(ss) {
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
   rows.forEach(r => {
     const k = (r[0] || "").toString().trim();
-    if (SETTINGS_RAW_HIDDEN_KEYS.indexOf(k) !== -1 || k.indexOf("auth_") === 0) return;
+    if (SETTINGS_RAW_HIDDEN_KEYS.indexOf(k) !== -1 || k.indexOf("auth_") === 0 || k.indexOf("notif_cfg_") === 0) return;
     if (k) out[k] = (r[1] === undefined || r[1] === null) ? "" : r[1].toString();
   });
   return out;
+}
+
+// Citește valoarea unei chei din Setari (inclusiv chei ascunse aplicației, ex. notif_cfg_<email>)
+function getSettingValueRaw(ss, key) {
+  const sh = ss.getSheetByName("Setari");
+  if (!sh || sh.getLastRow() < 2) return "";
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
+  for (let i = 0; i < rows.length; i++) {
+    if ((rows[i][0] || "").toString().trim() === key) return (rows[i][1] || "").toString();
+  }
+  return "";
 }
 
 function getSettingsData(ss) {
@@ -1456,8 +1467,8 @@ const AUTH_ADMIN_ACTIONS = ["authListProfiles", "authSaveProfile", "authRevokeSe
 const AUTH_ACTION_RULES = {
   getAllData: ["*", "view"], getLiveData: ["*", "view"], getSettingsRaw: ["*", "view"], getDriveImage: ["*", "view"],
   logEvent: ["*", "view"], logAppEvent: ["*", "view"], authMe: ["*", "view"], authLogout: ["*", "view"],
-  authSaveMyProfile: ["setari", "edit"],
-  updateGlobalSettings: ["setari", "edit"], setSettingRaw: ["setari", "edit"], saveNotificationConfigs: ["setari", "edit"],
+  authSaveMyProfile: ["setari", "edit"], saveNotificationConfigs: ["*", "view"],
+  updateGlobalSettings: ["setari", "edit"], setSettingRaw: ["setari", "edit"],
   uploadDriveFile: ["setari", "edit"],
   saveSchoolActivities: ["scoala", "edit"], deleteSchoolActivity: ["scoala", "edit"], batchUpdateSchoolStatus: ["scoala", "edit"],
   addPsaltirePerson: ["psaltire", "edit"], updatePsaltirePerson: ["psaltire", "edit"], deletePsaltirePerson: ["psaltire", "edit"],
@@ -1664,6 +1675,12 @@ function authFilterResponse(data, auth, ss) {
       if (k in data && !authLevelOk(auth.profile.permisiuni[AUTH_RESPONSE_MODULES[k]], "view")) data[k] = [];
     });
   }
+  // Notificările sunt per profil: fiecare primește doar configurația lui (adminul preia, o singură dată,
+  // vechea configurație comună, dacă nu și-a salvat încă una proprie)
+  if (data.settings) {
+    const raw = ss.getSheetByName("Setari") ? getSettingValueRaw(ss, "notif_cfg_" + auth.profile.email) : "";
+    data.settings.notificationsJson = raw || (auth.profile.rol === "admin" ? data.settings.notificationsJson : "");
+  }
   data.auth = { legacy: auth.legacy, mode: authGetMode(ss), profile: auth.legacy ? null : authPublicProfile(auth.profile) };
   return data;
 }
@@ -1829,6 +1846,9 @@ function autorizeazaVerificareaGoogle() {
 function autorizeazaToatePermisiunile() {
   Logger.log("Sheets: " + getSpreadsheet().getName());
   Logger.log("Drive: " + DriveApp.getRootFolder().getName());
+  const appFolder = getOrCreateAppDriveFolder(getSpreadsheet());
+  appFolder.setDescription("Fișierele aplicației DIiH: poze de profil, iconițe, calendarul școlar.");
+  Logger.log("Drive (scriere): folderul aplicației " + appFolder.getName());
   Logger.log("Calendar: " + CalendarApp.getDefaultCalendar().getName());
   Logger.log("Email: cotă zilnică " + MailApp.getRemainingDailyQuota());
   Logger.log("Triggere: " + ScriptApp.getProjectTriggers().length);

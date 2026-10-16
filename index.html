@@ -1222,7 +1222,7 @@
             <div id="authStatusBox" class="p-3 bg-darkbg border border-bordercol rounded-xl space-y-2"></div>
 
             <!-- Poză de profil personalizată (Strict izolată per profil) -->
-            <div class="pt-2 border-t border-bordercol/50 space-y-2">
+            <div class="auth-setari-edit pt-2 border-t border-bordercol/50 space-y-2">
               <span class="text-[10px] text-slate-400 block font-bold uppercase">Poză de Profil (Header Avatar):</span>
               <div class="flex items-center space-x-3">
                 <img id="settingsProfilePicPreview" src="" class="hidden w-12 h-12 rounded-full object-cover border-2 border-cyan-400 shadow">
@@ -1239,8 +1239,9 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.0 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.0.1 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
+            <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
             <a href="https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit" target="_blank" rel="noopener" class="w-full flex items-center justify-center space-x-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 py-2 rounded-xl font-bold hover:bg-emerald-900 transition">
               <span>📑</span>
@@ -1248,6 +1249,7 @@
               <span>↗</span>
             </a>
             <p class="text-[9px] text-slate-500">Pe telefon se deschide direct în aplicația Google Sheets (dacă e instalată); pe laptop, în browser.</p>
+            </div>
           </div>
 
           <div class="border-b border-bordercol pb-3 space-y-2">
@@ -1275,7 +1277,7 @@
           </div>
 
           <!-- Personalizare Nume și Simbol / Logo -->
-          <div class="border-b border-bordercol pb-3 space-y-2.5">
+          <div class="auth-setari-edit border-b border-bordercol pb-3 space-y-2.5">
             <h4 class="font-bold text-white uppercase tracking-wider text-xs">🎨 Nume Aplicație & Simbol (Cloud)</h4>
             
             <div>
@@ -1310,7 +1312,7 @@
           </div>
 
           <!-- Iconiță aplicație (per profil, încărcare locală + revenire la sigiliul implicit) -->
-          <div class="border-b border-bordercol pb-3 space-y-2.5">
+          <div class="auth-setari-edit border-b border-bordercol pb-3 space-y-2.5">
             <h4 class="font-bold text-white uppercase tracking-wider text-xs">🖼️ Iconiță Aplicație (profilul curent)</h4>
             <div class="flex items-center space-x-3">
               <img id="iconUploadPreview" src="" class="w-16 h-16 rounded-xl border border-bordercol bg-darkbg object-cover">
@@ -1327,7 +1329,7 @@
           </div>
 
           <!-- Personalizare Meniu Principal Jos (Setări Utilizator) -->
-          <div class="border-b border-bordercol pb-3 space-y-2">
+          <div class="auth-setari-edit border-b border-bordercol pb-3 space-y-2">
             <h4 class="font-bold text-cyan-300 uppercase tracking-wider">📌 Personalizare Bară de Meniu (Bara de Jos)</h4>
             <p class="text-[10px] text-slate-400">Bifează ce taburi dorești direct pe bara de navigare de jos. Modulele debifate se mută automat în meniul «⋯ Mai multe»:</p>
             <div class="grid grid-cols-2 gap-1.5">
@@ -1368,7 +1370,7 @@
 
           <button onclick="downloadJsonBackup()" class="w-full bg-slate-800 border border-bordercol py-2.5 rounded-xl font-medium text-slate-200">📥 Descarcă Backup JSON Local</button>
 
-          <div class="space-y-1 pt-1">
+          <div class="auth-setari-edit space-y-1 pt-1">
             <span class="text-[10px] font-bold text-slate-400 uppercase block">Consolă Diagnostic:</span>
             <div id="liveLogConsole" class="bg-black/90 border border-slate-800 rounded-xl p-2.5 font-mono text-[9px] text-emerald-400 max-h-36 overflow-y-auto space-y-1"></div>
           </div>
@@ -2327,7 +2329,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.0";
+    const APP_VERSION = "v24.0.1";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2533,9 +2535,12 @@
 
     // Caseta „Cont Google” din Setări: stare conectare, buton Google, cod de asociere
     function renderAuthPanels() {
+      const s = getAuthSession();
+      // Linkul și ID-ul registrului Google Sheets se arată doar adminului
+      const sheetBox = document.getElementById('adminSheetLinkBox');
+      if (sheetBox) sheetBox.classList.toggle('hidden', !(s && s.profile && s.profile.rol === 'admin'));
       const box = document.getElementById('authStatusBox');
       if (!box) return;
-      const s = getAuthSession();
       if (s && s.profile) {
         box.innerHTML = `
           <div class="flex items-start justify-between gap-2">
@@ -2583,6 +2588,11 @@
       });
       const adminBtn = document.getElementById('btnSubAdmin');
       if (adminBtn) adminBtn.classList.add('hidden');
+      // Fără „Setări: edit”: din Setări rămân doar contul Google, versiunea, instalarea și curățarea cache-ului
+      const canEditSettings = (perms.setari || 'none') === 'edit';
+      document.querySelectorAll('.auth-setari-edit').forEach(el => el.classList.toggle('hidden', !canEditSettings));
+      const widgetBtn = document.getElementById('btnSubWidget');
+      if (widgetBtn && !canEditSettings) widgetBtn.classList.add('hidden');
       const navBar = document.getElementById('bottomNavBar');
       if (navBar) {
         const visible = Array.from(navBar.children).filter(c => !c.classList.contains('hidden')).length;
@@ -2629,7 +2639,8 @@
     // Datele din sheet păstrate local; se golesc la orice conectare/deconectare Google, ca pe un dispozitiv comun
     // să nu rămână vizibile datele contului anterior (se reîncarcă la sincronizare, după drepturile contului nou)
     const AUTH_DATA_CACHE_KEYS = ['diih_people', 'diih_shopping', 'diih_known_shopping_keys', 'diih_ganduri', 'diih_school_activities',
-      'diih_psaltire_grup', 'diih_note_anania', 'diih_biblia360', 'diih_gandul_zilei', 'diih_model_citire', 'diih_inventar'];
+      'diih_psaltire_grup', 'diih_note_anania', 'diih_biblia360', 'diih_gandul_zilei', 'diih_model_citire', 'diih_inventar',
+      'diih_notifications_multi', 'diih_notifs_triggered_today'];
     function clearAuthDataCache() {
       AUTH_DATA_CACHE_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     }
@@ -2933,16 +2944,22 @@
           widgeturi: readAdminChecklist('adminProfWidgetGrid').join(',')
         };
         showToast('Se salvează profilul...');
-        const poza = await readAdminImageInput('adminProfPozaInput', false);
-        if (poza) {
-          extra.pozaFileId = await uploadImageDataUrlToDrive(poza, `PozaProfil_${email}_${Date.now()}.jpg`);
-          cacheProfileImage(extra.pozaFileId, poza);
-        } else if (document.getElementById('adminProfPozaClear').checked) extra.pozaFileId = '';
-        const icona = await readAdminImageInput('adminProfIconaInput', true);
-        if (icona) {
-          extra.iconaFileId = await uploadImageDataUrlToDrive(icona, `IconaApp_${email}_${Date.now()}.png`);
-          cacheProfileImage(extra.iconaFileId, icona);
-        } else if (document.getElementById('adminProfIconaClear').checked) extra.iconaFileId = '';
+        // Imaginile se urcă separat; dacă una pică (ex. lipsă permisiune Drive), restul profilului se salvează oricum
+        const imageErrors = [];
+        try {
+          const poza = await readAdminImageInput('adminProfPozaInput', false);
+          if (poza) {
+            extra.pozaFileId = await uploadImageDataUrlToDrive(poza, `PozaProfil_${email}_${Date.now()}.jpg`);
+            cacheProfileImage(extra.pozaFileId, poza);
+          } else if (document.getElementById('adminProfPozaClear').checked) extra.pozaFileId = '';
+        } catch (imgErr) { imageErrors.push('poza: ' + imgErr.message); }
+        try {
+          const icona = await readAdminImageInput('adminProfIconaInput', true);
+          if (icona) {
+            extra.iconaFileId = await uploadImageDataUrlToDrive(icona, `IconaApp_${email}_${Date.now()}.png`);
+            cacheProfileImage(extra.iconaFileId, icona);
+          } else if (document.getElementById('adminProfIconaClear').checked) extra.iconaFileId = '';
+        } catch (imgErr) { imageErrors.push('iconița: ' + imgErr.message); }
         const data = await apiJsonp({
           ...apiAuthParams(), action: 'authSaveProfile', email: email, nume: nume,
           rol: document.getElementById('adminProfRol').value,
@@ -2951,7 +2968,7 @@
           ...extra
         });
         if (!data.success) { showToast(data.error || 'Profilul nu a fost salvat.'); return; }
-        showToast('Profil salvat.');
+        showToast(imageErrors.length ? `Profil salvat, dar fără ${imageErrors.join('; ')}` : 'Profil salvat.');
         closeAdminProfileForm();
         loadAdminProfiles();
       } catch (e) { showToast(e.message); }
@@ -7947,12 +7964,30 @@
       { id: 'misc', container: 'notifMiscRows', defaults: [{t:'12:00', m:'💡 O clipă de reflecție: Verifică gândul zilei.'}, {t:'18:00', m:'🛒 Verifică lista de cumpărături înainte de plecare.'}, {t:'', m:''}] }
     ];
 
+    // Modulul de care ține fiecare categorie de notificări (null = fără restricție)
+    const NOTIF_CATEGORY_MODULES = { psaltire: 'psaltire', birth: 'pomelnic', death: 'pomelnic', school: 'scoala', misc: null, individualAnniversary: 'pomelnic' };
+    function hasNotifAccess(catId) {
+      const mod = NOTIF_CATEGORY_MODULES[catId];
+      if (!mod) return true;
+      const s = getAuthSession();
+      if (!s || !s.profile || s.profile.rol === 'admin') return true;
+      return ((s.profile.permisiuni || {})[mod] || 'none') !== 'none';
+    }
+    // Data calendaristică locală (yyyy-mm-dd). toISOString() dă data în UTC: între 00:00 și 03:00 ar fi „ieri”.
+    function localDateStr(d) {
+      const x = d || new Date();
+      return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+    }
+
     function initNotificationInputs() {
       updateNotificationPermissionBadge();
       const savedConfig = JSON.parse(localStorage.getItem('diih_notifications_multi') || '{}');
+      const indivBox = document.getElementById('individualAnniversaryEnabled');
+      if (indivBox && indivBox.closest('.p-3')) indivBox.closest('.p-3').classList.toggle('hidden', !hasNotifAccess('individualAnniversary'));
       NOTIF_CATEGORIES.forEach(cat => {
         const cont = document.getElementById(cat.container);
         if (!cont) return;
+        if (cont.closest('.p-3')) cont.closest('.p-3').classList.toggle('hidden', !hasNotifAccess(cat.id));
         const catData = savedConfig[cat.id] || cat.defaults;
         let html = '';
         for (let i = 0; i < 3; i++) {
@@ -8013,7 +8048,7 @@
 
     function getNotifsTriggeredToday() {
       try {
-        const todayDateStr = new Date().toISOString().split('T')[0];
+        const todayDateStr = localDateStr();
         const raw = localStorage.getItem('diih_notifs_triggered_today');
         if (raw) {
           const parsed = JSON.parse(raw);
@@ -8031,7 +8066,7 @@
 
     function markNotifTriggeredToday(key) {
       try {
-        const todayDateStr = new Date().toISOString().split('T')[0];
+        const todayDateStr = localDateStr();
         const raw = localStorage.getItem('diih_notifs_triggered_today');
         let data = { date: todayDateStr, keys: {} };
         if (raw) {
@@ -8059,7 +8094,7 @@
     function checkAndTriggerScheduledNotifications() {
       const now = new Date();
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const todayDateStr = now.toISOString().split('T')[0];
+      const todayDateStr = localDateStr(now);
 
       const savedConfig = JSON.parse(localStorage.getItem('diih_notifications_multi') || '{}');
       if (!savedConfig || Object.keys(savedConfig).length === 0) return;
@@ -8067,6 +8102,7 @@
 
       Object.keys(savedConfig).forEach(catId => {
         if (catId === 'individualAnniversary') return; // tratat separat mai jos, nu e un array de praguri
+        if (!hasNotifAccess(catId)) return; // fără acces la modul -> fără notificări din el
         const slots = savedConfig[catId] || [];
         slots.forEach((slot, idx) => {
           if (!slot.t || !isTimeSlotDue(slot.t, currentMinutes)) return;
@@ -8099,7 +8135,7 @@
 
       // Notificare individuală per persoană (nume + vârstă) pentru fiecare aniversare/pomenire de astăzi
       const indivConfig = savedConfig.individualAnniversary;
-      if (indivConfig && indivConfig.enabled && isTimeSlotDue(indivConfig.time, currentMinutes)) {
+      if (indivConfig && indivConfig.enabled && hasNotifAccess('individualAnniversary') && isTimeSlotDue(indivConfig.time, currentMinutes)) {
         const matches = computeTodaysAnniversaries(allPeople);
         matches.forEach(m => {
           const key = `indiv_${m.person.rowId}_${m.type}_${indivConfig.time}`;

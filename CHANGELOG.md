@@ -1,5 +1,24 @@
 # CHANGELOG — DIiH Hub
 
+## v24.0.1 — 2026-10-16 — Notificări per profil, Setări restrânse, registrul doar pentru admin
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.0.1).
+
+### Notificări
+- **Configurația e per profil**: se salvează în cheia `notif_cfg_<email>` din Setari și fiecare cont primește doar configurația lui. Înainte, o singură configurație comună se aplica pe toate dispozitivele, iar Andreea primea alertele adminului. Adminul preia o singură dată vechea configurație comună.
+- Oricine își poate salva propriile notificări, chiar fără „Setări: edit”.
+- **Notificări doar din modulele permise**: Psaltire (psaltire), aniversări, pomeniri și notificarea individuală (pomelnic), Școală (scoala). Secțiunile fără acces nu mai apar în pagina Notificări și nu se mai declanșează.
+- **Data locală în loc de UTC**: între 00:00 și 03:00, lista „deja trimise azi” și activitățile școlare ale zilei se calculau pe ziua anterioară.
+- Configurația și istoricul notificărilor se golesc la schimbarea contului pe dispozitiv.
+
+### Setări
+- Linkul și ID-ul **registrului Google Sheets** se arată doar adminului.
+- Profilurile fără „Setări: edit” văd din Setări doar contul Google, versiunea, instalarea și curățarea cache-ului. Personalizarea (poză, titlu, logo, iconiță, meniu, consola de diagnostic) și pagina „Widget” sunt ascunse.
+
+### Corectat
+- Salvarea unui profil din Admin nu mai eșuează complet dacă urcarea pozei sau a iconiței pică. Celelalte câmpuri se salvează, iar mesajul spune ce imagine nu a mers.
+- `autorizeazaToatePermisiunile()` cere acum și **scrierea** în Drive (actualizează descrierea folderului aplicației). Înainte, cerea doar citirea, iar încărcarea iconiței/pozei dădea „You do not have permission to call DriveApp.createFolder”.
+
 ## v24.0 — 2026-10-16 — O singură aplicație, personalizare per profil
 
 Frontend (`index.html`, `andreea.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.0). Push pe GitHub înainte de deploy.
