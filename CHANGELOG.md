@@ -1,5 +1,15 @@
 # CHANGELOG — DIiH Hub
 
+## v24.7 — 2026-10-16 — Adservio prin browser (sincronizare dintr-un marcaj)
+
+Backend (`_API.gs` 24.7 + `Adservio.gs`) și frontend (`index.html`, `sw.js`). **Necesită deploy.**
+
+- Adservio folosește verificare în doi pași (2FA) la login din afara unui dispozitiv de încredere, așa că login-ul automat din Apps Script nu e varianta potrivită. În schimb, datele se trimit din **sesiunea deja autentificată a părintelui**, printr-un marcaj (bookmarklet) rulat în browser.
+- Marcajul citește, din sesiunea logată, absențele, calificativele și temele copilului și le trimite la `doPost` (`action=adservioPush`), autorizat cu `ADSERVIO_PUSH_KEY` din Proprietăți script. Nicio parolă pe server, 2FA neatins.
+- `adservioHandlePush` scrie `Adservio_Absente` / `Adservio_Note` și îmbină temele în `Scoala_Teme` (ID `ADS-<id>`, sursa „adservio”). `aratamCheiaPush()` creează și afișează cheia o dată.
+- Subtab **🏫 Adservio**: status, buton „Reîmprospătează”, absențe (motivate/nemotivate) și calificative pe materii; temele apar în 📚 Teme cu eticheta „Adservio”.
+- Login-ul automat server-side (`adservioSync`, triggere) rămâne în `Adservio.gs` pentru referință, dar nu mai e calea recomandată.
+
 ## v24.6 — 2026-10-16 — Sincronizare automată Adservio
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.6 + fișier nou **`Adservio.gs`**). **Necesită deploy** și configurare unică.

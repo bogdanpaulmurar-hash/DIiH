@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.6
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.7
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.6";
+const BACKEND_VERSION = "24.7";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -1626,6 +1626,20 @@ function getOrCreateAppDriveFolder(ss) {
 function doPost(e) {
   const ss = getSpreadsheet();
   const action = e.parameter.action;
+
+  // Adservio: date trimise din browserul părintelui (sesiune Adservio deja autentificată).
+  // Nu folosește sesiunea DIiH; se autorizează cu o cheie proprie (ADSERVIO_PUSH_KEY din Proprietăți script).
+  if (action === "adservioPush") {
+    try {
+      const rez = (typeof adservioHandlePush === "function")
+        ? adservioHandlePush(ss, e)
+        : { error: "Lipsește fișierul Adservio.gs din proiect." };
+      return ContentService.createTextOutput(JSON.stringify(rez)).setMimeType(ContentService.MimeType.JSON);
+    } catch (err) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.message || String(err) })).setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
   const auth = authenticateRequest(ss, e);
   if (!auth.ok || !authIsActionAllowed(auth, action)) {
     return ContentService.createTextOutput(JSON.stringify({ error: auth.ok ? "Nu ai drept pentru această acțiune." : auth.error, authRequired: !auth.ok }))

@@ -312,3 +312,44 @@ function testeazaAdservio() {
   const r = adservioSync("test din editor");
   Logger.log(JSON.stringify(r));
 }
+
+// =====================================================================================================
+// ADSERVIO PRIN BROWSER (v24.7) — datele vin din sesiunea Adservio deja autentificată a părintelui,
+// trimise de marcajul (bookmarklet) din browser. Fără parolă pe server, fără a atinge 2FA.
+// Se autorizează cu ADSERVIO_PUSH_KEY (Proprietăți script). Payload (text/plain, JSON): {absente, note, teme}.
+// =====================================================================================================
+function adservioHandlePush(ss, e) {
+  const key = PropertiesService.getScriptProperties().getProperty("ADSERVIO_PUSH_KEY");
+  if (!key) return { success: false, error: "Lipsește ADSERVIO_PUSH_KEY din Proprietăți script. Rulează aratamCheiaPush() o dată." };
+  const given = (e && e.parameter && e.parameter.key) || "";
+  if (given !== key) return { success: false, error: "Cheie invalidă." };
+
+  let payload = {};
+  try { payload = JSON.parse(e.postData.contents); } catch (err) { return { success: false, error: "Date invalide: " + err }; }
+  const absente = Array.isArray(payload.absente) ? payload.absente : [];
+  const note = Array.isArray(payload.note) ? payload.note : [];
+  const teme = Array.isArray(payload.teme) ? payload.teme : [];
+
+  absente.sort((a, b) => String(b.data).localeCompare(String(a.data)));
+  note.sort((a, b) => String(b.data).localeCompare(String(a.data)));
+  adsWriteSheet(ss, ADS_ABS_SHEET, ["ID", "Copil", "Data", "Materie", "Motivata", "Modul", "Profesor", "Observatii"],
+    absente.map(a => [String(a.id), a.copil || "", a.data || "", a.materie || "", a.motivata ? "DA" : "NU", a.modul || "", a.profesor || "", a.obs || ""]));
+  adsWriteSheet(ss, ADS_NOTE_SHEET, ["ID", "Copil", "Data", "Materie", "Valoare", "Afisare", "Tip", "Modul", "Observatii"],
+    note.map(n => [String(n.id), n.copil || "", n.data || "", n.materie || "", n.valoare, n.afisare || "", n.tip || "", n.modul || "", n.obs || ""]));
+  const temeNoi = adsMergeTeme(ss, teme);
+
+  const rez = { success: true, absente: absente.length, note: note.length, teme: teme.length, temeNoi: temeNoi };
+  setSettingValue(ss.getSheetByName("Setari"), "adservio_ultim", authNow() + " — " + absente.length + " absențe, " + note.length + " note, " + teme.length + " teme (din browser)");
+  setSettingValue(ss.getSheetByName("Setari"), "adservio_eroare", "");
+  logToAppSheet(ss, { modul: "Adservio", actiune: "push_browser", status: "OK", detalii: JSON.stringify(rez), user: "-" });
+  return rez;
+}
+
+// Rulează O DATĂ din editor: creează cheia de trimitere (dacă nu există) și o afișează în jurnal.
+function aratamCheiaPush() {
+  const props = PropertiesService.getScriptProperties();
+  let key = props.getProperty("ADSERVIO_PUSH_KEY");
+  if (!key) { key = Utilities.getUuid().replace(/-/g, ""); props.setProperty("ADSERVIO_PUSH_KEY", key); }
+  Logger.log("ADSERVIO_PUSH_KEY = " + key);
+  return key;
+}

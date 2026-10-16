@@ -888,9 +888,9 @@
             <h3 class="font-bold text-cyan-300 uppercase text-xs">🏫 Catalog Adservio</h3>
             <a href="https://www.adservio.ro/ro/auth" target="_blank" rel="noopener" class="text-[10px] px-2 py-1 rounded-lg bg-darkbg border border-indigo-700 text-indigo-200">🔗 Deschide site-ul</a>
           </div>
-          <p id="adservioStatus" class="text-[11px] text-slate-400">Încă nu s-a sincronizat.</p>
-          <button id="btnAdservioSync" onclick="adservioSyncNow()" class="w-full bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs">🔄 Sincronizează acum</button>
-          <p class="text-[10px] text-slate-500">Se sincronizează singur zilnic la 07:00 și 16:00. Temele din Adservio apar în 📚 Teme, marcate „Adservio”.</p>
+          <p id="adservioStatus" class="text-[11px] text-slate-400">Încă nu s-a adus nimic din Adservio.</p>
+          <button id="btnAdservioSync" onclick="fetchDataFromSheet(true)" class="w-full bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs">🔄 Reîmprospătează</button>
+          <p class="text-[10px] text-slate-500">Datele se trimit din marcajul „Adservio → DIiH”, pe care îl apeși în Adservio după ce ești logat. Apoi aici apasă „Reîmprospătează”. Temele apar în 📚 Teme, marcate „Adservio”.</p>
         </div>
         <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2">
           <div class="flex items-center justify-between">
@@ -1345,7 +1345,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.6 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.7 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2450,7 +2450,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.6";
+    const APP_VERSION = "v24.7";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -8284,7 +8284,7 @@
       const d = adservioData;
       const st = document.getElementById('adservioStatus');
       if (!st) return;
-      if (!d) { st.textContent = 'Încă nu s-a sincronizat. Apasă „Sincronizează acum” după configurarea din Apps Script.'; }
+      if (!d) { st.textContent = 'Încă nu s-a adus nimic. Apasă marcajul „Adservio → DIiH” în Adservio, apoi „Reîmprospătează”.'; }
       else {
         st.innerHTML = (d.ultim ? `Ultima sincronizare: ${escapeHtmlText(d.ultim)}` : 'Încă nu s-a sincronizat.') +
           (d.eroare ? `<br><span class="text-rose-400">Ultima eroare: ${escapeHtmlText(d.eroare)}</span>` : '');
