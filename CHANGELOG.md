@@ -1,5 +1,23 @@
 # CHANGELOG — DIiH Hub
 
+## v24.2 — 2026-10-16 — Calendar școlar: săptămâni speciale ca marcaje, alerte, verificare
+
+Doar frontend (`index.html`, `sw.js`). Backend neschimbat (rămâne 24.1), nu e nevoie de deploy.
+
+### Săptămâna Verde și Săptămâna Altfel
+- Apar ca **fundal colorat** în calendar (lună și săptămână), cu iconiță 🌿 / 🎨. Nu mai sunt activități: nu blochează ziua și nu intră în sumarul de ore și sume.
+- „Salvează” păstrează doar intervalele în Setari (`SaptamanaVerde_<an>`, `SaptamanaAltfel_<an>`). Se verifică ordinea datelor și apartenența la anul școlar. Câmpurile goale înseamnă „neanunțată”.
+- **Curățare**: activitățile generate de versiunile vechi (ID `SAPTVERDE-`/`SAPTALTFEL-`, cu data decalată cu o zi și contorizate cu 1 oră/zi) sunt ascunse imediat. Adminul le poate șterge definitiv din 🗓️ Calendar → „🧹 Șterge activitățile generate automat”, cu confirmare.
+
+### Alerte și verificare
+- Casetă nouă deasupra calendarului: săptămână specială **în desfășurare** sau care **începe în următoarele 21 de zile** (apare și în widgetul Școală de pe ecranul Astăzi). Pentru anul școlar curent, săptămânile nesetate apar ca „neanunțată încă”.
+- **🔎 Verificare**: suprapuneri orare pe același copil, activități dublate, ore inversate, dată invalidă. Activitățile programate în săptămânile speciale apar separat, „de confirmat”. Atingerea unui rând deschide ziua respectivă.
+
+### Corecturi
+- **Data locală peste tot**: 19 locuri foloseau data UTC (`toISOString`), deci între 00:00 și 03:00 „azi” era ziua de ieri (Rânduială, Școală, widgeturi, filtre).
+- Opțiunile de admin din calendarul școlar (încărcare, date speciale, marcare luni) depind acum de **rolul din cont**, nu de numele utilizatorului.
+- Scos textul rătăcit despre iconiță din fereastra calendarului.
+
 ## v24.1 — 2026-10-16 — Scriptura per profil, plan de citire sincronizat cu progresul
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.1).
