@@ -1,0 +1,311 @@
+/**
+ * ADSERVIO → DIiH (v24.6) — fișier separat în Apps Script: Adservio.gs
+ * NOTĂ: Acest fișier .txt este doar INFORMATIV - codul se copiază manual în editorul Apps Script.
+ *
+ * Ce face: se loghează în Adservio cu datele părintelui și aduce absențele, calificativele/notele
+ * și temele copilului. Absențele și notele se scriu în tab-urile Adservio_Absente / Adservio_Note
+ * (rescrise complet la fiecare sincronizare); temele intră în Scoala_Teme (ID „ADS-<id>”, sursa „adservio”),
+ * fără să strice bifele „Gata” puse din aplicație.
+ *
+ * CONFIGURARE (o singură dată, din editor):
+ *  1. Setări proiect (⚙️) → Proprietăți script → adaugă:
+ *       ADSERVIO_USER = emailul/utilizatorul de Adservio
+ *       ADSERVIO_PASS = parola de Adservio
+ *     (nu se scriu niciodată în sheet și nu ajung în aplicație)
+ *  2. Rulează o dată testeazaAdservio() → în Execuții/Jurnal vezi ce a adus.
+ *  3. Rulează o dată instaleazaSyncAdservio() → sincronizare automată zilnic la 07:00 și 16:00.
+ */
+
+const ADSERVIO_BASE = "https://www.adservio.ro";
+const ADS_ABS_SHEET = "Adservio_Absente";
+const ADS_NOTE_SHEET = "Adservio_Note";
+const ADS_CALIFICATIVE = { 10: "FB", 8: "B", 6: "S", 4: "I" };
+
+function adsCredentials() {
+  const p = PropertiesService.getScriptProperties();
+  const user = p.getProperty("ADSERVIO_USER");
+  const pass = p.getProperty("ADSERVIO_PASS");
+  if (!user || !pass) throw new Error("Lipsesc ADSERVIO_USER / ADSERVIO_PASS din Proprietăți script.");
+  return { user: user, pass: pass };
+}
+
+// Extrage cookie-urile „nume=valoare” din antetele Set-Cookie ale unui răspuns
+function adsCookiesFrom(resp, jar) {
+  const h = resp.getAllHeaders();
+  let sc = h["Set-Cookie"] || h["set-cookie"] || [];
+  if (!Array.isArray(sc)) sc = [sc];
+  sc.forEach(c => {
+    const first = String(c).split(";")[0];
+    const i = first.indexOf("=");
+    if (i > 0) jar[first.substring(0, i).trim()] = first.substring(i + 1).trim();
+  });
+  return jar;
+}
+
+function adsCookieHeader(jar) {
+  return Object.keys(jar).map(k => k + "=" + jar[k]).join("; ");
+}
+
+// Login: POST /api/v2/auth (uaUserName, uaPassword, tokenLifetime). Întoarce sesiunea (cookie-uri + token).
+function adsLogin() {
+  const cred = adsCredentials();
+  const jar = {};
+  // cookie-urile inițiale ale site-ului (unele servere cer sesiunea înainte de login)
+  try { adsCookiesFrom(UrlFetchApp.fetch(ADSERVIO_BASE + "/ro/auth", { muteHttpExceptions: true, followRedirects: false }), jar); } catch (e) {}
+
+  const fields = { uaUserName: cred.user, uaPassword: cred.pass, tokenLifetime: "1" };
+  const mp = adsMultipart(fields);
+  const tries = [
+    { contentType: "application/x-www-form-urlencoded", payload: fields },
+    { contentType: "multipart/form-data; boundary=" + mp.boundary, payload: mp.body },
+    { contentType: "application/json", payload: JSON.stringify(fields) }
+  ];
+  let last = "";
+  for (let i = 0; i < tries.length; i++) {
+    const resp = UrlFetchApp.fetch(ADSERVIO_BASE + "/api/v2/auth", {
+      method: "post",
+      contentType: tries[i].contentType,
+      payload: tries[i].payload,
+      headers: { Accept: "application/json", Cookie: adsCookieHeader(jar) },
+      muteHttpExceptions: true,
+      followRedirects: false
+    });
+    const code = resp.getResponseCode();
+    const text = resp.getContentText();
+    adsCookiesFrom(resp, jar);
+    if (code === 200) {
+      let js = {};
+      try { js = JSON.parse(text); } catch (e) {}
+      if (js.atToken) return { jar: jar, token: js.atToken, uaID: js.uaID, mode: null };
+    }
+    last = "HTTP " + code + ": " + text.substring(0, 200);
+  }
+  throw new Error("Login Adservio eșuat (" + last + "). Verifică utilizatorul și parola din Proprietăți script.");
+}
+
+// Corp multipart/form-data construit manual (pentru cazul în care serverul acceptă doar FormData)
+function adsMultipart(fields) {
+  const boundary = "----DIiH" + Utilities.getUuid().replace(/-/g, "");
+  let body = "";
+  Object.keys(fields).forEach(k => {
+    body += "--" + boundary + "\r\nContent-Disposition: form-data; name=\"" + k + "\"\r\n\r\n" + fields[k] + "\r\n";
+  });
+  body += "--" + boundary + "--\r\n";
+  return { boundary: boundary, body: body };
+}
+
+// Cerere GET autentificată. Încearcă pe rând: cookie-uri, Bearer token, cookie cu token; reține varianta care merge.
+function adsGet(sess, path) {
+  const modes = sess.mode ? [sess.mode] : ["cookie", "bearer", "tokencookie"];
+  let last = "";
+  for (let i = 0; i < modes.length; i++) {
+    const headers = { Accept: "application/json" };
+    const jarCopy = Object.assign({}, sess.jar);
+    if (modes[i] === "bearer") headers.Authorization = "Bearer " + sess.token;
+    if (modes[i] === "tokencookie") jarCopy.atToken = sess.token;
+    if (Object.keys(jarCopy).length) headers.Cookie = adsCookieHeader(jarCopy);
+    const resp = UrlFetchApp.fetch(ADSERVIO_BASE + path, { headers: headers, muteHttpExceptions: true, followRedirects: false });
+    const code = resp.getResponseCode();
+    if (code === 200) {
+      sess.mode = modes[i];
+      return JSON.parse(resp.getContentText());
+    }
+    last = "HTTP " + code;
+  }
+  throw new Error("Adservio a refuzat cererea " + path.split("?")[0] + " (" + last + ").");
+}
+
+function adsData(js) {
+  return (js && Array.isArray(js.data)) ? js.data : (Array.isArray(js) ? js : []);
+}
+
+function adsDay(s) {
+  return s ? String(s).substring(0, 10) : "";
+}
+
+function adsStripHtml(s) {
+  return String(s || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n").replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, "\"")
+    .replace(/\n{2,}/g, "\n").trim();
+}
+
+function adsPersonName(p) {
+  return p ? [p.uaFirstName, p.uaLastName].filter(Boolean).join(" ") : "";
+}
+
+// Copilul (sau copiii) contului de părinte, cu clasa din anul școlar activ
+function adsChildren(sess) {
+  const kids = [];
+  const parentId = sess.uaID;
+  try {
+    const el = adsGet(sess, "/api/v2/parinti/elev?epID=" + encodeURIComponent(parentId));
+    (Array.isArray(el) ? el : [el]).forEach(e => { if (e && e.elevID) kids.push({ elevID: String(e.elevID), name: e.elevPrenume || e.elevNume || "Copil" }); });
+  } catch (e) {}
+  if (!kids.length) {
+    const acc = adsGet(sess, "/api/v2/accounts/adservio?uaID=" + encodeURIComponent(parentId) + "&withNonLinked=true");
+    (Array.isArray(acc) ? acc : []).forEach(a => { if (a.elev && a.elev.elevID) kids.push({ elevID: String(a.elev.elevID), name: a.elev.elevPrenume || "Copil" }); });
+  }
+  kids.forEach(k => {
+    const cls = adsData(adsGet(sess, "/api/v2/elevi/clase?elevID=" + k.elevID));
+    const active = cls.find(c => c.asc && String(c.asc.ascIsActiv) === "1") || cls[0] || {};
+    k.clID = active.clID || "";
+    k.ascID = active.asc ? active.asc.ascID : "";
+    k.className = active.clNume || "";
+  });
+  return kids;
+}
+
+function adsFetchChild(sess, k) {
+  const abs = adsData(adsGet(sess, "/api/v2/absente?elevID=" + k.elevID + "&cuMaterie=1&ascID=" + k.ascID + "&_limit=-1"));
+  const rep = adsGet(sess, "/api/v2/elevi/repartizare?elevID=" + k.elevID + "&clID=" + k.clID + "&cuNote=1&cuMedii=1&cuActivitate=1");
+  const hw = adsData(adsGet(sess, "/api/v2/teme?elevID=" + k.elevID + "&cuProfesor=1&cuMaterie=1&cuNota=1&cuRating=1&cuHwsSubmitted=1&_limit=9999"));
+
+  const absente = abs.map(a => ({
+    id: String(a.absID),
+    copil: k.name,
+    data: adsDay(a.absData),
+    materie: a.materie ? a.materie.matNume : "",
+    motivata: !!(a.absMotivareData || a.absMotivareCadruID),
+    modul: a.absSanID || "",
+    profesor: adsPersonName(a.cadruInfo),
+    obs: a.absObs || ""
+  }));
+
+  const note = [];
+  (Array.isArray(rep) ? rep : []).forEach(m => {
+    const materie = m.cmcMaterie ? m.cmcMaterie.matNume : "";
+    (m.note || []).forEach(n => {
+      const scale = n.type && n.type.scale;
+      const v = n.notaValoare;
+      note.push({
+        id: String(n.notaID),
+        copil: k.name,
+        data: adsDay(n.notaData || n.notaDataInsert),
+        materie: materie,
+        valoare: v,
+        afisare: scale === "calificative" ? (ADS_CALIFICATIVE[v] || String(v)) : String(v),
+        tip: n.type ? n.type.name : "",
+        modul: n.notaSanID || "",
+        obs: n.notaObs || ""
+      });
+    });
+  });
+
+  // doar temele din anul școlar curent (din 1 septembrie); cele vechi ar apărea ca „întârziate”
+  const now = new Date();
+  const startAn = (now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1) + "-09-01";
+  const teme = hw.filter(h => adsDay(h.hwDueDate || h.hwInsertDate) >= startAn).map(h => ({
+    id: "ADS-" + h.hwID,
+    child: k.name,
+    subject: h.materie ? h.materie.matNume : "",
+    text: (h.hwName || "Temă") + (h.hwDescription ? " — " + adsStripHtml(h.hwDescription) : ""),
+    givenDate: adsDay(h.hwInsertDate),
+    dueDate: adsDay(h.hwDueDate),
+    submitted: !!h.hwsSubmitted
+  }));
+
+  return { absente: absente, note: note, teme: teme };
+}
+
+function adsWriteSheet(ss, name, header, rows) {
+  let sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.setFrozenRows(1);
+  }
+  sh.clearContents();
+  sh.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight("bold");
+  sh.getRange("A:Z").setNumberFormat("@");
+  if (rows.length) sh.getRange(2, 1, rows.length, header.length).setValues(rows);
+}
+
+// Temele Adservio intră în Scoala_Teme. O temă bifată „Gata” în aplicație rămâne Gata.
+function adsMergeTeme(ss, teme) {
+  const sh = getOrCreateSchoolTemeSheet(ss);
+  const now = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+  const last = sh.getLastRow();
+  const existing = {};
+  if (last >= 2) {
+    sh.getRange(2, 1, last - 1, 12).getValues().forEach((r, i) => { if (r[0]) existing[String(r[0])] = { row: i + 2, status: r[6], doneDate: r[7], created: r[9] }; });
+  }
+  let added = 0;
+  teme.forEach(t => {
+    const ex = existing[t.id];
+    const status = t.submitted ? "Gata" : (ex && ex.status === "Gata" ? "Gata" : "De făcut");
+    const doneDate = status === "Gata" ? ((ex && ex.doneDate) || Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd")) : "";
+    const row = [t.id, t.child, t.subject, t.text.substring(0, 1500), t.givenDate, t.dueDate, status, doneDate, "adservio", (ex && ex.created) || now, now, "adservio"];
+    if (ex) sh.getRange(ex.row, 1, 1, row.length).setValues([row]);
+    else { sh.appendRow(row); added++; }
+  });
+  return added;
+}
+
+// Sincronizarea completă. Folosită de trigger, de butonul din aplicație și de testeazaAdservio().
+function adservioSync(motiv) {
+  const ss = getSpreadsheet();
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) throw new Error("O sincronizare Adservio e deja în curs.");
+  try {
+    const sess = adsLogin();
+    const kids = adsChildren(sess);
+    if (!kids.length) throw new Error("Nu am găsit niciun elev asociat contului.");
+    let absente = [], note = [], teme = [];
+    kids.forEach(k => {
+      const d = adsFetchChild(sess, k);
+      absente = absente.concat(d.absente);
+      note = note.concat(d.note);
+      teme = teme.concat(d.teme);
+    });
+    absente.sort((a, b) => b.data.localeCompare(a.data));
+    note.sort((a, b) => b.data.localeCompare(a.data));
+    adsWriteSheet(ss, ADS_ABS_SHEET, ["ID", "Copil", "Data", "Materie", "Motivata", "Modul", "Profesor", "Observatii"],
+      absente.map(a => [a.id, a.copil, a.data, a.materie, a.motivata ? "DA" : "NU", a.modul, a.profesor, a.obs]));
+    adsWriteSheet(ss, ADS_NOTE_SHEET, ["ID", "Copil", "Data", "Materie", "Valoare", "Afisare", "Tip", "Modul", "Observatii"],
+      note.map(n => [n.id, n.copil, n.data, n.materie, n.valoare, n.afisare, n.tip, n.modul, n.obs]));
+    const temeNoi = adsMergeTeme(ss, teme);
+    const rez = { copii: kids.map(k => k.name + (k.className ? " (" + k.className + ")" : "")).join(", "), absente: absente.length, note: note.length, teme: teme.length, temeNoi: temeNoi, mod: sess.mode };
+    setSettingValue(ss.getSheetByName("Setari"), "adservio_ultim", authNow() + " — " + rez.absente + " absențe, " + rez.note + " note, " + rez.teme + " teme (" + motiv + ")");
+    logToAppSheet(ss, { modul: "Adservio", actiune: "sincronizare", status: "OK", detalii: JSON.stringify(rez) + "; " + motiv, user: "-" });
+    return rez;
+  } catch (err) {
+    setSettingValue(ss.getSheetByName("Setari"), "adservio_eroare", authNow() + " — " + (err.message || String(err)));
+    logToAppSheet(ss, { modul: "Adservio", actiune: "sincronizare", status: "EROARE", detalii: (err.message || String(err)) + "; " + motiv, user: "-" });
+    throw err;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Ce primește aplicația la sincronizare (fără date de logare)
+function getAdservioData(ss) {
+  const read = (name, n) => {
+    const sh = ss.getSheetByName(name);
+    if (!sh || sh.getLastRow() < 2) return [];
+    return sh.getRange(2, 1, sh.getLastRow() - 1, n).getValues();
+  };
+  return {
+    ultim: getSettingValueRaw(ss, "adservio_ultim"),
+    eroare: getSettingValueRaw(ss, "adservio_eroare"),
+    absente: read(ADS_ABS_SHEET, 8).map(r => ({ id: String(r[0]), copil: String(r[1]), data: String(r[2]), materie: String(r[3]), motivata: String(r[4]) === "DA", profesor: String(r[6]), obs: String(r[7]) })),
+    note: read(ADS_NOTE_SHEET, 9).map(r => ({ id: String(r[0]), copil: String(r[1]), data: String(r[2]), materie: String(r[3]), valoare: String(r[4]), afisare: String(r[5]), tip: String(r[6]), obs: String(r[8]) }))
+  };
+}
+
+// Trigger-ul automat
+function adservioSyncAutomat() {
+  adservioSync("automat");
+}
+
+// Rulează O DATĂ din editor (Run). Atinge doar triggerele adservioSyncAutomat.
+function instaleazaSyncAdservio() {
+  ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === "adservioSyncAutomat") ScriptApp.deleteTrigger(t); });
+  [7, 16].forEach(h => ScriptApp.newTrigger("adservioSyncAutomat").timeBased().everyDays(1).atHour(h).inTimezone("Europe/Bucharest").create());
+  const r = adservioSync("prima rulare, la instalare");
+  Logger.log("Sincronizare Adservio programată zilnic la 07:00 și 16:00. Prima rulare: " + JSON.stringify(r));
+}
+
+// Rulează din editor ca să verifici configurarea, fără să programezi nimic
+function testeazaAdservio() {
+  const r = adservioSync("test din editor");
+  Logger.log(JSON.stringify(r));
+}

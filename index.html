@@ -881,13 +881,27 @@
         </div>
       </div>
 
-      <!-- Subtab ADSERVIO (v24.5): deocamdată acces rapid; importul datelor vine după ce avem structura paginilor -->
+      <!-- Subtab ADSERVIO (v24.6): absențe + calificative sincronizate automat din Adservio -->
       <div id="schoolSubView_adservio" class="hidden space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2 text-xs text-slate-300">
-          <h3 class="font-bold text-cyan-300 uppercase text-xs">🏫 Catalogul Adservio</h3>
-          <p>Absențele, notele și temele se văd în Adservio după autentificare. Butonul de mai jos deschide site-ul; datele tale de logare rămân doar în browser.</p>
-          <a href="https://www.adservio.ro/ro/auth" target="_blank" rel="noopener" class="block text-center w-full bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl">🔗 Deschide Adservio</a>
-          <p class="text-[11px] text-slate-500">Importul automat al absențelor și notelor în DIiH este în pregătire. Până atunci, temele din Adservio le poți nota în subtab-ul 📚 Teme.</p>
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-bold text-cyan-300 uppercase text-xs">🏫 Catalog Adservio</h3>
+            <a href="https://www.adservio.ro/ro/auth" target="_blank" rel="noopener" class="text-[10px] px-2 py-1 rounded-lg bg-darkbg border border-indigo-700 text-indigo-200">🔗 Deschide site-ul</a>
+          </div>
+          <p id="adservioStatus" class="text-[11px] text-slate-400">Încă nu s-a sincronizat.</p>
+          <button id="btnAdservioSync" onclick="adservioSyncNow()" class="w-full bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs">🔄 Sincronizează acum</button>
+          <p class="text-[10px] text-slate-500">Se sincronizează singur zilnic la 07:00 și 16:00. Temele din Adservio apar în 📚 Teme, marcate „Adservio”.</p>
+        </div>
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-rose-300 uppercase text-xs">Absențe</h3>
+            <span id="adservioAbsSummary" class="text-[10px] text-slate-400"></span>
+          </div>
+          <div id="adservioAbsList" class="space-y-1"></div>
+        </div>
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2">
+          <h3 class="font-bold text-emerald-300 uppercase text-xs">Calificative / Note</h3>
+          <div id="adservioNoteList" class="space-y-1.5"></div>
         </div>
       </div>
     </section>
@@ -1331,7 +1345,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.5 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.6 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -1560,7 +1574,7 @@
             <ul class="pt-1.5 space-y-1 leading-relaxed list-disc list-inside">
               <li><strong>Astăzi:</strong> rezumat zilnic — Catisma, Biblia Anania, Continuitate Scriptură, Plan de citire, aniversări, pomelnicul zilei, școală, cumpărături, notițe, Gândul Zilei, inventar.</li>
               <li><strong>Pomelnic:</strong> evidența completă a persoanelor pomenite (vii/adormiți), grupate pe categorii, cu tipărire și sincronizare automată cu Google Calendar.</li>
-              <li><strong>Școală:</strong> calendar activități copii, plăți (automat/manual), sumar financiar pe perioade, calendarul anual de la inspectorat; subtab <strong>Teme</strong> (materie, ce temă, termen, bifare gata) și acces rapid la Adservio.</li>
+              <li><strong>Școală:</strong> calendar activități copii, plăți (automat/manual), sumar financiar pe perioade, calendarul anual de la inspectorat; subtab <strong>Teme</strong> (materie, ce temă, termen, bifare gata) și subtab <strong>Adservio</strong> (absențe, calificative și teme sincronizate automat din catalog).</li>
               <li><strong>Notițe:</strong> notițe personale cu sursă/etichetă, editare, ștergere cu confirmare și anulare.</li>
               <li><strong>Cumpărături:</strong> listă pe magazine, cu linkuri clickabile pentru produse căutate online.</li>
               <li><strong>Mai multe → Psaltire:</strong> pomelnicul grupului de Psaltire pe 20 de catisme.</li>
@@ -2436,7 +2450,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.5";
+    const APP_VERSION = "v24.6";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2713,7 +2727,7 @@
     const AUTH_EDIT_GUARDS = {
       pomelnic: ['applyBatchAtentie', 'applyBatchAndreeaToggle', 'toggleEditMode', 'savePersonEdit', 'openAddPersonModal', 'saveNewPerson'],
       psaltire: ['openAddPsaltireModal', 'openEditPsaltireModal', 'savePsaltirePerson', 'deletePsaltirePerson'],
-      scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar', 'cleanupGeneratedSpecialWeekActivities', 'saveSchoolTema', 'toggleSchoolTemaDone', 'deleteSchoolTema', 'startEditSchoolTema'],
+      scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar', 'cleanupGeneratedSpecialWeekActivities', 'saveSchoolTema', 'toggleSchoolTemaDone', 'deleteSchoolTema', 'startEditSchoolTema', 'adservioSyncNow'],
       notite: ['saveOrUpdateGand', 'deleteGand', 'deleteSelectedGanduri', 'softDeleteManyGanduri', 'undoDeleteGanduri', 'startEditGand'],
       cumparaturi: ['addShoppingItem', 'removeShoppingItem', 'markWholeStoreCompleted', 'quickAddShopping'],
       inventar: ['addCustomInventoryCategory', 'deleteCustomInventoryCategory', 'addCustomInventorySpace', 'deleteCustomInventorySpace', 'saveInventoryItem', 'deleteInventoryItem', 'confirmMoveInventoryItem'],
@@ -2746,7 +2760,7 @@
 
     // Datele din sheet păstrate local; se golesc la orice conectare/deconectare Google, ca pe un dispozitiv comun
     // să nu rămână vizibile datele contului anterior (se reîncarcă la sincronizare, după drepturile contului nou)
-    const AUTH_DATA_CACHE_KEYS = ['diih_people', 'diih_shopping', 'diih_known_shopping_keys', 'diih_ganduri', 'diih_school_activities', 'diih_school_teme',
+    const AUTH_DATA_CACHE_KEYS = ['diih_people', 'diih_shopping', 'diih_known_shopping_keys', 'diih_ganduri', 'diih_school_activities', 'diih_school_teme', 'diih_adservio',
       'diih_psaltire_grup', 'diih_note_anania', 'diih_biblia360', 'diih_gandul_zilei', 'diih_model_citire', 'diih_inventar',
       'diih_notifications_multi', 'diih_notifs_triggered_today', 'diih_note_profiles', 'diih_scriptura_state'];
     function clearAuthDataCache() {
@@ -5287,6 +5301,7 @@
           persistSchoolTemeLocal();
           if (schoolSubTab === 'teme') renderSchoolTeme();
         }
+        if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
           psaltireGrupData = data.psaltireGrup;
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
@@ -5389,6 +5404,7 @@
           persistSchoolTemeLocal();
           if (schoolSubTab === 'teme') renderSchoolTeme();
         }
+        if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
           psaltireGrupData = data.psaltireGrup;
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
@@ -5432,6 +5448,7 @@
       allGanduri = JSON.parse(localStorage.getItem('diih_ganduri') || '[]');
       schoolActivities = JSON.parse(localStorage.getItem('diih_school_activities') || '[]');
       allSchoolTeme = JSON.parse(localStorage.getItem('diih_school_teme') || '[]');
+      try { adservioData = JSON.parse(localStorage.getItem('diih_adservio') || 'null'); } catch (e) { adservioData = null; }
       try { updateSchoolTemeBadge(); } catch (e) {}
       psaltireGrupData = JSON.parse(localStorage.getItem('diih_psaltire_grup') || '[]');
       biblia360List = JSON.parse(localStorage.getItem('diih_biblia360') || '[]');
@@ -7964,6 +7981,7 @@
         if (!document.getElementById('temaGivenDate').value) resetTemaForm();
         renderSchoolTeme();
       }
+      if (tab === 'adservio') renderAdservio();
     }
 
     function temaAddDays(n) {
@@ -8216,7 +8234,7 @@
             return `<div class="flex items-start gap-2 p-2 rounded-xl bg-darkbg border ${k === 'intarziate' ? 'border-rose-800' : 'border-bordercol'}">
               <button onclick="toggleSchoolTemaDone('${id}')" class="mt-0.5 w-5 h-5 shrink-0 rounded border ${done ? 'bg-emerald-700 border-emerald-500 text-white' : 'border-slate-500'} text-[11px] leading-none">${done ? '✓' : ''}</button>
               <div class="flex-1 min-w-0">
-                <p class="text-xs"><span class="font-bold text-cyan-300">${escapeHtmlText(t.subject)}</span>${showChild && t.child ? ` <span class="text-slate-500">• ${escapeHtmlText(t.child)}</span>` : ''}</p>
+                <p class="text-xs"><span class="font-bold text-cyan-300">${escapeHtmlText(t.subject)}</span>${t.source === 'adservio' ? ' <span class="text-[9px] px-1 rounded bg-indigo-900 text-indigo-200">Adservio</span>' : ''}${showChild && t.child ? ` <span class="text-slate-500">• ${escapeHtmlText(t.child)}</span>` : ''}</p>
                 <p class="text-xs ${done ? 'line-through text-slate-500' : 'text-slate-200'} whitespace-pre-wrap break-words">${escapeHtmlText(t.text)}</p>
                 <p class="text-[10px] text-slate-500">${t.givenDate ? 'primită ' + formatTemaDate(t.givenDate) : ''}${t.dueDate ? ' • termen <span class="' + (k === 'intarziate' ? 'text-rose-400' : 'text-slate-300') + '">' + formatTemaDate(t.dueDate) + '</span>' : ''}${done && t.doneDate ? ' • gata ' + formatTemaDate(t.doneDate) : ''}</p>
               </div>
@@ -8228,6 +8246,72 @@
           }).join('')}
         </div>`;
       }).join('');
+    }
+
+    // ====== ADSERVIO (v24.6): date aduse de sincronizarea din Apps Script ======
+    let adservioData = null;
+
+    function setAdservioData(d) {
+      if (!d || Array.isArray(d)) return;
+      adservioData = d;
+      try { localStorage.setItem('diih_adservio', JSON.stringify(d)); } catch (e) {}
+      if (schoolSubTab === 'adservio') renderAdservio();
+    }
+
+    async function adservioSyncNow() {
+      const btn = document.getElementById('btnAdservioSync');
+      btn.disabled = true; btn.textContent = '⏳ Se sincronizează... (până la un minut)';
+      try {
+        const res = await apiJsonp({ ...apiAuthParams(), action: 'adservioSyncNow' });
+        if (res && res.success) {
+          setAdservioData(res.adservio);
+          const r = res.rezultat || {};
+          showToast(`Adservio: ${r.absente || 0} absențe, ${r.note || 0} note, ${r.teme || 0} teme`);
+          fetchDataFromSheet(false);
+        } else {
+          showToast('Adservio: ' + ((res && res.error) || 'eroare necunoscută'));
+          if (adservioData) adservioData.eroare = (res && res.error) || '';
+          renderAdservio();
+        }
+      } catch (e) {
+        showToast(e.message || 'Nu s-a putut sincroniza.');
+      } finally {
+        btn.disabled = false; btn.textContent = '🔄 Sincronizează acum';
+      }
+    }
+
+    function renderAdservio() {
+      const d = adservioData;
+      const st = document.getElementById('adservioStatus');
+      if (!st) return;
+      if (!d) { st.textContent = 'Încă nu s-a sincronizat. Apasă „Sincronizează acum” după configurarea din Apps Script.'; }
+      else {
+        st.innerHTML = (d.ultim ? `Ultima sincronizare: ${escapeHtmlText(d.ultim)}` : 'Încă nu s-a sincronizat.') +
+          (d.eroare ? `<br><span class="text-rose-400">Ultima eroare: ${escapeHtmlText(d.eroare)}</span>` : '');
+      }
+      const abs = (d && d.absente) || [];
+      const nemot = abs.filter(a => !a.motivata).length;
+      document.getElementById('adservioAbsSummary').innerHTML = abs.length
+        ? `${abs.length - nemot} motivate • <span class="${nemot ? 'text-rose-400 font-bold' : ''}">${nemot} nemotivate</span>` : '';
+      document.getElementById('adservioAbsList').innerHTML = abs.length === 0
+        ? '<p class="text-xs text-slate-500 italic">Nicio absență. 🎉</p>'
+        : abs.map(a => `<div class="flex items-center justify-between gap-2 p-1.5 rounded-lg bg-darkbg border ${a.motivata ? 'border-bordercol' : 'border-rose-900'} text-xs">
+            <span class="text-slate-200">${escapeHtmlText(a.materie)}${a.copil ? ` <span class="text-slate-500">• ${escapeHtmlText(a.copil)}</span>` : ''}</span>
+            <span class="whitespace-nowrap ${a.motivata ? 'text-emerald-400' : 'text-rose-400'}">${formatTemaDate(a.data)} • ${a.motivata ? 'motivată' : 'nemotivată'}</span>
+          </div>`).join('');
+
+      const note = (d && d.note) || [];
+      const bySubj = {};
+      note.forEach(n => { (bySubj[n.materie] = bySubj[n.materie] || []).push(n); });
+      const subjects = Object.keys(bySubj).sort((a, b) => a.localeCompare(b, 'ro'));
+      const colorFor = v => ({ FB: 'bg-emerald-800 text-emerald-100', B: 'bg-cyan-800 text-cyan-100', S: 'bg-amber-800 text-amber-100', I: 'bg-rose-800 text-rose-100' }[v] || 'bg-slate-700 text-slate-100');
+      document.getElementById('adservioNoteList').innerHTML = subjects.length === 0
+        ? '<p class="text-xs text-slate-500 italic">Niciun calificativ încă.</p>'
+        : subjects.map(sj => `<div class="p-2 rounded-lg bg-darkbg border border-bordercol">
+            <p class="text-xs text-slate-200 mb-1">${escapeHtmlText(sj)}</p>
+            <div class="flex flex-wrap gap-1">${bySubj[sj].sort((a, b) => a.data.localeCompare(b.data)).map(n =>
+              `<span class="px-1.5 py-0.5 rounded text-[11px] font-bold ${colorFor(n.afisare)}" title="${escapeHtmlText(n.tip)}">${escapeHtmlText(n.afisare)} <span class="font-normal opacity-75">${formatTemaDate(n.data)}</span></span>`).join('')}</div>
+          </div>`).join('');
     }
 
     // ====== NOTIȚE PER PROFIL (v24.0.2) ======

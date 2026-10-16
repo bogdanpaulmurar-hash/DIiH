@@ -1,5 +1,16 @@
 # CHANGELOG — DIiH Hub
 
+## v24.6 — 2026-10-16 — Sincronizare automată Adservio
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.6 + fișier nou **`Adservio.gs`**). **Necesită deploy** și configurare unică.
+
+- `Adservio.gs` se loghează în Adservio (`POST /api/v2/auth`) cu datele din **Proprietăți script** (`ADSERVIO_USER`, `ADSERVIO_PASS`) — niciodată în sheet sau în aplicație.
+- Aduce, pentru fiecare copil al contului de părinte: **absențele** (`/api/v2/absente`), **calificativele/notele** (`/api/v2/elevi/repartizare?cuNote=1`; 10/8/6/4 → FB/B/S/I) și **temele** (`/api/v2/teme`, doar din anul școlar curent).
+- Absențele și notele se rescriu la fiecare sincronizare în tab-urile `Adservio_Absente` și `Adservio_Note`. Temele intră în `Scoala_Teme` cu ID `ADS-<id>` și sursa `adservio`; o temă bifată „Gata” în aplicație rămâne bifată, iar una predată în Adservio devine „Gata”.
+- Trigger zilnic la **07:00 și 16:00** (`instaleazaSyncAdservio()`, rulat o dată). `testeazaAdservio()` verifică configurarea fără programare.
+- Școală → **🏫 Adservio**: ultima sincronizare (și ultima eroare), buton „Sincronizează acum”, absențe (motivate/nemotivate) și calificative pe materii. Temele Adservio apar în 📚 Teme cu eticheta „Adservio”.
+- Acțiuni noi: `getAdservioData` (vizualizare Școală), `adservioSyncNow` (editare Școală). Rezultatul sincronizării se notează în `LOG_app` și în Setari (`adservio_ultim`, `adservio_eroare`).
+
 ## v24.5 — 2026-10-16 — Școală: subtab Teme + acces Adservio
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.5). **Necesită deploy** (copiere cod în Apps Script + implementare nouă).

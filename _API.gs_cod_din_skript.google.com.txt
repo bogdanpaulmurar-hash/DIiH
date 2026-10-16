@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.5
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.6
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.5";
+const BACKEND_VERSION = "24.6";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -587,6 +587,20 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
+  // 8a2. ADSERVIO (v24.6) — datele aduse de sincronizare (fișierul Adservio.gs) + sincronizare la cerere
+  if (action === "getAdservioData") {
+    return returnResponse(e, { adservio: getAdservioData(ss) });
+  }
+
+  if (action === "adservioSyncNow") {
+    try {
+      const rez = adservioSync("manual, din aplicație (" + (auth.profile.email || "-") + ")");
+      return returnResponse(e, { success: true, rezultat: rez, adservio: getAdservioData(ss) });
+    } catch (err) {
+      return returnResponse(e, { success: false, error: err.message || String(err) });
+    }
+  }
+
   // 8b. CRUD INVENTAR PERSONAL (Obiecte, spații de depozitare, mentenanță)
   if (action === "getInventoryData") {
     return returnResponse(e, { inventar: getInventoryData(ss) });
@@ -793,6 +807,7 @@ function doGet(e) {
       modelCitire: getModelCitireData(ss),
       schoolActivities: getSchoolActivitiesData(ss),
       schoolTeme: getSchoolTemeData(ss),
+      adservio: getAdservioDataSafe(ss),
       psaltireGrup: getPsaltireGrupData(ss)
     };
     return returnResponse(e, authFilterResponse(liveData, auth, ss));
@@ -813,6 +828,7 @@ function doGet(e) {
     bibliaBVA: getBiblia360Data(ss),
     schoolActivities: getSchoolActivitiesData(ss),
     schoolTeme: getSchoolTemeData(ss),
+    adservio: getAdservioDataSafe(ss),
     psaltireGrup: getPsaltireGrupData(ss)
   };
 
@@ -1478,6 +1494,11 @@ function findRowIndexById(sheet, id) {
   return -1;
 }
 
+// Dacă fișierul Adservio.gs nu e (încă) în proiect, aplicația merge mai departe fără datele Adservio
+function getAdservioDataSafe(ss) {
+  try { return typeof getAdservioData === "function" ? getAdservioData(ss) : null; } catch (e) { return null; }
+}
+
 function getSchoolTemeData(ss) {
   const sh = ss.getSheetByName("Scoala_Teme");
   if (!sh || sh.getLastRow() < 2) return [];
@@ -1673,6 +1694,7 @@ const AUTH_ACTION_RULES = {
   uploadDriveFile: ["setari", "edit"],
   saveSchoolActivities: ["scoala", "edit"], deleteSchoolActivity: ["scoala", "edit"], batchUpdateSchoolStatus: ["scoala", "edit"],
   saveSchoolTema: ["scoala", "edit"], deleteSchoolTema: ["scoala", "edit"],
+  getAdservioData: ["scoala", "view"], adservioSyncNow: ["scoala", "edit"],
   addPsaltirePerson: ["psaltire", "edit"], updatePsaltirePerson: ["psaltire", "edit"], deletePsaltirePerson: ["psaltire", "edit"],
   addNotita: ["notite", "edit"], updateNotita: ["notite", "edit"], deleteNotita: ["notite", "edit"],
   addGand: ["notite", "edit"], updateGand: ["notite", "edit"], deleteGand: ["notite", "edit"],
@@ -1690,7 +1712,7 @@ const AUTH_ACTION_RULES = {
 // Ce cheie din răspunsul de sincronizare ține de ce modul (cheile nelistate, ex. settings, se trimit tuturor)
 const AUTH_RESPONSE_MODULES = {
   pomelnic: "pomelnic", cumparaturi: "cumparaturi", ganduri: "notite", notite: "notite", gandulZilei: "gandul",
-  modelCitire: "scriptura", noteAnania: "scriptura", bibliaBVA: "biblia360", schoolActivities: "scoala", schoolTeme: "scoala", psaltireGrup: "psaltire"
+  modelCitire: "scriptura", noteAnania: "scriptura", bibliaBVA: "biblia360", schoolActivities: "scoala", schoolTeme: "scoala", adservio: "scoala", psaltireGrup: "psaltire"
 };
 
 function authRoleDefaults(rol) {
