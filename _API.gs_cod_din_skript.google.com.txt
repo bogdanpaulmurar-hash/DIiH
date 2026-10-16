@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.0.2
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.0.3
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.0.2";
+const BACKEND_VERSION = "24.0.3";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -342,7 +342,7 @@ function doGet(e) {
     const author = e.parameter.author ? ` (${e.parameter.author})` : "";
     const produsComplet = (e.parameter.produs || "") + author;
     const nuPartaja = (e.parameter.nuPartaja === "true" || e.parameter.nuPartaja === true) ? "DA" : "NU";
-    const owner = e.parameter.owner || e.parameter.user || e.parameter.author || "";
+    const owner = auth.profile.email;
     if (header === "ID") {
       const shopId = e.parameter.id || ("SHOP-" + Date.now());
       sh.appendRow([
@@ -382,10 +382,11 @@ function doGet(e) {
       const magazinCol = hasIdCol ? 2 : 1;
       const produsCol = hasIdCol ? 3 : 2;
       const maxRows = sh.getLastRow() - 1;
-      const vals = sh.getRange(2, 1, maxRows, hasIdCol ? 3 : 2).getValues();
+      const vals = sh.getRange(2, 1, maxRows, Math.max(sh.getLastColumn(), hasIdCol ? 7 : 5)).getValues();
       for (let i = vals.length - 1; i >= 0; i--) {
         let pVal = (vals[i][produsCol - 1] || "").toString().trim();
         let mVal = (vals[i][magazinCol - 1] || "").toString().trim();
+        if (!shopItemVisibleTo(shopRowToItem(vals[i], hasIdCol), auth.profile)) continue;
         if (pVal === targetProdus || pVal.startsWith(targetProdus) || (targetMagazin && mVal === targetMagazin && pVal.includes(targetProdus))) {
           sh.deleteRow(i + 2);
           deleted = true;
@@ -396,8 +397,12 @@ function doGet(e) {
 
     // 2. Fallback după rowId dacă nu s-a găsit după conținut
     if (!deleted && !isNaN(rowId) && rowId >= 2 && rowId <= sh.getLastRow()) {
-      sh.deleteRow(rowId);
-      deleted = true;
+      const hasIdColFb = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase() === "ID";
+      const rowVals = sh.getRange(rowId, 1, 1, Math.max(sh.getLastColumn(), hasIdColFb ? 7 : 5)).getValues()[0];
+      if (shopItemVisibleTo(shopRowToItem(rowVals, hasIdColFb), auth.profile)) {
+        sh.deleteRow(rowId);
+        deleted = true;
+      }
     }
 
     return returnResponse(e, { success: true, deleted: deleted });
@@ -408,10 +413,13 @@ function doGet(e) {
     const magazin = e.parameter.magazin;
     if (sh && magazin && sh.getLastRow() >= 2) {
       const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
-      const magazinCol = (header === "ID") ? 2 : 1;
-      const vals = sh.getRange(2, magazinCol, sh.getLastRow() - 1, 1).getValues();
+      const hasIdCol = header === "ID";
+      const magazinCol = hasIdCol ? 2 : 1;
+      const vals = sh.getRange(2, 1, sh.getLastRow() - 1, Math.max(sh.getLastColumn(), hasIdCol ? 7 : 5)).getValues();
       for (let i = vals.length - 1; i >= 0; i--) {
-        if (vals[i][0] && vals[i][0].toString().trim() === magazin.toString().trim()) {
+        const m = vals[i][magazinCol - 1];
+        // Produsele private ale altora rămân pe listă (nici nu le vezi)
+        if (m && m.toString().trim() === magazin.toString().trim() && shopItemVisibleTo(shopRowToItem(vals[i], hasIdCol), auth.profile)) {
           sh.deleteRow(i + 2);
         }
       }
@@ -987,6 +995,26 @@ function getPomelnicData(ss) {
     });
   });
   return list;
+}
+
+// v24.0.3: un produs marcat „Nu partaja” e vizibil doar celui care l-a adăugat. Owner = emailul contului;
+// la produsele vechi, owner e un nume (ex. „Bogdan Murar”), potrivit cu numele profilului; fără owner = adminul.
+function shopItemVisibleTo(it, prof) {
+  if (!prof) return false;
+  if (!it.nuPartaja) return true;
+  const o = (it.owner || "").toString().toLowerCase().trim();
+  if (!o) return prof.rol === "admin";
+  if (o.indexOf("@") !== -1) return o === prof.email;
+  const nm = (prof.nume || "").toLowerCase().trim();
+  return nm === o || (nm && nm.split(" ")[0] === o.split(" ")[0]);
+}
+
+function shopRowToItem(r, hasIdCol) {
+  const np = hasIdCol ? r[5] : r[3];
+  return {
+    nuPartaja: np === true || (np || "").toString().trim().toUpperCase() === "DA" || (np || "").toString().trim().toLowerCase() === "true",
+    owner: ((hasIdCol ? r[6] : r[4]) || "").toString().trim()
+  };
 }
 
 function getCumparaturiData(ss) {
@@ -1727,6 +1755,16 @@ function authFilterResponse(data, auth, ss) {
   if (auth.profile.rol !== "admin") {
     Object.keys(AUTH_RESPONSE_MODULES).forEach(k => {
       if (k in data && !authLevelOk(auth.profile.permisiuni[AUTH_RESPONSE_MODULES[k]], "view")) data[k] = [];
+    });
+  }
+  // Cumpărăturile sunt comune, în afară de cele marcate „Nu partaja” (doar ale autorului).
+  // ownerNume = numele afișat al celui care a adăugat produsul (pentru notificarea „X a adăugat…”).
+  if (Array.isArray(data.cumparaturi)) {
+    const profiles = authGetProfiles(ss);
+    data.cumparaturi = data.cumparaturi.filter(it => shopItemVisibleTo(it, auth.profile)).map(it => {
+      const o = (it.owner || "").toLowerCase();
+      const pr = o.indexOf("@") !== -1 ? profiles.find(x => x.email === o) : null;
+      return Object.assign({}, it, { ownerNume: pr ? (pr.nume || pr.email) : (it.owner || "") });
     });
   }
   // Notițele sunt per profil: fiecare vede doar notițele lui și pe cele pe care le-a scris pentru alții

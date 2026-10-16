@@ -1,5 +1,19 @@
 # CHANGELOG — DIiH Hub
 
+## v24.0.3 — 2026-10-16 — Cumpărături private pe server, adăugare rapidă din widgeturi
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.0.3).
+
+### Cumpărături
+- **„Nu partaja” e acum privat pe server**: un produs marcat așa ajunge doar la cel care l-a adăugat. Înainte, serverul îl trimitea tuturor și doar aplicația îl ascundea.
+- Proprietarul unui produs nou e întotdeauna contul Google conectat (coloana `Owner` primește emailul). La produsele vechi, cu un nume în `Owner`, se potrivește numele profilului.
+- Nimeni nu poate șterge produsele private ale altcuiva, nici prin „golește magazinul”.
+- Notificarea „X a adăugat pe listă” folosește numele real al celui care a adăugat, în locul numelor Bogdan/Andreea scrise în cod, și nu mai apare pentru produsele adăugate de tine.
+
+### Widgeturi pe Astăzi
+- **Cumpărături**: rând de adăugare rapidă (Enter sau „+”), cu magazinul implicit **„Oriunde”** sau oricare dintre magazinele deja din listă. Widgetul arată ultimele 3 produse adăugate.
+- **Notițe & remindere**: câmp de **oră** lângă notița rapidă. Reminderul se pune azi la ora aleasă sau mâine, dacă ora a trecut deja.
+
 ## v24.0.2 — 2026-10-16 — Notițe per profil, remindere, widget nou
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.0.2).

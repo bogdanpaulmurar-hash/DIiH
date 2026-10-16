@@ -361,12 +361,17 @@
       </div>
 
       <!-- Cumpărături Urgente -->
-      <div id="ownerWidget_shopping" onclick="switchTab('cumparaturi')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-emerald-600/60 active:scale-98 transition space-y-2">
+      <div id="ownerWidget_shopping" onclick="if (!event.target.closest('.no-tab-switch')) switchTab('cumparaturi')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-emerald-600/60 active:scale-98 transition space-y-2">
         <div class="flex items-center justify-between text-xs font-bold text-emerald-300 uppercase tracking-wider">
           <span>🛒 Cumpărături</span>
           <span id="ownerWidgetShoppingBadge" class="bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded-full text-[10px]">0 de luat</span>
         </div>
         <div id="ownerWidgetShoppingContent" class="space-y-1 text-xs text-slate-300"></div>
+        <div class="no-tab-switch flex items-center gap-1.5 pt-2">
+          <input id="quickShopInput" type="text" autocomplete="off" placeholder="Ce cumpărăm? (Enter)" onkeydown="if (event.key === 'Enter') { event.preventDefault(); quickAddShopping(); }" class="flex-1 min-w-0 bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+          <select id="quickShopStore" title="Magazin" class="shrink-0 max-w-[7.5rem] bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs"><option value="Oriunde">Oriunde</option></select>
+          <button onclick="quickAddShopping()" class="shrink-0 text-[11px] px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-bold rounded-lg">+</button>
+        </div>
       </div>
 
       <!-- Notițe Personale (fost Gânduri) -->
@@ -380,6 +385,7 @@
         <div id="ownerWidgetNotiteContent" class="space-y-1 mt-2"></div>
         <div class="no-tab-switch flex items-center gap-1.5 pt-2">
           <input id="quickNoteInput" type="text" autocomplete="off" placeholder="Notiță rapidă… (Enter)" onkeydown="if (event.key === 'Enter') { event.preventDefault(); saveQuickNote(); }" class="flex-1 min-w-0 bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+          <input id="quickNoteTime" type="time" title="⏰ Reminder (opțional): azi la ora aleasă, sau mâine dacă ora a trecut" class="shrink-0 w-[5.5rem] bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
           <button onclick="saveQuickNote()" class="shrink-0 text-[11px] px-2.5 py-1.5 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-lg">+</button>
         </div>
       </div>
@@ -1252,7 +1258,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.0.2 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.0.3 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2342,7 +2348,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.0.2";
+    const APP_VERSION = "v24.0.3";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2620,7 +2626,7 @@
       psaltire: ['openAddPsaltireModal', 'openEditPsaltireModal', 'savePsaltirePerson', 'deletePsaltirePerson'],
       scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar'],
       notite: ['saveOrUpdateGand', 'deleteGand', 'deleteSelectedGanduri', 'softDeleteManyGanduri', 'undoDeleteGanduri', 'startEditGand'],
-      cumparaturi: ['addShoppingItem', 'removeShoppingItem', 'markWholeStoreCompleted'],
+      cumparaturi: ['addShoppingItem', 'removeShoppingItem', 'markWholeStoreCompleted', 'quickAddShopping'],
       inventar: ['addCustomInventoryCategory', 'deleteCustomInventoryCategory', 'addCustomInventorySpace', 'deleteCustomInventorySpace', 'saveInventoryItem', 'deleteInventoryItem', 'confirmMoveInventoryItem'],
       gandul: ['saveGandulZileiFromManager', 'toggleGandulZileiActiv'],
       scriptura: ['startEditNoteBiblia', 'saveEditNoteBiblia', 'deleteOneNoteBiblia', 'deleteSelectedNoteBiblia', 'softDeleteManyNoteBiblia', 'undoDeleteNoteBiblia', 'toggleModelCitirePozitie', 'advanceScripturaProgress', 'toggleScripturaChapter', 'setBookAllChapters'],
@@ -7585,14 +7591,25 @@
       if (!authCanEdit('notite')) { showToast('Ai doar drept de vizualizare la Notițe.'); return; }
       const me = getMyAuthEmail();
       const tempRowId = -Date.now();
-      allGanduri.push({ rowId: tempRowId, gand: text, sursa: 'Rapid', data: new Date().toLocaleDateString('ro-RO'), user: getCurrentLoggedInUser(), proprietar: me, creatDe: me, reminder: '' });
+      // Ora din widget: azi la acea oră, sau mâine dacă ora a trecut deja
+      const timeInput = document.getElementById('quickNoteTime');
+      let reminder = '';
+      if (timeInput && timeInput.value) {
+        const [hh, mm] = timeInput.value.split(':').map(Number);
+        const when = new Date();
+        when.setHours(hh, mm, 0, 0);
+        if (when.getTime() <= Date.now()) when.setDate(when.getDate() + 1);
+        reminder = `${localDateStr(when)}T${timeInput.value}`;
+      }
+      allGanduri.push({ rowId: tempRowId, gand: text, sursa: 'Rapid', data: new Date().toLocaleDateString('ro-RO'), user: getCurrentLoggedInUser(), proprietar: me, creatDe: me, reminder: reminder });
       localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
       input.value = '';
+      if (timeInput) timeInput.value = '';
       renderGanduriList();
       updateTodayWidgetView();
-      showToast('Notiță salvată!');
+      showToast(reminder ? `Notiță salvată, reminder ${formatNoteReminder(reminder)}.` : 'Notiță salvată!');
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(text)}&sursa=Rapid&user=${encodeURIComponent(getCurrentLoggedInUser())}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(text)}&sursa=Rapid&user=${encodeURIComponent(getCurrentLoggedInUser())}&reminder=${encodeURIComponent(reminder)}&callback=void`;
       document.body.appendChild(script);
     }
 
@@ -7854,14 +7871,39 @@
     }
 
     // 7. CUMPĂRĂTURI (ENTER AUTOMAT, MAGAZIN PĂSTRAT, CURSOR POZIȚIONAT, OPȚIUNE PRIVAT)
+    // Serverul trimite doar produsele comune și pe cele private ale contului conectat („Nu partaja”)
     function getVisibleShoppingItems() {
-      const curUser = getCurrentLoggedInUser();
-      return allShopping.filter(item => {
-        const isPrivate = item.nuPartaja === true || item.nuPartaja === 'true' || item.nuPartaja === 'TRUE' || item.nuPartaja === 1;
-        if (!isPrivate) return true;
-        const owner = item.owner || item.author;
-        return owner === curUser;
-      });
+      return allShopping;
+    }
+
+    // Produs adăugat de contul conectat (owner = email; la produsele vechi, owner = numele utilizatorului)
+    function isMyShoppingItem(it) {
+      const owner = (it.owner || '').toString().toLowerCase().trim();
+      const me = getMyAuthEmail();
+      if (owner.indexOf('@') !== -1) return owner === me;
+      const curUser = getCurrentLoggedInUser().toLowerCase();
+      return !!owner && (owner === curUser || owner.split(' ')[0] === curUser.split(' ')[0]);
+    }
+
+    function quickAddShopping() {
+      const input = document.getElementById('quickShopInput');
+      const produs = (input ? input.value : '').trim();
+      if (!produs) return;
+      if (!authCanEdit('cumparaturi')) { showToast('Ai doar drept de vizualizare la Cumpărături.'); return; }
+      const storeSel = document.getElementById('quickShopStore');
+      const magazin = (storeSel && storeSel.value) || 'Oriunde';
+      const shopId = 'SHOP-' + Date.now();
+      const newItem = { id: shopId, rowId: -Date.now(), magazin, produs, cantitate: '1', nuPartaja: false, owner: getMyAuthEmail() };
+      allShopping.push(newItem);
+      localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
+      markShoppingItemAsLocallyKnown(newItem);
+      input.value = '';
+      renderShoppingList();
+      updateTodayWidgetView();
+      showToast(`Adăugat: ${produs} (${magazin})`);
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=1&nuPartaja=false&callback=void`;
+      document.body.appendChild(script);
     }
 
     function toggleShoppingGrouping() {
@@ -7917,17 +7959,7 @@
         if (!knownSet.has(key)) {
           knownSet.add(key);
           const isPrivate = it.nuPartaja === true || it.nuPartaja === 'true' || it.nuPartaja === 'TRUE' || it.nuPartaja === 'DA' || it.nuPartaja === 1;
-          if (!isPrivate) {
-            const itemOwner = (it.owner || it.author || '').trim();
-            // Verificăm dacă elementul a fost adăugat de celălalt utilizator
-            const isSelf = itemOwner && (
-              (curUser.toLowerCase().includes('bogdan') && itemOwner.toLowerCase().includes('bogdan')) ||
-              (curUser.toLowerCase().includes('andreea') && itemOwner.toLowerCase().includes('andreea'))
-            );
-            if (!isSelf) {
-              itemsToAlert.push(it);
-            }
-          }
+          if (!isPrivate && !isMyShoppingItem(it)) itemsToAlert.push(it);
         }
       });
 
@@ -7935,8 +7967,7 @@
 
       if (itemsToAlert.length > 0) {
         itemsToAlert.forEach(it => {
-          const isFromAndreea = (it.owner && it.owner.toLowerCase().includes('andreea')) || (!curUser.toLowerCase().includes('andreea') && it.author && it.author.toLowerCase().includes('andreea'));
-          const senderName = isFromAndreea ? 'Andreea' : 'Bogdan';
+          const senderName = ((it.ownerNume || it.owner || '').split(' ')[0]) || 'Cineva';
           const cantitateStr = it.cantitate ? ` (${it.cantitate} buc.)` : '';
           const magazinStr = it.magazin ? ` la magazinul ${it.magazin}` : '';
           const title = `🛒 Cumpărături • ${senderName}`;
@@ -7958,7 +7989,7 @@
 
       const newRowId = allShopping.length + 2;
       const shopId = 'SHOP-' + Date.now();
-      const newItem = { id: shopId, rowId: newRowId, magazin, produs, cantitate, nuPartaja, owner: curUser };
+      const newItem = { id: shopId, rowId: newRowId, magazin, produs, cantitate, nuPartaja, owner: getMyAuthEmail() || curUser };
       allShopping.push(newItem);
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       markShoppingItemAsLocallyKnown(newItem);
@@ -8431,10 +8462,19 @@
       const shopContent = document.getElementById('ownerWidgetShoppingContent');
       const shopBadge = document.getElementById('ownerWidgetShoppingBadge');
       if (shopContent && shopBadge) {
-        shopBadge.textContent = `${allShopping.length} de luat`;
-        shopContent.innerHTML = allShopping.length === 0
+        const shopItems = getVisibleShoppingItems();
+        shopBadge.textContent = `${shopItems.length} de luat`;
+        shopContent.innerHTML = shopItems.length === 0
           ? '<p class="text-xs text-slate-400 italic">Lista este goală.</p>'
-          : allShopping.slice(0, 3).map(x => `<p class="text-xs text-slate-200">• ${x.produs} <span class="text-slate-500">(${x.magazin})</span></p>`).join('');
+          : shopItems.slice(-3).reverse().map(x => `<p class="text-xs text-slate-200 truncate">• ${escapeHtmlText(x.produs)} <span class="text-slate-500">(${escapeHtmlText(x.magazin)})</span></p>`).join('');
+        // Magazinele existente în listă, cu „Oriunde” mereu primul și implicit
+        const storeSel = document.getElementById('quickShopStore');
+        if (storeSel) {
+          const keep = storeSel.value || 'Oriunde';
+          const stores = Array.from(new Set(shopItems.map(x => (x.magazin || '').trim()).filter(m => m && m !== 'Oriunde'))).sort();
+          storeSel.innerHTML = ['Oriunde', ...stores].map(m => `<option value="${escapeHtmlText(m)}">${escapeHtmlText(m)}</option>`).join('');
+          storeSel.value = ['Oriunde', ...stores].includes(keep) ? keep : 'Oriunde';
+        }
       }
 
       const notiteContent = document.getElementById('ownerWidgetNotiteContent') || document.getElementById('ownerWidgetGanduriContent');
