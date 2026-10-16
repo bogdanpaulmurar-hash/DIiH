@@ -1,5 +1,20 @@
 # CHANGELOG — DIiH Hub
 
+## v24.3 — 2026-10-16 — Raport Școală pe perioadă
+
+Doar frontend (`index.html`, `sw.js`). Backend neschimbat (rămâne 24.1), nu e nevoie de deploy.
+
+Butonul „📊 Raport Detaliat pe Perioadă” din Școală deschide acum raportul (înainte afișa „în lucru”).
+
+- **Perioadă**: luna aceasta, luna trecută, ultimele 30 de zile, **anul școlar** (1 sept – 31 aug), anul calendaristic sau un interval ales (gol = toate datele).
+- **Totaluri**: ore, sumă totală, achitat, restanță. Activitățile „Fără plată” și „Abonament” contează la achitat, ca în sumarul din calendar.
+- **Pe copil** și **pe instituție**: activități, ore, total, restanță.
+- **Grafic lunar**: bare cu suma pe fiecare lună, achitat (verde) și neachitat (portocaliu). Include și lunile fără activități.
+- **Restanțe**: activitățile neachitate, ordonate după termenul de plată; cele cu termen depășit sunt marcate.
+- **Export CSV** (se deschide direct în Excel: separator „;”, virgulă zecimală, diacritice) cu toate activitățile perioadei și rândul de total.
+- **PDF / Tipărire**: raport pe fundal alb (totaluri, tabele, grafic, restanțe, lista activităților), salvabil ca PDF din dialogul de tipărire.
+- Activitățile generate automat de versiunile vechi pentru Săptămâna Verde/Altfel nu intră în raport.
+
 ## v24.2 — 2026-10-16 — Calendar școlar: săptămâni speciale ca marcaje, alerte, verificare
 
 Doar frontend (`index.html`, `sw.js`). Backend neschimbat (rămâne 24.1), nu e nevoie de deploy.

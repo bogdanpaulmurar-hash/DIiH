@@ -1265,7 +1265,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.2 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.3 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2104,6 +2104,7 @@
         <button onclick="setSchoolReportPeriod('month')" data-period="month" class="report-period-btn px-2.5 py-1 rounded-lg bg-violet-900 text-violet-200 border border-violet-700 font-medium">Luna aceasta</button>
         <button onclick="setSchoolReportPeriod('lastMonth')" data-period="lastMonth" class="report-period-btn px-2.5 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Luna trecută</button>
         <button onclick="setSchoolReportPeriod('last30')" data-period="last30" class="report-period-btn px-2.5 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Ultimele 30 zile</button>
+        <button onclick="setSchoolReportPeriod('schoolYear')" data-period="schoolYear" class="report-period-btn px-2.5 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Anul școlar</button>
         <button onclick="setSchoolReportPeriod('year')" data-period="year" class="report-period-btn px-2.5 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Anul acesta</button>
         <button onclick="setSchoolReportPeriod('custom')" data-period="custom" class="report-period-btn px-2.5 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Interval custom</button>
       </div>
@@ -2120,6 +2121,11 @@
       </div>
 
       <div id="schoolReportContent" class="space-y-3 pt-2"></div>
+
+      <div class="grid grid-cols-2 gap-2 pt-2 border-t border-bordercol">
+        <button onclick="exportSchoolReportCsv()" class="py-2 rounded-xl bg-emerald-900 border border-emerald-700 text-emerald-100 font-bold hover:bg-emerald-800">⬇️ Export CSV (Excel)</button>
+        <button onclick="printSchoolReport()" class="py-2 rounded-xl bg-violet-900 border border-violet-700 text-violet-100 font-bold hover:bg-violet-800">🖨️ PDF / Tipărire</button>
+      </div>
     </div>
   </div>
 
@@ -2355,7 +2361,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.2";
+    const APP_VERSION = "v24.3";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2680,9 +2686,222 @@
       promptSwitchUser();
     }
 
-    // Raportul detaliat din Școală se construiește în v24.3; până atunci butonul spune asta în loc să nu facă nimic
+    // ====== RAPORT ȘCOALĂ (v24.3) ======
+    // Perioadă → totaluri, pe copil, pe instituție, grafic lunar achitat/neachitat, restanțe cu termen, export CSV și PDF.
+    // „Achitat” include și activitățile fără plată / cu abonament (isActivitySettled), ca în sumarul din calendar.
+    let schoolReportPeriod = 'month';
+    const SCHOOL_REPORT_LABELS = { month: 'Luna aceasta', lastMonth: 'Luna trecută', last30: 'Ultimele 30 zile', schoolYear: 'Anul școlar', year: 'Anul acesta', custom: 'Interval ales' };
+
     function openSchoolReportModal() {
-      showToast('Raportul detaliat pe perioadă este în lucru și va veni într-o versiune următoare.');
+      document.getElementById('schoolReportModal').classList.remove('hidden');
+      setSchoolReportPeriod(schoolReportPeriod);
+    }
+
+    function closeSchoolReportModal() {
+      document.getElementById('schoolReportModal').classList.add('hidden');
+    }
+
+    function setSchoolReportPeriod(period) {
+      schoolReportPeriod = period;
+      document.querySelectorAll('#reportPeriodButtons .report-period-btn').forEach(b => {
+        const on = b.dataset.period === period;
+        b.className = `report-period-btn px-2.5 py-1 rounded-lg ${on ? 'bg-violet-900 text-violet-200 border border-violet-700 font-medium' : 'bg-darkbg border border-bordercol text-slate-400'}`;
+      });
+      document.getElementById('reportCustomRange').classList.toggle('hidden', period !== 'custom');
+      renderSchoolReport();
+    }
+
+    function getSchoolReportRange() {
+      const now = new Date();
+      const y = now.getFullYear(), m = now.getMonth();
+      const today = localDateStr(now);
+      if (schoolReportPeriod === 'month') return { start: localDateStr(new Date(y, m, 1)), end: localDateStr(new Date(y, m + 1, 0)) };
+      if (schoolReportPeriod === 'lastMonth') return { start: localDateStr(new Date(y, m - 1, 1)), end: localDateStr(new Date(y, m, 0)) };
+      if (schoolReportPeriod === 'last30') { const d = new Date(now); d.setDate(d.getDate() - 29); return { start: localDateStr(d), end: today }; }
+      if (schoolReportPeriod === 'schoolYear') { const [a, b] = getDefaultSchoolYear().split('-'); return { start: `${a}-09-01`, end: `${b}-08-31` }; }
+      if (schoolReportPeriod === 'year') return { start: `${y}-01-01`, end: `${y}-12-31` };
+      const from = document.getElementById('reportCustomFrom').value, to = document.getElementById('reportCustomTo').value;
+      return { start: from || '0000-01-01', end: to || '9999-12-31' };
+    }
+
+    function buildSchoolReportData() {
+      const range = getSchoolReportRange();
+      const acts = getRealSchoolActivities()
+        .filter(a => a.date >= range.start && a.date <= range.end)
+        .sort((a, b) => (a.date + (a.startHour || '')).localeCompare(b.date + (b.startHour || '')));
+      const num = v => parseFloat(v) || 0;
+      const t = { hours: 0, total: 0, paid: 0, unpaid: 0, count: acts.length };
+      const byChild = {}, byInst = {}, byMonth = {};
+      const add = (map, key, a) => {
+        const r = map[key] = map[key] || { hours: 0, total: 0, unpaid: 0, count: 0 };
+        r.hours += num(a.hours); r.total += num(a.total); r.count++;
+        if (!isActivitySettled(a.paymentStatus)) r.unpaid += num(a.total);
+      };
+      acts.forEach(a => {
+        t.hours += num(a.hours); t.total += num(a.total);
+        if (isActivitySettled(a.paymentStatus)) t.paid += num(a.total); else t.unpaid += num(a.total);
+        add(byChild, a.child || 'Nealocat', a);
+        add(byInst, a.institution || '-', a);
+        add(byMonth, a.date.substring(0, 7), a);
+      });
+      // Lunile graficului: toate lunile dintre prima și ultima activitate (inclusiv cele goale)
+      const months = [];
+      if (acts.length) {
+        const [fy, fm] = acts[0].date.split('-').map(Number), [ly, lm] = acts[acts.length - 1].date.split('-').map(Number);
+        for (let d = new Date(fy, fm - 1, 1); d <= new Date(ly, lm - 1, 1); d.setMonth(d.getMonth() + 1)) {
+          const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          const r = byMonth[k] || { total: 0, unpaid: 0 };
+          months.push({ key: k, label: SCHOOL_CAL_MONTHS[d.getMonth()], year: d.getFullYear(), paid: r.total - r.unpaid, unpaid: r.unpaid });
+        }
+      }
+      const today = localDateStr();
+      const unpaidList = acts.filter(a => !isActivitySettled(a.paymentStatus) && num(a.total) > 0).map(a => {
+        const dl = a.deadline && a.deadline !== '-' ? a.deadline.toString().substring(0, 10) : '';
+        return { a, deadline: dl, overdue: !!dl && dl < today };
+      }).sort((x, y) => (x.deadline || '9999').localeCompare(y.deadline || '9999') || x.a.date.localeCompare(y.a.date));
+      const sortRows = map => Object.entries(map).sort((a, b) => b[1].total - a[1].total || b[1].hours - a[1].hours);
+      return { range, acts, t, children: sortRows(byChild), institutions: sortRows(byInst), months, unpaidList };
+    }
+
+    function fmtLei(n) { return `${(Math.round(n * 100) / 100).toLocaleString('ro-RO')} Lei`; }
+    function fmtOre(n) { return `${(Math.round(n * 100) / 100).toLocaleString('ro-RO')} h`; }
+    function fmtRoDate(d) { return d ? new Date(d + 'T12:00:00').toLocaleDateString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''; }
+
+    function schoolReportRangeLabel(range) {
+      if (range.start === '0000-01-01' && range.end === '9999-12-31') return 'Toate datele';
+      if (range.start === '0000-01-01') return `până la ${fmtRoDate(range.end)}`;
+      if (range.end === '9999-12-31') return `din ${fmtRoDate(range.start)}`;
+      return `${fmtRoDate(range.start)} – ${fmtRoDate(range.end)}`;
+    }
+
+    // Grafic lunar cu bare stivuite (achitat jos, neachitat sus), aceeași scară pentru bare și etichete
+    function buildSchoolReportChartSvg(months, colors) {
+      if (!months.length) return '';
+      const W = 320, H = 150, top = 16, bottom = 26, left = 4, right = 4;
+      const max = Math.max(...months.map(m => m.paid + m.unpaid), 1);
+      const slot = (W - left - right) / months.length;
+      const bw = Math.min(28, slot * 0.62);
+      const sc = v => (v / max) * (H - top - bottom);
+      const showYear = new Set(months.map(m => m.year)).size > 1;
+      const bars = months.map((m, i) => {
+        const x = left + i * slot + (slot - bw) / 2, base = H - bottom;
+        const hp = sc(m.paid), hu = sc(m.unpaid), tot = m.paid + m.unpaid;
+        return `
+          ${hp > 0 ? `<rect x="${x.toFixed(1)}" y="${(base - hp).toFixed(1)}" width="${bw.toFixed(1)}" height="${hp.toFixed(1)}" fill="${colors.paid}" rx="2"></rect>` : ''}
+          ${hu > 0 ? `<rect x="${x.toFixed(1)}" y="${(base - hp - hu).toFixed(1)}" width="${bw.toFixed(1)}" height="${hu.toFixed(1)}" fill="${colors.unpaid}" rx="2"></rect>` : ''}
+          ${tot > 0 && months.length <= 12 ? `<text x="${(x + bw / 2).toFixed(1)}" y="${(base - hp - hu - 4).toFixed(1)}" text-anchor="middle" font-size="8" fill="${colors.text}">${Math.round(tot)}</text>` : ''}
+          <text x="${(x + bw / 2).toFixed(1)}" y="${H - bottom + 11}" text-anchor="middle" font-size="8" fill="${colors.text}">${m.label}</text>
+          ${showYear && (i === 0 || m.label === 'Ian') ? `<text x="${(x + bw / 2).toFixed(1)}" y="${H - bottom + 21}" text-anchor="middle" font-size="7" fill="${colors.muted}">${m.year}</text>` : ''}`;
+      }).join('');
+      return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Sume pe lună, achitat și neachitat">
+        <line x1="${left}" y1="${H - bottom}" x2="${W - right}" y2="${H - bottom}" stroke="${colors.muted}" stroke-width="0.5"></line>${bars}</svg>`;
+    }
+
+    function renderSchoolReport() {
+      const el = document.getElementById('schoolReportContent');
+      if (!el) return;
+      const R = buildSchoolReportData();
+      const esc = escapeHtmlText;
+      const head = `<p class="text-[11px] text-slate-400">${SCHOOL_REPORT_LABELS[schoolReportPeriod]} · ${schoolReportRangeLabel(R.range)} · ${R.t.count} activități</p>`;
+      if (R.acts.length === 0) {
+        el.innerHTML = head + `<p class="text-center text-slate-500 italic py-6">Nicio activitate în această perioadă.</p>`;
+        return;
+      }
+      const tile = (label, val, cls) => `<div class="p-2 rounded-xl bg-darkbg border border-bordercol"><span class="text-[10px] text-slate-400 block uppercase">${label}</span><span class="text-sm font-bold ${cls}" style="font-variant-numeric: tabular-nums;">${val}</span></div>`;
+      const table = (title, rows) => `
+        <div class="space-y-1">
+          <p class="text-[10px] text-slate-500 uppercase font-bold">${title}</p>
+          <div class="overflow-x-auto"><table class="w-full text-[11px]" style="font-variant-numeric: tabular-nums;">
+            <thead><tr class="text-slate-500 text-left"><th class="font-semibold py-0.5"></th><th class="font-semibold text-right">Activ.</th><th class="font-semibold text-right">Ore</th><th class="font-semibold text-right">Total</th><th class="font-semibold text-right">Restanță</th></tr></thead>
+            <tbody>${rows.map(([name, r]) => `<tr class="border-t border-bordercol/40"><td class="py-1 text-slate-200">${esc(name)}</td><td class="text-right text-slate-400">${r.count}</td><td class="text-right text-cyan-300">${fmtOre(r.hours)}</td><td class="text-right text-emerald-300">${fmtLei(r.total)}</td><td class="text-right ${r.unpaid ? 'text-amber-300' : 'text-slate-600'}">${fmtLei(r.unpaid)}</td></tr>`).join('')}</tbody>
+          </table></div>
+        </div>`;
+      const chart = buildSchoolReportChartSvg(R.months, { paid: '#10b981', unpaid: '#f59e0b', text: '#cbd5e1', muted: '#64748b' });
+      el.innerHTML = head + `
+        <div class="grid grid-cols-2 gap-2 text-center">
+          ${tile('Ore', fmtOre(R.t.hours), 'text-cyan-400')}
+          ${tile('Total', fmtLei(R.t.total), 'text-emerald-400')}
+          ${tile('Achitat', fmtLei(R.t.paid), 'text-emerald-300')}
+          ${tile('Restanță', fmtLei(R.t.unpaid), R.t.unpaid ? 'text-amber-400' : 'text-slate-500')}
+        </div>
+        ${table('Pe copil', R.children)}
+        ${table('Pe instituție', R.institutions)}
+        <div class="space-y-1">
+          <div class="flex items-center justify-between">
+            <p class="text-[10px] text-slate-500 uppercase font-bold">Sume pe lună</p>
+            <p class="text-[10px] text-slate-400"><span style="color:#10b981">■</span> achitat <span style="color:#f59e0b">■</span> neachitat</p>
+          </div>
+          <div class="bg-darkbg border border-bordercol rounded-xl p-2">${chart}</div>
+        </div>
+        <div class="space-y-1">
+          <p class="text-[10px] text-slate-500 uppercase font-bold">Restanțe (${R.unpaidList.length})</p>
+          ${R.unpaidList.length === 0 ? '<p class="text-slate-500 italic">Nicio restanță în perioadă.</p>' : R.unpaidList.map(u => `
+            <div class="flex items-center justify-between p-1.5 rounded-lg bg-darkbg border ${u.overdue ? 'border-rose-700/70' : 'border-bordercol'}">
+              <div class="min-w-0">
+                <span class="text-slate-200 block truncate">${fmtRoDate(u.a.date)} · ${esc(u.a.title)} (${esc(u.a.child)})</span>
+                <span class="text-[10px] ${u.overdue ? 'text-rose-300 font-semibold' : 'text-slate-500'}">${u.deadline ? `Termen: ${fmtRoDate(u.deadline)}${u.overdue ? ' · depășit' : ''}` : 'Fără termen'} · ${esc(u.a.paymentStatus)}</span>
+              </div>
+              <span class="text-amber-300 font-bold shrink-0 pl-2">${fmtLei(parseFloat(u.a.total) || 0)}</span>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    // CSV cu „;” și BOM UTF-8, ca Excel (setări românești) să deschidă direct coloanele și diacriticele
+    function exportSchoolReportCsv() {
+      const R = buildSchoolReportData();
+      if (R.acts.length === 0) { showToast('Nicio activitate în perioada aleasă.'); return; }
+      const cell = v => { const x = (v === undefined || v === null ? '' : v).toString(); return /[;"\n\r]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x; };
+      const numCell = v => (Math.round((parseFloat(v) || 0) * 100) / 100).toString().replace('.', ',');
+      const header = ['Data', 'Copil', 'Instituție', 'Activitate', 'Început', 'Sfârșit', 'Ore', 'Tarif', 'Total', 'Tip plată', 'Status plată', 'Data achitării', 'Termen plată', 'Comentariu plată'];
+      const rows = R.acts.map(a => [a.date, a.child, a.institution, a.title, a.startHour || '', a.endHour || '', numCell(a.hours), numCell(a.rate), numCell(a.total), a.paymentType, a.paymentStatus, a.dataAchitat || '', a.deadline && a.deadline !== '-' ? a.deadline.toString().substring(0, 10) : '', a.comentariuPlata || '']);
+      rows.push([]);
+      rows.push(['TOTAL', '', '', '', '', '', numCell(R.t.hours), '', numCell(R.t.total), '', `Achitat ${numCell(R.t.paid)} / Restanță ${numCell(R.t.unpaid)}`]);
+      const csv = '\uFEFF' + [header, ...rows].map(r => r.map(cell).join(';')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `Raport_Scoala_${R.range.start.startsWith('0000') ? 'inceput' : R.range.start}_${R.range.end.startsWith('9999') ? 'azi' : R.range.end}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      showToast(`CSV descărcat: ${R.acts.length} activități.`);
+    }
+
+    // PDF prin dialogul de tipărire (Salvează ca PDF), pe fundal alb
+    function printSchoolReport() {
+      const R = buildSchoolReportData();
+      if (R.acts.length === 0) { showToast('Nicio activitate în perioada aleasă.'); return; }
+      const esc = escapeHtmlText;
+      const th = 'style="text-align:left; border-bottom:1.5px solid #000; padding:3px 6px; font-size:11px;"';
+      const thr = 'style="text-align:right; border-bottom:1.5px solid #000; padding:3px 6px; font-size:11px;"';
+      const td = 'style="padding:3px 6px; border-bottom:1px solid #ddd; font-size:11px;"';
+      const tdr = 'style="padding:3px 6px; border-bottom:1px solid #ddd; font-size:11px; text-align:right; font-variant-numeric:tabular-nums;"';
+      const h2 = 'style="font-size:14px; margin:18px 0 6px 0; text-transform:uppercase; letter-spacing:1px;"';
+      const group = (title, rows) => `<h2 ${h2}>${title}</h2><table style="width:100%; border-collapse:collapse;"><tr><th ${th}></th><th ${thr}>Activ.</th><th ${thr}>Ore</th><th ${thr}>Total</th><th ${thr}>Restanță</th></tr>
+        ${rows.map(([n, r]) => `<tr><td ${td}>${esc(n)}</td><td ${tdr}>${r.count}</td><td ${tdr}>${fmtOre(r.hours)}</td><td ${tdr}>${fmtLei(r.total)}</td><td ${tdr}>${fmtLei(r.unpaid)}</td></tr>`).join('')}</table>`;
+      const html = `
+        <div style="text-align:center; margin-bottom:14px;">
+          <h1 style="font-size:22px; margin:0; letter-spacing:1px;">RAPORT ACTIVITĂȚI ȘCOALĂ</h1>
+          <p style="font-size:12px; margin:4px 0 0 0;">${SCHOOL_REPORT_LABELS[schoolReportPeriod]} · ${schoolReportRangeLabel(R.range)} · generat ${new Date().toLocaleDateString('ro-RO')}</p>
+        </div>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:6px;"><tr>
+          ${[['Activități', R.t.count], ['Ore', fmtOre(R.t.hours)], ['Total', fmtLei(R.t.total)], ['Achitat', fmtLei(R.t.paid)], ['Restanță', fmtLei(R.t.unpaid)]].map(([l, v]) => `<td style="border:1px solid #999; padding:6px; text-align:center;"><div style="font-size:9px; text-transform:uppercase;">${l}</div><div style="font-size:14px; font-weight:bold;">${v}</div></td>`).join('')}
+        </tr></table>
+        ${group('Pe copil', R.children)}
+        ${group('Pe instituție', R.institutions)}
+        <h2 ${h2}>Sume pe lună <span style="font-size:10px; text-transform:none; letter-spacing:0;">(<span style="color:#444">■</span> achitat, <span style="color:#bbb">■</span> neachitat)</span></h2>
+        <div style="max-width:520px;">${buildSchoolReportChartSvg(R.months, { paid: '#444444', unpaid: '#bbbbbb', text: '#000000', muted: '#666666' })}</div>
+        ${R.unpaidList.length ? `<h2 ${h2}>Restanțe</h2><table style="width:100%; border-collapse:collapse;"><tr><th ${th}>Data</th><th ${th}>Activitate</th><th ${th}>Copil</th><th ${th}>Termen</th><th ${thr}>Sumă</th></tr>
+          ${R.unpaidList.map(u => `<tr><td ${td}>${fmtRoDate(u.a.date)}</td><td ${td}>${esc(u.a.title)}</td><td ${td}>${esc(u.a.child)}</td><td ${td}>${u.deadline ? fmtRoDate(u.deadline) + (u.overdue ? ' (depășit)' : '') : '-'}</td><td ${tdr}>${fmtLei(parseFloat(u.a.total) || 0)}</td></tr>`).join('')}</table>` : ''}
+        <h2 ${h2}>Activități</h2>
+        <table style="width:100%; border-collapse:collapse;"><tr><th ${th}>Data</th><th ${th}>Copil</th><th ${th}>Instituție</th><th ${th}>Activitate</th><th ${th}>Interval</th><th ${thr}>Ore</th><th ${thr}>Total</th><th ${th}>Status</th></tr>
+          ${R.acts.map(a => `<tr><td ${td}>${fmtRoDate(a.date)}</td><td ${td}>${esc(a.child)}</td><td ${td}>${esc(a.institution)}</td><td ${td}>${esc(a.title)}</td><td ${td}>${esc(a.startHour || '')}–${esc(a.endHour || '')}</td><td ${tdr}>${fmtOre(parseFloat(a.hours) || 0)}</td><td ${tdr}>${fmtLei(parseFloat(a.total) || 0)}</td><td ${td}>${esc(a.paymentStatus)}</td></tr>`).join('')}
+        </table>`;
+      const printContainer = document.getElementById('printablePomelnicArea');
+      printContainer.innerHTML = html;
+      printContainer.classList.remove('hidden');
+      window.print();
+      setTimeout(() => { printContainer.classList.add('hidden'); printContainer.innerHTML = ''; }, 1000);
     }
 
     // ====== PERSONALIZARE PER PROFIL (v24.0) ======
