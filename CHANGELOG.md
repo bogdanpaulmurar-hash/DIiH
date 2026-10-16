@@ -1,5 +1,28 @@
 # CHANGELOG — DIiH Hub
 
+## v24.0 — 2026-10-16 — O singură aplicație, personalizare per profil
+
+Frontend (`index.html`, `andreea.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.0). Push pe GitHub înainte de deploy.
+
+### O singură aplicație
+- `andreea.html` nu mai e o copie separată a aplicației: doar redirecționează spre `index.html`. Aplicația Andreei, deja instalată, se deschide în continuare; ce vede depinde acum de contul ei Google.
+- **Eliminată partajarea prin link cu cod secret** (`?share=`), cu panoul „Admin — Partajare Acces”, ecranul „Astăzi” partajat, alegerea widgeturilor pentru familie și `manifest-shared.json` / `manifest-shared-casa.json`. Accesul se dă acum doar din Admin → Profile și acces.
+- Ce era util din partajare a rămas: profilul Andreei vede în Pomelnic doar persoanele bifate „Pomelnic Andreea” (Col D).
+
+### Personalizare per profil, aceeași pe toate dispozitivele
+- Titlul, logo-ul, widgeturile de pe Astăzi, meniul de jos, poza de profil și iconița fiecărui profil se păstrează în tabul **Profile** (coloanele Titlu, Logo, Widgeturi, Meniu, PozaFileId, IconaFileId). Pozele și iconițele sunt în Drive (`DIiH_App_Fisiere`). Se aplică la fiecare sincronizare pe orice dispozitiv.
+- **Adminul** poate schimba oricui, din Admin → Profile → Editează: titlu, logo, meniu, widgeturi, poză, iconiță.
+- Ceilalți își pot schimba singuri personalizarea doar dacă au **Setări: vede și editează**. Altfel, butoanele respective spun „Ai doar drept de vizualizare la Setări”.
+- Backend: acțiune nouă `authSaveMyProfile`, doar pentru câmpurile de personalizare și doar pe propriul profil. Rolul și permisiunile le schimbă numai adminul.
+- Înainte, titlul, logo-ul și iconița se citeau dintr-o setare globală, comună tuturor, care suprascria profilul fiecăruia.
+
+### Iconița pe laptop (fără fundal negru)
+- Manifestul generat dinamic folosește adrese absolute și iconițe PNG transparente, plus o variantă „maskable”. Înainte, căile relative nu se rezolvau dintr-un manifest `blob:`, iar Chrome pe laptop punea o iconiță generată de el, pe fundal negru.
+- Iconițele încărcate se centrează automat pe un pătrat transparent. Pentru efect pe un dispozitiv deja instalat: dezinstalare și reinstalare.
+
+### Securitate
+- Serverul nu mai trimite aplicației vechile chei `user_profiles_json` (cu poze base64) și `sharing_config_json`, care ajungeau la orice cont conectat, inclusiv la profilurile cu acces restrâns.
+
 ## v23.3 — 2026-10-16 — Doar conectare Google, restricții complete
 
 Frontend (`index.html`, `andreea.html`, `sw.js`) și backend (`_API.gs`, versiunea 23.3). **Ordinea de publicare: întâi push pe GitHub, apoi deploy în Apps Script.**

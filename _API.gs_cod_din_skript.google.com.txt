@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v23.3
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.0
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "23.3";
+const BACKEND_VERSION = "24.0";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -71,9 +71,7 @@ function doGet(e) {
     if (e.parameter.appIconPath) setSettingValue(sh, "app_icon_path", e.parameter.appIconPath);
     if (e.parameter.pomelnicBatchSize) setSettingValue(sh, "pomelnic_batch_size", e.parameter.pomelnicBatchSize);
     if (e.parameter.psaltireBatchSize) setSettingValue(sh, "psaltire_batch_size", e.parameter.psaltireBatchSize);
-    if (e.parameter.sharingConfigJson) setSettingValue(sh, "sharing_config_json", e.parameter.sharingConfigJson);
     if (e.parameter.randuialaTrackerJson) setSettingValue(sh, "randuiala_tracker_json", e.parameter.randuialaTrackerJson);
-    if (e.parameter.userProfilesJson) setSettingValue(sh, "user_profiles_json", e.parameter.userProfilesJson);
     return returnResponse(e, { success: true });
   }
 
@@ -732,6 +730,10 @@ function returnResponse(e, data) {
 
 // Returnează TOATE perechile cheie-valoare din Setari, inclusiv chei noi dinamice (ex. CalendarScolar_2026-2027,
 // IconaApp_Bogdan Murar) pe care getSettingsData nu le cunoaște explicit
+// Chei care rămân doar în sheet și nu se mai trimit aplicației: vechea partajare prin link și profilurile
+// locale vechi (cu poze base64), înlocuite în v24.0 de tabul Profile, plus cheile interne de autentificare.
+const SETTINGS_RAW_HIDDEN_KEYS = ["sharing_config_json", "user_profiles_json"];
+
 function getAllSettingsRaw(ss) {
   let sh = ss.getSheetByName("Setari");
   const out = {};
@@ -739,6 +741,7 @@ function getAllSettingsRaw(ss) {
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
   rows.forEach(r => {
     const k = (r[0] || "").toString().trim();
+    if (SETTINGS_RAW_HIDDEN_KEYS.indexOf(k) !== -1 || k.indexOf("auth_") === 0) return;
     if (k) out[k] = (r[1] === undefined || r[1] === null) ? "" : r[1].toString();
   });
   return out;
@@ -753,9 +756,7 @@ function getSettingsData(ss) {
     pomelnicBatchSize: 20, 
     psaltireBatchSize: 20, 
     notificationsJson: "",
-    sharingConfigJson: "",
-    randuialaTrackerJson: "",
-    userProfilesJson: ""
+    randuialaTrackerJson: ""
   };
   if (!sh || sh.getLastRow() < 2) return cfg;
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
@@ -768,9 +769,7 @@ function getSettingsData(ss) {
     if (k === "pomelnic_batch_size" && v) cfg.pomelnicBatchSize = parseInt(v, 10) || 20;
     if (k === "psaltire_batch_size" && v) cfg.psaltireBatchSize = parseInt(v, 10) || 20;
     if (k === "notifications_config_json" && v) cfg.notificationsJson = v.toString();
-    if (k === "sharing_config_json" && v) cfg.sharingConfigJson = v.toString();
     if (k === "randuiala_tracker_json" && v) cfg.randuialaTrackerJson = v.toString();
-    if (k === "user_profiles_json" && v) cfg.userProfilesJson = v.toString();
   });
   return cfg;
 }
@@ -1457,6 +1456,7 @@ const AUTH_ADMIN_ACTIONS = ["authListProfiles", "authSaveProfile", "authRevokeSe
 const AUTH_ACTION_RULES = {
   getAllData: ["*", "view"], getLiveData: ["*", "view"], getSettingsRaw: ["*", "view"], getDriveImage: ["*", "view"],
   logEvent: ["*", "view"], logAppEvent: ["*", "view"], authMe: ["*", "view"], authLogout: ["*", "view"],
+  authSaveMyProfile: ["setari", "edit"],
   updateGlobalSettings: ["setari", "edit"], setSettingRaw: ["setari", "edit"], saveNotificationConfigs: ["setari", "edit"],
   uploadDriveFile: ["setari", "edit"],
   saveSchoolActivities: ["scoala", "edit"], deleteSchoolActivity: ["scoala", "edit"], batchUpdateSchoolStatus: ["scoala", "edit"],
@@ -1762,6 +1762,21 @@ function authHandleAction(ss, e, action, auth) {
     CacheService.getScriptCache().remove("auth_profiles");
     if (activ === "NU") authRevoke(ss, email, null);
     logToAppSheet(ss, { modul: "Auth", actiune: existing ? "profil_modificat" : "profil_adaugat", status: "OK", detalii: email + " / " + rol + " / " + activ, user: auth.profile.email || "token" });
+    return returnResponse(e, { success: true });
+  }
+
+  // Personalizarea proprie (titlu, logo, widgeturi, meniu, poză, iconiță) — doar pe profilul celui conectat;
+  // rolul, accesul și permisiunile le schimbă numai adminul, prin authSaveProfile
+  if (action === "authSaveMyProfile") {
+    const me = authFindProfile(ss, auth.profile.email);
+    if (!me) return returnResponse(e, { success: false, error: "Profil inexistent." });
+    const sh = getOrCreateProfileSheet(ss);
+    const cols = { widgeturi: 6, meniu: 7, titlu: 8, logo: 9, pozaFileId: 10, iconaFileId: 11 };
+    Object.keys(cols).forEach(k => {
+      if (p[k] !== undefined) sh.getRange(me.rowId, cols[k]).setValue(String(p[k]).slice(0, 1000));
+    });
+    sh.getRange(me.rowId, 12).setValue(authNow());
+    CacheService.getScriptCache().remove("auth_profiles");
     return returnResponse(e, { success: true });
   }
 

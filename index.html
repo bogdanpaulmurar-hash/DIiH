@@ -6,26 +6,6 @@
   <title id="htmlAppTitle">DIiH</title>
   
   <link id="manifestLink" rel="manifest" href="./manifest.json">
-  <script>
-    (function() {
-      try {
-        var sp = new URLSearchParams(window.location.search);
-        var mLink = document.getElementById('manifestLink');
-        if (sp.has('share')) {
-          var sc = localStorage.getItem('diih_sharing_config');
-          var iconChoice = '';
-          if (sc) {
-            try { iconChoice = JSON.parse(sc).sharedAppIconPath || ''; } catch(e){}
-          }
-          if (iconChoice.indexOf('home') !== -1) {
-            if (mLink) mLink.href = './manifest-shared-casa.json';
-          } else {
-            if (mLink) mLink.href = './manifest-shared.json';
-          }
-        }
-      } catch(e) {}
-    })();
-  </script>
   <link id="appFavicon" rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>">
   <link id="appAppleTouchIcon" rel="apple-touch-icon" href="./icons/apple-touch-180.png">
   <meta name="theme-color" content="#090d16">
@@ -240,9 +220,6 @@
     <!-- TAB 1: ASTĂZI -->
     <section id="tab-today" class="tab-content space-y-4">
 
-      <!-- SUMAR ASTĂZI PENTRU APLICAȚIA PARTAJATĂ (generat din modulele permise) -->
-      <div id="todaySharedSummary" class="hidden space-y-4"></div>
-
       <div id="todayOwnerContent" class="space-y-4">
       <!-- Catisma Zilei (Click: Deschide Rânduiala & Pomelnicul Grupului de Psaltire) -->
       <div id="ownerWidget_psaltire" onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
@@ -438,13 +415,6 @@
 
     <!-- TAB 2: POMELNIC COMPLET -->
     <section id="tab-pomelnic" class="tab-content hidden space-y-3">
-      <div id="sharedPomelnicBackNav" class="hidden flex items-center justify-between pb-1">
-        <button onclick="switchTab('today')" class="text-xs text-cyan-300 hover:text-cyan-200 flex items-center space-x-1 font-medium bg-cardbg px-2.5 py-1 rounded-lg border border-bordercol">
-          <span>←</span>
-          <span>Înapoi la Astăzi</span>
-        </button>
-      </div>
-
       <!-- Bara Celor 6 Subtaburi Pomelnic -->
       <div class="flex items-center space-x-1 overflow-x-auto pb-1 border-b border-bordercol/80">
         <button onclick="setPomelnicSubtab('astazi')" id="btnPomSub_astazi" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">📿 Pomelnicul Zilei</button>
@@ -899,13 +869,6 @@
 
     <!-- TAB: SFÂNTA SCRIPTURĂ (Canonul complet Bartolomeu Anania, Evidență Capitole & Comasare Biblia 360) -->
     <section id="tab-scriptura" class="tab-content hidden space-y-4">
-      <div id="sharedScripturaBackNav" class="hidden flex items-center justify-between pb-1">
-        <button onclick="switchTab('today')" class="text-xs text-cyan-300 hover:text-cyan-200 flex items-center space-x-1 font-medium bg-cardbg px-2.5 py-1 rounded-lg border border-bordercol">
-          <span>←</span>
-          <span>Înapoi la Astăzi</span>
-        </button>
-      </div>
-
       <!-- Card Central Progres & Continuare Lectură -->
       <div class="bg-cardbg border border-amber-800/80 rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
@@ -1226,44 +1189,6 @@
             <div id="ownerWidgetsOrderContainer" class="space-y-1 text-[11px]"></div>
           </div>
 
-          <!-- Secțiunea 2: Aplicația Partajată (Familia Murar) -->
-          <div class="space-y-2 p-3 bg-darkbg rounded-xl border border-bordercol">
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-emerald-300 text-[11px] uppercase">🏡 Ecranul «Astăzi» Partajat (Familia Murar):</span>
-              <div class="space-x-1">
-                <button onclick="toggleAllSharedWidgets(true)" class="text-[9px] px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-slate-300">Toate</button>
-                <button onclick="toggleAllSharedWidgets(false)" class="text-[9px] px-1.5 py-0.5 bg-cardbg border border-bordercol rounded text-slate-300">Niciunul</button>
-              </div>
-            </div>
-            <p class="text-[9px] text-slate-500">Alege ce widget-uri apar pe ecranul de start al soției tale:</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtShared_school" checked class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-slate-200">🎓 Școală & Activități</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtShared_shopping" checked class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-slate-200">🛒 Cumpărături</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtShared_anniversaries" checked class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-slate-200">🎉 Aniversările Zilei</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtShared_ganduri" checked class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-slate-200">💡 Gânduri</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtShared_scriptura" checked class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-slate-200">📑 Continuitate Scriptură</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="wgtShared_inventory" checked class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-slate-200">📦 Inventar</span>
-              </label>
-            </div>
-            <button onclick="saveSharedWidgetsConfig()" class="w-full bg-emerald-800 hover:bg-emerald-700 text-white font-bold py-2 rounded-xl transition mt-2">💾 Salvează Configurația Widget-urilor</button>
-          </div>
         </div>
       </div>
 
@@ -1314,7 +1239,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v23.3 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.0 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
             <a href="https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit" target="_blank" rel="noopener" class="w-full flex items-center justify-center space-x-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 py-2 rounded-xl font-bold hover:bg-emerald-900 transition">
@@ -1482,6 +1407,27 @@
             </div>
             <span class="text-[10px] text-slate-400 block font-bold uppercase pt-1">Acces pe module</span>
             <div id="adminProfPermGrid" class="space-y-1"></div>
+            <span class="text-[10px] text-slate-400 block font-bold uppercase pt-1">Personalizare</span>
+            <div class="grid grid-cols-3 gap-1.5">
+              <input id="adminProfTitlu" type="text" autocomplete="off" placeholder="Titlu aplicație" class="col-span-2 bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+              <input id="adminProfLogo" type="text" autocomplete="off" placeholder="Logo (emoji)" class="bg-cardbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            </div>
+            <span class="text-[10px] text-slate-400 block">Meniul de jos (nimic bifat = cel implicit)</span>
+            <div id="adminProfMeniuGrid" class="grid grid-cols-2 gap-1"></div>
+            <span class="text-[10px] text-slate-400 block">Widgeturi pe Astăzi (nimic bifat = cele implicite)</span>
+            <div id="adminProfWidgetGrid" class="grid grid-cols-2 gap-1"></div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-1">
+                <span class="text-[10px] text-slate-400 block">Poză profil</span>
+                <input id="adminProfPozaInput" type="file" accept="image/*" class="w-full text-[10px] text-slate-300">
+                <label class="flex items-center gap-1 text-[10px] text-slate-400"><input id="adminProfPozaClear" type="checkbox" class="rounded text-rose-500 focus:ring-0"> Elimină poza</label>
+              </div>
+              <div class="space-y-1">
+                <span class="text-[10px] text-slate-400 block">Iconiță aplicație</span>
+                <input id="adminProfIconaInput" type="file" accept="image/*" class="w-full text-[10px] text-slate-300">
+                <label class="flex items-center gap-1 text-[10px] text-slate-400"><input id="adminProfIconaClear" type="checkbox" class="rounded text-rose-500 focus:ring-0"> Iconița implicită</label>
+              </div>
+            </div>
             <div class="flex gap-1.5 pt-1">
               <button onclick="saveAdminProfileForm()" class="flex-1 bg-cyan-800 hover:bg-cyan-700 text-white font-bold py-1.5 rounded-lg">💾 Salvează</button>
               <button onclick="closeAdminProfileForm()" class="flex-1 bg-slate-800 border border-bordercol text-slate-300 py-1.5 rounded-lg">Anulează</button>
@@ -1491,143 +1437,7 @@
           <div id="adminPairCodeBox" class="hidden p-3 bg-amber-950/30 border border-amber-800 rounded-xl space-y-1"></div>
           <div id="adminProfilesList" class="space-y-2"></div>
         </div>
-
-        <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
-          <div class="border-b border-bordercol pb-2">
-            <h3 class="font-bold text-white uppercase tracking-wider">🛡️ Admin — Partajare Acces</h3>
-            <p class="text-[10px] text-slate-400 mt-1">Oferă acces limitat (ex: soției tale) la module selectate, cu nume și emblemă proprii pentru aplicație.</p>
-          </div>
-
-          <div class="p-3 bg-amber-950/30 border border-amber-800 rounded-xl space-y-1">
-            <span class="font-bold text-amber-300 block text-[11px]">⚠️ Important de știut:</span>
-            <p class="text-[10px] text-amber-100 leading-relaxed">
-              Acest link de partajare este o metodă simplă, bazată pe un <strong>cod secret personal</strong> (nu pe autentificare reală cu cont Google), deoarece aplicația rulează ca fișier static + Google Apps Script. Oricine are link-ul poate accesa modulele activate mai jos. Nu partaja link-ul public. Pentru autentificare Google reală (OAuth, cu control per-cont), ar fi nevoie de o găzduire server dedicată — pot ajuta la implementarea acesteia dacă dorești să mergem mai departe pe acel plan.
-            </p>
-          </div>
-
-          <div class="space-y-2">
-            <span class="font-bold text-cyan-300 block text-[11px] uppercase">👤 Identitatea aplicației pentru persoana partajată:</span>
-            <div class="grid grid-cols-3 gap-2">
-              <input type="text" id="adminSharedTitle" placeholder="Nume aplicație (ex: Agenda Familiei)" class="col-span-2 bg-darkbg border border-bordercol rounded-lg p-2 text-white">
-              <input type="text" id="adminSharedLogo" placeholder="🏡" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-center">
-            </div>
-            <span class="text-[10px] text-slate-400 block">Icoană dedicată familiei pe ecranul telefonului:</span>
-            <div class="grid grid-cols-4 gap-1.5">
-              <button onclick="setSharedIconChoice('./icons/icon-heart-ekg.png')" data-icon-path="./icons/icon-heart-ekg.png" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Inimă EKG (Original v16)"><img src="./icons/icon-heart-ekg.png" class="w-7 h-7 mx-auto rounded"></button>
-              <button onclick="setSharedIconChoice('./icons/icon-family-home.svg')" data-icon-path="./icons/icon-family-home.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Căminul Familiei (Casă)"><img src="./icons/icon-family-home.svg" class="w-7 h-7 mx-auto rounded"></button>
-              <button onclick="setSharedIconChoice('./icons/icon-heart-cross.svg')" data-icon-path="./icons/icon-heart-cross.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Inimă & Cruce"><img src="./icons/icon-heart-cross.svg" class="w-7 h-7 mx-auto rounded"></button>
-              <button onclick="setSharedIconChoice('./icons/icon-family-vine.svg')" data-icon-path="./icons/icon-family-vine.svg" class="p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-400" title="Vița Roditoare"><img src="./icons/icon-family-vine.svg" class="w-7 h-7 mx-auto rounded"></button>
-            </div>
-            <input type="hidden" id="adminSharedIconPath" value="./icons/icon-heart-ekg.png">
-          </div>
-
-          <div class="space-y-1.5">
-            <span class="font-bold text-emerald-300 block text-[11px] uppercase">✅ Module vizibile persoanei partajate:</span>
-            <p class="text-[9px] text-slate-500">Bara de navigare de jos a aplicației partajate va afișa DOAR modulele bifate mai jos. Tabul ⚙️ Setări (și Admin) nu este niciodată inclus — acelea rămân exclusiv la tine.</p>
-            <div class="grid grid-cols-2 gap-1.5">
-              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminModuleToday" class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">🏠 Astăzi</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminModuleCalendar" checked class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">🎓 Școală</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminModuleCumparaturi" checked class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">🛒 Cumpărături</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminModuleGanduri" class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">💡 Gânduri</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminModulePomelnic" onchange="toggleAdminPomelnicCategoriesBox()" class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">📜 Pomelnic</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminModuleInventar" class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">📦 Inventar</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminModuleScriptura" class="rounded text-emerald-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">📖 Scriptură</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="space-y-1.5 p-3 bg-darkbg rounded-xl border border-cyan-800">
-            <span class="font-bold text-cyan-300 block text-[11px] uppercase">📌 Bara de jos a Andreei (Meniul Principal):</span>
-            <p class="text-[9px] text-slate-500">Bifează ce să apară DIRECT pe bara de jos a soției. Modulele debifate merg în meniul «⋯ Mai multe»:</p>
-            <div class="grid grid-cols-2 gap-1.5">
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminMainBar_today" checked disabled class="rounded text-cyan-500 opacity-60">
-                <span class="text-[11px] text-slate-300">🏠 Astăzi</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminMainBar_calendar" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">🎓 Școală</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminMainBar_cumparaturi" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">🛒 Cumpărături</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminMainBar_inventar" checked class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-[11px] text-emerald-300 font-bold">📦 Inventar</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminMainBar_pomelnic" class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">📜 Pomelnic</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminMainBar_ganduri" class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">💡 Gânduri</span>
-              </label>
-              <label class="flex items-center space-x-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
-                <input type="checkbox" id="adminMainBar_scriptura" class="rounded text-cyan-500 focus:ring-0">
-                <span class="text-[11px] text-slate-200">📖 Scriptură</span>
-              </label>
-            </div>
-          </div>
-
-          <div id="adminPomelnicCategoriesBox" class="hidden space-y-1.5 p-3 bg-rose-950/20 border border-rose-900 rounded-xl">
-            <span class="font-bold text-rose-300 block text-[11px] uppercase">📜 Categorii Pomelnic partajate:</span>
-            <p class="text-[9px] text-slate-500">Nu se partajează tot Pomelnicul — bifează DOAR categoriile (Grad) pe care vrei să le poată vedea persoana partajată. Necompletat = nimic nu se arată.</p>
-            <div class="flex space-x-1.5 pb-1">
-              <button onclick="setAllAdminPomelnicCategories(true)" class="text-[10px] px-2 py-1 bg-darkbg border border-bordercol rounded-lg text-slate-300 hover:text-white">Bifează tot</button>
-              <button onclick="setAllAdminPomelnicCategories(false)" class="text-[10px] px-2 py-1 bg-darkbg border border-bordercol rounded-lg text-slate-300 hover:text-white">Debifează tot</button>
-            </div>
-            <div id="adminPomelnicCategoriesList" class="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto"></div>
-          </div>
-
-          <div class="space-y-1.5">
-            <span class="font-bold text-violet-300 block text-[11px] uppercase">✍️ Nume afișat pentru înregistrări (autor):</span>
-            <input type="text" id="adminSharedAuthorName" placeholder="ex: Soția" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
-            <p class="text-[9px] text-slate-500">Orice produs sau activitate adăugată de pe link-ul partajat va fi marcată cu acest nume, ca să știi cine a scris-o.</p>
-          </div>
-
-          <button onclick="saveAdminSharingConfig()" class="w-full bg-cyan-900 border border-cyan-700 text-cyan-100 py-2.5 rounded-xl font-bold">💾 Salvează Configurația de Partajare</button>
-
-          <div id="adminShareLinkBox" class="hidden p-3 bg-emerald-950/40 border border-emerald-700 rounded-xl space-y-3">
-            <div class="space-y-1.5">
-              <span class="font-bold text-pink-300 block text-[11px]">📱 Link Dedicat iPhone Safari (Aplicație Andreea Independentă):</span>
-              <input type="text" id="adminShareLinkOutputIPhone" readonly class="w-full bg-darkbg border border-pink-800 rounded-lg p-2 text-pink-200 text-[10px] font-mono">
-              <button onclick="copyShareLinkIPhone()" class="w-full bg-pink-900 hover:bg-pink-800 text-white py-2 rounded-lg font-bold text-[11px]">📋 Copiază Link-ul pentru iPhone</button>
-              <p class="text-[10px] text-pink-200/90 leading-relaxed">
-                Pe iPhone-ul Andreei: deschide în Safari acest link → butonul Share (pătrățel cu săgeată) → <strong>"Add to Home Screen"</strong>. Se va instala ca aplicație de sine stătătoare, cu numele „Andreea” și iconița proprie, fără să interfereze cu DIiH!
-              </p>
-            </div>
-
-            <div class="space-y-1.5 pt-2 border-t border-emerald-800/60">
-              <span class="font-bold text-emerald-300 block text-[11px]">🔗 Link Universal Web:</span>
-              <input type="text" id="adminShareLinkOutput" readonly class="w-full bg-darkbg border border-emerald-800 rounded-lg p-2 text-emerald-200 text-[10px] font-mono">
-              <button onclick="copyShareLink()" class="w-full bg-emerald-800 hover:bg-emerald-700 text-white py-2 rounded-lg font-bold text-[11px]">📋 Copiază Link Universal</button>
-            </div>
-          </div>
-        </div>
       </div>
-
       <!-- SUB-TAB 6: INVENTAR PERSONAL (Spații de depozitare, poze, mentenanță) -->
       <!-- SUB-TAB: INFO (Secțiunea 12) -->
       <div id="subtab-info" class="subtab-content hidden space-y-3">
@@ -2517,7 +2327,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v23.0";
+    const APP_VERSION = "v24.0";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2673,6 +2483,8 @@
       closeUserLoginModal();
       executeUserSwitch(resolveLocalUserForProfile(data.profile));
       clearAuthDataCache();
+      lastAppliedProfileSig = '';
+      localStorage.removeItem('diih_profile_sig');
       showToast(`Conectat ca ${data.profile.nume || data.profile.email}. Se reîncarcă datele...`);
       setTimeout(() => location.reload(), 600);
     }
@@ -2789,7 +2601,7 @@
       inventar: ['addCustomInventoryCategory', 'deleteCustomInventoryCategory', 'addCustomInventorySpace', 'deleteCustomInventorySpace', 'saveInventoryItem', 'deleteInventoryItem', 'confirmMoveInventoryItem'],
       gandul: ['saveGandulZileiFromManager', 'toggleGandulZileiActiv'],
       scriptura: ['startEditNoteBiblia', 'saveEditNoteBiblia', 'deleteOneNoteBiblia', 'deleteSelectedNoteBiblia', 'softDeleteManyNoteBiblia', 'undoDeleteNoteBiblia', 'toggleModelCitirePozitie', 'advanceScripturaProgress', 'toggleScripturaChapter', 'setBookAllChapters'],
-      setari: ['saveGlobalCustomSettings', 'saveCustomAppIcon', 'saveAdminSharingConfig']
+      setari: ['saveGlobalCustomSettings', 'saveCustomAppIcon', 'revertToDefaultAppIcon', 'setAppCustomIcon', 'saveOwnerNavConfig', 'toggleOwnerWidgetActive', 'moveOwnerWidgetOrder', 'toggleAllOwnerWidgets', 'handleProfilePhotoSelect', 'clearProfilePhoto']
     };
     function authCanEdit(mod) {
       const s = getAuthSession();
@@ -2834,6 +2646,172 @@
     // Raportul detaliat din Școală se construiește în v24.3; până atunci butonul spune asta în loc să nu facă nimic
     function openSchoolReportModal() {
       showToast('Raportul detaliat pe perioadă este în lucru și va veni într-o versiune următoare.');
+    }
+
+    // ====== PERSONALIZARE PER PROFIL (v24.0) ======
+    // Titlul, logo-ul, widgeturile, meniul, poza și iconița fiecărui profil stau în tabul Profile (sursa de adevăr),
+    // ca să fie aceleași pe toate dispozitivele. Local se păstrează doar o copie (diih_user_profile_<nume>).
+    // Adminul le poate schimba oricui din Admin → Profile; ceilalți doar pe ale lor și doar cu drept „Setări: edit”.
+    function profileCosmeticSig(p) {
+      return JSON.stringify([p.titlu || '', p.logo || '', p.widgeturi || [], p.meniu || [], p.pozaFileId || '', p.iconaFileId || '']);
+    }
+    let lastAppliedProfileSig = localStorage.getItem('diih_profile_sig') || '';
+
+    function cacheProfileImage(fileId, dataUrl) {
+      if (!fileId || !dataUrl) return;
+      try { localStorage.setItem(`diih_img_${fileId}`, dataUrl); } catch (e) { /* imaginea se reia din Drive data viitoare */ }
+    }
+    async function getProfileImage(fileId) {
+      const cached = localStorage.getItem(`diih_img_${fileId}`);
+      if (cached) return cached;
+      const dataUrl = await fetchDriveImageAsDataUrl(fileId);
+      cacheProfileImage(fileId, dataUrl);
+      return dataUrl;
+    }
+
+    // Aplică personalizarea venită din cloud peste copia locală a profilului (fără s-o retrimită în cloud)
+    async function applyProfileCustomization(profile, force) {
+      if (!profile) return;
+      const sig = profileCosmeticSig(profile);
+      if (!force && sig === lastAppliedProfileSig) return;
+      const uName = resolveLocalUserForProfile(profile);
+      const current = getUserProfileSettings(uName);
+      const updates = {};
+      if (profile.titlu) updates.appTitle = profile.titlu;
+      if (profile.logo) updates.appLogo = profile.logo;
+      const widgets = profile.widgeturi || [];
+      if (widgets.length) {
+        const active = widgets[0] === 'none' ? [] : widgets;
+        updates.widgets = active;
+        updates.widgetsOrder = [...active, ...ALL_OWNER_WIDGET_DEFS.map(d => d.id).filter(id => !active.includes(id))];
+      }
+      const menu = profile.meniu || [];
+      if (menu.length) updates.nav = menu.includes('today') ? menu : ['today', ...menu];
+      try {
+        if (profile.pozaFileId) {
+          updates.headerPicture = await getProfileImage(profile.pozaFileId);
+          updates.pozaFileIdApplied = profile.pozaFileId;
+        } else if (current.pozaFileIdApplied) {
+          updates.headerPicture = '';
+          updates.pozaFileIdApplied = '';
+        }
+      } catch (e) { /* poza rămâne cea locală până la următoarea sincronizare */ }
+      try {
+        if (profile.iconaFileId) {
+          updates.appIconPath = await getProfileImage(profile.iconaFileId);
+          updates.iconaFileIdApplied = profile.iconaFileId;
+        } else if (current.iconaFileIdApplied) {
+          updates.appIconPath = (APP_USERS[uName] || {}).defaultIcon || DEFAULT_OWNER_APP_ICON;
+          updates.iconaFileIdApplied = '';
+        }
+      } catch (e) { /* iconița rămâne cea locală */ }
+      localStorage.setItem(`diih_user_profile_${uName}`, JSON.stringify({ ...current, ...updates }));
+      lastAppliedProfileSig = sig;
+      localStorage.setItem('diih_profile_sig', sig);
+      if (getCurrentLoggedInUser() === uName) {
+        applyUserUIState();
+        applyOwnerNavLayout();
+        applyOwnerWidgetsVisibility();
+      }
+    }
+
+    // Trimite în tabul Profile câmpurile personalizate de utilizatorul conectat (pentru el însuși)
+    async function pushMyProfileFields(fields) {
+      const s = getAuthSession();
+      if (!s || !s.profile) return false;
+      try {
+        const data = await apiJsonp({ ...apiAuthParams(), action: 'authSaveMyProfile', ...fields });
+        if (!data || !data.success) {
+          if (data && data.forbidden) showToast('Personalizarea ta o poate schimba doar administratorul.');
+          return false;
+        }
+        const fresh = getAuthSession();
+        if (fresh && fresh.profile) {
+          Object.keys(fields).forEach(k => {
+            fresh.profile[k] = (k === 'widgeturi' || k === 'meniu') ? (fields[k] ? fields[k].split(',') : []) : fields[k];
+          });
+          setAuthSession(fresh);
+          lastAppliedProfileSig = profileCosmeticSig(fresh.profile);
+          localStorage.setItem('diih_profile_sig', lastAppliedProfileSig);
+        }
+        return true;
+      } catch (e) { return false; }
+    }
+
+    let myProfilePushTimer = null;
+    function scheduleMyProfilePush(username) {
+      const s = getAuthSession();
+      if (!s || !s.profile || resolveLocalUserForProfile(s.profile) !== username) return;
+      clearTimeout(myProfilePushTimer);
+      myProfilePushTimer = setTimeout(() => {
+        const prof = getUserProfileSettings(username);
+        const active = Array.isArray(prof.widgets) ? prof.widgets : [];
+        const order = Array.isArray(prof.widgetsOrder) ? prof.widgetsOrder : [];
+        const widgets = [...order.filter(id => active.includes(id)), ...active.filter(id => !order.includes(id))];
+        const menu = Array.isArray(prof.nav) ? prof.nav : (prof.navModules || []);
+        pushMyProfileFields({
+          titlu: prof.appTitle || '',
+          logo: prof.appLogo || '',
+          widgeturi: widgets.length ? widgets.join(',') : 'none',
+          meniu: menu.join(',')
+        });
+      }, 800);
+    }
+
+    // Urcă o imagine în Drive și o leagă de profilul conectat (field: pozaFileId sau iconaFileId)
+    async function pushMyProfileImage(field, dataUrl) {
+      const s = getAuthSession();
+      if (!s || !s.profile) return;
+      try {
+        const ext = dataUrl.startsWith('data:image/png') ? 'png' : 'jpg';
+        const fileId = await uploadImageDataUrlToDrive(dataUrl, `${field === 'pozaFileId' ? 'PozaProfil' : 'IconaApp'}_${s.profile.email}_${Date.now()}.${ext}`);
+        cacheProfileImage(fileId, dataUrl);
+        const prof = getUserProfileSettings(getCurrentLoggedInUser());
+        prof[field === 'pozaFileId' ? 'pozaFileIdApplied' : 'iconaFileIdApplied'] = fileId;
+        localStorage.setItem(`diih_user_profile_${getCurrentLoggedInUser()}`, JSON.stringify(prof));
+        if (await pushMyProfileFields({ [field]: fileId })) showToast('Salvat pe toate dispozitivele tale.');
+      } catch (e) {
+        showToast('Imaginea a rămas doar pe acest dispozitiv: ' + e.message);
+      }
+    }
+
+    // Pune imaginea pe un pătrat transparent (iconițele PWA trebuie să fie pătrate, fără fundal adăugat)
+    function padImageToSquare(dataUrl, size) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Imagine invalidă.'));
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const scale = Math.min(size / img.naturalWidth, size / img.naturalHeight);
+          const w = Math.round(img.naturalWidth * scale), h = Math.round(img.naturalHeight * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, Math.round((size - w) / 2), Math.round((size - h) / 2), w, h);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.src = dataUrl;
+      });
+    }
+
+    const AUTH_NAV_LABELS = { pomelnic: 'Pomelnic', calendar: 'Școală', notite: 'Notițe', cumparaturi: 'Cumpărături', scriptura: 'Scriptură', notazilei: 'Nota Zilei', inventar: 'Inventar' };
+    function renderAdminChecklist(containerId, items, selected) {
+      const box = document.getElementById(containerId);
+      if (!box) return;
+      box.innerHTML = items.map(it => `
+        <label class="flex items-center gap-1.5 text-[11px] text-slate-300 cursor-pointer">
+          <input type="checkbox" value="${it.id}" ${selected.includes(it.id) ? 'checked' : ''} class="rounded text-cyan-500 focus:ring-0"> ${it.label}
+        </label>`).join('');
+    }
+    function readAdminChecklist(containerId) {
+      return Array.from(document.querySelectorAll(`#${containerId} input:checked`)).map(el => el.value);
+    }
+    async function readAdminImageInput(inputId, squareIcon) {
+      const input = document.getElementById(inputId);
+      if (!input || !input.files || !input.files[0]) return null;
+      const { dataUrl } = await resizeImageFileToDataUrl(input.files[0], squareIcon ? 512 : 240, squareIcon ? 'image/png' : 'image/jpeg', 0.88);
+      return squareIcon ? padImageToSquare(dataUrl, 512) : dataUrl;
     }
 
     // ---- Admin → Profile și acces ----
@@ -2927,6 +2905,12 @@
       const grid = document.getElementById('adminProfPermGrid');
       if (grid) grid.innerHTML = '';
       renderAdminPermGrid();
+      document.getElementById('adminProfTitlu').value = p ? (p.titlu || '') : '';
+      document.getElementById('adminProfLogo').value = p ? (p.logo || '') : '';
+      renderAdminChecklist('adminProfMeniuGrid', Object.keys(AUTH_NAV_LABELS).map(id => ({ id, label: AUTH_NAV_LABELS[id] })), p ? (p.meniu || []) : []);
+      renderAdminChecklist('adminProfWidgetGrid', ALL_OWNER_WIDGET_DEFS, p ? (p.widgeturi || []).filter(id => id !== 'none') : []);
+      ['adminProfPozaInput', 'adminProfIconaInput'].forEach(id => { document.getElementById(id).value = ''; });
+      ['adminProfPozaClear', 'adminProfIconaClear'].forEach(id => { document.getElementById(id).checked = false; });
       document.getElementById('adminProfileForm').classList.remove('hidden');
     }
 
@@ -2942,11 +2926,29 @@
       const perms = {};
       document.querySelectorAll('#adminProfPermGrid select').forEach(sel => { if (sel.value) perms[sel.dataset.mod] = sel.value; });
       try {
+        const extra = {
+          titlu: document.getElementById('adminProfTitlu').value.trim(),
+          logo: document.getElementById('adminProfLogo').value.trim(),
+          meniu: readAdminChecklist('adminProfMeniuGrid').join(','),
+          widgeturi: readAdminChecklist('adminProfWidgetGrid').join(',')
+        };
+        showToast('Se salvează profilul...');
+        const poza = await readAdminImageInput('adminProfPozaInput', false);
+        if (poza) {
+          extra.pozaFileId = await uploadImageDataUrlToDrive(poza, `PozaProfil_${email}_${Date.now()}.jpg`);
+          cacheProfileImage(extra.pozaFileId, poza);
+        } else if (document.getElementById('adminProfPozaClear').checked) extra.pozaFileId = '';
+        const icona = await readAdminImageInput('adminProfIconaInput', true);
+        if (icona) {
+          extra.iconaFileId = await uploadImageDataUrlToDrive(icona, `IconaApp_${email}_${Date.now()}.png`);
+          cacheProfileImage(extra.iconaFileId, icona);
+        } else if (document.getElementById('adminProfIconaClear').checked) extra.iconaFileId = '';
         const data = await apiJsonp({
           ...apiAuthParams(), action: 'authSaveProfile', email: email, nume: nume,
           rol: document.getElementById('adminProfRol').value,
           activ: document.getElementById('adminProfActiv').checked ? 'DA' : 'NU',
-          permisiuni: JSON.stringify(perms)
+          permisiuni: JSON.stringify(perms),
+          ...extra
         });
         if (!data.success) { showToast(data.error || 'Profilul nu a fost salvat.'); return; }
         showToast('Profil salvat.');
@@ -3013,14 +3015,7 @@
       const current = getUserProfileSettings(username);
       const updated = { ...current, ...newSettings };
       localStorage.setItem(`diih_user_profile_${username}`, JSON.stringify(updated));
-      try {
-        const allProfiles = JSON.parse(localStorage.getItem('diih_user_profiles') || '{}');
-        allProfiles[username] = updated;
-        localStorage.setItem('diih_user_profiles', JSON.stringify(allProfiles));
-        const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&userProfilesJson=${encodeURIComponent(JSON.stringify(allProfiles))}&callback=void`;
-        document.body.appendChild(script);
-      } catch(e) {}
+      scheduleMyProfilePush(username);
     }
 
     // 60+ Citate Patristice & Înțelepciune Duhovnicească pentru Gândul Zilei
@@ -3323,7 +3318,8 @@
           prof.headerPicture = dataUrl;
           saveUserProfileSettings(uName, prof);
           applyUserUIState();
-          showToast("Poză de profil actualizată!");
+          showToast("Poză de profil actualizată! Se salvează în cloud...");
+          pushMyProfileImage('pozaFileId', dataUrl);
         };
         img.src = e.target.result;
       };
@@ -3334,8 +3330,10 @@
       const uName = getCurrentLoggedInUser();
       const prof = getUserProfileSettings(uName);
       prof.headerPicture = '';
+      prof.pozaFileIdApplied = '';
       saveUserProfileSettings(uName, prof);
       applyUserUIState();
+      pushMyProfileFields({ pozaFileId: '' });
       showToast("Poză de profil eliminată.");
     }
 
@@ -3455,10 +3453,7 @@
     let appIconPath = localStorage.getItem('diih_app_icon_path') || DEFAULT_OWNER_APP_ICON;
     let pomelnicBatchSize = parseInt(localStorage.getItem('diih_batch_size') || "20", 10);
     let psaltireBatchSize = parseInt(localStorage.getItem('diih_psaltire_batch_size') || "20", 10);
-    let sharingConfig = JSON.parse(localStorage.getItem('diih_sharing_config') || '{}');
     const SHEET_DIRECT_URL = "https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit";
-    const urlParams = new URLSearchParams(window.location.search);
-    const sharedModeToken = urlParams.get('share');
 
     let allInventory = JSON.parse(localStorage.getItem('diih_inventar') || '[]');
     let inventoryLoaded = false;
@@ -3498,9 +3493,7 @@
       fetchDataFromSheet(false);
       registerServiceWorker();
       setupOnlineOfflineHandlers();
-      logEventToCloud('app_start', 'session', deviceId, 'DIiH v23 pornit');
-
-      applySharedModeIfNeeded();
+      logEventToCloud('app_start', 'session', deviceId, 'DIiH v24 pornit');
 
       // Sincronizare rapidă/ușoară (fără Pomelnic & Biblia) la fiecare 20 secunde
       setInterval(() => {
@@ -3556,33 +3549,43 @@
       applyDynamicManifest();
     }
 
-    // Construiește dinamic manifest.json (nume + iconiță per profil) ca Blob, pentru ca dialogul de
-    // instalare să arate numele/iconița profilului activ. NU afectează instalarea deja existentă pe
-    // ecranul principal — aceea se schimbă doar la dezinstalare/reinstalare.
+    // Construiește dinamic manifest.json (nume + iconiță per profil) ca Blob. Toate adresele sunt absolute:
+    // dintr-un manifest blob:, căile relative nu se rezolvă, iar Chrome pe laptop înlocuia iconița cu una
+    // generată, pe fundal negru. Iconițele sunt PNG cu fundal transparent, plus o variantă „maskable”.
+    // NU afectează instalarea existentă — aceea se schimbă doar la dezinstalare/reinstalare.
     function applyDynamicManifest() {
       const mLink = document.getElementById('manifestLink');
       if (!mLink) return;
-      const sp = new URLSearchParams(window.location.search);
-      if (sp.has('share')) return; // păstrăm manifestele statice de partajare, neatinse
-
+      const abs = p => new URL(p, window.location.href).href;
       const uName = getCurrentLoggedInUser();
-      const shortName = appTitle || (uName === 'Andreea Murar' ? 'ABL' : 'DIiH');
-      const iconSrc = (appIconPath && appIconPath.startsWith('data:image')) ? appIconPath : DEFAULT_OWNER_APP_ICON;
+      const shortName = appTitle || 'DIiH';
+      let icons;
+      if (appIconPath && appIconPath.startsWith('data:image')) {
+        icons = [{ src: appIconPath, sizes: "512x512", type: appIconPath.substring(5, appIconPath.indexOf(';')), purpose: "any" }];
+      } else if (appIconPath && appIconPath.indexOf('icon-heart-ekg') !== -1) {
+        icons = [
+          { src: abs('./icons/icon-heart-ekg.png'), sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: abs('./icons/icon-heart-ekg-maskable.png'), sizes: "512x512", type: "image/png", purpose: "maskable" }
+        ];
+      } else {
+        icons = [
+          { src: abs('./icons/app-192.png'), sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: abs('./icons/app-512.png'), sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: abs('./icons/app-512-maskable.png'), sizes: "512x512", type: "image/png", purpose: "maskable" }
+        ];
+      }
       const manifest = {
-        id: `diih-${uName.replace(/\s+/g, '-').toLowerCase()}-pwa`,
+        id: abs(`./?app=diih-${uName.replace(/\s+/g, '-').toLowerCase()}`),
         name: shortName,
         short_name: shortName,
         description: "Aplicație privată de pomenire și rânduială duhovnicească",
-        start_url: "./index.html",
-        scope: "./",
+        start_url: abs('./index.html'),
+        scope: abs('./'),
         display: "standalone",
         background_color: "#090d16",
         theme_color: "#090d16",
         orientation: "portrait",
-        icons: [
-          { src: iconSrc, sizes: "192x192", type: iconSrc.startsWith('data:') ? "image/png" : "image/svg+xml", purpose: "any" },
-          { src: iconSrc, sizes: "512x512", type: iconSrc.startsWith('data:') ? "image/png" : "image/svg+xml", purpose: "any" }
-        ]
+        icons: icons
       };
       try {
         const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
@@ -3602,8 +3605,8 @@
       if (!fileInput.files || fileInput.files.length === 0) return;
       try {
         const { dataUrl } = await resizeImageFileToDataUrl(fileInput.files[0], 512, 'image/png', 0.92);
-        pendingCustomIconDataUrl = dataUrl;
-        document.getElementById('iconUploadPreview').src = dataUrl;
+        pendingCustomIconDataUrl = await padImageToSquare(dataUrl, 512);
+        document.getElementById('iconUploadPreview').src = pendingCustomIconDataUrl;
         statusEl.textContent = 'Previzualizare — apasă „Salvează Iconiță” pentru a o aplica.';
       } catch (err) {
         statusEl.textContent = '✗ Eroare: ' + err.message;
@@ -3617,12 +3620,13 @@
       statusEl.textContent = 'Se salvează în Drive...';
       try {
         const fileId = await uploadImageDataUrlToDrive(pendingCustomIconDataUrl, `IconaApp_${uName}_${Date.now()}.png`);
-        saveSettingRaw(`IconaApp_${uName}`, fileId);
+        cacheProfileImage(fileId, pendingCustomIconDataUrl);
+        await pushMyProfileFields({ iconaFileId: fileId });
         appIconPath = pendingCustomIconDataUrl;
         localStorage.setItem('diih_app_icon_path', appIconPath);
-        saveUserProfileSettings(uName, { appIconPath: appIconPath });
+        saveUserProfileSettings(uName, { appIconPath: appIconPath, iconaFileIdApplied: fileId });
         applyAppBrandUI();
-        statusEl.textContent = '✔ Iconiță salvată! Fișierele vechi rămân păstrate în Drive.';
+        statusEl.textContent = '✔ Iconiță salvată pe toate dispozitivele tale. Pentru ecranul principal, reinstalează aplicația.';
         showToast('Iconiță aplicație actualizată!');
       } catch (err) {
         statusEl.textContent = '✗ Eroare: ' + err.message;
@@ -3635,9 +3639,9 @@
       appIconPath = uConfig.defaultIcon;
       pendingCustomIconDataUrl = null;
       localStorage.setItem('diih_app_icon_path', appIconPath);
-      saveUserProfileSettings(uName, { appIconPath: appIconPath });
-      // Ștergem doar cheia de personalizare din Setari — fișierul din Drive NU se șterge
-      saveSettingRaw(`IconaApp_${uName}`, '');
+      saveUserProfileSettings(uName, { appIconPath: appIconPath, iconaFileIdApplied: '' });
+      // Se scoate doar legătura din profil — fișierul din Drive NU se șterge
+      pushMyProfileFields({ iconaFileId: '' });
       document.getElementById('iconUploadFileInput').value = '';
       applyAppBrandUI();
       document.getElementById('iconUploadStatus').textContent = '✔ Revenit la sigiliul implicit.';
@@ -3701,10 +3705,11 @@
 
       applyAppBrandUI();
       renderDailyPomelnic20();
+      saveUserProfileSettings(getCurrentLoggedInUser(), { appTitle: appTitle, appLogo: appLogo });
       if (!skipFormRead) showToast("Setări salvate și trimise în Cloud!");
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&appTitle=${encodeURIComponent(appTitle)}&appLogo=${encodeURIComponent(appLogo)}&appIconPath=${encodeURIComponent(appIconPath)}&pomelnicBatchSize=${pomelnicBatchSize}&psaltireBatchSize=${psaltireBatchSize}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&pomelnicBatchSize=${pomelnicBatchSize}&psaltireBatchSize=${psaltireBatchSize}&callback=void`;
       script.onerror = () => showToast("Eroare rețea la salvare! Verifică conexiunea.");
       document.body.appendChild(script);
     }
@@ -4661,23 +4666,8 @@
         updateBibliaQuoteDisplay();
       }
       if (tabId === 'more') {
-        if (!isInActiveSharedMode()) {
-          switchSubTab('setari');
-        } else {
-          const sharedAllowsInventar = sharingConfig.enabledModules && sharingConfig.enabledModules.includes('inventar');
-          switchSubTab(sharedAllowsInventar ? 'inventar' : 'notificari');
-        }
+        switchSubTab('setari');
       }
-      if (isInActiveSharedMode() && (tabId === 'pomelnic' || tabId === 'scriptura')) {
-        const moreBtn = document.getElementById('nav-more');
-        if (moreBtn && !moreBtn.classList.contains('hidden')) {
-          moreBtn.className = "flex flex-col items-center space-y-1 text-cyan-400 font-bold";
-        }
-      }
-      const backNav = document.getElementById('sharedPomelnicBackNav');
-      if (backNav) backNav.classList.toggle('hidden', !isInActiveSharedMode());
-      const scripturaBackNav = document.getElementById('sharedScripturaBackNav');
-      if (scripturaBackNav) scripturaBackNav.classList.toggle('hidden', !isInActiveSharedMode());
     }
 
     function jumpToCurrentSchoolMonth() {
@@ -4710,7 +4700,6 @@
       if (subId === 'psaltire-grup') renderPsaltireGrupList();
       if (subId === 'widget') updateTodayWidgetView();
       if (subId === 'notificari') initNotificationInputs();
-      if (subId === 'admin') renderAdminSharingForm();
       if (subId === 'inventar') loadInventoryIfNeeded();
       if (subId === 'notebiblia') renderNoteBibliaList();
       if (subId === 'admin') loadAdminProfiles();
@@ -4726,44 +4715,19 @@
     }
 
     // SINCRONIZARE LIVE 1:1 CU GOOGLE SHEETS
-    function isInActiveSharedMode() {
-      return !!(sharedModeToken && sharingConfig && sharingConfig.shareToken === sharedModeToken);
-    }
-
-    // Pomelnicul NU se partajează niciodată integral — doar categoriile (Grad) bifate explicit în Admin
-    function getSharedAllowedPomelnicCategories() {
-      if (!isInActiveSharedMode()) return null;
-      return (sharingConfig.pomelnicCategories && sharingConfig.pomelnicCategories.length > 0) ? sharingConfig.pomelnicCategories : [];
-    }
-
+    // Profilul Andreei vede în Pomelnic doar persoanele bifate „Pomelnic Andreea” (Col D), ca înainte în aplicația ei
     function getVisiblePeople() {
-      if (isInActiveSharedMode()) {
-        const andreeaList = allPeople.filter(p => p.pomelnicAndreea === true || p.pomelnicAndreea === 'true' || p.pomelnicAndreea === 'TRUE' || p.pomelnicAndreea === 1);
-        if (andreeaList.length > 0) return andreeaList;
-        const allowed = getSharedAllowedPomelnicCategories();
-        if (allowed !== null && allowed.length > 0) {
-          return allPeople.filter(p => p.grad && allowed.includes(p.grad.trim()));
-        }
-        return andreeaList;
+      if (getCurrentLoggedInUser() === 'Andreea Murar') {
+        return allPeople.filter(p => p.pomelnicAndreea === true || p.pomelnicAndreea === 'true' || p.pomelnicAndreea === 'TRUE' || p.pomelnicAndreea === 1);
       }
       return allPeople;
     }
 
     function applyCloudSettings(settings) {
       if (!settings) return;
-      const inActiveSharedMode = isInActiveSharedMode();
-      if (!inActiveSharedMode) {
-        if (settings.appTitle) appTitle = settings.appTitle;
-        if (settings.appLogo) appLogo = settings.appLogo;
-        if (settings.appIconPath) appIconPath = settings.appIconPath;
-      }
+      // Titlul, logo-ul și iconița sunt per profil (tabul Profile, v24.0); din Setari se iau doar valorile comune
       if (settings.pomelnicBatchSize) pomelnicBatchSize = parseInt(settings.pomelnicBatchSize, 10) || 20;
       if (settings.psaltireBatchSize) psaltireBatchSize = parseInt(settings.psaltireBatchSize, 10) || 20;
-      if (!inActiveSharedMode) {
-        localStorage.setItem('diih_app_title', appTitle);
-        localStorage.setItem('diih_app_logo', appLogo);
-        localStorage.setItem('diih_app_icon_path', appIconPath);
-      }
       localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
       localStorage.setItem('diih_psaltire_batch_size', psaltireBatchSize.toString());
       applyAppBrandUI();
@@ -4777,19 +4741,6 @@
           }
         } catch (e) {}
       }
-
-      if (settings.sharingConfigJson) {
-        try {
-          const cloudSharing = JSON.parse(settings.sharingConfigJson);
-          if (cloudSharing && typeof cloudSharing === 'object') {
-            sharingConfig = cloudSharing;
-            localStorage.setItem('diih_sharing_config', JSON.stringify(sharingConfig));
-            renderAdminSharingForm();
-            applySharedModeIfNeeded();
-          }
-        } catch (e) {}
-      }
-
       if (settings.randuialaTrackerJson) {
         try {
           const cloudTracker = JSON.parse(settings.randuialaTrackerJson);
@@ -4801,16 +4752,6 @@
         } catch (e) {}
       }
 
-      if (settings.userProfilesJson) {
-        try {
-          const cloudProfiles = JSON.parse(settings.userProfilesJson);
-          if (cloudProfiles && typeof cloudProfiles === 'object') {
-            const localProfiles = JSON.parse(localStorage.getItem('diih_user_profiles') || '{}');
-            const mergedProfiles = { ...cloudProfiles, ...localProfiles };
-            localStorage.setItem('diih_user_profiles', JSON.stringify(mergedProfiles));
-          }
-        } catch (e) {}
-      }
     }
 
     // Păstrează color/startHour/endHour locale dacă răspunsul cloud le întoarce goale
@@ -4860,6 +4801,7 @@
           authSess.profile = data.auth.profile;
           setAuthSession(authSess);
           applyAuthPermissionsUI();
+          applyProfileCustomization(data.auth.profile);
         }
 
         applyCloudSettings(data.settings);
@@ -4954,6 +4896,12 @@
           delete window[callbackName];
           promptGoogleLogin('Conectează-te cu contul Google ca să vezi datele.');
           return;
+        }
+        if (data && data.auth && data.auth.profile && getAuthSession()) {
+          const liveSess = getAuthSession();
+          liveSess.profile = data.auth.profile;
+          setAuthSession(liveSess);
+          applyProfileCustomization(data.auth.profile);
         }
 
         applyCloudSettings(data.settings);
@@ -8708,7 +8656,7 @@
       document.getElementById('newBolnav').checked = false;
       document.getElementById('newDNAprox').checked = false;
       document.getElementById('newDAAprox').checked = false;
-      document.getElementById('newPomelnicAndreea').checked = isInActiveSharedMode();
+      document.getElementById('newPomelnicAndreea').checked = getCurrentLoggedInUser() === 'Andreea Murar';
       const nAct = document.getElementById('newIsActivPomelnic');
       if (nAct) nAct.checked = true;
       document.getElementById('addPersonModal').classList.remove('hidden');
@@ -9444,7 +9392,6 @@
     }
 
     function applyOwnerWidgetsVisibility() {
-      if (isInActiveSharedMode()) return;
       const order = getOwnerWidgetsOrder();
       const active = getOwnerWidgetsConfig();
       const container = document.getElementById('todayOwnerContent');
@@ -9460,27 +9407,6 @@
       applyPomelnicNamesInWidgetVisibility();
       renderOwnerWidgetsSettingsList();
       applyAuthPermissionsUI();
-    }
-
-    function toggleAllSharedWidgets(state) {
-      ['school','shopping','anniversaries','ganduri','scriptura','inventory'].forEach(id => {
-        const el = document.getElementById(`wgtShared_${id}`);
-        if (el) el.checked = state;
-      });
-    }
-
-    function saveSharedWidgetsConfig() {
-      const list = [];
-      ['school','shopping','anniversaries','ganduri','scriptura','inventory'].forEach(id => {
-        const el = document.getElementById(`wgtShared_${id}`);
-        if (el && el.checked) list.push(id);
-      });
-      sharingConfig.sharedWidgets = list;
-      localStorage.setItem('diih_sharing_config', JSON.stringify(sharingConfig));
-      showToast("Configurația widget-urilor pentru familie salvată!");
-      const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&sharingConfigJson=${encodeURIComponent(JSON.stringify(sharingConfig))}&callback=void`;
-      document.body.appendChild(script);
     }
 
     // 16. PERSONALIZARE BARĂ DE NAVIGARE JOS (OWNER & SHARED)
@@ -9527,7 +9453,6 @@
     }
 
     function applyOwnerNavLayout() {
-      if (isInActiveSharedMode()) return;
       const navList = getOwnerNavConfig();
       const allMods = ['today','pomelnic','calendar','notite','cumparaturi','scriptura','notazilei','inventar'];
       let visibleCount = 0;
@@ -10192,148 +10117,6 @@
       document.body.appendChild(script);
     }
 
-    // 12. ADMIN & PARTAJARE ACCES (Mod convenabil pe bază de link + cod, nu autentificare Google reală)
-    function setSharedIconChoice(path) {
-      document.getElementById('adminSharedIconPath').value = path;
-      document.querySelectorAll('#subtab-admin [data-icon-path]').forEach(b => {
-        if (b.getAttribute('data-icon-path') === path) b.classList.add('border-cyan-400', 'border-2');
-        else b.classList.remove('border-cyan-400', 'border-2');
-      });
-    }
-
-    function renderAdminSharingForm() {
-      if (!sharingConfig || Object.keys(sharingConfig).length === 0) return;
-      const titleEl = document.getElementById('adminSharedTitle');
-      const logoEl = document.getElementById('adminSharedLogo');
-      const iconEl = document.getElementById('adminSharedIconPath');
-      const authorEl = document.getElementById('adminSharedAuthorName');
-      if (titleEl) titleEl.value = sharingConfig.sharedAppTitle || '';
-      if (logoEl) logoEl.value = sharingConfig.sharedAppLogo || '';
-      const chosenIcon = sharingConfig.sharedAppIconPath || './icons/icon-heart-ekg.png';
-      if (iconEl) iconEl.value = chosenIcon;
-      setSharedIconChoice(chosenIcon);
-      if (authorEl) authorEl.value = sharingConfig.authorName || '';
-
-      const modules = sharingConfig.enabledModules || ['calendar', 'cumparaturi', 'inventar'];
-      const map = {
-        today: 'adminModuleToday',
-        calendar: 'adminModuleCalendar',
-        cumparaturi: 'adminModuleCumparaturi',
-        ganduri: 'adminModuleGanduri',
-        pomelnic: 'adminModulePomelnic',
-        inventar: 'adminModuleInventar',
-        scriptura: 'adminModuleScriptura'
-      };
-      Object.keys(map).forEach(k => {
-        const cb = document.getElementById(map[k]);
-        if (cb) cb.checked = modules.includes(k);
-      });
-
-      // Bifează bara de jos a Andreei
-      const mainBar = sharingConfig.mainNavModules || ['today', 'calendar', 'cumparaturi', 'inventar'];
-      ['today', 'calendar', 'cumparaturi', 'inventar', 'pomelnic', 'ganduri', 'scriptura'].forEach(m => {
-        const el = document.getElementById(`adminMainBar_${m}`);
-        if (el) el.checked = mainBar.includes(m);
-      });
-
-      // Bifează widget-urile din ecranul Astăzi al Andreei
-      const shWidgets = sharingConfig.sharedWidgets || ['school', 'shopping', 'anniversaries', 'ganduri', 'scriptura', 'inventory'];
-      ['school', 'shopping', 'anniversaries', 'ganduri', 'scriptura', 'inventory'].forEach(w => {
-        const el = document.getElementById(`wgtShared_${w}`);
-        if (el) el.checked = shWidgets.includes(w);
-      });
-
-      if (sharingConfig.shareToken) {
-        const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-        const link = `${window.location.origin}${window.location.pathname}?share=${sharingConfig.shareToken}`;
-        const iphoneLink = `${window.location.origin}${basePath}andreea.html?share=${sharingConfig.shareToken}`;
-        const out = document.getElementById('adminShareLinkOutput');
-        if (out) out.value = link;
-        const iphOut = document.getElementById('adminShareLinkOutputIPhone');
-        if (iphOut) iphOut.value = iphoneLink;
-        document.getElementById('adminShareLinkBox')?.classList.remove('hidden');
-      }
-      toggleAdminPomelnicCategoriesBox();
-      populateAdminPomelnicCategoriesList(sharingConfig.pomelnicCategories || []);
-    }
-
-    function toggleAdminPomelnicCategoriesBox() {
-      const box = document.getElementById('adminPomelnicCategoriesBox');
-      const checked = document.getElementById('adminModulePomelnic') && document.getElementById('adminModulePomelnic').checked;
-      if (!box) return;
-      if (checked) {
-        box.classList.remove('hidden');
-        populateAdminPomelnicCategoriesList((sharingConfig && sharingConfig.pomelnicCategories) || []);
-      } else {
-        box.classList.add('hidden');
-      }
-    }
-
-    function populateAdminPomelnicCategoriesList(checkedCategories) {
-      const list = document.getElementById('adminPomelnicCategoriesList');
-      if (!list) return;
-      const categories = new Set();
-      allPeople.forEach(p => { if (p.grad && p.grad.trim()) categories.add(p.grad.trim()); });
-      list.innerHTML = Array.from(categories).sort().map(c => `
-        <label class="flex items-center space-x-1.5 p-1.5 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
-          <input type="checkbox" class="admin-pomelnic-cat-cb rounded text-rose-500 focus:ring-0" value="${c.replace(/"/g, '&quot;')}" ${checkedCategories.includes(c) ? 'checked' : ''}>
-          <span class="text-[10px] text-slate-200 truncate">${c}</span>
-        </label>
-      `).join('') || `<p class="text-[10px] text-slate-500 col-span-2">Niciun Pomelnic încărcat încă.</p>`;
-    }
-
-    function setAllAdminPomelnicCategories(state) {
-      document.querySelectorAll('.admin-pomelnic-cat-cb').forEach(cb => { cb.checked = state; });
-    }
-
-    function saveAdminSharingConfig() {
-      const modules = [];
-      if (document.getElementById('adminModuleToday').checked) modules.push('today');
-      if (document.getElementById('adminModuleCalendar').checked) modules.push('calendar');
-      if (document.getElementById('adminModuleCumparaturi').checked) modules.push('cumparaturi');
-      if (document.getElementById('adminModuleGanduri').checked) modules.push('ganduri');
-      if (document.getElementById('adminModulePomelnic').checked) modules.push('pomelnic');
-      if (document.getElementById('adminModuleInventar').checked) modules.push('inventar');
-      if (document.getElementById('adminModuleScriptura') && document.getElementById('adminModuleScriptura').checked) modules.push('scriptura');
-
-      const mainBarModules = ['today'];
-      ['calendar', 'cumparaturi', 'inventar', 'pomelnic', 'ganduri', 'scriptura'].forEach(m => {
-        const el = document.getElementById(`adminMainBar_${m}`);
-        if (el && el.checked) mainBarModules.push(m);
-      });
-
-      const sharedWidgets = [];
-      ['school', 'shopping', 'anniversaries', 'ganduri', 'scriptura', 'inventory'].forEach(w => {
-        const el = document.getElementById(`wgtShared_${w}`);
-        if (el && el.checked) sharedWidgets.push(w);
-      });
-
-      const pomelnicCategories = Array.from(document.querySelectorAll('.admin-pomelnic-cat-cb:checked')).map(cb => cb.value);
-
-      const existingToken = sharingConfig.shareToken || ('diih-' + Math.random().toString(36).substring(2, 10));
-
-      sharingConfig = {
-        sharedAppTitle: document.getElementById('adminSharedTitle').value.trim() || 'Agenda Familiei',
-        sharedAppLogo: document.getElementById('adminSharedLogo').value.trim() || '🏡',
-        sharedAppIconPath: document.getElementById('adminSharedIconPath').value || './icons/icon-heart-ekg.png',
-        authorName: document.getElementById('adminSharedAuthorName').value.trim() || 'Membru familie',
-        enabledModules: modules,
-        mainNavModules: mainBarModules,
-        sharedWidgets: sharedWidgets,
-        pomelnicCategories: pomelnicCategories,
-        shareToken: existingToken
-      };
-
-      localStorage.setItem('diih_sharing_config', JSON.stringify(sharingConfig));
-      renderAdminSharingForm();
-      showToast("Configurație de partajare salvată!");
-      logEventToCloud('admin_sharing_update', 'admin', existingToken, `Partajare actualizată: module [${modules.join(', ')}]`);
-
-      const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&sharingConfigJson=${encodeURIComponent(JSON.stringify(sharingConfig))}&callback=void`;
-      document.body.appendChild(script);
-    }
-
     function selectAppSymbol(symbol) {
       const input = document.getElementById('settingAppLogo');
       if (input) input.value = symbol;
@@ -10349,193 +10132,6 @@
       showToast('Logo revenit la implicit!');
     }
 
-    function copyShareLink() {
-      const input = document.getElementById('adminShareLinkOutput');
-      if (!input) return;
-      input.select();
-      navigator.clipboard.writeText(input.value).then(() => showToast("Link universal copiat!")).catch(() => showToast("Selectează manual link-ul."));
-    }
-
-    function copyShareLinkIPhone() {
-      const input = document.getElementById('adminShareLinkOutputIPhone');
-      if (!input) return;
-      input.select();
-      navigator.clipboard.writeText(input.value).then(() => showToast("Link iPhone Andreea copiat!")).catch(() => showToast("Selectează manual link-ul."));
-    }
-
-    let sharedModeInitialized = false;
-
-    function applySharedModeIfNeeded() {
-      if (!sharedModeToken) return;
-      if (!sharingConfig || sharingConfig.shareToken !== sharedModeToken) return;
-
-      // Rebrand aplicației pentru persoana partajată
-      appTitle = sharingConfig.sharedAppTitle || appTitle;
-      appLogo = sharingConfig.sharedAppLogo || appLogo;
-      appIconPath = sharingConfig.sharedAppIconPath || appIconPath;
-      deviceName = sharingConfig.authorName || deviceName;
-      applyAppBrandUI();
-
-      // Bara de jos configurată dinamic pentru Andreea (cu Inventar etc. pe bara principală dacă e bifat)
-      const allowedModules = sharingConfig.enabledModules && sharingConfig.enabledModules.length > 0 ? sharingConfig.enabledModules : ['calendar', 'cumparaturi', 'inventar'];
-      const sharedMainBar = sharingConfig.mainNavModules || ['today', 'calendar', 'cumparaturi', 'inventar'];
-
-      const allSharedMods = ['today', 'calendar', 'cumparaturi', 'inventar', 'pomelnic', 'ganduri', 'scriptura'];
-      let visibleCount = 0;
-      allSharedMods.forEach(mod => {
-        const btn = document.getElementById(`nav-${mod}`);
-        const isAllowed = (mod === 'today') ? allowedModules.includes('today') : allowedModules.includes(mod);
-        const onMain = isAllowed && (mod === 'today' || sharedMainBar.includes(mod));
-        if (btn) {
-          btn.classList.toggle('hidden', !onMain);
-          if (onMain) visibleCount++;
-        }
-        const subName = mod.charAt(0).toUpperCase() + mod.slice(1);
-        const subBtn = document.getElementById(`btnSub${subName}`);
-        if (subBtn && mod !== 'today') {
-          subBtn.classList.toggle('hidden', !isAllowed || onMain);
-        }
-      });
-
-      // Subtab-uri blocate pentru Andreea (aparțin exclusiv proprietarului)
-      ['btnSubPsaltire', 'btnSubWidget', 'btnSubSetari', 'btnSubAdmin'].forEach(id => {
-        const b = document.getElementById(id);
-        if (b) b.classList.add('hidden');
-      });
-      const notifBtn = document.getElementById('btnSubNotif');
-      if (notifBtn) notifBtn.classList.remove('hidden');
-
-      const moreBtn = document.getElementById('nav-more');
-      if (moreBtn) {
-        moreBtn.classList.remove('hidden');
-        visibleCount++;
-      }
-
-      const navBar = document.getElementById('bottomNavBar');
-      if (navBar) navBar.className = `max-w-lg mx-auto grid grid-cols-${Math.max(visibleCount, 1)} text-center text-[9px] font-medium text-slate-400`;
-
-      // Tabul "Astăzi" devine un sumar al noutăților din modulele permise
-      const todayOwner = document.getElementById('todayOwnerContent');
-      const todayShared = document.getElementById('todaySharedSummary');
-      if (allowedModules.includes('today')) {
-        if (todayOwner) todayOwner.classList.add('hidden');
-        if (todayShared) todayShared.classList.remove('hidden');
-        renderSharedTodaySummary(allowedModules);
-      }
-
-      // Prima inițializare: comutăm pe primul modul permis și afișăm mesajul de bun venit
-      if (!sharedModeInitialized) {
-        sharedModeInitialized = true;
-        const firstNavModule = allowedModules.find(m => m !== 'pomelnic') || (allowedModules.includes('today') ? 'today' : 'more');
-        switchTab(firstNavModule);
-        showToast(`Bine ai venit, ${deviceName}!`);
-      }
-    }
-
-    function renderSharedTodaySummary(allowedModules) {
-      const container = document.getElementById('todaySharedSummary');
-      if (!container) return;
-
-      const shWidgets = sharingConfig.sharedWidgets || ['school', 'shopping', 'anniversaries', 'ganduri', 'scriptura', 'inventory'];
-      const todayStr = new Date().toISOString().split('T')[0];
-      let html = `<div class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">📋 Noutățile de astăzi</div>`;
-
-      if (allowedModules.includes('calendar') && shWidgets.includes('school')) {
-        const todaysActs = schoolActivities.filter(a => a.date === todayStr);
-        const monthStr = todayStr.substring(0, 7);
-        const monthActs = schoolActivities.filter(a => a.date.startsWith(monthStr));
-        const unpaid = monthActs.filter(a => !isActivitySettled(a.paymentStatus));
-        const unpaidSum = unpaid.reduce((s, a) => s + (a.total || 0), 0);
-        html += `
-          <div onclick="switchTab('calendar')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-cyan-600/60 active:scale-98 transition space-y-2">
-            <div class="flex items-center justify-between text-xs font-bold text-cyan-300 uppercase tracking-wider">
-              <span>🎓 Școală</span>
-              <span class="bg-cyan-950 border border-cyan-800 px-2 py-0.5 rounded-full">${todaysActs.length} azi</span>
-            </div>
-            ${todaysActs.length === 0 ? '<p class="text-xs text-slate-400 italic">Nicio activitate programată astăzi.</p>' : todaysActs.map(a => `<p class="text-xs text-slate-200">• ${a.title} (${a.child}) • ${a.startHour || '08:00'}-${a.endHour || '16:00'}</p>`).join('')}
-            ${unpaid.length > 0 ? `<p class="text-[11px] text-amber-300 pt-1 border-t border-bordercol/40">⚠️ Restanță lună curentă: ${unpaidSum} Lei (${unpaid.length} activități)</p>` : ''}
-          </div>
-        `;
-      }
-
-      if (allowedModules.includes('cumparaturi') && shWidgets.includes('shopping')) {
-        const recent = [...allShopping].slice(-3).reverse();
-        html += `
-          <div onclick="switchTab('cumparaturi')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-emerald-600/60 active:scale-98 transition space-y-2">
-            <div class="flex items-center justify-between text-xs font-bold text-emerald-300 uppercase tracking-wider">
-              <span>🛒 Cumpărături</span>
-              <span class="bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded-full">${allShopping.length} de luat</span>
-            </div>
-            ${recent.length === 0 ? '<p class="text-xs text-slate-400 italic">Lista este goală.</p>' : recent.map(x => `<p class="text-xs text-slate-200">• ${x.produs} <span class="text-slate-500">(${x.magazin})</span></p>`).join('')}
-          </div>
-        `;
-      }
-
-      if (allowedModules.includes('ganduri') && shWidgets.includes('ganduri')) {
-        const latest = allGanduri[0];
-        html += `
-          <div onclick="switchTab('ganduri')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-600/60 active:scale-98 transition space-y-2">
-            <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
-              <span>💡 Gânduri</span>
-              <span class="bg-amber-950 border border-amber-800 px-2 py-0.5 rounded-full">${allGanduri.length} total</span>
-            </div>
-            ${latest ? `<p class="text-xs text-slate-200 italic">"${latest.gand}"</p><p class="text-[10px] text-amber-400">— ${latest.sursa || 'Personal'}</p>` : '<p class="text-xs text-slate-400 italic">Niciun gând notat încă.</p>'}
-          </div>
-        `;
-      }
-
-      if (allowedModules.includes('pomelnic') && shWidgets.includes('anniversaries')) {
-        const todaysBirthdays = computeTodaysAnniversaries(getVisiblePeople());
-        html += `
-          <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-2">
-            <div class="flex items-center justify-between text-xs font-bold text-cyan-300 uppercase tracking-wider border-b border-bordercol pb-2">
-              <div class="flex items-center space-x-2">
-                <span>🎉 Aniversările Zilei</span>
-                <span class="bg-slate-800 px-2 py-0.5 rounded-full text-slate-300 text-[10px]">${todaysBirthdays.length}</span>
-              </div>
-              <button onclick="switchTab('pomelnic')" class="px-2 py-1 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 hover:border-rose-600 text-rose-200 rounded-lg text-[10px] font-bold flex items-center space-x-1.5 transition active:scale-95 shadow-sm" title="Deschide Pomelnicul complet">
-                <span>📜</span>
-                <span>Pomelnic</span>
-              </button>
-            </div>
-            ${todaysBirthdays.length === 0 ? '<p class="text-xs text-slate-500 italic py-1 text-center">Nicio aniversare sau comemorare în această zi.</p>' : todaysBirthdays.map(m => {
-              const nume = `${m.person.prenume} ${m.person.nume}`.trim();
-              if (m.type === 'BIRTH') return `<div onclick="openPersonModal(${m.person.rowId})" class="p-2 rounded-xl bg-slate-900/80 border border-emerald-900/50 cursor-pointer active:scale-98 transition"><span class="text-xs font-bold text-emerald-300">🎂 ${nume}</span><p class="text-[11px] text-slate-400">Împlinește ${m.age} ani</p></div>`;
-              if (m.type === 'BIRTH_DECEASED') return `<div onclick="openPersonModal(${m.person.rowId})" class="p-2 rounded-xl bg-slate-900/80 border border-amber-900/50 cursor-pointer active:scale-98 transition"><span class="text-xs font-bold text-amber-300">🕯️ ${nume}</span><p class="text-[11px] text-slate-400">Ar fi împlinit ${m.ageWouldBe} ani${m.yearsSinceDeath !== null ? ` • adormit de ${m.yearsSinceDeath} ani` : ''}</p></div>`;
-              return `<div onclick="openPersonModal(${m.person.rowId})" class="p-2 rounded-xl bg-slate-900/80 border border-amber-900/50 cursor-pointer active:scale-98 transition"><span class="text-xs font-bold text-amber-300">† ${nume}</span><p class="text-[11px] text-slate-400">Adormit de ${m.years} ani${m.ageAtDeath !== null ? ` • adormit la ${m.ageAtDeath} ani` : ''}</p></div>`;
-            }).join('')}
-          </div>
-        `;
-      }
-
-      if (allowedModules.includes('scriptura') && shWidgets.includes('scriptura')) {
-        const next = getNextScripturaChapter();
-        html += `
-          <div onclick="switchTab('scriptura')" class="bg-cardbg border border-amber-800/80 rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-500 active:scale-98 transition space-y-2">
-            <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
-              <span>📖 Sfânta Scriptură</span>
-              <span class="bg-amber-950 border border-amber-800 px-2 py-0.5 rounded-full text-[10px] text-amber-200 font-bold">${next.book.abbr}, ${next.cap}</span>
-            </div>
-            <p class="text-xs text-slate-200">De continuat lectura cu: <strong class="text-white">${next.book.name} ${next.cap}</strong></p>
-          </div>
-        `;
-      }
-
-      if (allowedModules.includes('inventar') && shWidgets.includes('inventory')) {
-        const overdueItems = allInventory.filter(it => isMaintenanceOverdue(it));
-        html += `
-          <div onclick="switchTab('more'); switchSubTab('inventar');" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-violet-600/60 active:scale-98 transition space-y-2">
-            <div class="flex items-center justify-between text-xs font-bold text-violet-300 uppercase tracking-wider">
-              <span>📦 Inventar</span>
-              <span class="bg-violet-950 border border-violet-800 px-2 py-0.5 rounded-full">${allInventory.length} obiecte</span>
-            </div>
-            ${overdueItems.length > 0 ? `<p class="text-[11px] text-rose-400 font-bold">⚠️ ${overdueItems.length} obiecte cu mentenanță depășită</p>` : '<p class="text-xs text-slate-400 italic">Nicio mentenanță restantă.</p>'}
-          </div>
-        `;
-      }
-
-      container.innerHTML = html;
-    }
   </script>
 </body>
 </html>
