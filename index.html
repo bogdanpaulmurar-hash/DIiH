@@ -622,6 +622,13 @@
 
     <!-- TAB 3: ȘCOALĂ (Lună / Săptămână / Listă, Ore, Plăți, Sumar Zi/Lună/An) -->
     <section id="tab-calendar" class="tab-content hidden space-y-4">
+      <!-- Subtab-uri Școală (v24.5): Activități / Teme / Adservio -->
+      <div class="flex space-x-1 bg-cardbg border border-bordercol rounded-2xl p-1">
+        <button onclick="setSchoolSubTab('activitati')" id="btnSchoolSub_activitati" class="flex-1 px-2 py-1.5 text-xs rounded-xl bg-cyan-900 text-cyan-200 font-bold">📅 Activități</button>
+        <button onclick="setSchoolSubTab('teme')" id="btnSchoolSub_teme" class="flex-1 px-2 py-1.5 text-xs rounded-xl text-slate-400">📚 Teme <span id="schoolTemeTabBadge" class="hidden ml-0.5 bg-rose-700 text-white rounded-full px-1.5 text-[9px]"></span></button>
+        <button onclick="setSchoolSubTab('adservio')" id="btnSchoolSub_adservio" class="flex-1 px-2 py-1.5 text-xs rounded-xl text-slate-400">🏫 Adservio</button>
+      </div>
+      <div id="schoolSubView_activitati" class="space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
@@ -822,6 +829,65 @@
             </div>
             <button id="btnBulkApplySchoolAct" onclick="saveSchoolActivityBulk()" class="hidden w-full bg-amber-700 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl transition text-xs">🔁 Aplică Modificarea pe TOATE Zilele Selectate care au această activitate</button>
           </div>
+        </div>
+      </div>
+      </div>
+
+      <!-- Subtab TEME (v24.5): ce temă, la ce materie, până când -->
+      <div id="schoolSubView_teme" class="hidden space-y-3">
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 id="temaFormTitle" class="font-bold text-cyan-300 uppercase text-xs">➕ Temă nouă</h3>
+            <button id="btnCancelTemaEdit" onclick="cancelTemaEdit()" class="hidden text-[10px] text-slate-400 border border-slate-700 px-2 py-0.5 rounded">Anulează editarea</button>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="temaChild" list="temaChildList" placeholder="Copil" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+            <input type="text" id="temaSubject" list="temaSubjectList" placeholder="Materie (ex: Matematică)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+          </div>
+          <datalist id="temaChildList"></datalist>
+          <datalist id="temaSubjectList"></datalist>
+          <textarea id="temaText" rows="2" placeholder="Ce temă este (ex: ex. 3-7 pag. 42, compunere 1 pagină)" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs"></textarea>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[9px] text-slate-400 block">Primită pe:</label>
+              <input type="date" id="temaGivenDate" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-400 block">Termen (de predat pe):</label>
+              <input type="date" id="temaDueDate" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-1 text-[10px]">
+            <span class="text-slate-500 self-center">Termen rapid:</span>
+            <button onclick="setTemaDueQuick(1)" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-300">Mâine</button>
+            <button onclick="setTemaDueQuick(2)" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-300">Poimâine</button>
+            <button onclick="setTemaDueQuick('nextWeek')" class="px-2 py-0.5 rounded bg-darkbg border border-bordercol text-slate-300">Săpt. viitoare</button>
+          </div>
+          <button onclick="saveSchoolTema()" id="btnSaveTema" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-medium py-2 rounded-xl transition text-xs">💾 Salvează Tema</button>
+        </div>
+
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <select id="temaFilterChild" onchange="renderSchoolTeme()" class="flex-1 bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs"></select>
+            <select id="temaFilterSubject" onchange="renderSchoolTeme()" class="flex-1 bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs"></select>
+          </div>
+          <div class="flex space-x-1 text-[11px]">
+            <button onclick="setTemaStatusFilter('open')" id="temaStatusBtn_open" class="flex-1 px-2 py-1 rounded-lg bg-cyan-900 text-cyan-200 font-bold">De făcut</button>
+            <button onclick="setTemaStatusFilter('done')" id="temaStatusBtn_done" class="flex-1 px-2 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Gata</button>
+            <button onclick="setTemaStatusFilter('all')" id="temaStatusBtn_all" class="flex-1 px-2 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400">Toate</button>
+          </div>
+          <div id="schoolTemeSummary" class="text-[11px] text-slate-400"></div>
+          <div id="schoolTemeList" class="space-y-3"></div>
+        </div>
+      </div>
+
+      <!-- Subtab ADSERVIO (v24.5): deocamdată acces rapid; importul datelor vine după ce avem structura paginilor -->
+      <div id="schoolSubView_adservio" class="hidden space-y-3">
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2 text-xs text-slate-300">
+          <h3 class="font-bold text-cyan-300 uppercase text-xs">🏫 Catalogul Adservio</h3>
+          <p>Absențele, notele și temele se văd în Adservio după autentificare. Butonul de mai jos deschide site-ul; datele tale de logare rămân doar în browser.</p>
+          <a href="https://www.adservio.ro/ro/auth" target="_blank" rel="noopener" class="block text-center w-full bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl">🔗 Deschide Adservio</a>
+          <p class="text-[11px] text-slate-500">Importul automat al absențelor și notelor în DIiH este în pregătire. Până atunci, temele din Adservio le poți nota în subtab-ul 📚 Teme.</p>
         </div>
       </div>
     </section>
@@ -1265,7 +1331,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.4 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.5 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -1494,7 +1560,7 @@
             <ul class="pt-1.5 space-y-1 leading-relaxed list-disc list-inside">
               <li><strong>Astăzi:</strong> rezumat zilnic — Catisma, Biblia Anania, Continuitate Scriptură, Plan de citire, aniversări, pomelnicul zilei, școală, cumpărături, notițe, Gândul Zilei, inventar.</li>
               <li><strong>Pomelnic:</strong> evidența completă a persoanelor pomenite (vii/adormiți), grupate pe categorii, cu tipărire și sincronizare automată cu Google Calendar.</li>
-              <li><strong>Școală:</strong> calendar activități copii, plăți (automat/manual), sumar financiar pe perioade, calendarul anual de la inspectorat.</li>
+              <li><strong>Școală:</strong> calendar activități copii, plăți (automat/manual), sumar financiar pe perioade, calendarul anual de la inspectorat; subtab <strong>Teme</strong> (materie, ce temă, termen, bifare gata) și acces rapid la Adservio.</li>
               <li><strong>Notițe:</strong> notițe personale cu sursă/etichetă, editare, ștergere cu confirmare și anulare.</li>
               <li><strong>Cumpărături:</strong> listă pe magazine, cu linkuri clickabile pentru produse căutate online.</li>
               <li><strong>Mai multe → Psaltire:</strong> pomelnicul grupului de Psaltire pe 20 de catisme.</li>
@@ -2370,7 +2436,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.4";
+    const APP_VERSION = "v24.5";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2401,6 +2467,7 @@
     let allShopping = [];
     let allGanduri = [];
     let schoolActivities = [];
+    let allSchoolTeme = [];
     let psaltireGrupData = [];
     let biblia360List = [];
     let allNoteAnania = [];
@@ -2646,7 +2713,7 @@
     const AUTH_EDIT_GUARDS = {
       pomelnic: ['applyBatchAtentie', 'applyBatchAndreeaToggle', 'toggleEditMode', 'savePersonEdit', 'openAddPersonModal', 'saveNewPerson'],
       psaltire: ['openAddPsaltireModal', 'openEditPsaltireModal', 'savePsaltirePerson', 'deletePsaltirePerson'],
-      scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar', 'cleanupGeneratedSpecialWeekActivities'],
+      scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar', 'cleanupGeneratedSpecialWeekActivities', 'saveSchoolTema', 'toggleSchoolTemaDone', 'deleteSchoolTema', 'startEditSchoolTema'],
       notite: ['saveOrUpdateGand', 'deleteGand', 'deleteSelectedGanduri', 'softDeleteManyGanduri', 'undoDeleteGanduri', 'startEditGand'],
       cumparaturi: ['addShoppingItem', 'removeShoppingItem', 'markWholeStoreCompleted', 'quickAddShopping'],
       inventar: ['addCustomInventoryCategory', 'deleteCustomInventoryCategory', 'addCustomInventorySpace', 'deleteCustomInventorySpace', 'saveInventoryItem', 'deleteInventoryItem', 'confirmMoveInventoryItem'],
@@ -2679,7 +2746,7 @@
 
     // Datele din sheet păstrate local; se golesc la orice conectare/deconectare Google, ca pe un dispozitiv comun
     // să nu rămână vizibile datele contului anterior (se reîncarcă la sincronizare, după drepturile contului nou)
-    const AUTH_DATA_CACHE_KEYS = ['diih_people', 'diih_shopping', 'diih_known_shopping_keys', 'diih_ganduri', 'diih_school_activities',
+    const AUTH_DATA_CACHE_KEYS = ['diih_people', 'diih_shopping', 'diih_known_shopping_keys', 'diih_ganduri', 'diih_school_activities', 'diih_school_teme',
       'diih_psaltire_grup', 'diih_note_anania', 'diih_biblia360', 'diih_gandul_zilei', 'diih_model_citire', 'diih_inventar',
       'diih_notifications_multi', 'diih_notifs_triggered_today', 'diih_note_profiles', 'diih_scriptura_state'];
     function clearAuthDataCache() {
@@ -5215,6 +5282,11 @@
           schoolActivities = mergeSchoolActivitiesFromCloud(data.schoolActivities);
           localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
         }
+        if (data.schoolTeme && Array.isArray(data.schoolTeme)) {
+          allSchoolTeme = mergeSchoolTemeFromCloud(data.schoolTeme);
+          persistSchoolTemeLocal();
+          if (schoolSubTab === 'teme') renderSchoolTeme();
+        }
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
           psaltireGrupData = data.psaltireGrup;
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
@@ -5312,6 +5384,11 @@
           schoolActivities = mergeSchoolActivitiesFromCloud(data.schoolActivities);
           localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
         }
+        if (data.schoolTeme && Array.isArray(data.schoolTeme)) {
+          allSchoolTeme = mergeSchoolTemeFromCloud(data.schoolTeme);
+          persistSchoolTemeLocal();
+          if (schoolSubTab === 'teme') renderSchoolTeme();
+        }
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
           psaltireGrupData = data.psaltireGrup;
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
@@ -5354,6 +5431,8 @@
       allShopping = JSON.parse(localStorage.getItem('diih_shopping') || '[]');
       allGanduri = JSON.parse(localStorage.getItem('diih_ganduri') || '[]');
       schoolActivities = JSON.parse(localStorage.getItem('diih_school_activities') || '[]');
+      allSchoolTeme = JSON.parse(localStorage.getItem('diih_school_teme') || '[]');
+      try { updateSchoolTemeBadge(); } catch (e) {}
       psaltireGrupData = JSON.parse(localStorage.getItem('diih_psaltire_grup') || '[]');
       biblia360List = JSON.parse(localStorage.getItem('diih_biblia360') || '[]');
       allNoteAnania = JSON.parse(localStorage.getItem('diih_note_anania') || '[]');
@@ -7865,6 +7944,292 @@
       renderSchoolDisplay();
     }
 
+    // ====== ȘCOALĂ → SUBTAB-URI + TEME (v24.5) ======
+    let schoolSubTab = 'activitati';
+    let temaStatusFilter = 'open';
+    let editingTemaId = null;
+    const TEMA_DEFAULT_SUBJECTS = ['Matematică', 'Limba română', 'Limba engleză', 'Limba franceză', 'Limba germană', 'Istorie', 'Geografie', 'Biologie', 'Fizică', 'Chimie', 'Informatică', 'Educație civică', 'Religie', 'Arte vizuale', 'Muzică', 'Educație fizică', 'Științe'];
+
+    function setSchoolSubTab(tab) {
+      schoolSubTab = tab;
+      ['activitati', 'teme', 'adservio'].forEach(t => {
+        const view = document.getElementById('schoolSubView_' + t);
+        const btn = document.getElementById('btnSchoolSub_' + t);
+        if (view) view.classList.toggle('hidden', t !== tab);
+        if (btn) btn.className = t === tab
+          ? 'flex-1 px-2 py-1.5 text-xs rounded-xl bg-cyan-900 text-cyan-200 font-bold'
+          : 'flex-1 px-2 py-1.5 text-xs rounded-xl text-slate-400';
+      });
+      if (tab === 'teme') {
+        if (!document.getElementById('temaGivenDate').value) resetTemaForm();
+        renderSchoolTeme();
+      }
+    }
+
+    function temaAddDays(n) {
+      const d = new Date();
+      d.setDate(d.getDate() + n);
+      return localDateStr(d);
+    }
+
+    function setTemaDueQuick(when) {
+      let v;
+      if (when === 'nextWeek') {
+        const d = new Date();
+        const toMonday = ((8 - d.getDay()) % 7) || 7;
+        d.setDate(d.getDate() + toMonday);
+        v = localDateStr(d);
+      } else {
+        v = temaAddDays(when);
+      }
+      document.getElementById('temaDueDate').value = v;
+    }
+
+    function resetTemaForm() {
+      editingTemaId = null;
+      document.getElementById('temaText').value = '';
+      document.getElementById('temaSubject').value = '';
+      document.getElementById('temaGivenDate').value = localDateStr();
+      document.getElementById('temaDueDate').value = temaAddDays(1);
+      document.getElementById('temaFormTitle').textContent = '➕ Temă nouă';
+      document.getElementById('btnSaveTema').textContent = '💾 Salvează Tema';
+      document.getElementById('btnCancelTemaEdit').classList.add('hidden');
+    }
+
+    function cancelTemaEdit() { resetTemaForm(); }
+
+    function sendSchoolTemaToSheet(t) {
+      const q = new URLSearchParams({
+        action: 'saveSchoolTema', id: t.id, child: t.child, subject: t.subject, text: t.text,
+        givenDate: t.givenDate || '', dueDate: t.dueDate || '', status: t.status, doneDate: t.doneDate || '',
+        source: t.source || 'manual', dataCreare: t.dataCreare || '', callback: 'void'
+      });
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&${q.toString()}`;
+      document.body.appendChild(script);
+    }
+
+    function persistSchoolTemeLocal() {
+      localStorage.setItem('diih_school_teme', JSON.stringify(allSchoolTeme));
+      updateSchoolTemeBadge();
+    }
+
+    function saveSchoolTema() {
+      const child = document.getElementById('temaChild').value.trim();
+      const subject = document.getElementById('temaSubject').value.trim();
+      const text = document.getElementById('temaText').value.trim();
+      const givenDate = document.getElementById('temaGivenDate').value;
+      const dueDate = document.getElementById('temaDueDate').value;
+      if (!subject) return showToast('Scrie materia.');
+      if (!text) return showToast('Scrie ce temă este.');
+      if (dueDate && givenDate && dueDate < givenDate) return showToast('Termenul e înainte de data primirii.');
+
+      let t;
+      if (editingTemaId) {
+        t = allSchoolTeme.find(x => x.id === editingTemaId);
+        if (!t) { resetTemaForm(); return showToast('Tema nu mai există.'); }
+        Object.assign(t, { child, subject, text, givenDate, dueDate });
+      } else {
+        t = { id: 'TEMA-' + Date.now(), child, subject, text, givenDate, dueDate, status: 'De făcut', doneDate: '', source: 'manual', dataCreare: '' };
+        allSchoolTeme.push(t);
+      }
+      t._pending = Date.now();
+      persistSchoolTemeLocal();
+      sendSchoolTemaToSheet(t);
+      showToast(editingTemaId ? 'Temă modificată!' : 'Temă salvată!');
+      const keepChild = child;
+      resetTemaForm();
+      document.getElementById('temaChild').value = keepChild;
+      renderSchoolTeme();
+    }
+
+    function startEditSchoolTema(id) {
+      const t = allSchoolTeme.find(x => x.id === id);
+      if (!t) return;
+      editingTemaId = id;
+      document.getElementById('temaChild').value = t.child || '';
+      document.getElementById('temaSubject').value = t.subject || '';
+      document.getElementById('temaText').value = t.text || '';
+      document.getElementById('temaGivenDate').value = t.givenDate || '';
+      document.getElementById('temaDueDate').value = t.dueDate || '';
+      document.getElementById('temaFormTitle').textContent = '✏️ Editează tema';
+      document.getElementById('btnSaveTema').textContent = '💾 Salvează modificarea';
+      document.getElementById('btnCancelTemaEdit').classList.remove('hidden');
+      document.getElementById('schoolSubView_teme').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function toggleSchoolTemaDone(id) {
+      const t = allSchoolTeme.find(x => x.id === id);
+      if (!t) return;
+      const done = t.status !== 'Gata';
+      t.status = done ? 'Gata' : 'De făcut';
+      t.doneDate = done ? localDateStr() : '';
+      t._pending = Date.now();
+      persistSchoolTemeLocal();
+      sendSchoolTemaToSheet(t);
+      showToast(done ? 'Temă bifată ca gata ✔' : 'Temă redeschisă');
+      renderSchoolTeme();
+    }
+
+    function deleteSchoolTema(id) {
+      const t = allSchoolTeme.find(x => x.id === id);
+      if (!t) return;
+      showGenericConfirm(`Ștergi tema la ${t.subject}: „${t.text}”?`, () => {
+        allSchoolTeme = allSchoolTeme.filter(x => x.id !== id);
+        persistSchoolTemeLocal();
+        const script = document.createElement('script');
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deleteSchoolTema&id=${encodeURIComponent(id)}&callback=void`;
+        document.body.appendChild(script);
+        if (editingTemaId === id) resetTemaForm();
+        showToast('Temă ștearsă!');
+        renderSchoolTeme();
+      });
+    }
+
+    function setTemaStatusFilter(f) {
+      temaStatusFilter = f;
+      ['open', 'done', 'all'].forEach(k => {
+        document.getElementById('temaStatusBtn_' + k).className = k === f
+          ? 'flex-1 px-2 py-1 rounded-lg bg-cyan-900 text-cyan-200 font-bold'
+          : 'flex-1 px-2 py-1 rounded-lg bg-darkbg border border-bordercol text-slate-400';
+      });
+      renderSchoolTeme();
+    }
+
+    // Păstrează temele salvate local în ultimele 3 minute care încă nu apar în sheet (salvarea e asincronă)
+    function mergeSchoolTemeFromCloud(cloudList) {
+      const cloudIds = new Set(cloudList.map(t => t.id));
+      const recent = Date.now() - 180000;
+      const localById = {};
+      allSchoolTeme.forEach(t => { localById[t.id] = t; });
+      const merged = cloudList.map(t => {
+        const loc = localById[t.id];
+        return (loc && loc._pending && loc._pending > recent) ? loc : t;
+      });
+      allSchoolTeme.forEach(t => { if (!cloudIds.has(t.id) && t._pending && t._pending > recent) merged.push(t); });
+      return merged;
+    }
+
+    function formatTemaDate(iso) {
+      if (!iso) return '';
+      const [y, m, d] = iso.split('-');
+      const zile = ['dum', 'lun', 'mar', 'mie', 'joi', 'vin', 'sâm'];
+      const dt = new Date(+y, +m - 1, +d);
+      return `${zile[dt.getDay()]} ${d}.${m}`;
+    }
+
+    function temaGroupKey(t, today, tomorrow, weekEnd) {
+      if (t.status === 'Gata') return 'gata';
+      if (!t.dueDate) return 'fara';
+      if (t.dueDate < today) return 'intarziate';
+      if (t.dueDate === today) return 'azi';
+      if (t.dueDate === tomorrow) return 'maine';
+      if (t.dueDate <= weekEnd) return 'saptamana';
+      return 'later';
+    }
+
+    function getOpenTemeCounts() {
+      const today = localDateStr(), tomorrow = temaAddDays(1);
+      let overdue = 0, soon = 0, open = 0;
+      allSchoolTeme.forEach(t => {
+        if (t.status === 'Gata') return;
+        open++;
+        if (t.dueDate && t.dueDate < today) overdue++;
+        else if (t.dueDate === today || t.dueDate === tomorrow) soon++;
+      });
+      return { overdue, soon, open };
+    }
+
+    function updateSchoolTemeBadge() {
+      const b = document.getElementById('schoolTemeTabBadge');
+      if (!b) return;
+      const c = getOpenTemeCounts();
+      const n = c.overdue + c.soon;
+      b.textContent = n;
+      b.classList.toggle('hidden', n === 0);
+    }
+
+    function refreshTemaDropdowns() {
+      const children = Array.from(new Set([
+        ...allSchoolTeme.map(t => (t.child || '').trim()),
+        ...schoolActivities.map(a => (a.child || '').trim())
+      ].filter(x => x && x !== 'Copil'))).sort((a, b) => a.localeCompare(b, 'ro'));
+      const subjects = Array.from(new Set([...allSchoolTeme.map(t => (t.subject || '').trim()).filter(Boolean), ...TEMA_DEFAULT_SUBJECTS]))
+        .sort((a, b) => a.localeCompare(b, 'ro'));
+      document.getElementById('temaChildList').innerHTML = children.map(c => `<option value="${escapeHtmlText(c)}">`).join('');
+      document.getElementById('temaSubjectList').innerHTML = subjects.map(c => `<option value="${escapeHtmlText(c)}">`).join('');
+
+      const fc = document.getElementById('temaFilterChild');
+      const keepC = fc.value || 'ALL';
+      fc.innerHTML = `<option value="ALL">👧 Toți copiii</option>` + children.map(c => `<option value="${escapeHtmlText(c)}">${escapeHtmlText(c)}</option>`).join('');
+      fc.value = (keepC === 'ALL' || children.includes(keepC)) ? keepC : 'ALL';
+
+      const usedSubjects = Array.from(new Set(allSchoolTeme.map(t => (t.subject || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'ro'));
+      const fs = document.getElementById('temaFilterSubject');
+      const keepS = fs.value || 'ALL';
+      fs.innerHTML = `<option value="ALL">📘 Toate materiile</option>` + usedSubjects.map(c => `<option value="${escapeHtmlText(c)}">${escapeHtmlText(c)}</option>`).join('');
+      fs.value = (keepS === 'ALL' || usedSubjects.includes(keepS)) ? keepS : 'ALL';
+    }
+
+    function renderSchoolTeme() {
+      updateSchoolTemeBadge();
+      const listEl = document.getElementById('schoolTemeList');
+      if (!listEl) return;
+      refreshTemaDropdowns();
+      const fChild = document.getElementById('temaFilterChild').value;
+      const fSubj = document.getElementById('temaFilterSubject').value;
+      const today = localDateStr(), tomorrow = temaAddDays(1), weekEnd = temaAddDays(7);
+
+      let items = allSchoolTeme.filter(t =>
+        (fChild === 'ALL' || (t.child || '') === fChild) &&
+        (fSubj === 'ALL' || (t.subject || '') === fSubj) &&
+        (temaStatusFilter === 'all' || (temaStatusFilter === 'done' ? t.status === 'Gata' : t.status !== 'Gata')));
+
+      const c = getOpenTemeCounts();
+      document.getElementById('schoolTemeSummary').innerHTML =
+        `${c.open} de făcut` + (c.overdue ? ` • <span class="text-rose-400 font-bold">${c.overdue} întârziate</span>` : '') +
+        (c.soon ? ` • <span class="text-amber-300 font-bold">${c.soon} pentru azi/mâine</span>` : '');
+
+      if (items.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-3">${temaStatusFilter === 'done' ? 'Nicio temă bifată ca gata.' : 'Nicio temă de făcut. 🎉'}</p>`;
+        return;
+      }
+
+      const groups = [
+        ['intarziate', '⚠️ Întârziate', 'text-rose-400'], ['azi', '🔥 De predat azi', 'text-amber-300'],
+        ['maine', '📌 Pentru mâine', 'text-amber-200'], ['saptamana', '🗓️ În următoarele 7 zile', 'text-cyan-300'],
+        ['later', '⏳ Mai târziu', 'text-slate-300'], ['fara', '❔ Fără termen', 'text-slate-400'], ['gata', '✔ Gata', 'text-emerald-400']
+      ];
+      const byGroup = {};
+      items.forEach(t => { const k = temaGroupKey(t, today, tomorrow, weekEnd); (byGroup[k] = byGroup[k] || []).push(t); });
+      const showChild = fChild === 'ALL';
+
+      listEl.innerHTML = groups.filter(g => byGroup[g[0]]).map(([k, label, cls]) => {
+        const arr = byGroup[k].sort((a, b) => k === 'gata'
+          ? (b.doneDate || '').localeCompare(a.doneDate || '')
+          : (a.dueDate || '9999').localeCompare(b.dueDate || '9999') || (a.subject || '').localeCompare(b.subject || '', 'ro'));
+        return `<div class="space-y-1.5">
+          <p class="text-[11px] font-bold uppercase ${cls}">${label} <span class="text-slate-500">(${arr.length})</span></p>
+          ${arr.map(t => {
+            const done = t.status === 'Gata';
+            const id = escapeHtmlText(t.id).replace(/'/g, '&#39;');
+            return `<div class="flex items-start gap-2 p-2 rounded-xl bg-darkbg border ${k === 'intarziate' ? 'border-rose-800' : 'border-bordercol'}">
+              <button onclick="toggleSchoolTemaDone('${id}')" class="mt-0.5 w-5 h-5 shrink-0 rounded border ${done ? 'bg-emerald-700 border-emerald-500 text-white' : 'border-slate-500'} text-[11px] leading-none">${done ? '✓' : ''}</button>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs"><span class="font-bold text-cyan-300">${escapeHtmlText(t.subject)}</span>${showChild && t.child ? ` <span class="text-slate-500">• ${escapeHtmlText(t.child)}</span>` : ''}</p>
+                <p class="text-xs ${done ? 'line-through text-slate-500' : 'text-slate-200'} whitespace-pre-wrap break-words">${escapeHtmlText(t.text)}</p>
+                <p class="text-[10px] text-slate-500">${t.givenDate ? 'primită ' + formatTemaDate(t.givenDate) : ''}${t.dueDate ? ' • termen <span class="' + (k === 'intarziate' ? 'text-rose-400' : 'text-slate-300') + '">' + formatTemaDate(t.dueDate) + '</span>' : ''}${done && t.doneDate ? ' • gata ' + formatTemaDate(t.doneDate) : ''}</p>
+              </div>
+              <div class="flex flex-col gap-1">
+                <button onclick="startEditSchoolTema('${id}')" class="text-[11px] px-1.5 py-0.5 rounded bg-cardbg border border-bordercol text-slate-300">✏️</button>
+                <button onclick="deleteSchoolTema('${id}')" class="text-[11px] px-1.5 py-0.5 rounded bg-cardbg border border-rose-900 text-rose-300">🗑️</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }).join('');
+    }
+
     // ====== NOTIȚE PER PROFIL (v24.0.2) ======
     // Serverul trimite doar notițele proprii și pe cele scrise de tine pentru alții (adminul poate scrie oricui,
     // cu reminder). Reminderele se notifică doar proprietarului notiței.
@@ -8817,6 +9182,10 @@
         schoolContent.innerHTML = schoolAlerts.map(al => `<p class="text-xs font-semibold" style="color: ${al.week.color};">${al.text}</p>`).join('') + (acts.length === 0
           ? '<p class="text-xs text-slate-400 italic">Nicio activitate programată astăzi.</p>'
           : acts.map(a => `<p class="text-xs text-slate-200">• ${a.title} (${a.child}) • ${a.startHour || '08:00'}-${a.endHour || '16:00'}</p>`).join(''));
+        const tc = getOpenTemeCounts();
+        if (tc.overdue || tc.soon) {
+          schoolContent.innerHTML += `<p class="text-xs font-semibold text-amber-300">📚 Teme: ${tc.soon ? tc.soon + ' pentru azi/mâine' : ''}${tc.soon && tc.overdue ? ', ' : ''}${tc.overdue ? '<span class="text-rose-400">' + tc.overdue + ' întârziate</span>' : ''}</p>`;
+        }
       }
 
       const shopContent = document.getElementById('ownerWidgetShoppingContent');

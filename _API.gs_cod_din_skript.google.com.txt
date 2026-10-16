@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.4
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.5
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.4";
+const BACKEND_VERSION = "24.5";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -562,6 +562,31 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
+  // 8a. ȘCOALĂ → TEME (tab Scoala_Teme; adăugare/editare/bifare/ștergere) — v24.5
+  if (action === "saveSchoolTema") {
+    const sh = getOrCreateSchoolTemeSheet(ss);
+    const now = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
+    const id = e.parameter.id || ("TEMA-" + Date.now());
+    const p = e.parameter;
+    const row = [id, p.child || "", p.subject || "", p.text || "", p.givenDate || "", p.dueDate || "",
+      p.status === "Gata" ? "Gata" : "De făcut", p.doneDate || "", p.source || "manual",
+      p.dataCreare || now, now, auth.profile.email || ""];
+    const idx = findRowIndexById(sh, id);
+    if (idx > 0) {
+      row[9] = sh.getRange(idx, 10).getValue() || row[9];
+      sh.getRange(idx, 1, 1, row.length).setValues([row]);
+    } else {
+      sh.appendRow(row);
+    }
+    return returnResponse(e, { success: true, id: id });
+  }
+
+  if (action === "deleteSchoolTema") {
+    const sh = ss.getSheetByName("Scoala_Teme");
+    if (sh && e.parameter.id) deleteRowById(sh, e.parameter.id, 1);
+    return returnResponse(e, { success: true });
+  }
+
   // 8b. CRUD INVENTAR PERSONAL (Obiecte, spații de depozitare, mentenanță)
   if (action === "getInventoryData") {
     return returnResponse(e, { inventar: getInventoryData(ss) });
@@ -767,6 +792,7 @@ function doGet(e) {
       gandulZilei: getGandulZileiData(ss),
       modelCitire: getModelCitireData(ss),
       schoolActivities: getSchoolActivitiesData(ss),
+      schoolTeme: getSchoolTemeData(ss),
       psaltireGrup: getPsaltireGrupData(ss)
     };
     return returnResponse(e, authFilterResponse(liveData, auth, ss));
@@ -786,6 +812,7 @@ function doGet(e) {
     noteAnania: getNoteAnaniaData(ss),
     bibliaBVA: getBiblia360Data(ss),
     schoolActivities: getSchoolActivitiesData(ss),
+    schoolTeme: getSchoolTemeData(ss),
     psaltireGrup: getPsaltireGrupData(ss)
   };
 
@@ -1428,6 +1455,49 @@ function getGandulZileiData(ss) {
   })).filter(x => x.text !== "");
 }
 
+function getOrCreateSchoolTemeSheet(ss) {
+  let sh = ss.getSheetByName("Scoala_Teme");
+  if (!sh) {
+    sh = ss.insertSheet("Scoala_Teme");
+    sh.appendRow(["ID", "Copil", "Materie", "Tema", "DataPrimita", "Termen", "Status", "DataGata", "Sursa", "DataCreare", "DataModificare", "Autor"]);
+    sh.getRange("A1:L1").setFontWeight("bold");
+    sh.setFrozenRows(1);
+    sh.getRange("E:F").setNumberFormat("@");
+    sh.getRange("H:H").setNumberFormat("@");
+  }
+  return sh;
+}
+
+function findRowIndexById(sheet, id) {
+  const last = sheet.getLastRow();
+  if (last < 2) return -1;
+  const ids = sheet.getRange(2, 1, last - 1, 1).getValues();
+  for (let i = 0; i < ids.length; i++) {
+    if (ids[i][0] && ids[i][0].toString().trim() === id.toString().trim()) return i + 2;
+  }
+  return -1;
+}
+
+function getSchoolTemeData(ss) {
+  const sh = ss.getSheetByName("Scoala_Teme");
+  if (!sh || sh.getLastRow() < 2) return [];
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 12).getValues();
+  return rows.map(r => ({
+    id: r[0],
+    child: r[1] || "",
+    subject: r[2] || "",
+    text: r[3] || "",
+    givenDate: r[4] ? parseDateToISO(r[4]) : "",
+    dueDate: r[5] ? parseDateToISO(r[5]) : "",
+    status: (r[6] || "De făcut").toString() === "Gata" ? "Gata" : "De făcut",
+    doneDate: r[7] ? parseDateToISO(r[7]) : "",
+    source: r[8] || "manual",
+    dataCreare: r[9] ? r[9].toString() : "",
+    dataModificare: r[10] ? r[10].toString() : "",
+    author: r[11] || ""
+  })).filter(x => x.id);
+}
+
 function getInventoryData(ss) {
   const sh = ss.getSheetByName("Inventar");
   if (!sh || sh.getLastRow() < 2) return [];
@@ -1602,6 +1672,7 @@ const AUTH_ACTION_RULES = {
   updateGlobalSettings: ["setari", "edit"], setSettingRaw: ["setari", "edit"],
   uploadDriveFile: ["setari", "edit"],
   saveSchoolActivities: ["scoala", "edit"], deleteSchoolActivity: ["scoala", "edit"], batchUpdateSchoolStatus: ["scoala", "edit"],
+  saveSchoolTema: ["scoala", "edit"], deleteSchoolTema: ["scoala", "edit"],
   addPsaltirePerson: ["psaltire", "edit"], updatePsaltirePerson: ["psaltire", "edit"], deletePsaltirePerson: ["psaltire", "edit"],
   addNotita: ["notite", "edit"], updateNotita: ["notite", "edit"], deleteNotita: ["notite", "edit"],
   addGand: ["notite", "edit"], updateGand: ["notite", "edit"], deleteGand: ["notite", "edit"],
@@ -1619,7 +1690,7 @@ const AUTH_ACTION_RULES = {
 // Ce cheie din răspunsul de sincronizare ține de ce modul (cheile nelistate, ex. settings, se trimit tuturor)
 const AUTH_RESPONSE_MODULES = {
   pomelnic: "pomelnic", cumparaturi: "cumparaturi", ganduri: "notite", notite: "notite", gandulZilei: "gandul",
-  modelCitire: "scriptura", noteAnania: "scriptura", bibliaBVA: "biblia360", schoolActivities: "scoala", psaltireGrup: "psaltire"
+  modelCitire: "scriptura", noteAnania: "scriptura", bibliaBVA: "biblia360", schoolActivities: "scoala", schoolTeme: "scoala", psaltireGrup: "psaltire"
 };
 
 function authRoleDefaults(rol) {

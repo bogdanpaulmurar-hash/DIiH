@@ -1,5 +1,16 @@
 # CHANGELOG — DIiH Hub
 
+## v24.5 — 2026-10-16 — Școală: subtab Teme + acces Adservio
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.5). **Necesită deploy** (copiere cod în Apps Script + implementare nouă).
+
+- Tab-ul Școală are acum trei subtab-uri: **📅 Activități** (ecranul de până acum, neschimbat), **📚 Teme** și **🏫 Adservio**.
+- **Teme**: copil, materie (cu listă de materii uzuale + cele folosite deja), ce temă este, data primirii și termenul. Butoane rapide de termen: mâine, poimâine, săptămâna viitoare.
+- Lista e grupată după termen: întârziate, de predat azi, pentru mâine, următoarele 7 zile, mai târziu, fără termen; filtre pe copil, materie și status (de făcut / gata / toate). Bifare „gata” cu data, editare, ștergere cu confirmare.
+- Insigna de pe subtab și widget-ul Școală din „Astăzi” arată temele pentru azi/mâine și pe cele întârziate.
+- Datele se salvează în tab-ul nou **`Scoala_Teme`** din sheet (creat automat la prima temă). Acțiuni noi `saveSchoolTema` / `deleteSchoolTema`, cu drept „edit” pe modulul Școală; temele intră în sincronizare (`schoolTeme`) doar pentru profilurile care văd Școala.
+- **Adservio**: deocamdată buton de deschidere a site-ului. Importul absențelor/notelor urmează după ce avem structura paginilor.
+
 ## v24.4 — 2026-10-16 — Copii de siguranță săptămânale ale registrului
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.4). **Necesită deploy** și o rulare unică a `instaleazaBackupSaptamanal()`.
