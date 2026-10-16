@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.1
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.4
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.1";
+const BACKEND_VERSION = "24.4";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -726,6 +726,19 @@ function doGet(e) {
     scripturaSaveRow(ss, row);
     logToAppSheet(ss, { modul: "Scriptura", actiune: "restaurare_progres", status: "OK", detalii: row.email, user: auth.profile.email });
     return returnResponse(e, { success: true, scripturaProgres: scripturaPublic(row) });
+  }
+
+  // 8h. COPII DE SIGURANȚĂ (v24.4) — doar admin (acțiuni nelistate în AUTH_ACTION_RULES)
+  if (action === "adminBackupStatus") {
+    return returnResponse(e, backupStatus(ss));
+  }
+  if (action === "adminBackupNow") {
+    try {
+      backupCreeazaCopie(ss, "manual, din aplicație (" + auth.profile.email + ")");
+      return returnResponse(e, backupStatus(ss));
+    } catch (err) {
+      return returnResponse(e, { success: false, error: "Copia nu s-a putut face: " + (err.message || err) });
+    }
   }
 
   // Populare inițială unică: scrie citatele trimise doar dacă foaia GandulZilei este încă goală (nu suprascrie date reale)
@@ -1998,6 +2011,95 @@ function autorizeazaToatePermisiunile() {
   Logger.log("Cont: " + Session.getEffectiveUser().getEmail());
   Logger.log("Verificare Google: cod " + UrlFetchApp.fetch("https://oauth2.googleapis.com/tokeninfo?id_token=test", { muteHttpExceptions: true }).getResponseCode());
   Logger.log("Toate permisiunile sunt acordate.");
+}
+
+// =====================================================================================================
+// COPII DE SIGURANȚĂ (v24.4) — o copie a întregului sheet în Drive, săptămânal, păstrând ultimele BACKUP_COPII
+// Copia e un fișier NOU (makeCopy); sheet-ul original doar se citește, nu se modifică.
+// Copiile stau în subfolderul „Backup” din DIiH_App_Fisiere; cele vechi ajung în Coșul Drive (30 de zile).
+// Pornire: rulează O DATĂ din editor instaleazaBackupSaptamanal() (duminică, 03:00, ora României).
+// =====================================================================================================
+const BACKUP_COPII = 8;
+const BACKUP_PREFIX = "DIiH_Backup_";
+
+function backupReadSetting(ss, key) {
+  const sh = ss.getSheetByName("Setari");
+  if (!sh || sh.getLastRow() < 2) return "";
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
+  for (let i = 0; i < rows.length; i++) {
+    if ((rows[i][0] || "").toString().trim() === key) return (rows[i][1] || "").toString().trim();
+  }
+  return "";
+}
+
+function getOrCreateBackupFolder(ss) {
+  const id = backupReadSetting(ss, "backup_folder_id");
+  if (id) {
+    try {
+      const f = DriveApp.getFolderById(id);
+      if (!f.isTrashed()) return f;
+    } catch (e) { /* folder șters — îl recreăm */ }
+  }
+  const folder = getOrCreateAppDriveFolder(ss).createFolder("Backup");
+  folder.setDescription("Copii de siguranță ale registrului DIiH (automat, săptămânal). Se păstrează ultimele " + BACKUP_COPII + ".");
+  setSettingValue(ss.getSheetByName("Setari"), "backup_folder_id", folder.getId());
+  return folder;
+}
+
+function backupListeaza(folder) {
+  const list = [];
+  const it = folder.getFiles();
+  while (it.hasNext()) {
+    const f = it.next();
+    if (f.getName().indexOf(BACKUP_PREFIX) === 0) list.push(f);
+  }
+  return list.sort((a, b) => b.getDateCreated() - a.getDateCreated());
+}
+
+function backupCreeazaCopie(ss, motiv) {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(30000)) throw new Error("O altă copie e în curs. Încearcă peste un minut.");
+  try {
+    const folder = getOrCreateBackupFolder(ss);
+    const nume = BACKUP_PREFIX + Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd_HHmm");
+    const copie = DriveApp.getFileById(ss.getId()).makeCopy(nume, folder);
+    const vechi = backupListeaza(folder).slice(BACKUP_COPII);
+    vechi.forEach(f => f.setTrashed(true));
+    setSettingValue(ss.getSheetByName("Setari"), "backup_ultim", authNow() + " (" + motiv + ")");
+    logToAppSheet(ss, { modul: "Backup", actiune: "copie_sheet", status: "OK", detalii: nume + "; " + motiv + "; mutate în Coș: " + vechi.length, user: "-" });
+    return { id: copie.getId(), nume: nume, sterse: vechi.length };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function backupStatus(ss) {
+  const folder = getOrCreateBackupFolder(ss);
+  const copii = backupListeaza(folder).map(f => ({
+    id: f.getId(),
+    nume: f.getName(),
+    data: Utilities.formatDate(f.getDateCreated(), "Europe/Bucharest", "yyyy-MM-dd HH:mm")
+  }));
+  const programat = ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === "backupSaptamanal");
+  return { success: true, copii: copii, pastrate: BACKUP_COPII, programat: programat, ultim: backupReadSetting(ss, "backup_ultim"), folderId: folder.getId() };
+}
+
+// Rulată de trigger (duminică noaptea)
+function backupSaptamanal() {
+  try {
+    backupCreeazaCopie(getSpreadsheet(), "automat, săptămânal");
+  } catch (err) {
+    logToAppSheet(getSpreadsheet(), { modul: "Backup", actiune: "copie_sheet", status: "EROARE", detalii: err.message || String(err), user: "-" });
+    throw err;
+  }
+}
+
+// Rulează O DATĂ din editor (Run). Atinge doar triggerul backupSaptamanal; celelalte triggere rămân neschimbate.
+function instaleazaBackupSaptamanal() {
+  ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === "backupSaptamanal") ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger("backupSaptamanal").timeBased().onWeekDay(ScriptApp.WeekDay.SUNDAY).atHour(3).inTimezone("Europe/Bucharest").create();
+  const r = backupCreeazaCopie(getSpreadsheet(), "prima copie, la instalare");
+  Logger.log("Backup programat: duminică, 03:00. Prima copie: " + r.nume + ". Se păstrează ultimele " + BACKUP_COPII + ".");
 }
 
 // =====================================================================================================

@@ -1,5 +1,17 @@
 # CHANGELOG — DIiH Hub
 
+## v24.4 — 2026-10-16 — Copii de siguranță săptămânale ale registrului
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.4). **Necesită deploy** și o rulare unică a `instaleazaBackupSaptamanal()`.
+
+- În fiecare **duminică la 03:00** (ora României), Apps Script face o copie a întregului sheet în Drive, în `DIiH_App_Fisiere/Backup`, cu numele `DIiH_Backup_<data>_<ora>`.
+- Copia e un **fișier nou**. Sheet-ul original doar se citește, nu se modifică.
+- Se păstrează **ultimele 8 copii**. Cele mai vechi ajung în Coșul Drive, de unde se pot recupera 30 de zile.
+- **Admin → 💾 Copii de siguranță**: dacă programarea e pornită, lista copiilor cu link de deschidere și butonul „Fă o copie acum”. Acțiunile `adminBackupStatus` / `adminBackupNow` sunt doar pentru admin.
+- Copiile nu pot fi citite prin `getDriveImage` (sunt într-un subfolder, nu direct în folderul aplicației).
+- Fiecare copie (sau eroare) se notează în `LOG_app`; data ultimei copii se păstrează în Setari (`backup_ultim`).
+- `instaleazaBackupSaptamanal()` atinge doar triggerul său; triggerele existente (Pomelnic, Psaltire) rămân neschimbate.
+
 ## v24.3 — 2026-10-16 — Raport Școală pe perioadă
 
 Doar frontend (`index.html`, `sw.js`). Backend neschimbat (rămâne 24.1), nu e nevoie de deploy.

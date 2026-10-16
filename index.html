@@ -1265,7 +1265,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.3 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.4 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -1464,6 +1464,15 @@
 
           <div id="adminPairCodeBox" class="hidden p-3 bg-amber-950/30 border border-amber-800 rounded-xl space-y-1"></div>
           <div id="adminProfilesList" class="space-y-2"></div>
+
+          <div class="p-3 bg-darkbg border border-bordercol rounded-xl space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-bold text-cyan-300 uppercase tracking-wider text-[11px]">💾 Copii de siguranță</span>
+              <button id="adminBackupNowBtn" onclick="adminBackupNow()" class="text-[10px] px-2.5 py-1 bg-cyan-900 border border-cyan-700 text-cyan-100 font-bold rounded-lg">Fă o copie acum</button>
+            </div>
+            <div id="adminBackupStatus" class="space-y-1 text-[11px] text-slate-400"></div>
+            <p class="text-[9px] text-slate-500">Fiecare copie e un fișier separat în Drive (folderul DIiH_App_Fisiere/Backup). Registrul tău nu se modifică. Pentru restaurare, deschizi copia și iei din ea tabul sau rândurile de care ai nevoie.</p>
+          </div>
         </div>
       </div>
       <!-- SUB-TAB 6: INVENTAR PERSONAL (Spații de depozitare, poze, mentenanță) -->
@@ -2361,7 +2370,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.3";
+    const APP_VERSION = "v24.4";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -5081,7 +5090,7 @@
       if (subId === 'notificari') initNotificationInputs();
       if (subId === 'inventar') loadInventoryIfNeeded();
       if (subId === 'notebiblia') renderNoteBibliaList();
-      if (subId === 'admin') loadAdminProfiles();
+      if (subId === 'admin') { loadAdminProfiles(); loadAdminBackupStatus(); }
       if (subId === 'setari') renderAuthPanels();
       if (subId === 'info') renderInfoVersion();
     }
@@ -9645,6 +9654,45 @@
     }
 
     // Admin: resetare / restaurare progres Scriptură pentru un profil (cu copie de siguranță în istoric)
+    // ---- Admin → Copii de siguranță (v24.4) ----
+    function renderAdminBackupStatus(data) {
+      const box = document.getElementById('adminBackupStatus');
+      if (!box) return;
+      if (!data || !data.success || !Array.isArray(data.copii)) {
+        box.innerHTML = `<p class="text-rose-300">${escapeHtmlText((data && data.error) || 'Serverul nu are încă funcția de backup (actualizează Apps Script la 24.4).')}</p>`;
+        return;
+      }
+      const sched = data.programat
+        ? '<span class="text-emerald-300">✔ Automat în fiecare duminică, ora 03:00</span>'
+        : '<span class="text-amber-300">⚠ Copia automată nu e pornită. Rulează instaleazaBackupSaptamanal() o dată din Apps Script.</span>';
+      box.innerHTML = `
+        <p>${sched}</p>
+        <p>Se păstrează ultimele ${data.pastrate} copii · acum: ${data.copii.length}</p>
+        ${data.copii.length === 0 ? '<p class="italic text-slate-500">Nicio copie încă.</p>' : data.copii.map(c => `
+          <a href="https://docs.google.com/spreadsheets/d/${encodeURIComponent(c.id)}/edit" target="_blank" rel="noopener" class="flex items-center justify-between p-1.5 rounded-lg bg-cardbg border border-bordercol hover:border-cyan-600">
+            <span class="text-slate-200">${escapeHtmlText(c.data)}</span><span class="text-cyan-300">Deschide ↗</span>
+          </a>`).join('')}`;
+    }
+
+    async function loadAdminBackupStatus() {
+      const box = document.getElementById('adminBackupStatus');
+      if (!box || !isCurrentUserAdmin()) return;
+      box.innerHTML = '<p class="italic text-slate-500">Se verifică copiile...</p>';
+      try { renderAdminBackupStatus(await apiJsonp({ ...apiAuthParams(), action: 'adminBackupStatus' })); }
+      catch (e) { renderAdminBackupStatus({ success: false, error: e.message }); }
+    }
+
+    async function adminBackupNow() {
+      const btn = document.getElementById('adminBackupNowBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Se copiază...'; }
+      try {
+        const data = await apiJsonp({ ...apiAuthParams(), action: 'adminBackupNow' });
+        renderAdminBackupStatus(data);
+        showToast(data && data.success && Array.isArray(data.copii) ? 'Copie de siguranță făcută.' : ((data && data.error) || 'Copia nu s-a putut face.'));
+      } catch (e) { showToast(e.message); }
+      finally { if (btn) { btn.disabled = false; btn.textContent = 'Fă o copie acum'; } }
+    }
+
     function adminScripturaAction(email, action) {
       const isReset = action === 'adminResetScriptura';
       showGenericConfirm(isReset
