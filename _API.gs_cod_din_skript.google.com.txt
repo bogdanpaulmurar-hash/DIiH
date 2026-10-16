@@ -1809,3 +1809,11 @@ function authHandleAction(ss, e, action, auth) {
 
   return returnResponse(e, { success: false, error: "Acțiune de autentificare necunoscută." });
 }
+
+// Rulează această funcție O DATĂ din editorul Apps Script (Run) ca Google să ceară permisiunea
+// „Connect to an external service”, necesară pentru verificarea login-ului Google (authVerifyGoogleIdToken).
+// Rezultat așteptat în Execution log: „Verificare Google OK (cod 400)” — 400 e normal pentru un token de test.
+function autorizeazaVerificareaGoogle() {
+  const res = UrlFetchApp.fetch("https://oauth2.googleapis.com/tokeninfo?id_token=test", { muteHttpExceptions: true });
+  Logger.log("Verificare Google OK (cod " + res.getResponseCode() + ")");
+}
