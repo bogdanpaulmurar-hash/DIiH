@@ -1314,7 +1314,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v23.2 (Build 2026-10-15)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v23.3 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
             <a href="https://docs.google.com/spreadsheets/d/107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY/edit" target="_blank" rel="noopener" class="w-full flex items-center justify-center space-x-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 py-2 rounded-xl font-bold hover:bg-emerald-900 transition">
@@ -2490,7 +2490,7 @@
     <div class="bg-cardbg border border-cyan-800/80 w-full max-w-sm rounded-3xl p-5 shadow-2xl space-y-4 text-xs">
       <div class="text-center space-y-1">
         <span class="text-3xl block">🔐</span>
-        <h3 id="userLoginModalTitle" class="text-base font-bold text-white">Autentificare Utilizator</h3>
+        <h3 id="userLoginModalTitle" class="text-base font-bold text-white">Conectare</h3>
         <p class="text-[11px] text-slate-400">Conectează-te cu contul Google</p>
       </div>
 
@@ -2501,30 +2501,7 @@
           <button onclick="loginWithPairCode('authPairCodeModal')" class="shrink-0 text-[11px] px-2.5 py-2 bg-cyan-800 hover:bg-cyan-700 text-white font-bold rounded-lg">Conectează</button>
         </div>
       </div>
-      <p class="text-[10px] text-slate-500 text-center">Varianta veche, cu parolă, mai funcționează pentru scurt timp:</p>
 
-      <div class="space-y-3">
-        <div>
-          <label class="text-[10px] text-slate-400 block font-bold uppercase mb-1">Utilizator:</label>
-          <select id="loginUserSelect" onchange="onLoginUserChange()" class="w-full bg-darkbg border border-bordercol rounded-xl p-2.5 text-white font-bold text-xs focus:border-cyan-500">
-            <option value="Bogdan Murar">Bogdan Murar (Proprietar)</option>
-            <option value="Andreea Murar">Andreea Murar (Familie)</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="text-[10px] text-slate-400 block font-bold uppercase mb-1">Parolă:</label>
-          <input type="password" id="loginPasswordInput" onkeydown="if(event.key==='Enter') handleLoginSubmit()" placeholder="Introdu parola (Ber.lin)" class="w-full bg-darkbg border border-bordercol rounded-xl p-2.5 text-white text-xs focus:border-cyan-500">
-        </div>
-
-        <button onclick="handleLoginSubmit()" class="w-full bg-cyan-700 hover:bg-cyan-600 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95 transition shadow-lg">
-          Conectare & Aplică Profil
-        </button>
-
-        <div class="pt-2 border-t border-bordercol/60 flex items-center justify-end text-[11px]">
-          <a href="./andreea.html" class="text-pink-400 hover:text-pink-300 font-medium">🌸 Pagina Andreei ↗</a>
-        </div>
-      </div>
 
       <div class="pt-1 text-center">
         <button onclick="closeUserLoginModal()" id="btnLoginCancel" class="text-[11px] text-slate-400 hover:text-white">Anulează</button>
@@ -2540,7 +2517,6 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const API_TOKEN = "diih_secret_2026_bm";
     const APP_VERSION = "v23.0";
 
     const BASE_DATE = new Date(2026, 8, 22);
@@ -2595,14 +2571,12 @@
     // 1. SISTEM AUTENTIFICARE & PROFILURI UTILIZATORI (BOGDAN MURAR / ANDREEA MURAR)
     const APP_USERS = {
       "Bogdan Murar": {
-        pass: "Ber.lin",
         defaultTitle: "DIiH",
         defaultLogo: "🧭",
         defaultIcon: DEFAULT_OWNER_APP_ICON,
         isOwner: true
       },
       "Andreea Murar": {
-        pass: "Ber.lin",
         defaultTitle: "ABL - Andreea",
         defaultLogo: "🌸",
         defaultIcon: DEFAULT_SHARED_APP_ICON,
@@ -2616,8 +2590,7 @@
 
     // ====== AUTENTIFICARE GOOGLE (v23.2) ======
     // Google confirmă doar identitatea; serverul (Apps Script) emite o sesiune de 30 de zile și verifică
-    // dreptul pe modul la fiecare cerere (tabul Profile). Cât timp backend-ul e în „mod tranziție”,
-    // tokenul vechi se trimite în paralel, ca aplicația să meargă și fără login Google.
+    // dreptul pe modul la fiecare cerere (tabul Profile). Din v23.3, fără sesiune Google nu se primesc date.
     const GOOGLE_CLIENT_ID = "958493435354-6287uhsb9a4qhq1hha44j02r1if1jjcr.apps.googleusercontent.com";
     const AUTH_SESSION_KEY = 'diih_auth_session';
     const AUTH_MODULE_LABELS = {
@@ -2642,9 +2615,9 @@
       else localStorage.removeItem(AUTH_SESSION_KEY);
     }
 
-    // Parametrii de autentificare trimiși la fiecare cerere către Apps Script
+    // Parametrii de autentificare trimiși la fiecare cerere către Apps Script (din v23.3 doar sesiunea Google)
     function apiAuthParams() {
-      const p = { token: API_TOKEN };
+      const p = {};
       const s = getAuthSession();
       if (s) p.session = s.token;
       return p;
@@ -2679,15 +2652,16 @@
       if (/andreea/i.test(profile.nume || '')) return 'Andreea Murar';
       const name = profile.nume || profile.email;
       if (!APP_USERS[name]) {
-        APP_USERS[name] = { pass: null, defaultTitle: "DIiH", defaultLogo: "🙂", defaultIcon: DEFAULT_OWNER_APP_ICON, isOwner: false };
+        APP_USERS[name] = { defaultTitle: "DIiH", defaultLogo: "🙂", defaultIcon: DEFAULT_OWNER_APP_ICON, isOwner: false };
       }
       return name;
     }
     (function restoreAuthSessionUser() {
       const s = getAuthSession();
       if (s && s.profile) resolveLocalUserForProfile(s.profile);
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => renderAuthPanels());
-      else setTimeout(() => renderAuthPanels(), 0);
+      const authInit = () => { installAuthEditGuards(); renderAuthPanels(); };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', authInit);
+      else setTimeout(authInit, 0);
     })();
 
     async function completeAuthLogin(data) {
@@ -2698,9 +2672,9 @@
       setAuthSession({ token: data.sessionToken, expira: data.expira, profile: data.profile });
       closeUserLoginModal();
       executeUserSwitch(resolveLocalUserForProfile(data.profile));
-      renderAuthPanels();
-      applyAuthPermissionsUI();
-      fetchDataFromSheet(true);
+      clearAuthDataCache();
+      showToast(`Conectat ca ${data.profile.nume || data.profile.email}. Se reîncarcă datele...`);
+      setTimeout(() => location.reload(), 600);
     }
 
     async function onGoogleCredential(response) {
@@ -2725,10 +2699,9 @@
       showGenericConfirm('Te deconectezi de la contul Google pe acest dispozitiv?', async () => {
         try { await apiJsonp({ ...apiAuthParams(), action: 'authLogout' }); } catch (e) { /* sesiunea se șterge oricum local */ }
         setAuthSession(null);
-        renderAuthPanels();
-        applyOwnerNavLayout();
-        applyOwnerWidgetsVisibility();
+        clearAuthDataCache();
         showToast('Deconectat de la contul Google.');
+        setTimeout(() => location.reload(), 600);
       }, 'Deconectează');
     }
 
@@ -2791,6 +2764,11 @@
         const wgt = document.getElementById(`ownerWidget_${w}`);
         if (wgt && hidden(AUTH_WIDGET_MODULES[w])) wgt.classList.add('hidden');
       });
+      const extraSubButtons = { btnSubPsaltire: 'psaltire', btnSubNoteBiblia: 'scriptura', btnSubGanduri: 'notite' };
+      Object.keys(extraSubButtons).forEach(id => {
+        const b = document.getElementById(id);
+        if (b && hidden(extraSubButtons[id])) b.classList.add('hidden');
+      });
       const adminBtn = document.getElementById('btnSubAdmin');
       if (adminBtn) adminBtn.classList.add('hidden');
       const navBar = document.getElementById('bottomNavBar');
@@ -2798,6 +2776,64 @@
         const visible = Array.from(navBar.children).filter(c => !c.classList.contains('hidden')).length;
         navBar.className = `max-w-lg mx-auto grid grid-cols-${Math.max(visible, 1)} text-center text-[9px] font-medium text-slate-400`;
       }
+    }
+
+    // ---- v23.3: drept „doar vede” — funcțiile care modifică date se blochează pentru profilurile fără „edit” ----
+    // (serverul oricum refuză; blocarea din aplicație evită modificări afișate local care nu ajung în sheet)
+    const AUTH_EDIT_GUARDS = {
+      pomelnic: ['applyBatchAtentie', 'applyBatchAndreeaToggle', 'toggleEditMode', 'savePersonEdit', 'openAddPersonModal', 'saveNewPerson'],
+      psaltire: ['openAddPsaltireModal', 'openEditPsaltireModal', 'savePsaltirePerson', 'deletePsaltirePerson'],
+      scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar'],
+      notite: ['saveOrUpdateGand', 'deleteGand', 'deleteSelectedGanduri', 'softDeleteManyGanduri', 'undoDeleteGanduri'],
+      cumparaturi: ['addShoppingItem', 'removeShoppingItem', 'markWholeStoreCompleted'],
+      inventar: ['addCustomInventoryCategory', 'deleteCustomInventoryCategory', 'addCustomInventorySpace', 'deleteCustomInventorySpace', 'saveInventoryItem', 'deleteInventoryItem', 'confirmMoveInventoryItem'],
+      gandul: ['saveGandulZileiFromManager', 'toggleGandulZileiActiv'],
+      scriptura: ['startEditNoteBiblia', 'saveEditNoteBiblia', 'deleteOneNoteBiblia', 'deleteSelectedNoteBiblia', 'softDeleteManyNoteBiblia', 'undoDeleteNoteBiblia', 'toggleModelCitirePozitie', 'advanceScripturaProgress', 'toggleScripturaChapter', 'setBookAllChapters'],
+      setari: ['saveGlobalCustomSettings', 'saveCustomAppIcon', 'saveAdminSharingConfig']
+    };
+    function authCanEdit(mod) {
+      const s = getAuthSession();
+      if (!s || !s.profile || s.profile.rol === 'admin') return true;
+      return (s.profile.permisiuni || {})[mod] === 'edit';
+    }
+    function installAuthEditGuards() {
+      Object.keys(AUTH_EDIT_GUARDS).forEach(mod => {
+        AUTH_EDIT_GUARDS[mod].forEach(fnName => {
+          const original = window[fnName];
+          if (typeof original !== 'function' || original.__authGuarded) return;
+          const guarded = function (...args) {
+            if (!authCanEdit(mod)) {
+              showToast(`Ai doar drept de vizualizare la ${AUTH_MODULE_LABELS[mod]}.`);
+              return;
+            }
+            return original.apply(this, args);
+          };
+          guarded.__authGuarded = true;
+          window[fnName] = guarded;
+        });
+      });
+    }
+
+    // Datele din sheet păstrate local; se golesc la orice conectare/deconectare Google, ca pe un dispozitiv comun
+    // să nu rămână vizibile datele contului anterior (se reîncarcă la sincronizare, după drepturile contului nou)
+    const AUTH_DATA_CACHE_KEYS = ['diih_people', 'diih_shopping', 'diih_known_shopping_keys', 'diih_ganduri', 'diih_school_activities',
+      'diih_psaltire_grup', 'diih_note_anania', 'diih_biblia360', 'diih_gandul_zilei', 'diih_model_citire', 'diih_inventar'];
+    function clearAuthDataCache() {
+      AUTH_DATA_CACHE_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    }
+
+    // Fără sesiune Google (sau sesiune expirată) aplicația nu mai primește date: cere conectarea
+    let authLoginPromptShown = false;
+    function promptGoogleLogin(message) {
+      if (authLoginPromptShown) return;
+      authLoginPromptShown = true;
+      if (message) showToast(message);
+      promptSwitchUser();
+    }
+
+    // Raportul detaliat din Școală se construiește în v24.3; până atunci butonul spune asta în loc să nu facă nimic
+    function openSchoolReportModal() {
+      showToast('Raportul detaliat pe perioadă este în lucru și va veni într-o versiune următoare.');
     }
 
     // ---- Admin → Profile și acces ----
@@ -3258,7 +3294,7 @@
 
       const btnSwitchTxt = document.getElementById('btnQuickSwitchText');
       if (btnSwitchTxt) {
-        btnSwitchTxt.textContent = (uName === "Bogdan Murar") ? "Treci pe Andreea" : "Treci pe Bogdan";
+        btnSwitchTxt.textContent = "Schimbă contul";
       }
 
       applyAppBrandUI();
@@ -3311,7 +3347,8 @@
       const passIn = document.getElementById('loginPasswordInput');
       if (passIn) passIn.value = '';
       const title = document.getElementById('userLoginModalTitle');
-      if (title) title.textContent = `Schimbare pe profilul: ${target}`;
+      if (title) title.textContent = getAuthSession() ? 'Schimbă contul Google' : 'Conectare';
+      renderGoogleButtons();
       document.getElementById('userLoginModal')?.classList.remove('hidden');
       setTimeout(() => { if (passIn) passIn.focus(); }, 150);
     }
@@ -3320,23 +3357,6 @@
       const sel = document.getElementById('loginUserSelect');
       const title = document.getElementById('userLoginModalTitle');
       if (sel && title) title.textContent = `Autentificare: ${sel.value}`;
-    }
-
-    function handleLoginSubmit() {
-      const sel = document.getElementById('loginUserSelect');
-      const passIn = document.getElementById('loginPasswordInput');
-      const selectedUser = sel ? sel.value : 'Bogdan Murar';
-      const enteredPass = (passIn ? passIn.value.trim() : '').toLowerCase();
-
-      const userDef = APP_USERS[selectedUser];
-      const validPass = (userDef ? userDef.pass : 'Ber.lin').toLowerCase();
-      // Validare strictă prin parolă (acceptă Ber.lin, berlin)
-      if (!userDef || (enteredPass !== validPass && enteredPass !== 'berlin' && enteredPass !== 'ber.lin')) {
-        showToast("Parolă incorectă! Introdu Ber.lin pentru comutare.");
-        return;
-      }
-
-      executeUserSwitch(selectedUser);
     }
 
     function executeUserSwitch(selectedUser) {
@@ -3363,8 +3383,8 @@
     }
 
     function logoutCurrentUser() {
-      if (!confirm("Sigur dorești să te deconectezi?")) return;
-      promptSwitchUser();
+      if (getAuthSession()) logoutGoogleSession();
+      else promptSwitchUser();
     }
 
     function closeUserLoginModal() {
@@ -4825,14 +4845,13 @@
         handled = true;
         const dur = Date.now() - startT;
 
-        // Sesiune Google expirată sau revocată: o ștergem și reîncercăm cu modul vechi (cât timp serverul e în tranziție)
-        if (data && data.authRequired && getAuthSession()) {
-          setAuthSession(null);
+        // Fără sesiune Google validă (lipsă, expirată sau închisă de admin) serverul nu trimite date: cerem conectarea
+        if (data && data.authRequired) {
+          if (getAuthSession()) { setAuthSession(null); clearAuthDataCache(); }
           renderAuthPanels();
-          showToast('Sesiunea Google a expirat. Conectează-te din nou din Setări.');
           if (icon) icon.classList.remove('animate-spin');
           delete window[callbackName];
-          setTimeout(() => fetchDataFromSheet(showFeedback), 300);
+          promptGoogleLogin('Conectează-te cu contul Google ca să vezi datele.');
           return;
         }
         // Profilul (rol, permisiuni) se actualizează la fiecare sincronizare, ca schimbările făcute de admin să ajungă aici
@@ -4929,10 +4948,11 @@
         handled = true;
         const dur = Date.now() - startT;
 
-        if (data && data.authRequired && getAuthSession()) {
-          setAuthSession(null);
+        if (data && data.authRequired) {
+          if (getAuthSession()) { setAuthSession(null); clearAuthDataCache(); }
           renderAuthPanels();
           delete window[callbackName];
+          promptGoogleLogin('Conectează-te cu contul Google ca să vezi datele.');
           return;
         }
 

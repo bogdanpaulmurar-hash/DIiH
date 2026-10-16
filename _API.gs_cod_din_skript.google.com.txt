@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v23.1
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v23.3
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,8 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const API_SECURITY_TOKEN = "diih_secret_2026_bm";
-const BACKEND_VERSION = "23.1";
+const BACKEND_VERSION = "23.3";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -23,8 +22,8 @@ function doGet(e) {
   const ss = getSpreadsheet();
   const action = e.parameter.action;
 
-  // 0. AUTENTIFICARE (v23.1): login Google / cod de asociere sunt publice; restul cere sesiune
-  //    (sau tokenul vechi, cât timp modul e "tranzitie") și dreptul pe modulul acțiunii
+  // 0. AUTENTIFICARE: login Google / cod de asociere sunt publice; restul cere o sesiune Google validă
+  //    și dreptul pe modulul acțiunii (din v23.3 tokenul vechi nu mai e acceptat)
   if (AUTH_PUBLIC_ACTIONS.indexOf(action) !== -1) return authHandleAction(ss, e, action, null);
   const auth = authenticateRequest(ss, e);
   if (!auth.ok) return returnResponse(e, { error: auth.error, authRequired: true });
@@ -1445,8 +1444,7 @@ function getDriveImageAsBase64(ss, fileId) {
 // AUTENTIFICARE (v23.1): login cu Google + sesiuni + permisiuni pe profil
 // - Google confirmă DOAR identitatea (emailul). Cine are acces și la ce se decide în tabul "Profile".
 // - Sesiunile se țin în tabul "Sesiuni" (doar hash-ul tokenului, nu tokenul în clar).
-// - Mod "tranzitie" (implicit): tokenul vechi API_SECURITY_TOKEN mai funcționează, ca admin.
-//   Mod "strict" (cheia auth_mode din Setari, se schimbă doar de un admin logat): doar sesiuni Google.
+// - Din v23.3 se acceptă doar sesiuni Google (tokenul vechi a fost eliminat); modul e mereu "strict".
 // =====================================================================================================
 const GOOGLE_CLIENT_ID = "958493435354-6287uhsb9a4qhq1hha44j02r1if1jjcr.apps.googleusercontent.com";
 const SESSION_DAYS = 30;
@@ -1573,12 +1571,7 @@ function authPublicProfile(p) {
 }
 
 function authGetMode(ss) {
-  const cache = CacheService.getScriptCache();
-  const cached = cache.get("auth_mode");
-  if (cached) return cached;
-  const mode = (getAllSettingsRaw(ss)["auth_mode"] || "tranzitie") === "strict" ? "strict" : "tranzitie";
-  cache.put("auth_mode", mode, 60);
-  return mode;
+  return "strict";
 }
 
 function authCreateSession(ss, email, device) {
@@ -1651,9 +1644,6 @@ function authenticateRequest(ss, e) {
     const prof = authFindProfile(ss, s.email);
     if (!prof || !prof.activ) return { ok: false, error: "Profilul nu există sau a fost dezactivat." };
     return { ok: true, legacy: false, sessionHash: authSha256(p.session), profile: prof };
-  }
-  if (p.token && p.token === API_SECURITY_TOKEN && authGetMode(ss) !== "strict") {
-    return { ok: true, legacy: true, profile: { email: "", nume: "(token vechi)", rol: "admin", activ: true, permisiuni: authRoleDefaults("admin") } };
   }
   return { ok: false, error: "Acces neautorizat! Conectează-te cu Google." };
 }

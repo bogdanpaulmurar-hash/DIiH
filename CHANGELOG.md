@@ -1,5 +1,26 @@
 # CHANGELOG — DIiH Hub
 
+## v23.3 — 2026-10-16 — Doar conectare Google, restricții complete
+
+Frontend (`index.html`, `andreea.html`, `sw.js`) și backend (`_API.gs`, versiunea 23.3). **Ordinea de publicare: întâi push pe GitHub, apoi deploy în Apps Script.**
+
+### Securitate
+- **Tokenul vechi al API-ului și parolele profilurilor au fost scoase din cod.** Serverul acceptă doar sesiuni Google (modul e permanent „strict”). Tokenul vechi, rămas în istoricul public al repo-ului, nu mai deschide nimic.
+- `DIiH.xlsx` (export local cu date personale) nu mai e urmărit în git și e adăugat în `.gitignore`. Fișierul rămâne pe Drive.
+- La orice conectare sau deconectare Google, datele din sheet păstrate local se golesc și aplicația se reîncarcă. Pe un dispozitiv comun nu mai rămân vizibile datele contului anterior.
+
+### Restricții
+- Se ascund și butoanele Psaltire, Note Biblia și Gânduri din „Mai multe”, pentru profilurile fără acces.
+- **Dreptul „doar vede” e respectat și în aplicație**: adăugarea, editarea, ștergerea și bifele dintr-un modul fără „edit” sunt blocate, cu mesajul „Ai doar drept de vizualizare la …”. Înainte, modificarea apărea local, dar serverul o refuza.
+
+### Schimbat
+- Fereastra de autentificare are doar „Sign in with Google” și codul de asociere. Butonul „Treci pe Andreea” devine „Schimbă contul”, iar „Deconectare” deconectează contul Google.
+- Fără sesiune Google validă, aplicația cere conectarea în loc să rămână fără date.
+- Butonul „Raport Detaliat pe Perioadă” din Școală afișează că raportul e în lucru (înainte nu făcea nimic, pentru că funcția lui lipsea).
+
+### De știut
+- Linkurile vechi de partajare cu cod secret nu mai funcționează (foloseau tokenul). Se elimină complet în v24.0.
+
 ## v23.2 — 2026-10-15 — Conectare cu Google (aplicație)
 
 Doar `index.html`, `andreea.html`, `sw.js`. Backend-ul rămâne v23.1, deci nu e nevoie de deploy în Apps Script.
