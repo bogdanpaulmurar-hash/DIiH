@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.0.3
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.1
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.0.3";
+const BACKEND_VERSION = "24.1";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -688,6 +688,44 @@ function doGet(e) {
       }
     });
     return returnResponse(e, { success: true, count: ids.length });
+  }
+
+  // 8g. PROGRES SCRIPTURĂ PER PROFIL (v24.1) — capitole citite, model activ, lectura curentă, istoric
+  if (action === "saveScripturaProgress") {
+    const row = scripturaGetRow(ss, auth.profile.email);
+    if (e.parameter.capitole !== undefined) row.capitole = e.parameter.capitole.toString().slice(0, 40000);
+    if (e.parameter.modelActiv !== undefined) row.modelActiv = e.parameter.modelActiv.toString().slice(0, 100);
+    if (!row.inceputLa) row.inceputLa = authNow();
+    scripturaSaveRow(ss, row);
+    return returnResponse(e, { success: true, scripturaProgres: scripturaPublic(row) });
+  }
+
+  // Lectură nouă: lectura curentă intră în istoric (cu copie a capitolelor), progresul o ia de la zero
+  if (action === "newScripturaReading") {
+    const row = scripturaArchive(ss, auth.profile.email, "încheiată");
+    return returnResponse(e, { success: true, scripturaProgres: scripturaPublic(row) });
+  }
+
+  // Admin: resetează progresul unui profil (cu copie de siguranță) sau restaurează ultima copie
+  if (action === "adminResetScriptura") {
+    if (!authFindProfile(ss, e.parameter.email)) return returnResponse(e, { success: false, error: "Profil inexistent." });
+    const row = scripturaArchive(ss, e.parameter.email, "resetată de admin");
+    logToAppSheet(ss, { modul: "Scriptura", actiune: "reset_progres", status: "OK", detalii: e.parameter.email, user: auth.profile.email });
+    return returnResponse(e, { success: true, scripturaProgres: scripturaPublic(row) });
+  }
+
+  if (action === "adminRestoreScriptura") {
+    const row = scripturaGetRow(ss, (e.parameter.email || "").toString().toLowerCase());
+    const last = row.istoric.length ? row.istoric[row.istoric.length - 1] : null;
+    if (!last || last.capitole === undefined) return returnResponse(e, { success: false, error: "Nu există o copie de restaurat." });
+    row.istoric.pop();
+    row.capitole = last.capitole;
+    row.modelActiv = last.model || row.modelActiv;
+    row.inceputLa = last.inceput || row.inceputLa;
+    row.nrLectura = Math.max(1, row.nrLectura - 1);
+    scripturaSaveRow(ss, row);
+    logToAppSheet(ss, { modul: "Scriptura", actiune: "restaurare_progres", status: "OK", detalii: row.email, user: auth.profile.email });
+    return returnResponse(e, { success: true, scripturaProgres: scripturaPublic(row) });
   }
 
   // Populare inițială unică: scrie citatele trimise doar dacă foaia GandulZilei este încă goală (nu suprascrie date reale)
@@ -1561,6 +1599,7 @@ const AUTH_ACTION_RULES = {
   getInventoryData: ["inventar", "view"], addInventoryItem: ["inventar", "edit"], updateInventoryItem: ["inventar", "edit"], deleteInventoryItem: ["inventar", "edit"],
   getGandulZileiData: ["gandul", "view"], addGandulZilei: ["gandul", "edit"], updateGandulZilei: ["gandul", "edit"], seedGandulZileiIfEmpty: ["gandul", "edit"],
   getModelCitireData: ["scriptura", "view"], setModelCitirePozitieBifat: ["scriptura", "edit"],
+  saveScripturaProgress: ["scriptura", "edit"], newScripturaReading: ["scriptura", "edit"],
   updateNoteAnania: ["scriptura", "edit"], restoreNoteAnania: ["scriptura", "edit"], softDeleteNoteAnania: ["scriptura", "edit"]
 };
 
@@ -1777,6 +1816,10 @@ function authFilterResponse(data, auth, ss) {
     const raw = ss.getSheetByName("Setari") ? getSettingValueRaw(ss, "notif_cfg_" + auth.profile.email) : "";
     data.settings.notificationsJson = raw || (auth.profile.rol === "admin" ? data.settings.notificationsJson : "");
   }
+  if ("modelCitire" in data) {
+    const sp = scripturaFindRow(ss, auth.profile.email);
+    data.scripturaProgres = sp ? scripturaPublic(sp) : null;
+  }
   data.auth = { legacy: auth.legacy, mode: authGetMode(ss), profile: auth.legacy ? null : authPublicProfile(auth.profile) };
   return data;
 }
@@ -1955,4 +1998,78 @@ function autorizeazaToatePermisiunile() {
   Logger.log("Cont: " + Session.getEffectiveUser().getEmail());
   Logger.log("Verificare Google: cod " + UrlFetchApp.fetch("https://oauth2.googleapis.com/tokeninfo?id_token=test", { muteHttpExceptions: true }).getResponseCode());
   Logger.log("Toate permisiunile sunt acordate.");
+}
+
+// =====================================================================================================
+// PROGRES SCRIPTURĂ PER PROFIL (v24.1) — tabul ProgresScriptura, un rând per profil
+// Capitole = listă compactă „indexCarte:capitole” (ex. „0:1-50|1:1-3,5”), indexul fiind ordinea canonului din aplicație.
+// Istoric = lecturile anterioare (JSON); ultimele copii păstrează și capitolele, pentru restaurare.
+// =====================================================================================================
+const SCRIPTURA_PROGRES_COLUMNS = ["Email", "Capitole", "ModelActiv", "NrLectura", "InceputLa", "Istoric", "Actualizat"];
+const SCRIPTURA_ISTORIC_COPII = 5;
+
+function getOrCreateScripturaProgresSheet(ss) {
+  let sh = ss.getSheetByName("ProgresScriptura");
+  if (!sh) {
+    sh = ss.insertSheet("ProgresScriptura");
+    sh.appendRow(SCRIPTURA_PROGRES_COLUMNS);
+    sh.getRange("A1:G1").setFontWeight("bold");
+  }
+  return sh;
+}
+
+function scripturaFindRow(ss, email) {
+  const sh = ss.getSheetByName("ProgresScriptura");
+  const em = (email || "").toString().trim().toLowerCase();
+  if (!sh || sh.getLastRow() < 2 || !em) return null;
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 7).getValues();
+  for (let i = 0; i < rows.length; i++) {
+    if ((rows[i][0] || "").toString().trim().toLowerCase() !== em) continue;
+    let istoric = [];
+    try { istoric = rows[i][5] ? JSON.parse(rows[i][5].toString()) : []; } catch (err) { istoric = []; }
+    return {
+      rowId: i + 2,
+      email: em,
+      capitole: (rows[i][1] || "").toString(),
+      modelActiv: (rows[i][2] || "").toString(),
+      nrLectura: parseInt(rows[i][3], 10) || 1,
+      inceputLa: rows[i][4] ? (rows[i][4] instanceof Date ? Utilities.formatDate(rows[i][4], "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss") : rows[i][4].toString()) : "",
+      istoric: Array.isArray(istoric) ? istoric : [],
+      actualizat: rows[i][6] ? rows[i][6].toString() : ""
+    };
+  }
+  return null;
+}
+
+function scripturaGetRow(ss, email) {
+  return scripturaFindRow(ss, email) || { rowId: 0, email: (email || "").toString().trim().toLowerCase(), capitole: "", modelActiv: "", nrLectura: 1, inceputLa: "", istoric: [], actualizat: "" };
+}
+
+function scripturaSaveRow(ss, row) {
+  const sh = getOrCreateScripturaProgresSheet(ss);
+  // Doar ultimele copii păstrează capitolele (limita de caractere a unei celule)
+  row.istoric.forEach((h, i) => { if (i < row.istoric.length - SCRIPTURA_ISTORIC_COPII) delete h.capitole; });
+  row.actualizat = authNow();
+  const values = [row.email, row.capitole, row.modelActiv, row.nrLectura, row.inceputLa, JSON.stringify(row.istoric), row.actualizat];
+  if (row.rowId) sh.getRange(row.rowId, 1, 1, 7).setValues([values]);
+  else { sh.appendRow(values); row.rowId = sh.getLastRow(); }
+}
+
+function scripturaArchive(ss, email, motiv) {
+  const row = scripturaGetRow(ss, email);
+  if (row.capitole || row.inceputLa) {
+    row.istoric.push({ nr: row.nrLectura, model: row.modelActiv, inceput: row.inceputLa, sfarsit: authNow(), motiv: motiv, capitole: row.capitole });
+    row.nrLectura = row.nrLectura + 1;
+  }
+  row.capitole = "";
+  row.inceputLa = authNow();
+  scripturaSaveRow(ss, row);
+  return row;
+}
+
+function scripturaPublic(row) {
+  return {
+    capitole: row.capitole, modelActiv: row.modelActiv, nrLectura: row.nrLectura, inceputLa: row.inceputLa, actualizat: row.actualizat,
+    istoric: row.istoric.map(h => ({ nr: h.nr, model: h.model, inceput: h.inceput, sfarsit: h.sfarsit, motiv: h.motiv, areCopie: h.capitole !== undefined }))
+  };
 }

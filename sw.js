@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diih-cache-v24.0.3';
+const CACHE_NAME = 'diih-cache-v24.1';
 const ASSETS = [
   './index.html',
   './andreea.html',

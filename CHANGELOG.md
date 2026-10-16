@@ -1,5 +1,27 @@
 # CHANGELOG — DIiH Hub
 
+## v24.1 — 2026-10-16 — Scriptura per profil, plan de citire sincronizat cu progresul
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.1).
+
+### Progres per profil, în cloud
+- Tab nou **`ProgresScriptura`** (creat automat), cu un rând per cont: capitolele citite (format compact), modelul de citire activ, numărul lecturii, data începerii și istoricul lecturilor.
+- Progresul e același pe toate dispozitivele unui cont și separat între conturi. Înainte stătea doar în browser, iar bifele modelului și modelul activ erau comune tuturor.
+- **Migrare automată**: la prima sincronizare, adminul își mută progresul existent (capitolele din browser plus pozițiile bifate în vechea coloană comună `Bifat`). Celelalte profiluri încep de la zero.
+
+### Plan de citire ↔ progres
+- O poziție din model se **bifează singură** când toate capitolele cărților ei sunt citite, **în toate modelele**, și se debifează dacă un capitol devine necitit. Nu mai bifezi în două locuri.
+- Bifarea unei poziții marchează citite capitolele ei. **Debifarea cere confirmare**, pentru că marchează capitolele necitite.
+- **„Următorul capitol”** urmează ordinea modelului activ. După ce modelul e gata, continuă cu restul canonului.
+
+### Lecturi
+- Sub progres apare „Lectura nr. N · începută pe …”. Când tot modelul activ e citit, apare **„🎉 Lectura nr. N încheiată”**, cu butonul **„Începe o nouă lectură”**: lectura curentă intră în istoric, iar capitolele se golesc.
+- „Lecturi anterioare” arată istoricul (model, perioadă, motiv).
+- **Admin → Profile**: „📖 Resetează Scriptura” pentru orice profil (progresul se păstrează ca o copie) și „↩ Restaurează Scriptura” (revine la ultima copie). Se păstrează ultimele 5 copii complete.
+
+### Diverse
+- Fereastra de confirmare are acum butonul potrivit acțiunii („Debifează”, „Începe lectura”, „Deconectează” etc.), nu mereu „Șterge”.
+
 ## v24.0.3 — 2026-10-16 — Cumpărături private pe server, adăugare rapidă din widgeturi
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.0.3).
