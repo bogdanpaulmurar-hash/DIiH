@@ -370,15 +370,18 @@
       </div>
 
       <!-- Notițe Personale (fost Gânduri) -->
-      <div id="ownerWidget_notite" onclick="switchTab('notite')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-600/60 active:scale-98 transition space-y-2">
+      <div id="ownerWidget_notite" onclick="if (!event.target.closest('.no-tab-switch')) switchTab('notite')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-600/60 active:scale-98 transition space-y-2">
         <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
           <div class="flex items-center space-x-1.5">
-            <span>📝 Notițe</span>
-            <span class="text-[10px] text-slate-500 font-normal">Deschide secțiunea</span>
+            <span>📝 Notițe & remindere</span>
           </div>
           <span id="ownerWidgetNotiteBadge" class="bg-amber-950 border border-amber-800 px-2 py-0.5 rounded-full text-[10px]">0 notițe</span>
         </div>
-        <div id="ownerWidgetNotiteContent" class="text-xs text-slate-200 italic line-clamp-2"></div>
+        <div id="ownerWidgetNotiteContent" class="space-y-1 mt-2"></div>
+        <div class="no-tab-switch flex items-center gap-1.5 pt-2">
+          <input id="quickNoteInput" type="text" autocomplete="off" placeholder="Notiță rapidă… (Enter)" onkeydown="if (event.key === 'Enter') { event.preventDefault(); saveQuickNote(); }" class="flex-1 min-w-0 bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+          <button onclick="saveQuickNote()" class="shrink-0 text-[11px] px-2.5 py-1.5 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-lg">+</button>
+        </div>
       </div>
 
       <!-- Gândul Zilei (Generator / Citat Rotativ Zilnic) -->
@@ -821,6 +824,16 @@
         </div>
 
         <textarea id="gandInput" rows="3" onkeydown="handleGandKeyDown(event)" placeholder="Scrie o notiță, idee sau reflecție... (Apasă Enter pentru salvare instantă)" class="w-full bg-darkbg border border-bordercol rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"></textarea>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="text-[10px] text-slate-400 space-y-0.5">
+            <span class="block">⏰ Reminder (opțional)</span>
+            <input type="datetime-local" id="gandReminder" class="w-full bg-darkbg border border-bordercol rounded-xl p-2 text-white text-xs">
+          </label>
+          <label id="gandOwnerBox" class="hidden text-[10px] text-slate-400 space-y-0.5">
+            <span class="block">Pentru</span>
+            <select id="gandOwnerSelect" class="w-full bg-darkbg border border-bordercol rounded-xl p-2 text-white text-xs"><option value="">Mine</option></select>
+          </label>
+        </div>
         <input type="text" id="gandSursa" onkeydown="handleGandKeyDown(event)" placeholder="Sursă / Categorie / Etichetă (rămâne păstrată)" class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition">
         
         <div class="flex space-x-2 pt-1">
@@ -1239,7 +1252,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.0.1 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.0.2 (Build 2026-10-16)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2329,7 +2342,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.0.1";
+    const APP_VERSION = "v24.0.2";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2606,7 +2619,7 @@
       pomelnic: ['applyBatchAtentie', 'applyBatchAndreeaToggle', 'toggleEditMode', 'savePersonEdit', 'openAddPersonModal', 'saveNewPerson'],
       psaltire: ['openAddPsaltireModal', 'openEditPsaltireModal', 'savePsaltirePerson', 'deletePsaltirePerson'],
       scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar'],
-      notite: ['saveOrUpdateGand', 'deleteGand', 'deleteSelectedGanduri', 'softDeleteManyGanduri', 'undoDeleteGanduri'],
+      notite: ['saveOrUpdateGand', 'deleteGand', 'deleteSelectedGanduri', 'softDeleteManyGanduri', 'undoDeleteGanduri', 'startEditGand'],
       cumparaturi: ['addShoppingItem', 'removeShoppingItem', 'markWholeStoreCompleted'],
       inventar: ['addCustomInventoryCategory', 'deleteCustomInventoryCategory', 'addCustomInventorySpace', 'deleteCustomInventorySpace', 'saveInventoryItem', 'deleteInventoryItem', 'confirmMoveInventoryItem'],
       gandul: ['saveGandulZileiFromManager', 'toggleGandulZileiActiv'],
@@ -2640,7 +2653,7 @@
     // să nu rămână vizibile datele contului anterior (se reîncarcă la sincronizare, după drepturile contului nou)
     const AUTH_DATA_CACHE_KEYS = ['diih_people', 'diih_shopping', 'diih_known_shopping_keys', 'diih_ganduri', 'diih_school_activities',
       'diih_psaltire_grup', 'diih_note_anania', 'diih_biblia360', 'diih_gandul_zilei', 'diih_model_citire', 'diih_inventar',
-      'diih_notifications_multi', 'diih_notifs_triggered_today'];
+      'diih_notifications_multi', 'diih_notifs_triggered_today', 'diih_note_profiles'];
     function clearAuthDataCache() {
       AUTH_DATA_CACHE_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
     }
@@ -4685,6 +4698,7 @@
       if (tabId === 'more') {
         switchSubTab('setari');
       }
+      if (tabId === 'notite') loadNoteOwnerOptions();
     }
 
     function jumpToCurrentSchoolMonth() {
@@ -7486,6 +7500,120 @@
       renderSchoolDisplay();
     }
 
+    // ====== NOTIȚE PER PROFIL (v24.0.2) ======
+    // Serverul trimite doar notițele proprii și pe cele scrise de tine pentru alții (adminul poate scrie oricui,
+    // cu reminder). Reminderele se notifică doar proprietarului notiței.
+    function getMyAuthEmail() {
+      const s = getAuthSession();
+      return s && s.profile ? s.profile.email : '';
+    }
+    function isNoteForOther(g) {
+      const me = getMyAuthEmail();
+      return !!(g.proprietar && me && g.proprietar !== me);
+    }
+    function noteOwnerLabel(email) {
+      const p = (noteProfileNames || []).find(x => x.email === email);
+      return p ? (p.nume || p.email) : email;
+    }
+    function parseNoteReminder(str) {
+      if (!str) return null;
+      const m = str.toString().match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+      return m ? new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) : null;
+    }
+    function formatNoteReminder(str) {
+      const d = parseNoteReminder(str);
+      if (!d) return '';
+      const today = localDateStr();
+      const tomorrow = localDateStr(new Date(Date.now() + 86400000));
+      const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      const ds = localDateStr(d);
+      if (ds === today) return `azi ${hm}`;
+      if (ds === tomorrow) return `mâine ${hm}`;
+      return `${d.getDate()}.${String(d.getMonth() + 1).padStart(2, '0')} ${hm}`;
+    }
+
+    // Lista de profiluri pentru câmpul „Pentru” (doar adminul o primește de la server)
+    let noteProfileNames = JSON.parse(localStorage.getItem('diih_note_profiles') || '[]');
+    async function loadNoteOwnerOptions() {
+      const s = getAuthSession();
+      const box = document.getElementById('gandOwnerBox');
+      if (!box) return;
+      const isAdmin = !!(s && s.profile && s.profile.rol === 'admin');
+      box.classList.toggle('hidden', !isAdmin);
+      if (!isAdmin) return;
+      try {
+        const data = await apiJsonp({ ...apiAuthParams(), action: 'authProfileNames' });
+        if (data && data.success) {
+          noteProfileNames = data.profiles;
+          try { localStorage.setItem('diih_note_profiles', JSON.stringify(noteProfileNames)); } catch (e) {}
+        }
+      } catch (e) { /* rămâne lista salvată */ }
+      const sel = document.getElementById('gandOwnerSelect');
+      const current = sel.value;
+      sel.innerHTML = '<option value="">Mine</option>' + noteProfileNames
+        .filter(p => p.email !== s.profile.email)
+        .map(p => `<option value="${escapeHtmlText(p.email)}">${escapeHtmlText(p.nume || p.email)}</option>`).join('');
+      sel.value = current;
+    }
+
+    // Widgetul de pe Astăzi: remindere apropiate (cele trecute în roșu), apoi ultimele notițe proprii
+    function renderNotesWidget(container, badge) {
+      const mine = allGanduri.filter(g => !isNoteForOther(g));
+      const now = Date.now();
+      const reminders = mine.filter(g => parseNoteReminder(g.reminder))
+        .map(g => ({ g, t: parseNoteReminder(g.reminder).getTime() }))
+        .filter(x => x.t > now - 86400000)
+        .sort((a, b) => a.t - b.t);
+      const todayCount = reminders.filter(x => localDateStr(new Date(x.t)) === localDateStr()).length;
+      if (badge) badge.textContent = todayCount > 0 ? `${todayCount} azi · ${mine.length} notițe` : `${mine.length} notițe`;
+      const latest = [...mine].sort((a, b) => b.rowId - a.rowId);
+      const rows = [];
+      reminders.slice(0, 3).forEach(x => {
+        const past = x.t < now;
+        rows.push(`<p class="text-xs ${past ? 'text-rose-300' : 'text-slate-200'} truncate">⏰ <span class="font-mono text-[10px] ${past ? 'text-rose-400' : 'text-amber-300'}">${formatNoteReminder(x.g.reminder)}</span> ${escapeHtmlText(x.g.gand)}</p>`);
+      });
+      latest.filter(g => !reminders.slice(0, 3).some(x => x.g === g)).slice(0, Math.max(0, 3 - rows.length)).forEach(g => {
+        rows.push(`<p class="text-xs text-slate-300 truncate">• ${escapeHtmlText(g.gand)}</p>`);
+      });
+      container.innerHTML = rows.length ? rows.join('') : '<p class="text-xs text-slate-400 italic">Nicio notiță. Scrie una mai jos.</p>';
+    }
+
+    function saveQuickNote() {
+      const input = document.getElementById('quickNoteInput');
+      const text = (input ? input.value : '').trim();
+      if (!text) return;
+      if (!authCanEdit('notite')) { showToast('Ai doar drept de vizualizare la Notițe.'); return; }
+      const me = getMyAuthEmail();
+      const tempRowId = -Date.now();
+      allGanduri.push({ rowId: tempRowId, gand: text, sursa: 'Rapid', data: new Date().toLocaleDateString('ro-RO'), user: getCurrentLoggedInUser(), proprietar: me, creatDe: me, reminder: '' });
+      localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
+      input.value = '';
+      renderGanduriList();
+      updateTodayWidgetView();
+      showToast('Notiță salvată!');
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(text)}&sursa=Rapid&user=${encodeURIComponent(getCurrentLoggedInUser())}&callback=void`;
+      document.body.appendChild(script);
+    }
+
+    // Reminderele notițelor proprii: notificare o singură dată, în primele 2 ore după ora setată
+    function checkNoteReminders(triggeredToday) {
+      const me = getMyAuthEmail();
+      const now = Date.now();
+      allGanduri.forEach(g => {
+        if (isNoteForOther(g) || (g.proprietar && g.proprietar !== me)) return;
+        const d = parseNoteReminder(g.reminder);
+        if (!d) return;
+        const diff = now - d.getTime();
+        if (diff < 0 || diff > 2 * 3600000) return;
+        const key = `note_${g.rowId}_${g.reminder}`;
+        if (triggeredToday[key]) return;
+        markNotifTriggeredToday(key);
+        const from = g.creatDe && g.creatDe !== me ? ` (de la ${noteOwnerLabel(g.creatDe)})` : '';
+        triggerNotification(`📝 Reminder${from}`, g.gand);
+      });
+    }
+
     // 6. GÂNDURI (ENTER AUTOMAT, SURSĂ PĂSTRATĂ, CURSOR POZIȚIONAT)
     function toggleGanduriGrouping() {
       isGanduriGrouped = !isGanduriGrouped;
@@ -7507,6 +7635,8 @@
       editingGandRowId = rowId;
       document.getElementById('gandInput').value = g.gand;
       document.getElementById('gandSursa').value = g.sursa;
+      document.getElementById('gandReminder').value = g.reminder ? g.reminder.replace(' ', 'T').slice(0, 16) : '';
+      document.getElementById('gandOwnerSelect').disabled = true;
 
       document.getElementById('gandFormTitle').textContent = "✏️ Editează Gândul";
       document.getElementById('gandEditingBadge').classList.remove('hidden');
@@ -7519,19 +7649,17 @@
     function cancelGandEdit() {
       editingGandRowId = null;
       document.getElementById('gandInput').value = '';
+      document.getElementById('gandReminder').value = '';
+      document.getElementById('gandOwnerSelect').disabled = false;
       document.getElementById('gandFormTitle').textContent = "✍️ Notează Gândul Zilei";
       document.getElementById('gandEditingBadge').classList.add('hidden');
       document.getElementById('btnSaveGand').textContent = "💾 Salvează în Sheet";
       document.getElementById('btnCancelGandEdit').classList.add('hidden');
     }
 
+    // Serverul trimite deja doar notițele profilului conectat (plus cele scrise de el pentru alții)
     function getCurrentUserGanduri() {
-      const curUser = getCurrentLoggedInUser();
-      return allGanduri.filter(g => {
-        const owner = g.user || g.author;
-        if (!owner) return curUser === "Bogdan Murar";
-        return owner === curUser;
-      });
+      return [...allGanduri].sort((a, b) => b.rowId - a.rowId);
     }
 
     function saveOrUpdateGand() {
@@ -7539,25 +7667,31 @@
       const sursa = document.getElementById('gandSursa').value.trim() || 'Personal';
       if (!gand) return;
       const curUser = getCurrentLoggedInUser();
+      const reminder = document.getElementById('gandReminder').value || '';
+      const ownerSel = document.getElementById('gandOwnerSelect');
+      const proprietar = (ownerSel && !ownerSel.disabled && ownerSel.value) ? ownerSel.value : getMyAuthEmail();
 
       if (editingGandRowId) {
         const g = allGanduri.find(x => x.rowId === editingGandRowId);
         if (g) {
           g.gand = gand;
           g.sursa = sursa;
+          g.reminder = reminder;
           if (!g.user && !g.author) g.user = curUser;
         }
         localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         showToast("Notiță actualizată!");
 
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGand&rowId=${editingGandRowId}&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGand&rowId=${editingGandRowId}&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&reminder=${encodeURIComponent(reminder)}&callback=void`;
         document.body.appendChild(script);
 
         cancelGandEdit();
       } else {
-        const newRowId = allGanduri.length + 2;
-        allGanduri.unshift({ rowId: newRowId, gand: gand, sursa: sursa, data: new Date().toLocaleDateString('ro-RO'), user: curUser, author: curUser });
+        // rowId provizoriu (negativ) până la următoarea sincronizare, ca să nu se suprapună cu un rând real
+        const newRowId = -Date.now();
+        allGanduri.push({ rowId: newRowId, gand: gand, sursa: sursa, data: new Date().toLocaleDateString('ro-RO'), user: curUser, author: curUser, proprietar: proprietar, creatDe: getMyAuthEmail(), reminder: reminder });
+        document.getElementById('gandReminder').value = '';
         localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         showToast("Notiță salvată!");
 
@@ -7566,7 +7700,7 @@
         document.getElementById('gandInput').focus(); // Cursorul revine automat!
 
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&reminder=${encodeURIComponent(reminder)}&proprietar=${encodeURIComponent(proprietar)}&callback=void`;
         document.body.appendChild(script);
       }
 
@@ -7645,6 +7779,14 @@
       `;
     }
 
+    function renderNoteTags(g) {
+      const tags = [];
+      if (g.reminder) tags.push(`<span class="text-[9px] px-1.5 py-0.5 rounded-full border border-amber-800 text-amber-300">⏰ ${formatNoteReminder(g.reminder) || g.reminder}</span>`);
+      if (isNoteForOther(g)) tags.push(`<span class="text-[9px] px-1.5 py-0.5 rounded-full border border-cyan-800 text-cyan-300">Pentru ${escapeHtmlText(noteOwnerLabel(g.proprietar))}</span>`);
+      else if (g.creatDe && g.creatDe !== getMyAuthEmail()) tags.push(`<span class="text-[9px] px-1.5 py-0.5 rounded-full border border-violet-800 text-violet-300">De la ${escapeHtmlText(noteOwnerLabel(g.creatDe))}</span>`);
+      return tags.length ? `<div class="flex flex-wrap gap-1 pt-1">${tags.join('')}</div>` : '';
+    }
+
     function renderGanduriList() {
       const container = document.getElementById('savedGanduriList');
       if (!container) return;
@@ -7664,6 +7806,7 @@
               <button onclick="deleteGand(${g.rowId})" class="text-slate-500 hover:text-rose-400 p-1">🗑️</button>
             </div>
             <p class="text-slate-200 leading-relaxed pr-20">${g.gand}</p>
+            ${renderNoteTags(g)}
             <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
               <span class="text-amber-400 font-semibold">— ${g.sursa || 'Personal'}</span>
               <span>${g.data || ''}</span>
@@ -7691,7 +7834,10 @@
                   <div class="pt-1.5 flex items-start justify-between text-xs">
                     <div class="flex items-start space-x-1.5 pr-2">
                       <input type="checkbox" onchange="toggleGandSelect(${g.rowId}, this.checked)" ${selectedGandIds.has(g.rowId) ? 'checked' : ''} class="rounded text-rose-500 focus:ring-0 mt-0.5 shrink-0" title="Selectează">
-                      <p class="text-slate-200 leading-relaxed">${g.gand}</p>
+                      <div>
+                        <p class="text-slate-200 leading-relaxed">${g.gand}</p>
+                        ${renderNoteTags(g)}
+                      </div>
                     </div>
                     <div class="flex items-center space-x-1 shrink-0">
                       <button onclick="startEditGand(${g.rowId})" class="text-slate-400 hover:text-cyan-300 p-1">✏️</button>
@@ -7966,6 +8112,11 @@
 
     // Modulul de care ține fiecare categorie de notificări (null = fără restricție)
     const NOTIF_CATEGORY_MODULES = { psaltire: 'psaltire', birth: 'pomelnic', death: 'pomelnic', school: 'scoala', misc: null, individualAnniversary: 'pomelnic' };
+    function hasNotifAccessModule(mod) {
+      const s = getAuthSession();
+      if (!s || !s.profile || s.profile.rol === 'admin') return true;
+      return ((s.profile.permisiuni || {})[mod] || 'none') !== 'none';
+    }
     function hasNotifAccess(catId) {
       const mod = NOTIF_CATEGORY_MODULES[catId];
       if (!mod) return true;
@@ -8097,8 +8248,9 @@
       const todayDateStr = localDateStr(now);
 
       const savedConfig = JSON.parse(localStorage.getItem('diih_notifications_multi') || '{}');
-      if (!savedConfig || Object.keys(savedConfig).length === 0) return;
       const triggeredToday = getNotifsTriggeredToday();
+      if (((getAuthSession() || {}).profile || { rol: 'admin' }).rol === 'admin' || hasNotifAccessModule('notite')) checkNoteReminders(triggeredToday);
+      if (!savedConfig || Object.keys(savedConfig).length === 0) return;
 
       Object.keys(savedConfig).forEach(catId => {
         if (catId === 'individualAnniversary') return; // tratat separat mai jos, nu e un array de praguri
@@ -8287,11 +8439,7 @@
 
       const notiteContent = document.getElementById('ownerWidgetNotiteContent') || document.getElementById('ownerWidgetGanduriContent');
       const notiteBadge = document.getElementById('ownerWidgetNotiteBadge');
-      if (notiteContent) {
-        const latest = allGanduri[0];
-        if (notiteBadge) notiteBadge.textContent = `${allGanduri.length} notițe`;
-        notiteContent.innerHTML = latest ? `"${latest.gand}" <span class="text-amber-400 text-[10px] not-italic block mt-0.5">— ${latest.sursa || 'Personal'}</span>` : '<span class="text-slate-400 not-italic">Nicio notiță adăugată încă.</span>';
-      }
+      if (notiteContent) renderNotesWidget(notiteContent, notiteBadge);
 
       updateGrandThoughtDisplay();
 

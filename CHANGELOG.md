@@ -1,5 +1,26 @@
 # CHANGELOG — DIiH Hub
 
+## v24.0.2 — 2026-10-16 — Notițe per profil, remindere, widget nou
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.0.2).
+
+### Notițe per profil
+- Fiecare profil vede **doar notițele lui**. Filtrarea se face pe server, deci nici datele nu pleacă spre alții.
+- Coloane noi în `Notite` (create automat): `Proprietar` (emailul profilului), `CreatDe`, `Reminder`.
+- Notițele vechi, fără proprietar, aparțin profilului cu numele din coloana „User” (ex. „Andreea Murar”). Cele fără user aparțin adminului.
+- **Adminul poate scrie notițe pentru oricine**, din câmpul „Pentru” al formularului, opțional cu reminder. În lista lui apar cu eticheta „Pentru X”, iar la destinatar cu „De la X”. Ceilalți pot scrie doar pentru ei.
+- Editarea și ștergerea sunt permise doar pe notițele proprii sau pe cele scrise de tine.
+
+### Remindere
+- Câmp nou „⏰ Reminder” (dată și oră) la fiecare notiță. Notificarea vine doar proprietarului, o singură dată, în primele 2 ore după ora setată, cât timp aplicația e deschisă.
+
+### Widgetul „Notițe & remindere” (Astăzi)
+- Arată reminderele apropiate (cele trecute în roșu), apoi ultimele notițe proprii, plus câmpul **„Notiță rapidă”** (Enter salvează). Insigna arată câte remindere sunt azi și câte notițe ai.
+- Înainte afișa cea mai veche notiță din tot sheet-ul, nefiltrată pe profil.
+
+### Corectat
+- **Profilurile non-admin nu puteau salva sau edita notițe din v23.3**: aplicația trimitea `addGand`/`updateGand`, acțiuni care lipseau din regulile serverului. Notița apărea doar local și se pierdea la sincronizare.
+
 ## v24.0.1 — 2026-10-16 — Notificări per profil, Setări restrânse, registrul doar pentru admin
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs`, versiunea 24.0.1).

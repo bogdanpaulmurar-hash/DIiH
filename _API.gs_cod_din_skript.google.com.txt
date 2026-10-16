@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.0.1
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.0.2
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.0.1";
+const BACKEND_VERSION = "24.0.2";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -228,6 +228,18 @@ function doGet(e) {
     const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
     const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
     const noteContent = e.parameter.gand || e.parameter.nota || e.parameter.notita || e.parameter.text || "";
+    const noteCols = ensureSheetColumns(sh, NOTE_OWNER_COLUMNS);
+    // Fiecare notiță are un proprietar (profilul care o vede). Doar adminul poate crea notițe pentru altcineva.
+    let proprietar = auth.profile.email;
+    if (auth.profile.rol === "admin" && e.parameter.proprietar && authFindProfile(ss, e.parameter.proprietar)) {
+      proprietar = e.parameter.proprietar.toString().trim().toLowerCase();
+    }
+    const writeNoteOwner = () => {
+      const r = sh.getLastRow();
+      sh.getRange(r, noteCols["Proprietar"]).setValue(proprietar);
+      sh.getRange(r, noteCols["CreatDe"]).setValue(auth.profile.email);
+      sh.getRange(r, noteCols["Reminder"]).setValue((e.parameter.reminder || "").toString());
+    };
     if (header === "ID") {
       const gandId = e.parameter.id || ("NOTE-" + Date.now());
       sh.appendRow([
@@ -237,6 +249,7 @@ function doGet(e) {
         dataCreare,
         e.parameter.user || e.parameter.author || ""
       ]);
+      writeNoteOwner();
     } else {
       sh.appendRow([
         noteContent,
@@ -244,8 +257,9 @@ function doGet(e) {
         dataCreare,
         e.parameter.user || e.parameter.author || ""
       ]);
+      writeNoteOwner();
     }
-    return returnResponse(e, { success: true });
+    return returnResponse(e, { success: true, rowId: sh.getLastRow() });
   }
 
   if (action === "updateGand" || action === "updateNote" || action === "updateNotita") {
@@ -253,10 +267,15 @@ function doGet(e) {
     let rowId = parseInt(e.parameter.rowId, 10);
     const noteContent = e.parameter.gand || e.parameter.nota || e.parameter.notita || e.parameter.text || "";
     if (sh && rowId >= 2 && rowId <= sh.getLastRow()) {
+      if (!noteRowAllowed(ss, sh, rowId, auth.profile)) return returnResponse(e, { success: false, forbidden: true, error: "Notița nu îți aparține." });
       const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
       const colOffset = (header === "ID") ? 1 : 0;
       sh.getRange(rowId, 1 + colOffset).setValue(noteContent);
       if (e.parameter.sursa) sh.getRange(rowId, 2 + colOffset).setValue(e.parameter.sursa);
+      if (e.parameter.reminder !== undefined) {
+        const noteCols = ensureSheetColumns(sh, NOTE_OWNER_COLUMNS);
+        sh.getRange(rowId, noteCols["Reminder"]).setValue(e.parameter.reminder.toString());
+      }
       return returnResponse(e, { success: true });
     }
   }
@@ -275,7 +294,7 @@ function doGet(e) {
       const col = (header === "ID") ? 2 : 1;
       const vals = sh.getRange(2, col, sh.getLastRow() - 1, 1).getValues();
       for (let i = vals.length - 1; i >= 0; i--) {
-        if (vals[i][0] && vals[i][0].toString().trim() === targetGand) {
+        if (vals[i][0] && vals[i][0].toString().trim() === targetGand && noteRowAllowed(ss, sh, i + 2, auth.profile)) {
           sh.deleteRow(i + 2);
           deleted = true;
           break;
@@ -284,7 +303,7 @@ function doGet(e) {
     }
 
     // 2. Fallback după rowId dacă nu s-a găsit după text
-    if (!deleted && !isNaN(rowId) && rowId >= 2 && rowId <= sh.getLastRow()) {
+    if (!deleted && !isNaN(rowId) && rowId >= 2 && rowId <= sh.getLastRow() && noteRowAllowed(ss, sh, rowId, auth.profile)) {
       sh.deleteRow(rowId);
       deleted = true;
     }
@@ -302,7 +321,7 @@ function doGet(e) {
     const rowIdsStr = e.parameter.rowIds || e.parameter.rowId || "";
     const ids = rowIdsStr.toString().split(",").map(x => parseInt(x.trim(), 10)).filter(n => !isNaN(n));
     ids.forEach(rId => {
-      if (rId >= 2 && rId <= sh.getLastRow()) {
+      if (rId >= 2 && rId <= sh.getLastRow() && noteRowAllowed(ss, sh, rId, auth.profile)) {
         sh.getRange(rId, cols.stersCol).setValue(isDelete ? "DA" : "NU");
         sh.getRange(rId, cols.dataStergereCol).setValue(timestamp);
       }
@@ -1006,13 +1025,16 @@ function getGanduriData(ss) {
   const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
   const hasIdCol = (header === "ID");
   const cols = getNoteStersColumns(sh);
-  const rows = sh.getRange(2, 1, maxRows - 1, Math.max(maxCols, cols.stersCol)).getValues();
+  const ownerCols = ensureSheetColumns(sh, NOTE_OWNER_COLUMNS);
+  const lastNeeded = Math.max(maxCols, cols.stersCol, ownerCols["Proprietar"], ownerCols["CreatDe"], ownerCols["Reminder"]);
+  const rows = sh.getRange(2, 1, maxRows - 1, lastNeeded).getValues();
   return rows.map((r, i) => {
     let gand = hasIdCol ? (r[1] || "") : (r[0] || "");
     let sursa = hasIdCol ? (r[2] || "Personal") : (r[1] || "Personal");
     let dataVal = hasIdCol ? r[3] : r[2];
     let user = hasIdCol ? (r[4] || "").toString().trim() : (r[3] || "").toString().trim();
     let sters = (r[cols.stersCol - 1] || "").toString().trim().toUpperCase() === "DA";
+    const rem = r[ownerCols["Reminder"] - 1];
     return {
       rowId: i + 2,
       gand: gand.toString().trim(),
@@ -1020,9 +1042,39 @@ function getGanduriData(ss) {
       sursa: sursa.toString().trim(),
       data: dataVal ? parseDateToText(dataVal) : "",
       user: user,
+      proprietar: (r[ownerCols["Proprietar"] - 1] || "").toString().trim().toLowerCase(),
+      creatDe: (r[ownerCols["CreatDe"] - 1] || "").toString().trim().toLowerCase(),
+      reminder: rem instanceof Date ? Utilities.formatDate(rem, "Europe/Bucharest", "yyyy-MM-dd'T'HH:mm") : (rem || "").toString().trim(),
       sters: sters
     };
   }).filter(x => x.gand !== "" && !x.sters);
+}
+
+// v24.0.2: notițe per profil. Proprietar = emailul profilului care vede notița; CreatDe = cine a scris-o
+// (adminul poate scrie pentru alții); Reminder = data și ora (yyyy-MM-ddTHH:mm) pentru notificare.
+const NOTE_OWNER_COLUMNS = ["Proprietar", "CreatDe", "Reminder"];
+
+// Notițele vechi (dinainte de v24.0.2) nu au proprietar: aparțin profilului al cărui nume se potrivește cu
+// coloana „user” (ex. „Andreea Murar”), iar cele fără user, adminului.
+function noteVisibleTo(n, prof) {
+  if (!prof) return false;
+  if (n.proprietar) return n.proprietar === prof.email || n.creatDe === prof.email;
+  const u = (n.user || "").toString().toLowerCase().trim();
+  if (!u) return prof.rol === "admin";
+  const nm = (prof.nume || "").toLowerCase().trim();
+  return nm === u || (nm && nm.split(" ")[0] === u.split(" ")[0]);
+}
+
+function noteRowAllowed(ss, sh, rowId, prof) {
+  const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
+  const ownerCols = ensureSheetColumns(sh, NOTE_OWNER_COLUMNS);
+  const width = Math.max(sh.getLastColumn(), ownerCols["Reminder"]);
+  const r = sh.getRange(rowId, 1, 1, width).getValues()[0];
+  return noteVisibleTo({
+    user: (header === "ID" ? r[4] : r[3]) || "",
+    proprietar: (r[ownerCols["Proprietar"] - 1] || "").toString().trim().toLowerCase(),
+    creatDe: (r[ownerCols["CreatDe"] - 1] || "").toString().trim().toLowerCase()
+  }, prof);
 }
 
 // Returnează indicii coloanelor Sters / DataStergere pentru foaia Notite/Ganduri, creându-le idempotent dacă lipsesc
@@ -1461,7 +1513,7 @@ const SESSION_DAYS = 30;
 const PAIR_CODE_MINUTES = 15;
 const AUTH_MODULES = ["pomelnic", "scoala", "psaltire", "notite", "cumparaturi", "inventar", "gandul", "scriptura", "biblia360", "setari"];
 const AUTH_PUBLIC_ACTIONS = ["authGoogle", "authPair"];
-const AUTH_ADMIN_ACTIONS = ["authListProfiles", "authSaveProfile", "authRevokeSessions", "authCreatePairCode", "authSetMode"];
+const AUTH_ADMIN_ACTIONS = ["authListProfiles", "authSaveProfile", "authRevokeSessions", "authCreatePairCode", "authSetMode", "authProfileNames"];
 
 // Acțiune -> [modul, nivel minim]. "*" = orice utilizator logat. Acțiunile nelistate cer rol de admin.
 const AUTH_ACTION_RULES = {
@@ -1473,6 +1525,8 @@ const AUTH_ACTION_RULES = {
   saveSchoolActivities: ["scoala", "edit"], deleteSchoolActivity: ["scoala", "edit"], batchUpdateSchoolStatus: ["scoala", "edit"],
   addPsaltirePerson: ["psaltire", "edit"], updatePsaltirePerson: ["psaltire", "edit"], deletePsaltirePerson: ["psaltire", "edit"],
   addNotita: ["notite", "edit"], updateNotita: ["notite", "edit"], deleteNotita: ["notite", "edit"],
+  addGand: ["notite", "edit"], updateGand: ["notite", "edit"], deleteGand: ["notite", "edit"],
+  addNote: ["notite", "edit"], updateNote: ["notite", "edit"], deleteNote: ["notite", "edit"],
   restoreGand: ["notite", "edit"], softDeleteGand: ["notite", "edit"],
   addCumparaturi: ["cumparaturi", "edit"], deleteCumparaturi: ["cumparaturi", "edit"], deleteMagazinCumparaturi: ["cumparaturi", "edit"],
   addPerson: ["pomelnic", "edit"], updatePerson: ["pomelnic", "edit"], batchUpdateAndreea: ["pomelnic", "edit"], batchUpdateAtentie: ["pomelnic", "edit"],
@@ -1675,6 +1729,10 @@ function authFilterResponse(data, auth, ss) {
       if (k in data && !authLevelOk(auth.profile.permisiuni[AUTH_RESPONSE_MODULES[k]], "view")) data[k] = [];
     });
   }
+  // Notițele sunt per profil: fiecare vede doar notițele lui și pe cele pe care le-a scris pentru alții
+  ["ganduri", "notite"].forEach(k => {
+    if (Array.isArray(data[k])) data[k] = data[k].filter(n => noteVisibleTo(n, auth.profile));
+  });
   // Notificările sunt per profil: fiecare primește doar configurația lui (adminul preia, o singură dată,
   // vechea configurație comună, dacă nu și-a salvat încă una proprie)
   if (data.settings) {
@@ -1718,6 +1776,10 @@ function authHandleAction(ss, e, action, auth) {
     const s = authCreateSession(ss, prof.email, p.device);
     logToAppSheet(ss, { modul: "Auth", actiune: "login_cod", status: "OK", detalii: p.device || "", user: prof.email });
     return returnResponse(e, { success: true, sessionToken: s.token, expira: s.expira, profile: authPublicProfile(prof) });
+  }
+
+  if (action === "authProfileNames") {
+    return returnResponse(e, { success: true, profiles: authGetProfiles(ss).filter(pr => pr.activ).map(pr => ({ email: pr.email, nume: pr.nume })) });
   }
 
   if (action === "authMe") {
