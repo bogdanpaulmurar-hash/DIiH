@@ -1345,7 +1345,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.7 (Build 2026-10-16)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.8 (Build 2026-10-17)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2450,7 +2450,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.7";
+    const APP_VERSION = "v24.8";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2616,7 +2616,7 @@
     async function onGoogleCredential(response) {
       showToast('Se verifică contul Google...');
       try {
-        completeAuthLogin(await apiJsonp({ action: 'authGoogle', idToken: response.credential, device: deviceName }));
+        completeAuthLogin(await apiJsonp({ action: 'authGoogle', idToken: response.credential, device: getDeviceName() }));
       } catch (e) { showToast(e.message); }
     }
 
@@ -2625,7 +2625,7 @@
       const code = (input ? input.value : '').trim();
       if (!code) { showToast('Introdu codul primit de la administrator.'); return; }
       try {
-        completeAuthLogin(await apiJsonp({ action: 'authPair', code: code, device: deviceName }));
+        completeAuthLogin(await apiJsonp({ action: 'authPair', code: code, device: getDeviceName() }));
         if (input) input.value = '';
       } catch (e) { showToast(e.message); }
     }
@@ -3828,7 +3828,22 @@
 
     let deviceId = localStorage.getItem('diih_device_id') || ('DEV-' + Math.random().toString(36).substring(2, 9).toUpperCase());
     localStorage.setItem('diih_device_id', deviceId);
-    let deviceName = localStorage.getItem('diih_device_name') || (navigator.userAgent.includes('Android') ? 'Bogdan S24 Ultra' : 'Bogdan Laptop Siemens');
+    // Numele dispozitivului se deduce din contul Google conectat (nu mai e fixat pe dispozitivele lui Bogdan).
+    // Un nume personalizat se poate pune în localStorage: diih_device_name.
+    function getDeviceName() {
+      const custom = localStorage.getItem('diih_device_name');
+      if (custom) return custom;
+      const ua = navigator.userAgent;
+      const tip = /iPhone/i.test(ua) ? 'iPhone' : (/iPad/i.test(ua) ? 'iPad' : (/Android/i.test(ua) ? 'Android' : 'Laptop'));
+      let nume = '';
+      try {
+        const s = (typeof getAuthSession === 'function') ? getAuthSession() : null;
+        nume = (s && s.profile) ? (s.profile.nume || s.profile.email || '') : '';
+      } catch (e) {}
+      const prenume = nume.split(/[\s@]/)[0];
+      if (prenume.toLowerCase() === 'bogdan') return tip === 'Android' ? 'Bogdan S24 Ultra' : (tip === 'Laptop' ? 'Bogdan Laptop Siemens' : 'Bogdan ' + tip);
+      return prenume ? `${prenume} ${tip}` : tip;
+    }
     const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
     const deviceType = isMobile ? 'Mobile' : 'Desktop';
     const browserName = navigator.userAgent.includes('Chrome') ? 'Chrome' : (navigator.userAgent.includes('Edge') ? 'Edge' : 'Browser');
@@ -4704,7 +4719,7 @@
         ...apiAuthParams(),
         action: 'logEvent',
         deviceId: deviceId,
-        deviceName: deviceName,
+        deviceName: getDeviceName(),
         deviceType: deviceType,
         browser: browserName,
         appVersion: APP_VERSION,
@@ -7845,7 +7860,7 @@
           targetAct.dayMessage = dayMessage;
           targetAct.color = chosenColor;
           targetAct.reminders = pickupReminders;
-          targetAct.author = targetAct.author || deviceName;
+          targetAct.author = targetAct.author || getDeviceName();
           targetAct.dataAchitat = dataAchitat;
           targetAct.comentariuPlata = comentariuPlata;
         }
@@ -7881,7 +7896,7 @@
           dayMessage: dayMessage,
           color: chosenColor,
           reminders: pickupReminders,
-          author: deviceName,
+          author: getDeviceName(),
           dataAchitat: dataAchitat,
           comentariuPlata: comentariuPlata
         };
@@ -8811,7 +8826,7 @@
       document.getElementById('shopProdus').focus(); // Cursorul revine automat!
 
       const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&author=${encodeURIComponent(deviceName)}&nuPartaja=${nuPartaja ? 'true' : 'false'}&owner=${encodeURIComponent(curUser)}&callback=void`;
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&nuPartaja=${nuPartaja ? 'true' : 'false'}&owner=${encodeURIComponent(curUser)}&callback=void`;
       document.body.appendChild(script);
     }
 

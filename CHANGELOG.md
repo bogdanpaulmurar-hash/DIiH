@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.8 — 2026-10-17 — Cumpărături: fără „(Bogdan Laptop Siemens)” la produsele altor utilizatori
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.8). Reparația principală e în frontend; backend-ul **necesită deploy** doar ca plasă de siguranță.
+
+- Cauza: numele dispozitivului avea valoare implicită fixă („Bogdan S24 Ultra” pe Android, „Bogdan Laptop Siemens” în rest), indiferent cine e conectat. La adăugarea unui produs, aplicația trimitea acest nume ca `author`, iar serverul îl lipea de produs: „Suc (Bogdan Laptop Siemens)”. Așa apărea în listă și în notificări și la produsele Andreei.
+- Numele dispozitivului se deduce acum din contul Google conectat (ex. „Andreea iPhone”, „Andreea Android”); dispozitivele lui Bogdan își păstrează numele vechi. Se aplică și la autorul activităților din Școală și la jurnalul de evenimente.
+- `addCumparaturi` nu mai trimite `author`, iar serverul nu mai lipește autorul de numele produsului — cine a adăugat se vede din coloana Owner.
+- Produsele deja salvate cu sufix (ex. „Suc (Bogdan Laptop Siemens)”) rămân așa în sheet; se corectează manual în `lista_cumparaturi` sau se bifează.
+
 ## v24.7 — 2026-10-16 — Adservio prin browser (sincronizare dintr-un marcaj)
 
 Backend (`_API.gs` 24.7 + `Adservio.gs`) și frontend (`index.html`, `sw.js`). **Necesită deploy.**

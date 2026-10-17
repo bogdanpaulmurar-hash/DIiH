@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.7
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.8
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.7";
+const BACKEND_VERSION = "24.8";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -339,8 +339,8 @@ function doGet(e) {
     }
     const header = (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase();
     const dataCreare = Utilities.formatDate(new Date(), "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss");
-    const author = e.parameter.author ? ` (${e.parameter.author})` : "";
-    const produsComplet = (e.parameter.produs || "") + author;
+    // Autorul NU se mai lipește de numele produsului (cine a adăugat e deja în coloana Owner).
+    const produsComplet = (e.parameter.produs || "").toString().trim();
     const nuPartaja = (e.parameter.nuPartaja === "true" || e.parameter.nuPartaja === true) ? "DA" : "NU";
     const owner = auth.profile.email;
     if (header === "ID") {
