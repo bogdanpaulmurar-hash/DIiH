@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.10 — 2026-10-18 — Cumpărături: magazine predefinite și culori
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+
+- Câmpul Magazin e acum dropdown, cu magazinele predefinite: Lidl, Auchan, Kaufland, MegaImage, Darina, Piață, VIVO, Iulius, RIVO, Ikea, eMAG, Online, Oriunde, Brutărie, Hornbach, Dedeman, Brico. Apar și magazinele folosite deja în listă; „➕ Alt magazin…” adaugă unul nou. Același dropdown e și în widgetul de adăugare rapidă.
+- Fiecare magazin are culoarea lui: chenar și bandă colorată pe secțiune, plus eticheta colorată în lista simplă. Secțiunile apar în ordinea listei de mai sus.
+- Numele scrise diferit se recunosc („lidl”, „Piata” → Lidl, Piață).
+
 ## v24.9 — 2026-10-18 — Calendarul familiei, centru de notificări, ecran pornit, sfinții zilei, sincronizare fără pâlpâiri
 
 Frontend (`index.html`, **`familie.js` nou**, `awake.mp4` nou, `sw.js`) și backend (`_API.gs` 24.9 + **`Familie.gs` nou**). **Necesită deploy** + rularea o dată a `familieInstaleaza()`.

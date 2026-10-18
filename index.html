@@ -949,7 +949,7 @@
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-3 shadow-sm">
         <h3 class="text-xs font-semibold text-emerald-300 uppercase tracking-wider">🛒 Adaugă Produs</h3>
         <div class="grid grid-cols-2 gap-2">
-          <input type="text" id="shopMagazin" onkeydown="handleShopKeyDown(event)" placeholder="Magazin (Kaufland/Lidl)" class="bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500">
+          <select id="shopMagazin" onchange="onShopStoreChange(this)" class="bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white font-bold"><option value="Oriunde">Oriunde</option></select>
           <input type="text" id="shopCantitate" onkeydown="handleShopKeyDown(event)" placeholder="Cantitate (1 kg, 2 buc)" value="1" class="bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500">
         </div>
         <input type="text" id="shopProdus" onkeydown="handleShopKeyDown(event)" placeholder="Nume produs... (Apasă Enter pentru adăugare instantă)" class="w-full bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500">
@@ -1345,7 +1345,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.9 (Build 2026-10-18)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.10 (Build 2026-10-18)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2450,7 +2450,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.9";
+    const APP_VERSION = "v24.10";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -8913,7 +8913,8 @@
     }
 
     function addShoppingItem() {
-      const magazin = document.getElementById('shopMagazin').value.trim() || 'General';
+      const magazinRaw = document.getElementById('shopMagazin').value.trim();
+      const magazin = shopStoreCanon(magazinRaw && magazinRaw !== '__nou__' ? magazinRaw : 'Oriunde');
       const produs = document.getElementById('shopProdus').value.trim();
       const cantitate = document.getElementById('shopCantitate').value.trim() || '1';
       const nuPartaja = document.getElementById('shopNuPartaja') ? document.getElementById('shopNuPartaja').checked : false;
@@ -8994,7 +8995,68 @@
       return out;
     }
 
+    // ====== MAGAZINE PREDEFINITE + CULORI (v24.10) ======
+    const SHOP_STORES = [
+      ['Lidl', '#2563eb'], ['Auchan', '#dc2626'], ['Kaufland', '#f97316'], ['MegaImage', '#eab308'], ['Darina', '#a855f7'],
+      ['Piață', '#16a34a'], ['VIVO', '#ec4899'], ['Iulius', '#0d9488'], ['RIVO', '#7c3aed'], ['Ikea', '#0ea5e9'],
+      ['eMAG', '#e11d48'], ['Online', '#6366f1'], ['Oriunde', '#94a3b8'], ['Brutărie', '#b45309'], ['Hornbach', '#84cc16'],
+      ['Dedeman', '#f59e0b'], ['Brico', '#06b6d4']
+    ];
+    const SHOP_EXTRA_COLORS = ['#f472b6', '#22d3ee', '#a3e635', '#fb923c', '#c084fc', '#38bdf8', '#facc15', '#4ade80'];
+    function shopStoreCanon(name) {
+      const n = (name || '').trim();
+      const norm = x => x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[\s-]/g, '');
+      const hit = SHOP_STORES.find(([s]) => norm(s) === norm(n));
+      return hit ? hit[0] : n;
+    }
+    function shopStoreColor(name) {
+      const c = shopStoreCanon(name);
+      const hit = SHOP_STORES.find(([s]) => s === c);
+      if (hit) return hit[1];
+      let h = 0; for (const ch of c) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+      return SHOP_EXTRA_COLORS[h % SHOP_EXTRA_COLORS.length];
+    }
+    function shopStoreOrder(name) {
+      const i = SHOP_STORES.findIndex(([s]) => s === shopStoreCanon(name));
+      return i === -1 ? 100 : i;
+    }
+    // Lista din dropdown: magazinele predefinite + cele folosite deja în listă (ex. „General” sau unul adăugat manual)
+    function shopStoreOptions() {
+      const extra = Array.from(new Set((allShopping || []).map(x => shopStoreCanon(x.magazin)).filter(m => m && shopStoreOrder(m) === 100))).sort();
+      return SHOP_STORES.map(([s]) => s).concat(extra);
+    }
+    function fillShopStoreSelect(sel, defVal) {
+      if (!sel) return;
+      const keep = sel.value || defVal;
+      const opts = shopStoreOptions();
+      if (keep && !opts.includes(keep)) opts.push(keep);
+      sel.innerHTML = opts.map(m => `<option value="${escapeHtmlText(m)}" style="color:${shopStoreColor(m)}">● ${escapeHtmlText(m)}</option>`).join('')
+        + (sel.id === 'shopMagazin' ? '<option value="__nou__">➕ Alt magazin…</option>' : '');
+      sel.value = opts.includes(keep) ? keep : defVal;
+      sel.style.borderColor = shopStoreColor(sel.value);
+      sel.style.color = shopStoreColor(sel.value);
+    }
+    function onShopStoreChange(sel) {
+      if (sel.value === '__nou__') {
+        const n = (prompt('Numele magazinului:') || '').trim();
+        if (n) {
+          const c = shopStoreCanon(n);
+          if (![...sel.options].some(o => o.value === c)) sel.insertAdjacentHTML('afterbegin', `<option value="${escapeHtmlText(c)}">● ${escapeHtmlText(c)}</option>`);
+          sel.value = c;
+        } else sel.value = 'Oriunde';
+      }
+      sel.style.borderColor = shopStoreColor(sel.value);
+      sel.style.color = shopStoreColor(sel.value);
+      const prod = document.getElementById('shopProdus');
+      if (prod) prod.focus();
+    }
+    function shopStoreBadge(name) {
+      const c = shopStoreColor(name);
+      return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold" style="color:${c};background:${c}22;border:1px solid ${c}66">● ${escapeHtmlText(shopStoreCanon(name) || 'General')}</span>`;
+    }
+
     function renderShoppingList() {
+      try { fillShopStoreSelect(document.getElementById('shopMagazin'), 'Oriunde'); } catch (e) {}
       const container = document.getElementById('shoppingListContainer');
       const visibleItems = getVisibleShoppingItems();
       if (visibleItems.length === 0) {
@@ -9012,7 +9074,7 @@
                   <span class="font-semibold text-white [overflow-wrap:anywhere]">${linkifyProductText(item.produs)}</span>
                   ${isPriv ? '<span class="text-[9px] bg-amber-950/80 border border-amber-700/80 text-amber-300 px-1 py-0.2 rounded font-semibold shrink-0">🔒 Nu partaja</span>' : ''}
                 </div>
-                <span class="text-slate-400 text-[11px] block">${item.magazin} • Cantitate: ${item.cantitate}</span>
+                <span class="text-slate-400 text-[11px] flex items-center gap-1.5 mt-0.5">${shopStoreBadge(item.magazin)} <span>Cantitate: ${item.cantitate}</span></span>
               </div>
               <button onclick="removeShoppingItem(${item.rowId})" class="p-1.5 text-slate-400 hover:text-emerald-400 border border-slate-700 rounded-lg text-xs flex items-center space-x-1 shrink-0">
                 <span>✔</span>
@@ -9030,11 +9092,12 @@
         });
 
         let html = '';
-        Object.keys(groups).forEach(magazin => {
+        Object.keys(groups).sort((a, b) => shopStoreOrder(a) - shopStoreOrder(b) || a.localeCompare(b)).forEach(magazin => {
+          const sc = shopStoreColor(magazin);
           html += `
-            <div class="bg-cardbg border border-bordercol rounded-xl p-3 space-y-2 overflow-hidden">
-              <div class="flex items-center justify-between border-b border-bordercol pb-1">
-                <span class="text-xs font-bold text-emerald-400">🏪 ${magazin}</span>
+            <div class="bg-cardbg rounded-xl p-3 space-y-2 overflow-hidden" style="border:1px solid ${sc}55;border-left:5px solid ${sc};background:linear-gradient(90deg, ${sc}1f, transparent 60%)">
+              <div class="flex items-center justify-between pb-1" style="border-bottom:1px solid ${sc}44">
+                <span class="text-xs font-bold" style="color:${sc}">🏪 ${escapeHtmlText(magazin)} <span class="text-slate-400 font-normal">(${groups[magazin].length})</span></span>
                 <button onclick="markWholeStoreCompleted('${magazin}')" class="text-[10px] bg-emerald-950 border border-emerald-800 text-emerald-300 px-2 py-0.5 rounded-lg hover:bg-emerald-900">Bifează tot magazinul</button>
               </div>
               <div class="space-y-1.5">
@@ -9404,10 +9467,8 @@
         // Magazinele existente în listă, cu „Oriunde” mereu primul și implicit
         const storeSel = document.getElementById('quickShopStore');
         if (storeSel) {
-          const keep = storeSel.value || 'Oriunde';
-          const stores = Array.from(new Set(shopItems.map(x => (x.magazin || '').trim()).filter(m => m && m !== 'Oriunde'))).sort();
-          storeSel.innerHTML = ['Oriunde', ...stores].map(m => `<option value="${escapeHtmlText(m)}">${escapeHtmlText(m)}</option>`).join('');
-          storeSel.value = ['Oriunde', ...stores].includes(keep) ? keep : 'Oriunde';
+          fillShopStoreSelect(storeSel, 'Oriunde');
+          if (!storeSel._famBound) { storeSel._famBound = true; storeSel.addEventListener('change', () => { storeSel.style.borderColor = shopStoreColor(storeSel.value); storeSel.style.color = shopStoreColor(storeSel.value); }); }
         }
       }
 
