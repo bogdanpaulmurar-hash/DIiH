@@ -90,16 +90,17 @@
         : aw.mode === 'timer' ? `Activ: ecran pornit încă ${awFmt(aw.until - Date.now())}` : 'Oprit';
     });
   }
-  async function awStart(mode, minutes) {
+  async function awStart(mode, minutes, keepMenu) {
     aw = { mode, until: mode === 'timer' ? Date.now() + minutes * 60000 : 0 };
     LS.set(AW_KEY, aw);
     const ok = await awAcquire();
     if (!ok) toast('Telefonul nu permite păstrarea ecranului pornit din browser.');
     else toast(mode === 'app' ? 'Ecranul rămâne pornit cât DIiH e deschis.' : `Ecran pornit ${minutes} min.`);
     awLoop();
-    awMenu(false);
+    if (!keepMenu) awMenu(false);
   }
   function awStop(silent) {
+    pipStop();
     aw = { mode: null, until: 0 };
     LS.set(AW_KEY, aw);
     awRelease();
@@ -154,6 +155,20 @@
           <button onclick="famAw.custom()" class="py-2 rounded-xl bg-slate-800 border border-slate-600 font-bold">⏱…</button>
         </div>
         <button onclick="famAw.stop()" class="w-full py-1.5 rounded-xl bg-red-900/60 border border-red-700 font-bold">⏹ Oprește</button>
+        <div class="pt-2 border-t border-slate-700 space-y-1.5">
+          <p class="text-[10px] font-bold text-cyan-300">⧉ Varianta 2 (experimental): fereastră plutitoare</p>
+          <p class="text-[9px] text-slate-500 leading-snug">Numărătoarea roșie plutește peste Teams / browser, ca un video mic. Cât rulează video-ul, telefonul de obicei nu stinge ecranul. De testat pe fiecare telefon.</p>
+          <div class="grid grid-cols-3 gap-1">
+            <button onclick="famAw.pip(5)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">⧉ 5′</button>
+            <button onclick="famAw.pip(10)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">⧉ 10′</button>
+            <button onclick="famAw.pip(30)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">⧉ 30′</button>
+          </div>
+          <div id="awPipBox" class="hidden space-y-1.5">
+            <div id="awPipSlot" class="rounded-lg overflow-hidden border border-red-800 bg-black"></div>
+            <button onclick="famAw.pipEnter()" class="w-full py-2 rounded-xl bg-cyan-700 text-white font-bold">⧉ Mută peste aplicații</button>
+            <p class="text-[9px] text-slate-500">Dacă butonul nu merge, apasă iconița ⧉ (Picture-in-Picture) din colțul video-ului, apoi treci în Teams.</p>
+          </div>
+        </div>
         <p class="text-[9px] text-slate-500 leading-snug">Funcționează cât DIiH e deschis pe ecran. Când treci în altă aplicație, telefonul preia controlul; la revenire se reia automat până expiră timpul.</p>
         <button onclick="famAw.fab(false)" class="text-[9px] text-slate-500 underline">Ascunde butonul (îl reafișezi din 🔔 Notificări)</button>
       </div>
@@ -167,7 +182,61 @@
       if (document.visibilityState === 'visible' && aw.mode) { awAcquire(); awLoop(); }
     });
   }
-  window.famAw = { start: awStart, stop: awStop, menu: awMenu, custom: awCustom, fab: awSetFabVisible };
+  // ---- Varianta 2: Picture-in-Picture cu numărătoare (video pre-generat 5/10/30 min, în /pip) ----
+  let pipVideo = null;
+  function pipEl() {
+    if (pipVideo) return pipVideo;
+    const v = document.createElement('video');
+    v.muted = true; v.playsInline = true; v.controls = true; v.preload = 'auto';
+    v.setAttribute('playsinline', ''); v.setAttribute('muted', ''); v.setAttribute('webkit-playsinline', '');
+    v.style.cssText = 'width:100%;display:block;aspect-ratio:8/3;background:#000';
+    v.addEventListener('ended', () => {
+      if (aw.mode === 'timer') { awStop(true); toast('⏱ Timpul pentru ecran pornit s-a încheiat.'); }
+      pipStop();
+    });
+    const slot = document.getElementById('awPipSlot');
+    if (slot) slot.appendChild(v);
+    pipVideo = v;
+    return v;
+  }
+  function pipStart(min) {
+    awStart('timer', min, true);
+    const box = document.getElementById('awPipBox');
+    if (box) box.classList.remove('hidden');
+    const v = pipEl();
+    v.src = `./pip/pip-${min}.mp4`;
+    try { v.currentTime = 0; } catch (e) {}
+    v.play().then(() => pipEnter(true)).catch(() => toast('Apasă ▶ pe video, apoi „Mută peste aplicații”.'));
+  }
+  function pipEnter(auto) {
+    const v = pipVideo;
+    if (!v) return;
+    if (v.paused) v.play().catch(() => {});
+    try {
+      if (document.pictureInPictureEnabled && typeof v.requestPictureInPicture === 'function') {
+        v.requestPictureInPicture()
+          .then(() => { toast('⧉ Numărătoarea plutește. Poți trece în Teams.'); awMenu(false); })
+          .catch(() => { if (!auto) toast('Fereastra plutitoare a fost refuzată. Încearcă iconița ⧉ din video.'); });
+        return;
+      }
+      if (typeof v.webkitSupportsPresentationMode === 'function' && v.webkitSupportsPresentationMode('picture-in-picture')) {
+        v.webkitSetPresentationMode('picture-in-picture');
+        awMenu(false);
+        return;
+      }
+    } catch (e) {}
+    if (!auto) toast('Telefonul/browserul nu permite fereastra plutitoare aici.');
+  }
+  function pipStop() {
+    const v = pipVideo;
+    if (!v) return;
+    try { if (document.pictureInPictureElement) document.exitPictureInPicture(); } catch (e) {}
+    try { if (v.webkitPresentationMode === 'picture-in-picture') v.webkitSetPresentationMode('inline'); } catch (e) {}
+    try { v.pause(); } catch (e) {}
+    const box = document.getElementById('awPipBox');
+    if (box) box.classList.add('hidden');
+  }
+  window.famAw = { start: awStart, stop: awStop, menu: awMenu, custom: awCustom, fab: awSetFabVisible, pip: pipStart, pipEnter: () => pipEnter(false) };
 
   // =====================================================================
   // 2. CENTRUL DE NOTIFICĂRI

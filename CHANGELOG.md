@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.12 — 2026-10-18 — Ecran pornit: varianta 2, fereastră plutitoare (experimental)
+
+Doar frontend (`familie.js`, `pip/pip-5|10|30.mp4` noi, `index.html`, `sw.js`).
+
+- În meniul butonului ☀️, sub varianta actuală (neschimbată), apare „⧉ Varianta 2 (experimental): fereastră plutitoare” cu 5′ / 10′ / 30′.
+- Pornește un video mic cu numărătoarea roșie și îl mută în Picture-in-Picture, deci plutește peste Teams, browser sau orice altă aplicație. Cât rulează video-ul, telefonul de obicei nu stinge ecranul, iar Teams rămâne aplicația din față. Pornește în paralel și numărătoarea/blocarea obișnuită din aplicație.
+- Dacă fereastra nu se deschide singură: „⧉ Mută peste aplicații” sau iconița PiP din colțul video-ului. Când se termină video-ul, se oprește tot; „⏹ Oprește” închide și fereastra.
+- De testat pe Samsung (Chrome), iPhone XR și 13 Pro Max (Safari / aplicația instalată).
+
 ## v24.11 — 2026-10-18 — Sfinții zilei: variantă scurtă, post și dezlegări, widget per profil
 
 Doar frontend (`familie.js`, `index.html`, `sw.js`).
