@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.16 — 2026-10-18 — Reminder: ora nu se mai decalează
+
+Frontend (`index.html`) și backend (`_API.gs` + `Familie.gs`). **Necesită deploy** pentru partea de server.
+
+- Cauza: reminderul („2026-10-18T20:00”) era scris în registru ca valoare obișnuită, iar Sheets îl transforma în dată în fusul orar al registrului; la citire era convertit în ora României, deci ora se putea decala. Acum se scrie ca text simplu, iar reminderele vechi salvate ca dată se citesc în fusul registrului.
+- Aceeași protecție pentru tabelele noi `Remindere` (o oră singură „08:00” devenea o dată din 1899 cu minute ciudate) și `Notificari`.
+- Notițe: sub câmpul de reminder apare clar ce s-a ales („⏰ mâine 21:15”, cu roșu dacă ora a trecut) și un buton ✕ pentru „fără reminder”. Pe iPhone, câmpul gol se completează singur cu ora curentă când îl atingi; acum se vede imediat.
+- Calendar: ștergerea reminderului sau a notiței scoate și evenimentul din calendar; restaurarea notiței îl pune la loc.
+
 ## v24.15 — 2026-10-18 — Ecran pornit: video cu sunet (liniște), 1 oră și timp la alegere
 
 - Fereastra plutitoare folosește acum un singur video de 2 ore (`pip/pip-120.mp4`) **cu pistă audio de liniște** și redat **fără mute**. Telefoanele nu tratau video-ul mut ca redare reală (pe 13 Pro Max și S24 ecranul se stingea); un video cu sunet e tratat ca YouTube.

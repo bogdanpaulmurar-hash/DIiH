@@ -918,7 +918,11 @@
         <div class="grid grid-cols-2 gap-2">
           <label class="text-[10px] text-slate-400 space-y-0.5">
             <span class="block">⏰ Reminder (opțional)</span>
-            <input type="datetime-local" id="gandReminder" class="w-full bg-darkbg border border-bordercol rounded-xl p-2 text-white text-xs">
+            <span class="flex items-center gap-1">
+              <input type="datetime-local" id="gandReminder" oninput="updateGandReminderPreview()" onchange="updateGandReminderPreview()" class="w-full bg-darkbg border border-bordercol rounded-xl p-2 text-white text-xs">
+              <button type="button" onclick="document.getElementById('gandReminder').value=''; updateGandReminderPreview()" title="Fără reminder" class="shrink-0 px-2 py-2 rounded-xl bg-darkbg border border-bordercol text-slate-400">✕</button>
+            </span>
+            <span id="gandReminderPreview" class="block text-[10px] text-amber-300 min-h-[14px]"></span>
           </label>
           <label id="gandOwnerBox" class="hidden text-[10px] text-slate-400 space-y-0.5">
             <span class="block">Pentru</span>
@@ -1345,7 +1349,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.15 (Build 2026-10-18)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.16 (Build 2026-10-18)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2450,7 +2454,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.15";
+    const APP_VERSION = "v24.16";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -8455,6 +8459,15 @@
       const p = (noteProfileNames || []).find(x => x.email === email);
       return p ? (p.nume || p.email) : email;
     }
+    // Arată clar ce oră s-a ales (pe iPhone, câmpul gol se completează singur cu ora curentă când îl atingi)
+    function updateGandReminderPreview() {
+      const el = document.getElementById('gandReminderPreview');
+      const v = (document.getElementById('gandReminder') || {}).value || '';
+      if (!el) return;
+      const d = parseNoteReminder(v);
+      el.textContent = d ? `⏰ ${formatNoteReminder(v)}${d.getTime() < Date.now() ? ' — atenție, ora a trecut' : ''}` : '';
+      el.className = 'block text-[10px] min-h-[14px] ' + (d && d.getTime() < Date.now() ? 'text-red-400' : 'text-amber-300');
+    }
     function parseNoteReminder(str) {
       if (!str) return null;
       const m = str.toString().match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
@@ -8588,6 +8601,7 @@
       document.getElementById('gandInput').value = g.gand;
       document.getElementById('gandSursa').value = g.sursa;
       document.getElementById('gandReminder').value = g.reminder ? g.reminder.replace(' ', 'T').slice(0, 16) : '';
+      updateGandReminderPreview();
       document.getElementById('gandOwnerSelect').disabled = true;
 
       document.getElementById('gandFormTitle').textContent = "✏️ Editează Gândul";
@@ -8602,6 +8616,7 @@
       editingGandRowId = null;
       document.getElementById('gandInput').value = '';
       document.getElementById('gandReminder').value = '';
+      updateGandReminderPreview();
       document.getElementById('gandOwnerSelect').disabled = false;
       document.getElementById('gandFormTitle').textContent = "✍️ Notează Gândul Zilei";
       document.getElementById('gandEditingBadge').classList.add('hidden');
@@ -8645,6 +8660,8 @@
         allGanduri.push(newNote);
         pendingPush('gand', 'add', newNote);
         document.getElementById('gandReminder').value = '';
+        updateGandReminderPreview();
+      updateGandReminderPreview();
         localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         showToast("Notiță salvată!");
 
@@ -11587,6 +11604,6 @@
     }
 
   </script>
-  <script src="./familie.js?v=24.15"></script>
+  <script src="./familie.js?v=24.16"></script>
 </body>
 </html>

@@ -173,9 +173,17 @@ function familieOnNoteSaved(ss, auth, n) {
     if (prop !== me && n.nou) {
       famAddNotif(ss, { dest: prop, titlu: "📝 " + (auth.profile.nume || me).split(" ")[0] + " ți-a scris o notiță", mesaj: (n.text || "").slice(0, 160), tab: "notite", tip: "notita", deLa: me });
     }
-    if (!n.reminder || !n.rowId) return;
+    if (!n.rowId) return;
     const key = "NOTE-" + n.rowId;
     const ex = famLinkGet(ss, key);
+    if (!n.reminder || !/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(n.reminder)) {
+      // reminder șters / notiță ștearsă → scoatem evenimentul din calendar
+      if (ex && ex.eventId) {
+        try { const ev = famCalendar().getEventById(ex.eventId); if (ev) ev.deleteEvent(); } catch (err) {}
+        famLinkSheet(ss).deleteRow(ex.row);
+      }
+      return;
+    }
     const id = famCreateEvent({
       eventId: ex ? ex.eventId : null, titlu: "📝 " + (n.text || "Notiță").slice(0, 80), start: n.reminder, durata: 15,
       descriere: (n.text || "") + "\n\nReminder din DIiH (Notițe)", invitati: [prop]
@@ -237,8 +245,19 @@ function famSyncSarbatori(ss) {
 function famNotifSheet(ss) {
   let sh = ss.getSheetByName("Notificari");
   if (!sh) { sh = ss.insertSheet("Notificari"); sh.appendRow(FAM_NOTIF_COLS); sh.getRange(1, 1, 1, FAM_NOTIF_COLS.length).setFontWeight("bold"); }
+  famPlainText(sh, "Notificari", FAM_NOTIF_COLS.length);
   return sh;
 }
+// Coloanele cu date/ore rămân text simplu: altfel Sheets le transformă în date în fusul registrului
+// (dacă acesta nu e București, orele se decalează; o oră singură „08:00” devenea 1899-12-30 cu minute ciudate).
+function famPlainText(sh, name, cols) {
+  const props = PropertiesService.getScriptProperties();
+  const key = "FAM_TXT_" + name;
+  if (props.getProperty(key)) return;
+  sh.getRange(1, 1, sh.getMaxRows(), cols).setNumberFormat("@");
+  props.setProperty(key, "1");
+}
+function famTz(ss) { try { return ss.getSpreadsheetTimeZone() || FAM_TZ; } catch (e) { return FAM_TZ; } }
 function famAddNotif(ss, n) {
   famNotifSheet(ss).appendRow(["N-" + Date.now() + "-" + Math.floor(Math.random() * 1000), (n.dest || "").toLowerCase(),
     Utilities.formatDate(new Date(), FAM_TZ, "yyyy-MM-dd HH:mm:ss"), n.titlu || "", n.mesaj || "", n.tab || "", "NU", n.tip || "", "", n.ref || "", n.deLa || ""]);
@@ -248,7 +267,7 @@ function famNotifRows(ss) {
   if (sh.getLastRow() < 2) return [];
   return sh.getRange(2, 1, sh.getLastRow() - 1, FAM_NOTIF_COLS.length).getValues().map((r, i) => {
     const o = { _row: i + 2 };
-    FAM_NOTIF_COLS.forEach((c, j) => { o[c] = (r[j] instanceof Date) ? Utilities.formatDate(r[j], FAM_TZ, "yyyy-MM-dd HH:mm:ss") : (r[j] || "").toString(); });
+    FAM_NOTIF_COLS.forEach((c, j) => { o[c] = (r[j] instanceof Date) ? Utilities.formatDate(r[j], famTz(ss), "yyyy-MM-dd HH:mm:ss") : (r[j] || "").toString(); });
     return o;
   });
 }
@@ -361,6 +380,7 @@ const REM_COLS = ["ID", "Titlu", "Detalii", "Destinatari", "CreatDe", "Recurenta
 function remSheet(ss) {
   let sh = ss.getSheetByName("Remindere");
   if (!sh) { sh = ss.insertSheet("Remindere"); sh.appendRow(REM_COLS); sh.getRange(1, 1, 1, REM_COLS.length).setFontWeight("bold"); sh.setFrozenRows(1); }
+  famPlainText(sh, "Remindere", REM_COLS.length);
   return sh;
 }
 function remRows(ss) {
@@ -370,7 +390,7 @@ function remRows(ss) {
     const o = { _row: i + 2 };
     REM_COLS.forEach((c, j) => {
       const v = r[j];
-      o[c] = v instanceof Date ? Utilities.formatDate(v, FAM_TZ, c === "Ore" ? "HH:mm" : "yyyy-MM-dd") : (v === null || v === undefined ? "" : v.toString());
+      o[c] = v instanceof Date ? Utilities.formatDate(v, famTz(ss), c === "Ore" ? "HH:mm" : (c === "Creat" || c === "Actualizat" ? "yyyy-MM-dd HH:mm:ss" : "yyyy-MM-dd")) : (v === null || v === undefined ? "" : v.toString());
     });
     return o;
   }).filter(o => o.ID);
@@ -463,7 +483,8 @@ function remHandle(ss, e, action, auth) {
       try { row.EventIds = JSON.stringify(remCreateEvents(row, auth.profile.nume || me)); } catch (err) { famLog(ss, "rem_calendar", err); }
     }
     const values = [REM_COLS.map(c => row[c])];
-    if (o) sh.getRange(o._row, 1, 1, REM_COLS.length).setValues(values); else sh.appendRow(values[0]);
+    if (o) sh.getRange(o._row, 1, 1, REM_COLS.length).setNumberFormat("@").setValues(values);
+    else { sh.appendRow(values[0]); sh.getRange(sh.getLastRow(), 1, 1, REM_COLS.length).setNumberFormat("@").setValues(values); }
     if (!o || r.notificaDinNou) {
       dest.filter(x => x !== me).forEach(x => famAddNotif(ss, {
         dest: x, titlu: "⏰ " + (auth.profile.nume || me).split(" ")[0] + " ți-a setat un reminder", mesaj: r.titlu + " — " + ore.join(", "), tab: "remindere", tip: "reminder", deLa: me

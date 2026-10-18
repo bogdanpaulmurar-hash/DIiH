@@ -244,7 +244,8 @@ function doGet(e) {
       const r = sh.getLastRow();
       sh.getRange(r, noteCols["Proprietar"]).setValue(proprietar);
       sh.getRange(r, noteCols["CreatDe"]).setValue(auth.profile.email);
-      sh.getRange(r, noteCols["Reminder"]).setValue((e.parameter.reminder || "").toString());
+      // Text simplu: altfel Sheets transformă „2026-10-18T20:00” în dată, în fusul registrului, și ora se decala
+      sh.getRange(r, noteCols["Reminder"]).setNumberFormat("@").setValue((e.parameter.reminder || "").toString());
     };
     if (header === "ID") {
       const gandId = e.parameter.id || ("NOTE-" + Date.now());
@@ -282,8 +283,8 @@ function doGet(e) {
       if (e.parameter.sursa) sh.getRange(rowId, 2 + colOffset).setValue(e.parameter.sursa);
       if (e.parameter.reminder !== undefined) {
         const noteCols = ensureSheetColumns(sh, NOTE_OWNER_COLUMNS);
-        sh.getRange(rowId, noteCols["Reminder"]).setValue(e.parameter.reminder.toString());
-        if (typeof familieOnNoteSaved === "function" && e.parameter.reminder) {
+        sh.getRange(rowId, noteCols["Reminder"]).setNumberFormat("@").setValue(e.parameter.reminder.toString());
+        if (typeof familieOnNoteSaved === "function") {
           const propNote = (sh.getRange(rowId, noteCols["Proprietar"]).getValue() || auth.profile.email).toString();
           familieOnNoteSaved(ss, auth, { rowId: rowId, text: noteContent, proprietar: propNote, reminder: e.parameter.reminder.toString(), nou: false });
         }
@@ -336,6 +337,13 @@ function doGet(e) {
       if (rId >= 2 && rId <= sh.getLastRow() && noteRowAllowed(ss, sh, rId, auth.profile)) {
         sh.getRange(rId, cols.stersCol).setValue(isDelete ? "DA" : "NU");
         sh.getRange(rId, cols.dataStergereCol).setValue(timestamp);
+        // notiță ștearsă → și evenimentul ei din calendar dispare (la restaurare se recreează din reminder)
+        if (typeof familieOnNoteSaved === "function") {
+          const nc = ensureSheetColumns(sh, NOTE_OWNER_COLUMNS);
+          const remVal = sh.getRange(rId, nc["Reminder"]).getDisplayValue();
+          familieOnNoteSaved(ss, auth, { rowId: rId, text: sh.getRange(rId, (sh.getRange(1, 1).getValue() || "").toString().trim().toUpperCase() === "ID" ? 2 : 1).getValue().toString(),
+            proprietar: (sh.getRange(rId, nc["Proprietar"]).getValue() || auth.profile.email).toString(), reminder: isDelete ? "" : remVal, nou: false });
+        }
       }
     });
     return returnResponse(e, { success: true, count: ids.length });
@@ -1198,7 +1206,8 @@ function getGanduriData(ss) {
       user: user,
       proprietar: (r[ownerCols["Proprietar"] - 1] || "").toString().trim().toLowerCase(),
       creatDe: (r[ownerCols["CreatDe"] - 1] || "").toString().trim().toLowerCase(),
-      reminder: rem instanceof Date ? Utilities.formatDate(rem, "Europe/Bucharest", "yyyy-MM-dd'T'HH:mm") : (rem || "").toString().trim(),
+      // Remindere vechi salvate ca dată: se citesc în fusul registrului (cel în care au fost interpretate), nu forțat în București
+      reminder: rem instanceof Date ? Utilities.formatDate(rem, ss.getSpreadsheetTimeZone() || "Europe/Bucharest", "yyyy-MM-dd'T'HH:mm") : (rem || "").toString().trim(),
       sters: sters
     };
   }).filter(x => x.gand !== "" && !x.sters);
