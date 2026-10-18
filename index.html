@@ -1349,7 +1349,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.17 (Build 2026-10-18)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.18 (Build 2026-10-18)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2454,7 +2454,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.17";
+    const APP_VERSION = "v24.18";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -9069,6 +9069,19 @@
       const prod = document.getElementById('shopProdus');
       if (prod) prod.focus();
     }
+    // Cantitatea: 1 = discret; mai mult de 1 = roșu, mare, ca să sară în ochi la cumpărat
+    function shopQtyIsMulti(cant) {
+      const t = (cant || '1').toString().trim().replace(',', '.');
+      const n = parseFloat(t);
+      if (isNaN(n)) return t !== '' && !/^1\s*(buc|bucat[aă])?\.?$/i.test(t);
+      return n > 1 || (n !== 1 && /\d/.test(t) && !/^1\b/.test(t));
+    }
+    function shopQtyBadge(cant, big) {
+      const t = escapeHtmlText((cant || '1').toString().trim());
+      if (!shopQtyIsMulti(cant)) return `<span class="text-slate-500 text-[10px]">${t === '1' ? '1 buc' : t}</span>`;
+      const label = /^\d+([.,]\d+)?$/.test(t) ? `×${t}` : t;
+      return `<span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-red-600 text-white font-extrabold ${big ? 'text-base' : 'text-sm'} leading-none shadow shadow-red-900/60 border border-red-300/70 shrink-0">${label}</span>`;
+    }
     function shopStoreBadge(name) {
       const c = shopStoreColor(name);
       return `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold" style="color:${c};background:${c}22;border:1px solid ${c}66">● ${escapeHtmlText(shopStoreCanon(name) || 'General')}</span>`;
@@ -9093,7 +9106,7 @@
                   <span class="font-semibold text-white [overflow-wrap:anywhere]">${linkifyProductText(item.produs)}</span>
                   ${isPriv ? '<span class="text-[9px] bg-amber-950/80 border border-amber-700/80 text-amber-300 px-1 py-0.2 rounded font-semibold shrink-0">🔒 Nu partaja</span>' : ''}
                 </div>
-                <span class="text-slate-400 text-[11px] flex items-center gap-1.5 mt-0.5">${shopStoreBadge(item.magazin)} <span>Cantitate: ${item.cantitate}</span></span>
+                <span class="text-slate-400 text-[11px] flex items-center gap-1.5 mt-0.5">${shopStoreBadge(item.magazin)} ${shopQtyBadge(item.cantitate)}</span>
               </div>
               <button onclick="removeShoppingItem(${item.rowId})" class="p-1.5 text-slate-400 hover:text-emerald-400 border border-slate-700 rounded-lg text-xs flex items-center space-x-1 shrink-0">
                 <span>✔</span>
@@ -9129,7 +9142,7 @@
                           <span class="text-white [overflow-wrap:anywhere]">${linkifyProductText(item.produs)}</span>
                           ${isPriv ? '<span class="text-[9px] bg-amber-950/80 border border-amber-700/80 text-amber-300 px-1 py-0.2 rounded font-semibold shrink-0">🔒 Nu partaja</span>' : ''}
                         </div>
-                        <span class="text-slate-500 text-[10px] block">Cantitate: ${item.cantitate}</span>
+                        <span class="block mt-0.5">${shopQtyBadge(item.cantitate)}</span>
                       </div>
                       <button onclick="removeShoppingItem(${item.rowId})" class="p-1 text-slate-400 hover:text-emerald-400 border border-slate-800 rounded px-2 shrink-0">✔</button>
                     </div>
@@ -9482,7 +9495,7 @@
         shopBadge.textContent = `${shopItems.length} de luat`;
         shopContent.innerHTML = shopItems.length === 0
           ? '<p class="text-xs text-slate-400 italic">Lista este goală.</p>'
-          : shopItems.slice(-3).reverse().map(x => `<p class="text-xs text-slate-200 truncate">• ${escapeHtmlText(x.produs)} <span class="text-slate-500">(${escapeHtmlText(x.magazin)})</span></p>`).join('');
+          : shopItems.slice(-3).reverse().map(x => `<p class="text-xs text-slate-200 truncate">• ${shopQtyIsMulti(x.cantitate) ? `<b class="text-red-400">${/^\d+([.,]\d+)?$/.test((x.cantitate || '').trim()) ? '×' : ''}${escapeHtmlText(x.cantitate)}</b> ` : ''}${escapeHtmlText(x.produs)} <span class="text-slate-500">(${escapeHtmlText(x.magazin)})</span></p>`).join('');
         // Magazinele existente în listă, cu „Oriunde” mereu primul și implicit
         const storeSel = document.getElementById('quickShopStore');
         if (storeSel) {
@@ -11604,6 +11617,6 @@
     }
 
   </script>
-  <script src="./familie.js?v=24.17"></script>
+  <script src="./familie.js?v=24.18"></script>
 </body>
 </html>

@@ -1,5 +1,12 @@
 # CHANGELOG — DIiH Hub
 
+## v24.18 — 2026-10-18 — Cumpărături: cantitatea mai mare de 1 sare în ochi
+
+Doar frontend (`index.html`, `sw.js`).
+
+- Când cantitatea nu e 1 (ex. „3”, „2 kg”, „500 g”), apare ca etichetă **roșie, îngroșată și mai mare** lângă produs („×3”, „2 kg”), atât în lista pe magazine, cât și în lista simplă. Cantitatea 1 rămâne discretă („1 buc”).
+- În widgetul Cumpărături de pe Acasă, cantitatea apare cu roșu în fața produsului când e mai mare de 1.
+
 ## v24.17 — 2026-10-18 — Fără numele aplicației în ce primesc ceilalți; calendarul „Familia-ABL_Murar”
 
 Frontend (`index.html`, `familie.js`, `pip.html`, `pip/pip-120.mp4`) și backend (`Familie.gs`). **Necesită deploy** pentru partea de server.
