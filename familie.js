@@ -480,43 +480,169 @@
   }
   window.famSarbatoareLegala = sarbatoareLegala; // pentru alte ecrane (ex. calendare)
 
+  // ---- Post și dezlegări (calcul după rânduiala generală BOR) ----
+  const ZILE = ['duminică', 'luni', 'marți', 'miercuri', 'joi', 'vineri', 'sâmbătă'];
+  const POST_TIPURI = ['aspru', 'ulei', 'peste', 'negru', 'post'];
+  function zi(d, n) { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() + n); return x; }
+  function intre(d, a, b) { const t = ymd(d); return t >= ymd(a) && t <= ymd(b); }
+  function md(d) { return `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+  function posturiMari(an) {
+    const P = pasteOrtodox(an);
+    const out = [
+      { nume: 'Postul Mare (al Sfintelor Paști)', start: zi(P, -48), end: zi(P, -1) },
+      { nume: 'Postul Adormirii Maicii Domnului', start: new Date(an, 7, 1), end: new Date(an, 7, 14) },
+      { nume: 'Postul Nașterii Domnului (Crăciunului)', start: new Date(an, 10, 15), end: new Date(an, 11, 24) }
+    ];
+    const ap = zi(P, 57), apEnd = new Date(an, 5, 28);
+    if (ymd(ap) <= ymd(apEnd)) out.splice(1, 0, { nume: 'Postul Sfinților Apostoli Petru și Pavel', start: ap, end: apEnd });
+    return out;
+  }
+  // tip: normal | harti | branza | post | ulei | aspru | peste | negru
+  function postInfo(d, cruceAzi) {
+    const P = pasteOrtodox(d.getFullYear());
+    const w = d.getDay(), m = md(d);
+    const r = (tip, text, motiv) => ({ tip, text, motiv: motiv || '' });
+    if (m >= '12-25' || m <= '01-04') return r('harti', 'Fără post', 'perioada Nașterii Domnului');
+    if (intre(d, P, zi(P, 6))) return r('harti', 'Fără post', 'Săptămâna Luminată');
+    if (intre(d, zi(P, 50), zi(P, 56))) return r('harti', 'Fără post', 'săptămâna după Rusalii');
+    if (intre(d, zi(P, -70), zi(P, -64))) return r('harti', 'Fără post', 'săptămâna Vameșului și a Fariseului');
+    if (intre(d, zi(P, -55), zi(P, -49))) return r('branza', 'Fără carne — lactate, ouă, pește', 'Săptămâna brânzei');
+    if (m === '01-05') return r('post', 'Post', 'Ajunul Bobotezei');
+    if (m === '08-29') return r('post', 'Post', 'Tăierea capului Sf. Ioan Botezătorul');
+    if (m === '09-14') return r('post', 'Post', 'Înălțarea Sfintei Cruci');
+    const mari = posturiMari(d.getFullYear());
+    const pm = mari.find(p => intre(d, p.start, p.end));
+    if (pm) {
+      const n = pm.nume.split(' (')[0];
+      if (pm.nume.startsWith('Postul Mare')) {
+        if (ymd(d) === ymd(zi(P, -2))) return r('negru', 'Post negru (aspru)', 'Vinerea Mare');
+        if (ymd(d) === ymd(zi(P, -7))) return r('peste', 'Dezlegare la pește', 'Floriile');
+        if (m === '03-25' && ymd(d) < ymd(zi(P, -7))) return r('peste', 'Dezlegare la pește', 'Buna Vestire');
+        if (w === 0 || w === 6) return r('ulei', 'Post — dezlegare la ulei și vin', n);
+        return r('aspru', 'Post aspru (fără ulei)', n);
+      }
+      if (pm.nume.startsWith('Postul Sfinților')) {
+        if (m === '06-24') return r('peste', 'Dezlegare la pește', 'Nașterea Sf. Ioan Botezătorul');
+        if (w === 3 || w === 5) return r('ulei', 'Post — dezlegare la ulei și vin', n);
+        return r('peste', 'Post — dezlegare la pește', n);
+      }
+      if (pm.nume.startsWith('Postul Adormirii')) {
+        if (m === '08-06') return r('peste', 'Dezlegare la pește', 'Schimbarea la Față');
+        if (w === 0 || w === 6) return r('ulei', 'Post — dezlegare la ulei și vin', n);
+        return r('aspru', 'Post aspru (fără ulei)', n);
+      }
+      // Postul Nașterii Domnului
+      if (m === '11-21' || m === '12-06') return r('peste', 'Dezlegare la pește', m === '11-21' ? 'Intrarea în Biserică a Maicii Domnului' : 'Sf. Ierarh Nicolae');
+      if (m === '12-24') return r('aspru', 'Post aspru (ajunare)', 'Ajunul Crăciunului');
+      if ((w === 0 || w === 6) && m <= '12-20') return r('peste', 'Post — dezlegare la pește', n);
+      if (w === 0 || w === 6 || w === 2 || w === 4) return r('ulei', 'Post — dezlegare la ulei și vin', n);
+      return r('aspru', 'Post aspru (fără ulei)', n);
+    }
+    if (w === 3 || w === 5) {
+      const mariSarb = ['02-02', '06-24', '06-29', '08-15', '09-08'];
+      if (mariSarb.includes(m) || cruceAzi) return r('peste', 'Dezlegare la pește', 'sărbătoare mare în zi de ' + ZILE[w]);
+      return r('post', 'Post', ZILE[w]);
+    }
+    return r('normal', 'Fără post', ZILE[w]);
+  }
+  function esteZiPost(p) { return POST_TIPURI.includes(p.tip); }
+  function urmatoareaZiPost(azi) {
+    for (let i = 1; i <= 60; i++) { const d = zi(azi, i); const p = postInfo(d, false); if (esteZiPost(p)) return { d, p, zile: i }; }
+    return null;
+  }
+  function stareaPosturilorMari(azi) {
+    const an = azi.getFullYear();
+    const toate = posturiMari(an - 1).concat(posturiMari(an), posturiMari(an + 1));
+    const acum = toate.find(p => intre(azi, p.start, p.end));
+    const urm = toate.filter(p => ymd(p.start) > ymd(azi)).sort((a, b) => a.start - b.start)[0];
+    const zileIntre = (a, b) => Math.round((zi(b, 0) - zi(a, 0)) / 86400000);
+    return {
+      acum: acum ? { nume: acum.nume, ziua: zileIntre(acum.start, azi) + 1, total: zileIntre(acum.start, acum.end) + 1, ramase: zileIntre(azi, acum.end) } : null,
+      urm: urm ? { nume: urm.nume, start: urm.start, zile: zileIntre(azi, urm.start) } : null
+    };
+  }
+  const fmtZi = d => `${ZILE[d.getDay()]}, ${d.getDate()} ${d.toLocaleDateString('ro-RO', { month: 'short' }).replace('.', '')}`;
+  const POST_ICON = { normal: '🍽', harti: '🍖', branza: '🧀', post: '🥗', ulei: '🫒', aspru: '🥖', peste: '🐟', negru: '⚫' };
+  window.famPostInfo = postInfo;
+
   const DOX_KEY = 'diih_doxologia_zi';
+  const MODE_KEY = () => 'diih_sfinti_mode_' + (typeof getCurrentLoggedInUser === 'function' ? getCurrentLoggedInUser() : '');
+  function doxMode() { return LS.get(MODE_KEY(), 'scurt'); }
+  function doxSetMode(m) { LS.set(MODE_KEY(), m); doxRender(doxData); }
+
   function doxRender(d) {
     const card = document.getElementById('famSfintiCard');
     if (!card) return;
     const azi = new Date();
     const legal = sarbatoareLegala(azi);
-    const mareSarb = d && d.sfinti && d.sfinti.some(s => s.cruce);
-    card.className = 'rounded-2xl p-4 shadow-lg space-y-2 ' + (legal
+    const okData = d && d.sfinti && d.data === ymd(azi);
+    const sfinti = okData ? d.sfinti : [];
+    const cruce = sfinti.find(s => s.cruce);
+    const post = postInfo(azi, !!cruce);
+    const nextPost = esteZiPost(post) ? null : urmatoareaZiPost(azi);
+    const mari = stareaPosturilorMari(azi);
+    const scurt = doxMode() === 'scurt';
+    const rosu = legal || cruce;
+    card.className = 'rounded-2xl p-3.5 shadow-lg space-y-2 ' + (legal
       ? 'bg-gradient-to-br from-red-950 to-[#2a0d12] border-4 border-red-500 shadow-red-900/50'
-      : (mareSarb ? 'bg-gradient-to-br from-cardbg to-[#2a1218] border-2 border-red-700/80' : 'bg-cardbg border border-amber-800/60'));
-    const next = urmatoareaZiLibera();
-    const zile = next ? Math.round((new Date(next.data + 'T00:00') - new Date(ymd(azi) + 'T00:00')) / 86400000) : 0;
-    let html = `<div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider ${legal || mareSarb ? 'text-red-300' : 'text-amber-300'}">✝ Sfinții zilei</span>
-        <span class="text-[10px] text-slate-400">${esc(d && d.antet ? d.antet.join(' • ') : azi.toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' }))}</span>
+      : (cruce ? 'bg-gradient-to-br from-cardbg to-[#2a1218] border-2 border-red-700/80' : 'bg-cardbg border border-amber-800/60'));
+    const curat = s => s.replace(/^\s*[✝†]\)?\s*/, '');
+    const antet = okData && d.antet ? d.antet.join(' • ') : azi.toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' });
+
+    let h = `<div class="flex items-center justify-between gap-2">
+        <span class="text-xs font-bold uppercase tracking-wider ${rosu ? 'text-red-300' : 'text-amber-300'}">✝ Sfinții zilei</span>
+        <span class="text-[10px] text-slate-400 truncate">${esc(antet)}</span>
+        <button onclick="famDox.mode('${scurt ? 'detaliat' : 'scurt'}')" class="shrink-0 text-[10px] px-2 py-0.5 rounded-lg bg-darkbg border border-bordercol text-slate-300">${scurt ? 'Detaliat ▾' : 'Scurt ▴'}</button>
       </div>`;
-    if (legal) html += `<div class="bg-red-600 text-white font-bold text-sm rounded-xl px-3 py-2 text-center border border-red-300">🔴 ZI LIBERĂ — ${esc(legal.nume)}</div>`;
-    if (!d || !d.sfinti) {
-      html += `<p class="text-[11px] text-slate-400">${d && d.eroare ? esc(d.eroare) : 'Se încarcă de pe doxologia.ro…'}</p>
-        <a href="https://doxologia.ro/calendarul-zilei" target="_blank" class="text-[11px] text-cyan-300 underline">Deschide calendarul pe doxologia.ro</a>`;
+    if (legal) h += `<div class="bg-red-600 text-white font-bold text-xs rounded-xl px-3 py-1.5 text-center border border-red-300">🔴 ZI LIBERĂ — ${esc(legal.nume)}</div>`;
+
+    // Sfinții
+    if (!okData) {
+      h += `<p class="text-[11px] text-slate-400">${d && d.eroare ? esc(d.eroare) : 'Se încarcă de pe doxologia.ro…'}</p>`;
+    } else if (scurt) {
+      const princ = cruce || sfinti[0];
+      const iPr = sfinti.indexOf(princ);
+      h += `<button onclick="famDox.open(${iPr})" class="w-full text-left text-[13px] leading-snug ${cruce ? 'text-red-200 font-bold' : 'text-white font-semibold'}">${cruce ? '<span class="text-red-400">✝</span> ' : ''}${esc(curat(princ.nume))}${sfinti.length > 1 ? ` <span class="text-slate-400 font-normal text-[11px]">+${sfinti.length - 1} sfinți</span>` : ''}</button>`;
     } else {
-      const lst = d.sfinti.map((s, i) => `<button onclick="famDox.open(${i})" class="w-full text-left px-2.5 py-1.5 rounded-lg ${s.cruce ? 'bg-red-900/50 border border-red-600 text-red-200 font-bold' : 'bg-darkbg border border-bordercol text-slate-200'} text-[12px] flex items-center justify-between gap-2 ${i >= 4 ? 'famDoxMore hidden' : ''}">
-          <span>${s.cruce ? '<span class="text-red-400">✝</span> ' : ''}${esc(s.nume.replace(/^\s*[✝†]\)?\s*/, ''))}</span><span class="text-slate-500">›</span></button>`).join('');
-      html += `<div class="space-y-1">${lst}</div>`;
-      if (d.sfinti.length > 4) html += `<button onclick="document.querySelectorAll('.famDoxMore').forEach(x=>x.classList.toggle('hidden')); this.textContent = this.textContent.startsWith('▾') ? '▴ Mai puțini' : '▾ Toți sfinții (${d.sfinti.length})'" class="text-[11px] text-amber-300 font-bold">▾ Toți sfinții (${d.sfinti.length})</button>`;
+      h += `<div class="space-y-1">${sfinti.map((s, i) => `<button onclick="famDox.open(${i})" class="w-full text-left px-2.5 py-1.5 rounded-lg ${s.cruce ? 'bg-red-900/50 border border-red-600 text-red-200 font-bold' : 'bg-darkbg border border-bordercol text-slate-200'} text-[12px] flex items-center justify-between gap-2">
+          <span>${s.cruce ? '<span class="text-red-400">✝</span> ' : ''}${esc(curat(s.nume))}</span><span class="text-slate-500">›</span></button>`).join('')}</div>`;
       const rd = [];
       if (d.apostol) rd.push(`<button onclick="famDox.openUrl('${esc(d.apostol.url)}')" class="flex-1 px-2 py-1.5 rounded-lg bg-darkbg border border-bordercol text-[11px] text-slate-200 text-left">📖 <b>Apostol</b><br><span class="text-slate-400">${esc(d.apostol.text)}</span></button>`);
       if (d.evanghelie) rd.push(`<button onclick="famDox.openUrl('${esc(d.evanghelie.url)}')" class="flex-1 px-2 py-1.5 rounded-lg bg-darkbg border border-bordercol text-[11px] text-slate-200 text-left">✠ <b>Evanghelie</b><br><span class="text-slate-400">${esc(d.evanghelie.text)}</span></button>`);
-      if (rd.length) html += `<div class="flex gap-1.5">${rd.join('')}</div>`;
+      if (rd.length) h += `<div class="flex gap-1.5">${rd.join('')}</div>`;
     }
-    if (next && !legal) html += `<p class="text-[10px] text-slate-400">Următoarea zi liberă: <span class="text-red-300 font-bold">${esc(next.nume)}</span> — ${new Date(next.data + 'T00:00').toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' })} (în ${zile} ${zile === 1 ? 'zi' : 'zile'})</p>`;
-    card.innerHTML = html;
+
+    // Post / dezlegare / sărbătoare
+    const postCls = esteZiPost(post) ? 'text-emerald-300' : (post.tip === 'branza' ? 'text-amber-200' : 'text-slate-300');
+    h += `<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+        <span class="${postCls} font-bold">${POST_ICON[post.tip] || ''} ${esc(post.text)}</span>${post.motiv ? `<span class="text-slate-500">(${esc(post.motiv)})</span>` : ''}
+        ${!legal && cruce ? `<span class="text-red-300 font-bold">🔴 Sărbătoare mare</span>` : ''}
+      </div>`;
+
+    // Calcul până la următoarea zi de post și următorul post mare
+    const linii = [];
+    if (esteZiPost(post)) linii.push('Azi e zi de post.');
+    else if (nextPost) linii.push(`Următoarea zi de post: <b class="text-emerald-300">${fmtZi(nextPost.d)}</b> (în ${nextPost.zile} ${nextPost.zile === 1 ? 'zi' : 'zile'})`);
+    if (mari.acum) linii.push(`Ești în <b class="text-amber-200">${esc(mari.acum.nume.split(' (')[0])}</b>: ziua ${mari.acum.ziua} din ${mari.acum.total}${mari.acum.ramase ? `, mai sunt ${mari.acum.ramase} zile` : ', ultima zi'}`);
+    if (mari.urm && (!scurt || !mari.acum)) linii.push(`${esc(mari.urm.nume.split(' (')[0])}: începe ${fmtZi(mari.urm.start)} (în ${mari.urm.zile} zile)`);
+    h += `<div class="text-[10px] text-slate-400 space-y-0.5">${linii.map(l => `<p>⏳ ${l}</p>`).join('')}</div>`;
+
+    if (!scurt) {
+      const next = urmatoareaZiLibera();
+      if (next && !legal) {
+        const zl = Math.round((new Date(next.data + 'T00:00') - new Date(ymd(azi) + 'T00:00')) / 86400000);
+        h += `<p class="text-[10px] text-slate-400">Următoarea zi liberă: <span class="text-red-300 font-bold">${esc(next.nume)}</span> — ${new Date(next.data + 'T00:00').toLocaleDateString('ro-RO', { day: 'numeric', month: 'long' })} (în ${zl} ${zl === 1 ? 'zi' : 'zile'})</p>`;
+      }
+      const toate = stareaPosturilorMari(azi);
+      h += `<p class="text-[9px] text-slate-500">Postul e calculat după rânduiala generală a BOR; verifică dezlegările locale în calendarul parohiei. Sursa sfinților: doxologia.ro</p>`;
+      void toate;
+    }
+    card.innerHTML = h;
   }
   let doxData = LS.get(DOX_KEY, null);
   function doxLoad(force) {
     const azi = ymd(new Date());
-    if (doxData && doxData.data === azi) doxRender(doxData); else doxRender(null);
+    doxRender(doxData && doxData.data === azi ? doxData : null);
     if (!force && doxData && doxData.data === azi && Date.now() - (doxData._t || 0) < 3 * 3600000) return;
     if (!(typeof getAuthSession === 'function' && getAuthSession())) return;
     api({ action: 'doxologiaZi' }).then(r => {
@@ -557,14 +683,31 @@
   window.famDox = {
     open: i => { const s = doxData && doxData.sfinti && doxData.sfinti[i]; if (s) doxModal(s.url || 'https://doxologia.ro/calendarul-zilei', s.nume); },
     openUrl: u => doxModal(u, ''),
-    refresh: () => doxLoad(true)
+    refresh: () => doxLoad(true),
+    mode: m => doxSetMode(m)
   };
+  // Cardul e un widget ca celelalte (ownerWidget_sfinti): se ascunde/ordonează din setările widgeturilor, per profil.
+  // La prima rulare pe un profil: activ și primul la admin, ascuns la ceilalți (îl pot activa din setări).
+  function doxMigrateWidget() {
+    try {
+      const user = getCurrentLoggedInUser();
+      const key = 'diih_wgt_mig_sfinti_' + user;
+      if (localStorage.getItem(key)) return;
+      const active = getOwnerWidgetsConfig().filter(x => x !== 'sfinti');
+      setOwnerWidgetsConfig(isAdminUser() ? active.concat('sfinti') : active);
+      setOwnerWidgetsOrder(['sfinti'].concat(getOwnerWidgetsOrder().filter(x => x !== 'sfinti')));
+      localStorage.setItem(key, '1');
+    } catch (e) {}
+  }
   function doxBuild() {
-    const today = document.getElementById('tab-today');
-    if (!today || document.getElementById('famSfintiCard')) return;
-    const card = document.createElement('div');
-    card.id = 'famSfintiCard';
-    today.insertBefore(card, today.firstElementChild);
+    const box = document.getElementById('todayOwnerContent');
+    if (!box || document.getElementById('ownerWidget_sfinti')) return;
+    const wrap = document.createElement('div');
+    wrap.id = 'ownerWidget_sfinti';
+    wrap.innerHTML = '<div id="famSfintiCard"></div>';
+    box.insertBefore(wrap, box.firstElementChild);
+    doxMigrateWidget();
+    try { applyOwnerWidgetsVisibility(); } catch (e) {}
     doxLoad(false);
     setInterval(() => { if (!document.hidden) doxLoad(false); }, 15 * 60000);
   }

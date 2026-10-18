@@ -1345,7 +1345,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.10 (Build 2026-10-18)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.11 (Build 2026-10-18)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2450,7 +2450,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.10";
+    const APP_VERSION = "v24.11";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -8998,7 +8998,7 @@
     // ====== MAGAZINE PREDEFINITE + CULORI (v24.10) ======
     const SHOP_STORES = [
       ['Lidl', '#2563eb'], ['Auchan', '#dc2626'], ['Kaufland', '#f97316'], ['MegaImage', '#eab308'], ['Darina', '#a855f7'],
-      ['Piață', '#16a34a'], ['VIVO', '#ec4899'], ['Iulius', '#0d9488'], ['RIVO', '#7c3aed'], ['Ikea', '#0ea5e9'],
+      ['Piață', '#16a34a'], ['VIVO', '#ec4899'], ['Iulius', '#0d9488'], ['RIVUS', '#7c3aed'], ['Ikea', '#0ea5e9'],
       ['eMAG', '#e11d48'], ['Online', '#6366f1'], ['Oriunde', '#94a3b8'], ['Brutărie', '#b45309'], ['Hornbach', '#84cc16'],
       ['Dedeman', '#f59e0b'], ['Brico', '#06b6d4']
     ];
@@ -9006,6 +9006,7 @@
     function shopStoreCanon(name) {
       const n = (name || '').trim();
       const norm = x => x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[\s-]/g, '');
+      if (norm(n) === 'rivo') return 'RIVUS'; // denumire greșită din v24.10
       const hit = SHOP_STORES.find(([s]) => norm(s) === norm(n));
       return hit ? hit[0] : n;
     }
@@ -10658,6 +10659,7 @@
 
     // 15. PERSONALIZARE & REORDONARE WIDGET-URI ASTĂZI (OWNER & SHARED)
     const ALL_OWNER_WIDGET_DEFS = [
+      { id: 'sfinti', label: '✝ Sfinții zilei & post' },
       { id: 'psaltire', label: '📖 Citirea Psaltirii' },
       { id: 'biblia360', label: '📜 Biblia 360 & Citatul Zilei' },
       { id: 'scriptura', label: '📑 Continuitate Sf. Scriptură' },
@@ -11584,6 +11586,6 @@
     }
 
   </script>
-  <script src="./familie.js?v=24.9"></script>
+  <script src="./familie.js?v=24.11"></script>
 </body>
 </html>

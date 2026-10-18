@@ -1,10 +1,20 @@
 # CHANGELOG — DIiH Hub
 
+## v24.11 — 2026-10-18 — Sfinții zilei: variantă scurtă, post și dezlegări, widget per profil
+
+Doar frontend (`familie.js`, `index.html`, `sw.js`).
+
+- Cardul „Sfinții zilei” are variantă **Scurt** (implicit: sfântul principal + câți mai sunt, postul zilei, sărbătoarea) și **Detaliat** (toți sfinții, Apostol, Evanghelie, următoarea zi liberă). Butonul Scurt/Detaliat se ține minte per profil.
+- **Post / dezlegări** calculate după rânduiala generală BOR: miercuri/vineri, cele 4 posturi mari (aspru, ulei și vin, pește, post negru în Vinerea Mare), zilele de post de peste an (5 ian, 29 aug, 14 sep), săptămânile fără post (Luminată, după Rusalii, Vameșului, perioada Crăciunului), Săptămâna brânzei, dezlegările de la marile sărbători.
+- **Numărătoare**: până la următoarea zi de post și până la următorul post mare; în timpul unui post mare: ziua X din Y, câte zile mai sunt.
+- Cardul e acum un widget ca celelalte („✝ Sfinții zilei & post”): se ascunde/mută din setările widgeturilor pe fiecare profil. La admin pornește activ și primul; la ceilalți pornește ascuns.
+- Cumpărături: RIVO corectat în RIVUS (și produsele salvate cu „RIVO” apar la RIVUS).
+
 ## v24.10 — 2026-10-18 — Cumpărături: magazine predefinite și culori
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
 
-- Câmpul Magazin e acum dropdown, cu magazinele predefinite: Lidl, Auchan, Kaufland, MegaImage, Darina, Piață, VIVO, Iulius, RIVO, Ikea, eMAG, Online, Oriunde, Brutărie, Hornbach, Dedeman, Brico. Apar și magazinele folosite deja în listă; „➕ Alt magazin…” adaugă unul nou. Același dropdown e și în widgetul de adăugare rapidă.
+- Câmpul Magazin e acum dropdown, cu magazinele predefinite: Lidl, Auchan, Kaufland, MegaImage, Darina, Piață, VIVO, Iulius, RIVUS, Ikea, eMAG, Online, Oriunde, Brutărie, Hornbach, Dedeman, Brico. Apar și magazinele folosite deja în listă; „➕ Alt magazin…” adaugă unul nou. Același dropdown e și în widgetul de adăugare rapidă.
 - Fiecare magazin are culoarea lui: chenar și bandă colorată pe secțiune, plus eticheta colorată în lista simplă. Secțiunile apar în ordinea listei de mai sus.
 - Numele scrise diferit se recunosc („lidl”, „Piata” → Lidl, Piață).
 
