@@ -3,7 +3,7 @@
  * Fișier NOU în Apps Script: + lângă „Fișiere” → Script → nume „Familie” → lipești tot conținutul.
  *
  * 1. Calendarul familiei: evenimentele (remindere din notițe, evenimente trimise între membri, sărbători legale)
- *    se creează într-un calendar Google „DIiH Familie” al adminului, cu ceilalți membri ca INVITAȚI.
+ *    se creează într-un calendar Google „Familia-ABL_Murar” al adminului, cu ceilalți membri ca INVITAȚI.
  *    Invitația apare singură în Google Calendar al fiecăruia (Samsung Calendar, iPhone cu cont Google,
  *    Outlook/Calendar pe Windows) — fără nimic instalat. Cine nu vrea evenimentul apasă „Ignoră” în aplicație
  *    (e scos din invitați) sau „Nu” în Calendar.
@@ -15,7 +15,10 @@
  * (Calendar + acces la internet). Apoi Implementare → Gestionează implementările → Versiune nouă.
  */
 
-const FAM_CAL_NAME = "DIiH Familie";
+const FAM_CAL_NAME = "Familia-ABL_Murar";
+const FAM_CAL_OLD_NAMES = ["DIiH Familie"];
+// Primul nume al autorului, fără numele aplicației (fiecare își poate denumi aplicația cum vrea)
+function famPrenume(auth) { return ((auth.profile.nume || auth.profile.email || "").split(/[\s@]/)[0]) || "familie"; }
 const FAM_TZ = "Europe/Bucharest";
 const FAM_NOTIF_COLS = ["ID", "Destinatar", "Creat", "Titlu", "Mesaj", "Tab", "Citit", "Tip", "Status", "Ref", "DeLa"];
 
@@ -50,7 +53,7 @@ function familieHandleAction(ss, e, action, auth) {
       if (!p.titlu || !p.start) return returnResponse(e, { success: false, error: "Lipsește titlul sau data." });
       const id = famCreateEvent({
         titlu: p.titlu, start: p.start, durata: parseInt(p.durata, 10) || 60, toataZiua: p.toataZiua === "true",
-        descriere: (p.descriere || "") + "\n\nTrimis din DIiH de " + (auth.profile.nume || me), invitati: dest.concat([me])
+        descriere: (p.descriere || "") + "\n\nTrimis de " + famPrenume(auth), invitati: dest.concat([me])
       });
       dest.filter(x => x !== me).forEach(x => famAddNotif(ss, {
         dest: x, titlu: "📅 " + (auth.profile.nume || me).split(" ")[0] + " ți-a trimis un eveniment",
@@ -98,10 +101,12 @@ function famCalendar() {
   const id = props.getProperty("FAM_CAL_ID");
   let cal = id ? CalendarApp.getCalendarById(id) : null;
   if (!cal) {
-    const found = CalendarApp.getCalendarsByName(FAM_CAL_NAME);
+    let found = CalendarApp.getCalendarsByName(FAM_CAL_NAME);
+    if (!found.length) FAM_CAL_OLD_NAMES.forEach(n => { if (!found.length) found = CalendarApp.getCalendarsByName(n); });
     cal = found.length ? found[0] : CalendarApp.createCalendar(FAM_CAL_NAME, { timeZone: FAM_TZ, color: CalendarApp.Color.RED });
     props.setProperty("FAM_CAL_ID", cal.getId());
   }
+  if (cal.getName() !== FAM_CAL_NAME) { try { cal.setName(FAM_CAL_NAME); } catch (e) {} }
   return cal;
 }
 
@@ -186,7 +191,7 @@ function familieOnNoteSaved(ss, auth, n) {
     }
     const id = famCreateEvent({
       eventId: ex ? ex.eventId : null, titlu: "📝 " + (n.text || "Notiță").slice(0, 80), start: n.reminder, durata: 15,
-      descriere: (n.text || "") + "\n\nReminder din DIiH (Notițe)", invitati: [prop]
+      descriere: (n.text || "") + "\n\nReminder de la " + famPrenume(auth), invitati: [prop]
     });
     famLinkSet(ss, key, id);
   } catch (err) { famLog(ss, "note_calendar", err); }
@@ -374,7 +379,7 @@ function doxologiaPagina(url) {
 
 // ---------- Remindere programate (v24.13) ----------
 // Tabul „Remindere” din registru: un rând = un reminder (pentru unul sau mai mulți membri), cu una-trei ore pe zi
-// și recurență. Fiecare oră devine o serie de evenimente în calendarul „DIiH Familie”, cu destinatarii invitați.
+// și recurență. Fiecare oră devine o serie de evenimente în calendarul „Familia-ABL_Murar”, cu destinatarii invitați.
 const REM_COLS = ["ID", "Titlu", "Detalii", "Destinatari", "CreatDe", "Recurenta", "Zile", "Ore", "DataStart", "DataSfarsit", "Activ", "InCalendar", "NotifApp", "EventIds", "Creat", "Actualizat"];
 
 function remSheet(ss) {
@@ -426,7 +431,7 @@ function remCreateEvents(o, autorNume) {
   const guests = o.Destinatari.split(",").map(x => x.trim().toLowerCase()).filter(x => x && x !== owner);
   const zile = o.Zile ? o.Zile.split(",").map(Number) : [];
   const WD = [CalendarApp.Weekday.SUNDAY, CalendarApp.Weekday.MONDAY, CalendarApp.Weekday.TUESDAY, CalendarApp.Weekday.WEDNESDAY, CalendarApp.Weekday.THURSDAY, CalendarApp.Weekday.FRIDAY, CalendarApp.Weekday.SATURDAY];
-  const desc = (o.Detalii ? o.Detalii + "\n\n" : "") + "Reminder DIiH de la " + autorNume;
+  const desc = (o.Detalii ? o.Detalii + "\n\n" : "") + "Reminder de la " + autorNume;
   const ids = [];
   o.Ore.split(",").map(x => x.trim()).filter(Boolean).forEach(hhmm => {
     let start = famParseLocal(o.DataStart + "T" + hhmm);
@@ -480,7 +485,7 @@ function remHandle(ss, e, action, auth) {
     };
     if (o) { try { remDeleteEvents(o); } catch (err) { famLog(ss, "rem_delete_events", err); } }
     if (row.Activ === "DA" && row.InCalendar === "DA") {
-      try { row.EventIds = JSON.stringify(remCreateEvents(row, auth.profile.nume || me)); } catch (err) { famLog(ss, "rem_calendar", err); }
+      try { row.EventIds = JSON.stringify(remCreateEvents(row, famPrenume(auth))); } catch (err) { famLog(ss, "rem_calendar", err); }
     }
     const values = [REM_COLS.map(c => row[c])];
     if (o) sh.getRange(o._row, 1, 1, REM_COLS.length).setNumberFormat("@").setValues(values);
@@ -507,7 +512,7 @@ function remHandle(ss, e, action, auth) {
     let ids = "[]";
     try { remDeleteEvents(o); } catch (err) {}
     if (activ && o.InCalendar !== "NU") {
-      try { ids = JSON.stringify(remCreateEvents(Object.assign({}, o, { Activ: "DA" }), auth.profile.nume || me)); } catch (err) { famLog(ss, "rem_calendar", err); }
+      try { ids = JSON.stringify(remCreateEvents(Object.assign({}, o, { Activ: "DA" }), famPrenume(auth))); } catch (err) { famLog(ss, "rem_calendar", err); }
     }
     sh.getRange(o._row, REM_COLS.indexOf("Activ") + 1).setValue(activ ? "DA" : "NU");
     sh.getRange(o._row, REM_COLS.indexOf("EventIds") + 1).setValue(ids);

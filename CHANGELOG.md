@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.17 — 2026-10-18 — Fără numele aplicației în ce primesc ceilalți; calendarul „Familia-ABL_Murar”
+
+Frontend (`index.html`, `familie.js`, `pip.html`, `pip/pip-120.mp4`) și backend (`Familie.gs`). **Necesită deploy** pentru partea de server.
+
+- Fiecare își poate denumi aplicația cum vrea, deci în ce ajunge la ceilalți nu mai apare „DIiH”, ci doar cine a trimis: evenimentele și reminderele din calendar au „Trimis de Bogdan” / „Reminder de la Andreea” (doar prenumele).
+- Calendarul Google se numește **Familia-ABL_Murar** (un calendar creat deja cu numele vechi „DIiH Familie” e redenumit automat).
+- Notificările programate folosesc titlul aplicației din profilul fiecăruia; textele generale nu mai conțin „DIiH”. Profilurile noi primesc implicit titlul „Familia”.
+- Ecran pornit: textele și video-ul cu numărătoarea nu mai conțin numele aplicației.
+
 ## v24.16 — 2026-10-18 — Reminder: ora nu se mai decalează
 
 Frontend (`index.html`) și backend (`_API.gs` + `Familie.gs`). **Necesită deploy** pentru partea de server.

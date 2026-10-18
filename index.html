@@ -1228,7 +1228,7 @@
             <p class="text-[10px] text-slate-400 leading-relaxed">
               💡 <strong>Pentru ca notificările să sune garantat pe telefon (Samsung / Android):</strong><br>
               1. Apasă <em>„Activează Notificări”</em> și alege <em>„Permite”</em> în browser.<br>
-              2. În <strong>Setări telefon → Aplicații → Chrome (sau DIiH) → Baterie</strong>, alege <strong>„Fără restricții”</strong> (Unrestricted), altfel Android oprește alertele când ecranul este stins.
+              2. În <strong>Setări telefon → Aplicații → Chrome (sau aplicația instalată) → Baterie</strong>, alege <strong>„Fără restricții”</strong> (Unrestricted), altfel Android oprește alertele când ecranul este stins.
             </p>
           </div>
 
@@ -1349,7 +1349,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.16 (Build 2026-10-18)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.17 (Build 2026-10-18)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -1564,7 +1564,7 @@
       <div id="subtab-info" class="subtab-content hidden space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
           <div class="border-b border-bordercol pb-2">
-            <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">ℹ️ Despre DIiH Hub</span>
+            <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">ℹ️ Despre aplicație</span>
             <p id="infoVersionLine" class="text-[10px] text-slate-400 mt-0.5"></p>
           </div>
 
@@ -2454,7 +2454,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.16";
+    const APP_VERSION = "v24.17";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2663,7 +2663,7 @@
       if (/andreea/i.test(profile.nume || '')) return 'Andreea Murar';
       const name = profile.nume || profile.email;
       if (!APP_USERS[name]) {
-        APP_USERS[name] = { defaultTitle: "DIiH", defaultLogo: "🙂", defaultIcon: DEFAULT_OWNER_APP_ICON, isOwner: false };
+        APP_USERS[name] = { defaultTitle: "Familia", defaultLogo: "🙂", defaultIcon: DEFAULT_OWNER_APP_ICON, isOwner: false };
       }
       return name;
     }
@@ -9304,13 +9304,13 @@
           if (triggeredToday[key]) return; // deja declanșat astăzi
           markNotifTriggeredToday(key);
 
-          let msg = slot.m || 'Alertă programată DIiH';
-          let title = `DIiH [${catId.toUpperCase()}]`;
+          let msg = slot.m || 'Alertă programată';
+          let title = `${appTitle} [${catId.toUpperCase()}]`;
 
           // Formatare contextuală pe categorie
           if (catId === 'psaltire') {
             const info = CATISME_INFO[currentCatismaNum] || {};
-            title = `DIiH • Catisma ${info.roman || ''}`;
+            title = `${appTitle} • Catisma ${info.roman || ''}`;
           } else if (catId === 'school') {
             const acts = schoolActivities.filter(a => a.date === todayDateStr);
             if (acts.length > 0) {
@@ -9428,7 +9428,7 @@
         updateNotificationPermissionBadge();
         if (perm === "granted") {
           showToast("Notificările au fost activate cu succes!");
-          triggerNotification(appTitle, "Notificările DIiH sunt acum active pe acest dispozitiv!");
+          triggerNotification(appTitle, "Notificările sunt acum active pe acest dispozitiv!");
         } else {
           showToast("Permisiunea nu a fost acordată.");
         }
@@ -11604,6 +11604,6 @@
     }
 
   </script>
-  <script src="./familie.js?v=24.16"></script>
+  <script src="./familie.js?v=24.17"></script>
 </body>
 </html>

@@ -95,7 +95,7 @@
     LS.set(AW_KEY, aw);
     const ok = await awAcquire();
     if (!ok) toast('Telefonul nu permite păstrarea ecranului pornit din browser.');
-    else toast(mode === 'app' ? 'Ecranul rămâne pornit cât DIiH e deschis.' : `Ecran pornit ${minutes} min.`);
+    else toast(mode === 'app' ? 'Ecranul rămâne pornit cât aplicația e deschisă.' : `Ecran pornit ${minutes} min.`);
     awLoop();
     if (!keepMenu) awMenu(false);
   }
@@ -172,7 +172,7 @@
           </div>
           <a href="./pip.html?m=60" target="_blank" rel="noopener" class="block w-full py-2 rounded-xl bg-slate-800 border border-slate-500 text-center font-bold">🍎 iPhone: deschide în Safari (ecran complet → glisează în sus)</a>
         </div>
-        <p class="text-[9px] text-slate-500 leading-snug">Funcționează cât DIiH e deschis pe ecran. Când treci în altă aplicație, telefonul preia controlul; la revenire se reia automat până expiră timpul.</p>
+        <p class="text-[9px] text-slate-500 leading-snug">Funcționează cât aplicația e deschisă pe ecran. Când treci în altă aplicație, telefonul preia controlul; la revenire se reia automat până expiră timpul.</p>
         <button onclick="famAw.fab(false)" class="text-[9px] text-slate-500 underline">Ascunde butonul (îl reafișezi din 🔔 Notificări)</button>
       </div>
       <button id="awakeBtn" onclick="famAw.menu()" class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-700 text-white text-xl shadow-xl shadow-black/50 border-2 border-amber-200/60 active:scale-90 transition" title="Ecran pornit">☀️</button>
@@ -533,7 +533,7 @@
         <div id="famNotifList" class="flex-1 overflow-y-auto px-4 py-3 space-y-2"></div>
         <div class="px-4 py-2 border-t border-bordercol flex items-center justify-between text-[10px] text-slate-400">
           <label class="flex items-center gap-1.5"><input id="famAwakeFabToggle" type="checkbox" onchange="famAw.fab(this.checked)" class="accent-amber-500"> Butonul ☀️ Ecran pornit</label>
-          <span>DIiH v24.9</span>
+          <span>${typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''}</span>
         </div>
       </div>
     </div>`);
