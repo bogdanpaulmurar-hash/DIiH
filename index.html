@@ -1345,7 +1345,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.8 (Build 2026-10-17)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.9 (Build 2026-10-18)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2450,7 +2450,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.8";
+    const APP_VERSION = "v24.9";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2558,6 +2558,79 @@
     }
     function apiAuthQuery() {
       return new URLSearchParams(apiAuthParams()).toString();
+    }
+
+
+    // ====== SINCRONIZARE FĂRĂ „PÂLPÂIRI” (v24.9) ======
+    // Scrierile pleacă imediat, dar o sincronizare pornită înainte ca serverul să le salveze aducea lista veche
+    // și produsul/notița dispărea câteva secunde. Acum fiecare modificare locală rămâne „în așteptare” și se
+    // suprapune peste ce vine de pe server până când serverul o confirmă (sau expiră după 3 minute).
+    const SYNC_PENDING_KEY = 'diih_sync_pending';
+    const SYNC_PENDING_TTL = 3 * 60 * 1000;
+    let syncPending = (() => { try { return JSON.parse(localStorage.getItem(SYNC_PENDING_KEY) || '{}') || {}; } catch (e) { return {}; } })();
+    function savePending() { try { localStorage.setItem(SYNC_PENDING_KEY, JSON.stringify(syncPending)); } catch (e) {} }
+    function normTxt(v) { return (v || '').toString().trim().toLowerCase(); }
+    function shopKey(it) { return normTxt(it.produs).replace(/\s*\([^)]*\)\s*$/, '') + '|' + normTxt(it.magazin); }
+    function gandKey(it) { return normTxt(it.gand) + '|' + normTxt(it.proprietar); }
+    function pendingPush(coll, op, item) {
+      (syncPending[coll] = syncPending[coll] || []).push({ op, item: JSON.parse(JSON.stringify(item)), t: Date.now() });
+      savePending();
+    }
+    function applyPendingOverlay(coll, serverList) {
+      const now = Date.now();
+      let list = serverList.slice();
+      const ops = (syncPending[coll] || []).filter(p => now - p.t < SYNC_PENDING_TTL);
+      const keep = [];
+      ops.forEach(p => {
+        const it = p.item;
+        if (coll === 'shop') {
+          const match = x => (it.id && x.id === it.id) || shopKey(x) === shopKey(it);
+          if (p.op === 'add') {
+            if (list.some(match)) return;           // serverul îl are: confirmat
+            list.push(it); keep.push(p);
+          } else if (p.op === 'del') {
+            if (!list.some(match)) return;          // serverul l-a șters: confirmat
+            const i = list.findIndex(match); list.splice(i, 1); keep.push(p);
+          } else if (p.op === 'delStore') {
+            if (!list.some(x => x.magazin === it.magazin)) return;
+            list = list.filter(x => x.magazin !== it.magazin); keep.push(p);
+          }
+        } else if (coll === 'gand') {
+          const match = x => (it.rowId > 0 && x.rowId === it.rowId) || gandKey(x) === gandKey(it);
+          if (p.op === 'add') {
+            if (list.some(x => gandKey(x) === gandKey(it))) return;
+            list.push(it); keep.push(p);
+          } else if (p.op === 'del') {
+            if (!list.some(match)) return;
+            // Notiță ștearsă înainte să ajungă pe server: acum are rând real, deci o ștergem și acolo
+            if (!(it.rowId > 0)) {
+              const real = list.find(x => x.rowId > 0 && match(x));
+              if (real) { it.rowId = real.rowId; sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=softDeleteGand&rowIds=${real.rowId}&callback=void`); }
+            }
+            list = list.filter(x => !match(x)); keep.push(p);
+          } else if (p.op === 'upd') {
+            const x = list.find(y => y.rowId === it.rowId);
+            if (!x || (normTxt(x.gand) === normTxt(it.gand) && (x.reminder || '') === (it.reminder || ''))) return;
+            Object.assign(x, { gand: it.gand, sursa: it.sursa, reminder: it.reminder }); keep.push(p);
+          } else if (p.op === 'restore') {
+            if (list.some(match)) return;
+            list.push(it); keep.push(p);
+          }
+        }
+      });
+      syncPending[coll] = keep;
+      savePending();
+      return list;
+    }
+    // Trimite o scriere (URL construit ca înainte, cu callback=void) și, când serverul confirmă, cere o sincronizare
+    // rapidă ca lista să fie identică peste tot. La eroare de rețea mai încearcă o dată după 5 secunde.
+    function sendWrite(url, attempt = 1) {
+      const cb = 'wr_' + Date.now() + '_' + Math.floor(Math.random() * 1e5);
+      const script = document.createElement('script');
+      window[cb] = () => { delete window[cb]; script.remove(); clearTimeout(sendWrite._t); sendWrite._t = setTimeout(() => fetchLiveData(false), 800); };
+      script.onerror = () => { delete window[cb]; script.remove(); if (attempt < 2) setTimeout(() => sendWrite(url, attempt + 1), 5000); };
+      script.src = url.replace('callback=void', 'callback=' + cb);
+      document.body.appendChild(script);
     }
 
     function apiJsonp(params) {
@@ -5300,11 +5373,11 @@
         }
         if (data.cumparaturi && Array.isArray(data.cumparaturi)) {
           checkShoppingNotifications(data.cumparaturi);
-          allShopping = data.cumparaturi;
+          allShopping = applyPendingOverlay('shop', data.cumparaturi);
           localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
         }
         if (data.ganduri && Array.isArray(data.ganduri)) {
-          allGanduri = data.ganduri;
+          allGanduri = applyPendingOverlay('gand', data.ganduri);
           localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         }
         if (data.schoolActivities && Array.isArray(data.schoolActivities)) {
@@ -5317,6 +5390,7 @@
           if (schoolSubTab === 'teme') renderSchoolTeme();
         }
         if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
+        if (Array.isArray(data.notificari) && window.famNotif) window.famNotif.setInbox(data.notificari);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
           psaltireGrupData = data.psaltireGrup;
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
@@ -5403,11 +5477,11 @@
 
         if (data.cumparaturi && Array.isArray(data.cumparaturi)) {
           checkShoppingNotifications(data.cumparaturi);
-          allShopping = data.cumparaturi;
+          allShopping = applyPendingOverlay('shop', data.cumparaturi);
           localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
         }
         if (data.ganduri && Array.isArray(data.ganduri)) {
-          allGanduri = data.ganduri;
+          allGanduri = applyPendingOverlay('gand', data.ganduri);
           localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         }
         if (data.schoolActivities && Array.isArray(data.schoolActivities)) {
@@ -5420,6 +5494,7 @@
           if (schoolSubTab === 'teme') renderSchoolTeme();
         }
         if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
+        if (Array.isArray(data.notificari) && window.famNotif) window.famNotif.setInbox(data.notificari);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
           psaltireGrupData = data.psaltireGrup;
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
@@ -5479,6 +5554,7 @@
 
 
     function renderAll() {
+      try { applyPomelnicTabVisibility(); } catch (e) {}
       document.getElementById('totalCount').textContent = getVisiblePeople().length;
       const countAtentie = getVisiblePeople().filter(p => p.necesitaAtentie === true).length;
       document.getElementById('atentieCount').textContent = countAtentie;
@@ -6575,7 +6651,42 @@
     let centerAdormitiMode = '20'; // '20', '30', 'ALL'
     let centerGradSliceSize = '20'; // '20', '30', 'ALL'
 
+    // v24.9: cine nu e admin vede doar taburile Pomelnicului în care are conținut partajat;
+    // grupul Psaltirii (catisme) e doar la admin.
+    function isAdminUser() {
+      const s = (typeof getAuthSession === 'function') ? getAuthSession() : null;
+      if (s && s.profile) return s.profile.rol === 'admin';
+      return getCurrentLoggedInUser() === 'Bogdan Murar';
+    }
+    function getPomelnicTabCounts() {
+      const vis = getVisiblePeople();
+      return {
+        astazi: 1,
+        total: vis.length,
+        psaltire: isAdminUser() ? Math.max(1, (psaltireGrupData || []).length) : 0,
+        bolnavi: vis.filter(p => p.bolnav === true).length + (isAdminUser() ? (psaltireGrupData || []).length : 0),
+        adormiti: vis.filter(p => p.stare === 'Adormit' || (p.da && p.da.trim())).length,
+        categorii: vis.filter(p => p.grad && p.grad.trim()).length
+      };
+    }
+    function applyPomelnicTabVisibility() {
+      const counts = getPomelnicTabCounts();
+      Object.keys(counts).forEach(id => {
+        const show = counts[id] > 0;
+        const btn = document.getElementById(`btnPomSub_${id}`);
+        if (btn) btn.classList.toggle('hidden', !show);
+        document.querySelectorAll(`button[onclick*="setPomelnicSubtab('${id}')"]`).forEach(b => {
+          if (b.id !== `btnPomSub_${id}` && id !== 'astazi') b.classList.toggle('hidden', !show);
+        });
+      });
+      const w = document.getElementById('ownerWidget_psaltire');
+      if (w && !isAdminUser()) w.classList.add('hidden');
+      return counts;
+    }
+
     function setPomelnicSubtab(subtabId) {
+      const tabCounts = applyPomelnicTabVisibility();
+      if (!(tabCounts[subtabId] > 0)) subtabId = 'astazi';
       currentPomelnicSubtab = subtabId;
       ['astazi', 'total', 'psaltire', 'bolnavi', 'adormiti', 'categorii'].forEach(id => {
         const view = document.getElementById(`pomelnicSubView_${id}`);
@@ -6633,7 +6744,7 @@
       const q = (document.getElementById('pomelnicCenterBolnaviSearch')?.value || '').toLowerCase().trim();
 
       // 1. Bolnavi din pomelnicul personal
-      const personalBolnavi = allPeople.filter(p => p.bolnav === true).map(p => ({
+      const personalBolnavi = getVisiblePeople().filter(p => p.bolnav === true).map(p => ({
         source: 'personal',
         id: p.rowId,
         nume: getPersonFullName(p),
@@ -8424,16 +8535,16 @@
         if (when.getTime() <= Date.now()) when.setDate(when.getDate() + 1);
         reminder = `${localDateStr(when)}T${timeInput.value}`;
       }
-      allGanduri.push({ rowId: tempRowId, gand: text, sursa: 'Rapid', data: new Date().toLocaleDateString('ro-RO'), user: getCurrentLoggedInUser(), proprietar: me, creatDe: me, reminder: reminder });
+      const quickNote = { rowId: tempRowId, gand: text, sursa: 'Rapid', data: new Date().toLocaleDateString('ro-RO'), user: getCurrentLoggedInUser(), proprietar: me, creatDe: me, reminder: reminder };
+      allGanduri.push(quickNote);
+      pendingPush('gand', 'add', quickNote);
       localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
       input.value = '';
       if (timeInput) timeInput.value = '';
       renderGanduriList();
       updateTodayWidgetView();
       showToast(reminder ? `Notiță salvată, reminder ${formatNoteReminder(reminder)}.` : 'Notiță salvată!');
-      const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(text)}&sursa=Rapid&user=${encodeURIComponent(getCurrentLoggedInUser())}&reminder=${encodeURIComponent(reminder)}&callback=void`;
-      document.body.appendChild(script);
+      sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(text)}&sursa=Rapid&user=${encodeURIComponent(getCurrentLoggedInUser())}&reminder=${encodeURIComponent(reminder)}&callback=void`);
     }
 
     // Reminderele notițelor proprii: notificare o singură dată, în primele 2 ore după ora setată
@@ -8518,19 +8629,20 @@
           g.sursa = sursa;
           g.reminder = reminder;
           if (!g.user && !g.author) g.user = curUser;
+          pendingPush('gand', 'upd', g);
         }
         localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         showToast("Notiță actualizată!");
 
-        const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGand&rowId=${editingGandRowId}&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&reminder=${encodeURIComponent(reminder)}&callback=void`;
-        document.body.appendChild(script);
+        sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGand&rowId=${editingGandRowId}&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&reminder=${encodeURIComponent(reminder)}&callback=void`);
 
         cancelGandEdit();
       } else {
         // rowId provizoriu (negativ) până la următoarea sincronizare, ca să nu se suprapună cu un rând real
         const newRowId = -Date.now();
-        allGanduri.push({ rowId: newRowId, gand: gand, sursa: sursa, data: new Date().toLocaleDateString('ro-RO'), user: curUser, author: curUser, proprietar: proprietar, creatDe: getMyAuthEmail(), reminder: reminder });
+        const newNote = { rowId: newRowId, gand: gand, sursa: sursa, data: new Date().toLocaleDateString('ro-RO'), user: curUser, author: curUser, proprietar: proprietar, creatDe: getMyAuthEmail(), reminder: reminder };
+        allGanduri.push(newNote);
+        pendingPush('gand', 'add', newNote);
         document.getElementById('gandReminder').value = '';
         localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
         showToast("Notiță salvată!");
@@ -8539,9 +8651,7 @@
         document.getElementById('gandInput').value = '';
         document.getElementById('gandInput').focus(); // Cursorul revine automat!
 
-        const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&reminder=${encodeURIComponent(reminder)}&proprietar=${encodeURIComponent(proprietar)}&callback=void`;
-        document.body.appendChild(script);
+        sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addGand&gand=${encodeURIComponent(gand)}&sursa=${encodeURIComponent(sursa)}&user=${encodeURIComponent(curUser)}&reminder=${encodeURIComponent(reminder)}&proprietar=${encodeURIComponent(proprietar)}&callback=void`);
       }
 
       renderGanduriList();
@@ -8577,14 +8687,14 @@
     function softDeleteManyGanduri(rowIds) {
       const removedItems = allGanduri.filter(g => rowIds.includes(g.rowId));
       allGanduri = allGanduri.filter(g => !rowIds.includes(g.rowId));
+      removedItems.forEach(g => pendingPush('gand', 'del', g));
       selectedGandIds.clear();
       localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
       renderGanduriList();
       updateTodayWidgetView();
 
-      const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=softDeleteGand&rowIds=${rowIds.join(',')}&callback=void`;
-      document.body.appendChild(script);
+      const realIds = rowIds.filter(id => id > 0);
+      if (realIds.length) sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=softDeleteGand&rowIds=${realIds.join(',')}&callback=void`);
 
       const msg = rowIds.length === 1 ? "Notiță ștearsă." : `${rowIds.length} notițe șterse.`;
       showUndoToast(msg, () => undoDeleteGanduri(rowIds, removedItems));
@@ -8592,14 +8702,15 @@
 
     function undoDeleteGanduri(rowIds, removedItems) {
       allGanduri = allGanduri.concat(removedItems);
+      syncPending.gand = (syncPending.gand || []).filter(p => !(p.op === 'del' && removedItems.some(r => r.rowId === p.item.rowId)));
+      removedItems.forEach(g => pendingPush('gand', 'restore', g));
       localStorage.setItem('diih_ganduri', JSON.stringify(allGanduri));
       renderGanduriList();
       updateTodayWidgetView();
       showToast("Ștergere anulată!");
 
-      const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=restoreGand&rowIds=${rowIds.join(',')}&callback=void`;
-      document.body.appendChild(script);
+      const realIds = rowIds.filter(id => id > 0);
+      if (realIds.length) sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=restoreGand&rowIds=${realIds.join(',')}&callback=void`);
     }
 
     function renderGanduriSelectionBar() {
@@ -8718,15 +8829,14 @@
       const shopId = 'SHOP-' + Date.now();
       const newItem = { id: shopId, rowId: -Date.now(), magazin, produs, cantitate: '1', nuPartaja: false, owner: getMyAuthEmail() };
       allShopping.push(newItem);
+      pendingPush('shop', 'add', newItem);
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       markShoppingItemAsLocallyKnown(newItem);
       input.value = '';
       renderShoppingList();
       updateTodayWidgetView();
       showToast(`Adăugat: ${produs} (${magazin})`);
-      const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=1&nuPartaja=false&callback=void`;
-      document.body.appendChild(script);
+      sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=1&nuPartaja=false&callback=void`);
     }
 
     function toggleShoppingGrouping() {
@@ -8810,10 +8920,10 @@
       const curUser = getCurrentLoggedInUser();
       if (!produs) return;
 
-      const newRowId = allShopping.length + 2;
       const shopId = 'SHOP-' + Date.now();
-      const newItem = { id: shopId, rowId: newRowId, magazin, produs, cantitate, nuPartaja, owner: getMyAuthEmail() || curUser };
+      const newItem = { id: shopId, rowId: -Date.now(), magazin, produs, cantitate, nuPartaja, owner: getMyAuthEmail() || curUser };
       allShopping.push(newItem);
+      pendingPush('shop', 'add', newItem);
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       markShoppingItemAsLocallyKnown(newItem);
       renderShoppingList();
@@ -8825,37 +8935,33 @@
       if (document.getElementById('shopNuPartaja')) document.getElementById('shopNuPartaja').checked = false;
       document.getElementById('shopProdus').focus(); // Cursorul revine automat!
 
-      const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&nuPartaja=${nuPartaja ? 'true' : 'false'}&owner=${encodeURIComponent(curUser)}&callback=void`;
-      document.body.appendChild(script);
+      sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addCumparaturi&id=${encodeURIComponent(shopId)}&magazin=${encodeURIComponent(magazin)}&produs=${encodeURIComponent(produs)}&cantitate=${encodeURIComponent(cantitate)}&nuPartaja=${nuPartaja ? 'true' : 'false'}&owner=${encodeURIComponent(curUser)}&callback=void`);
     }
 
     function removeShoppingItem(rowId) {
       const targetItem = allShopping.find(item => item.rowId === rowId);
       const produsText = targetItem ? targetItem.produs : '';
       const magazinText = targetItem ? targetItem.magazin : '';
+      const idText = targetItem && targetItem.id ? targetItem.id : '';
       allShopping = allShopping.filter(item => item.rowId !== rowId);
-      allShopping.forEach((item, idx) => { item.rowId = idx + 2; });
+      if (targetItem) pendingPush('shop', 'del', targetItem);
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       renderShoppingList();
       updateTodayWidgetView();
       showToast("Cumpărat!");
 
-      const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deleteCumparaturi&rowId=${rowId}&produs=${encodeURIComponent(produsText)}&magazin=${encodeURIComponent(magazinText)}&callback=void`;
-      document.body.appendChild(script);
+      sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deleteCumparaturi&id=${encodeURIComponent(idText)}&rowId=${rowId > 0 ? rowId : ''}&produs=${encodeURIComponent(produsText)}&magazin=${encodeURIComponent(magazinText)}&callback=void`);
     }
 
     function markWholeStoreCompleted(magazin) {
       allShopping = allShopping.filter(item => item.magazin !== magazin);
+      pendingPush('shop', 'delStore', { magazin });
       localStorage.setItem('diih_shopping', JSON.stringify(allShopping));
       renderShoppingList();
       updateTodayWidgetView();
       showToast(`Tot magazinul ${magazin} cumpărat!`);
 
-      const script = document.createElement('script');
-      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deleteMagazinCumparaturi&magazin=${encodeURIComponent(magazin)}&callback=void`;
-      document.body.appendChild(script);
+      sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=deleteMagazinCumparaturi&magazin=${encodeURIComponent(magazin)}&callback=void`);
     }
 
     function escapeHtmlText(str) {
@@ -11417,5 +11523,6 @@
     }
 
   </script>
+  <script src="./familie.js?v=24.9"></script>
 </body>
 </html>

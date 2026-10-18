@@ -1,6 +1,7 @@
-const CACHE_NAME = 'diih-cache-v24.8';
+const CACHE_NAME = 'diih-cache-v24.9';
 const ASSETS = [
   './index.html',
+  './familie.js',
   './andreea.html',
   './manifest.json',
   './manifest-andreea.json',
@@ -39,7 +40,7 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = e.request.url;
-  if (url.includes('script.google.com') || url.includes('doxologia.ro')) {
+  if (url.includes('script.google.com') || url.includes('doxologia.ro') || url.includes('.mp4')) {
     return;
   }
 

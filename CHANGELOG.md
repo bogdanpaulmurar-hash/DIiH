@@ -1,5 +1,17 @@
 # CHANGELOG — DIiH Hub
 
+## v24.9 — 2026-10-18 — Calendarul familiei, centru de notificări, ecran pornit, sfinții zilei, sincronizare fără pâlpâiri
+
+Frontend (`index.html`, **`familie.js` nou**, `awake.mp4` nou, `sw.js`) și backend (`_API.gs` 24.9 + **`Familie.gs` nou**). **Necesită deploy** + rularea o dată a `familieInstaleaza()`.
+
+- **Sincronizare Cumpărături/Notițe**: un produs/notiță adăugat(ă) sau șters(ă) nu mai dispare și reapare. Fiecare modificare rămâne „în așteptare” peste datele de pe server până o confirmă serverul (max. 3 min); după confirmare se face o sincronizare rapidă. Ștergerea la Cumpărături se face după ID (înainte „Suc” putea șterge „Suc de mere”).
+- **Calendarul familiei (Familie.gs)**: calendar Google „DIiH Familie” al adminului; membrii sunt invitați, deci evenimentul apare singur în Google Calendar al fiecăruia (Samsung, iPhone cu cont Google, Windows). Se creează automat: reminderele din Notițe (inclusiv cele trimise de admin altcuiva), evenimentele trimise din 🔔 → „📅 Eveniment pentru familie”, sărbătorile legale (zile libere, cu roșu) pe anul curent și următor (trigger lunar).
+- **Centru de notificări**: 🔔 în bara de sus, roșu cu număr când ai necitite; ecran dedicat cu „Citit tot”, filtru necitite, Accept/Ignoră la evenimente (Ignoră = scos din calendarul tău). Citit/necitit e pe server (tabul `Notificari`), deci la fel pe toate dispozitivele. Număr pe iconița aplicației unde sistemul permite (Badging API).
+- **Pornire**: dacă ai notificări necitite, aplicația se deschide în centrul de notificări; altfel la Acasă. Dacă ieși sub 20 de minute, revii în același tab.
+- **☀️ Ecran pornit**: buton rotund (dreapta jos): „Ține aplicația deschisă” fără limită sau 5/10/30/custom minute, cu countdown roșu sus pe centru. Wake Lock API, cu rezervă video mut pentru iPhone-uri mai vechi.
+- **Sfinții zilei**: card pe Acasă, preluat de pe doxologia.ro/calendarul-zilei (cache 3 ore); fiecare sfânt se deschide cu conținutul extins, plus Apostolul și Evanghelia zilei. Marile sărbători (✝) cu roșu; zilele libere legale cu chenar roșu gros și banner „ZI LIBERĂ”; afișează și următoarea zi liberă.
+- **Pomelnic**: cine nu e admin vede doar taburile cu conținut partajat; grupul Psaltirii (catisme) e doar la admin (și serverul nu-l mai trimite altora). Lista Bolnavi respectă partajarea.
+
 ## v24.8 — 2026-10-17 — Cumpărături: fără „(Bogdan Laptop Siemens)” la produsele altor utilizatori
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.8). Reparația principală e în frontend; backend-ul **necesită deploy** doar ca plasă de siguranță.

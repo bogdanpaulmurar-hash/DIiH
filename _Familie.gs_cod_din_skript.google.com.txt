@@ -1,0 +1,353 @@
+/**
+ * DIiH — Familie.gs (v24.9)
+ * Fișier NOU în Apps Script: + lângă „Fișiere” → Script → nume „Familie” → lipești tot conținutul.
+ *
+ * 1. Calendarul familiei: evenimentele (remindere din notițe, evenimente trimise între membri, sărbători legale)
+ *    se creează într-un calendar Google „DIiH Familie” al adminului, cu ceilalți membri ca INVITAȚI.
+ *    Invitația apare singură în Google Calendar al fiecăruia (Samsung Calendar, iPhone cu cont Google,
+ *    Outlook/Calendar pe Windows) — fără nimic instalat. Cine nu vrea evenimentul apasă „Ignoră” în aplicație
+ *    (e scos din invitați) sau „Nu” în Calendar.
+ * 2. Centrul de notificări: tabul „Notificari” din registru; fiecare cont își vede doar notificările lui,
+ *    citit/necitit sincronizat pe toate dispozitivele.
+ * 3. Sfinții zilei: preluați de pe doxologia.ro/calendarul-zilei (cache 3 ore), cu pagina extinsă la cerere.
+ *
+ * O SINGURĂ DATĂ, după lipire: rulează funcția familieInstaleaza() din editor (Rulează) și acceptă permisiunile
+ * (Calendar + acces la internet). Apoi Implementare → Gestionează implementările → Versiune nouă.
+ */
+
+const FAM_CAL_NAME = "DIiH Familie";
+const FAM_TZ = "Europe/Bucharest";
+const FAM_NOTIF_COLS = ["ID", "Destinatar", "Creat", "Titlu", "Mesaj", "Tab", "Citit", "Tip", "Status", "Ref", "DeLa"];
+
+// ---------- Rutare acțiuni noi (apelată din doGet, înainte de restul acțiunilor) ----------
+function familieHandleAction(ss, e, action, auth) {
+  const FAM_ACTIONS = ["notifList", "notifMarkRead", "notifRespond", "calAddEvent", "calStatus", "calSyncSarbatori", "famProfiles", "doxologiaZi", "doxologiaPagina"];
+  if (FAM_ACTIONS.indexOf(action) === -1) return null;
+  const p = e.parameter;
+  const me = auth.profile.email;
+  try {
+    if (action === "notifList") return returnResponse(e, { success: true, notificari: familieGetNotificari(ss, auth) });
+    if (action === "notifMarkRead") {
+      const ids = (p.ids || "").split(",").map(x => x.trim()).filter(Boolean);
+      famNotifUpdate(ss, me, r => (p.all === "1" || ids.indexOf(r.ID) !== -1), { Citit: "DA" });
+      return returnResponse(e, { success: true });
+    }
+    if (action === "notifRespond") {
+      const raspuns = p.raspuns === "accept" ? "acceptat" : "ignorat";
+      let ref = "";
+      famNotifUpdate(ss, me, r => r.ID === p.id, { Status: raspuns, Citit: "DA" }, r => { ref = r.Ref; });
+      if (raspuns === "ignorat" && ref) {
+        try { const ev = famCalendar().getEventById(ref); if (ev) ev.removeGuest(me); } catch (err) {}
+      }
+      return returnResponse(e, { success: true, status: raspuns });
+    }
+    if (action === "famProfiles") {
+      return returnResponse(e, { success: true, profiles: authGetProfiles(ss).map(x => ({ email: x.email, nume: x.nume || x.email, rol: x.rol })) });
+    }
+    if (action === "calAddEvent") {
+      const dest = (p.destinatari || "").split(",").map(x => x.trim().toLowerCase()).filter(x => x && authFindProfile(ss, x));
+      if (!p.titlu || !p.start) return returnResponse(e, { success: false, error: "Lipsește titlul sau data." });
+      const id = famCreateEvent({
+        titlu: p.titlu, start: p.start, durata: parseInt(p.durata, 10) || 60, toataZiua: p.toataZiua === "true",
+        descriere: (p.descriere || "") + "\n\nTrimis din DIiH de " + (auth.profile.nume || me), invitati: dest.concat([me])
+      });
+      dest.filter(x => x !== me).forEach(x => famAddNotif(ss, {
+        dest: x, titlu: "📅 " + (auth.profile.nume || me).split(" ")[0] + " ți-a trimis un eveniment",
+        mesaj: p.titlu + " — " + famFmtStart(p.start, p.toataZiua === "true"), tab: "notificari", tip: "eveniment", ref: id, deLa: me
+      }));
+      return returnResponse(e, { success: true, eventId: id });
+    }
+    if (action === "calStatus") {
+      const cal = famCalendar();
+      return returnResponse(e, { success: true, nume: cal.getName(), id: cal.getId(), link: "https://calendar.google.com/calendar/u/0/r?cid=" + encodeURIComponent(cal.getId()) });
+    }
+    if (action === "calSyncSarbatori") {
+      if (auth.profile.rol !== "admin") return returnResponse(e, { success: false, forbidden: true });
+      return returnResponse(e, { success: true, create: famSyncSarbatori(ss) });
+    }
+    if (action === "doxologiaZi") return returnResponse(e, Object.assign({ success: true }, doxologiaZi(p.fresh === "1")));
+    if (action === "doxologiaPagina") return returnResponse(e, Object.assign({ success: true }, doxologiaPagina(p.url || "")));
+  } catch (err) {
+    return returnResponse(e, { success: false, error: err.message });
+  }
+  return null;
+}
+
+// ---------- Instalare (rulează o dată din editor) ----------
+function familieInstaleaza() {
+  const ss = getSpreadsheet();
+  const cal = famCalendar();
+  famNotifSheet(ss);
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === "familieLunar").forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger("familieLunar").timeBased().onMonthDay(1).atHour(6).create();
+  const n = famSyncSarbatori(ss);
+  doxologiaZi(true);
+  Logger.log("Calendar: " + cal.getName() + " (" + cal.getId() + "), sărbători create: " + n);
+}
+
+function familieLunar() {
+  const ss = getSpreadsheet();
+  famSyncSarbatori(ss);
+  famCleanupNotif(ss);
+}
+
+// ---------- Calendar ----------
+function famCalendar() {
+  const props = PropertiesService.getScriptProperties();
+  const id = props.getProperty("FAM_CAL_ID");
+  let cal = id ? CalendarApp.getCalendarById(id) : null;
+  if (!cal) {
+    const found = CalendarApp.getCalendarsByName(FAM_CAL_NAME);
+    cal = found.length ? found[0] : CalendarApp.createCalendar(FAM_CAL_NAME, { timeZone: FAM_TZ, color: CalendarApp.Color.RED });
+    props.setProperty("FAM_CAL_ID", cal.getId());
+  }
+  return cal;
+}
+
+function famParseLocal(str) {
+  // "yyyy-MM-ddTHH:mm" sau "yyyy-MM-dd" în ora României
+  const m = (str || "").match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/);
+  if (!m) return null;
+  return Utilities.parseDate(`${m[1]}-${m[2]}-${m[3]} ${m[4] || "00"}:${m[5] || "00"}`, FAM_TZ, "yyyy-MM-dd HH:mm");
+}
+
+function famFmtStart(str, allDay) {
+  const d = famParseLocal(str);
+  return d ? Utilities.formatDate(d, FAM_TZ, allDay ? "dd.MM.yyyy" : "dd.MM.yyyy HH:mm") : str;
+}
+
+// Creează (sau actualizează, dacă se dă eventId) un eveniment; invitații = emailuri; adminul (proprietarul calendarului) nu e invitat
+function famCreateEvent(o) {
+  const cal = famCalendar();
+  const owner = (Session.getEffectiveUser().getEmail() || "").toLowerCase();
+  const guests = (o.invitati || []).map(x => (x || "").toLowerCase()).filter((x, i, a) => x && x !== owner && a.indexOf(x) === i);
+  const start = famParseLocal(o.start);
+  if (!start) throw new Error("Dată invalidă: " + o.start);
+  let ev = o.eventId ? cal.getEventById(o.eventId) : null;
+  if (ev) {
+    ev.setTitle(o.titlu);
+    if (o.toataZiua) ev.setAllDayDate(start); else ev.setTime(start, new Date(start.getTime() + (o.durata || 30) * 60000));
+    ev.setDescription(o.descriere || "");
+    const cur = ev.getGuestList().map(g => g.getEmail().toLowerCase());
+    guests.filter(g => cur.indexOf(g) === -1).forEach(g => ev.addGuest(g));
+  } else {
+    const opts = { description: o.descriere || "", guests: guests.join(","), sendInvites: true };
+    ev = o.toataZiua ? cal.createAllDayEvent(o.titlu, start, opts)
+                     : cal.createEvent(o.titlu, start, new Date(start.getTime() + (o.durata || 30) * 60000), opts);
+  }
+  try {
+    ev.removeAllReminders();
+    if (o.toataZiua) ev.addPopupReminder(15 * 60); // ziua dinainte la 09:00
+    else { ev.addPopupReminder(0); ev.addPopupReminder(15); }
+    if (o.culoare) ev.setColor(o.culoare);
+  } catch (err) {}
+  return ev.getId();
+}
+
+function famLinkSheet(ss) {
+  let sh = ss.getSheetByName("Calendar_Legaturi");
+  if (!sh) { sh = ss.insertSheet("Calendar_Legaturi"); sh.appendRow(["Cheie", "EventId", "Actualizat"]); sh.getRange("A1:C1").setFontWeight("bold"); }
+  return sh;
+}
+function famLinkGet(ss, key) {
+  const sh = famLinkSheet(ss);
+  if (sh.getLastRow() < 2) return null;
+  const vals = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
+  for (let i = 0; i < vals.length; i++) if (vals[i][0] === key) return { row: i + 2, eventId: vals[i][1] };
+  return null;
+}
+function famLinkSet(ss, key, eventId) {
+  const sh = famLinkSheet(ss);
+  const ex = famLinkGet(ss, key);
+  const now = Utilities.formatDate(new Date(), FAM_TZ, "yyyy-MM-dd HH:mm:ss");
+  if (ex) sh.getRange(ex.row, 2, 1, 2).setValues([[eventId, now]]); else sh.appendRow([key, eventId, now]);
+}
+
+// Notiță salvată (din addGand / updateGand): reminder → eveniment în calendarul proprietarului;
+// notiță scrisă pentru altcineva → notificare în centrul lui.
+function familieOnNoteSaved(ss, auth, n) {
+  try {
+    const me = auth.profile.email;
+    const prop = (n.proprietar || me).toLowerCase();
+    if (prop !== me && n.nou) {
+      famAddNotif(ss, { dest: prop, titlu: "📝 " + (auth.profile.nume || me).split(" ")[0] + " ți-a scris o notiță", mesaj: (n.text || "").slice(0, 160), tab: "notite", tip: "notita", deLa: me });
+    }
+    if (!n.reminder || !n.rowId) return;
+    const key = "NOTE-" + n.rowId;
+    const ex = famLinkGet(ss, key);
+    const id = famCreateEvent({
+      eventId: ex ? ex.eventId : null, titlu: "📝 " + (n.text || "Notiță").slice(0, 80), start: n.reminder, durata: 15,
+      descriere: (n.text || "") + "\n\nReminder din DIiH (Notițe)", invitati: [prop]
+    });
+    famLinkSet(ss, key, id);
+  } catch (err) { famLog(ss, "note_calendar", err); }
+}
+
+// Produs partajat adăugat → notificare în centrul celorlalți membri cu acces la Cumpărături
+function familieOnShopAdded(ss, auth, produs, magazin, nuPartaja) {
+  try {
+    if (nuPartaja) return;
+    const me = auth.profile.email;
+    const first = (auth.profile.nume || me).split(" ")[0];
+    authGetProfiles(ss).filter(x => x.email !== me && (x.rol === "admin" || authLevelOk((x.permisiuni || {}).cumparaturi, "view"))).forEach(x =>
+      famAddNotif(ss, { dest: x.email, titlu: "🛒 Cumpărături • " + first, mesaj: first + " a adăugat: " + produs + (magazin ? " (" + magazin + ")" : ""), tab: "cumparaturi", tip: "cumparaturi", deLa: me }));
+  } catch (err) { famLog(ss, "shop_notif", err); }
+}
+
+// ---------- Sărbători legale (zile libere) ----------
+function famPasteOrtodox(an) {
+  const a = an % 4, b = an % 7, c = an % 19;
+  const d = (19 * c + 15) % 30, e = (2 * a + 4 * b - d + 34) % 7;
+  const luna = Math.floor((d + e + 114) / 31), zi = ((d + e + 114) % 31) + 1;
+  const julian = new Date(an, luna - 1, zi);
+  julian.setDate(julian.getDate() + 13);
+  return julian;
+}
+function famSarbatoriLegale(an) {
+  const P = famPasteOrtodox(an);
+  const plus = n => { const d = new Date(P); d.setDate(d.getDate() + n); return d; };
+  const z = (l, d) => new Date(an, l - 1, d);
+  return [
+    [z(1, 1), "Anul Nou"], [z(1, 2), "Anul Nou (a doua zi)"], [z(1, 6), "Botezul Domnului (Boboteaza)"],
+    [z(1, 7), "Soborul Sf. Ioan Botezătorul"], [z(1, 24), "Ziua Unirii Principatelor"], [plus(-2), "Vinerea Mare"],
+    [P, "Învierea Domnului (Paștile)"], [plus(1), "A doua zi de Paști"], [z(5, 1), "Ziua Muncii"], [z(6, 1), "Ziua Copilului"],
+    [plus(49), "Pogorârea Sfântului Duh (Rusaliile)"], [plus(50), "A doua zi de Rusalii"], [z(8, 15), "Adormirea Maicii Domnului"],
+    [z(11, 30), "Sf. Apostol Andrei"], [z(12, 1), "Ziua Națională"], [z(12, 25), "Nașterea Domnului (Crăciunul)"], [z(12, 26), "A doua zi de Crăciun"]
+  ];
+}
+function famSyncSarbatori(ss) {
+  const emails = authGetProfiles(ss).map(x => x.email);
+  const an = new Date().getFullYear();
+  let create = 0;
+  [an, an + 1].forEach(y => famSarbatoriLegale(y).forEach(([d, nume]) => {
+    const key = "SARB-" + Utilities.formatDate(d, FAM_TZ, "yyyy-MM-dd");
+    if (famLinkGet(ss, key) || d < new Date(Date.now() - 86400000)) return;
+    const id = famCreateEvent({
+      titlu: "🔴 " + nume + " (zi liberă)", start: Utilities.formatDate(d, FAM_TZ, "yyyy-MM-dd"), toataZiua: true,
+      descriere: "Sărbătoare legală — zi nelucrătoare.", invitati: emails, culoare: CalendarApp.EventColor.RED
+    });
+    famLinkSet(ss, key, id);
+    create++;
+  }));
+  return create;
+}
+
+// ---------- Centrul de notificări ----------
+function famNotifSheet(ss) {
+  let sh = ss.getSheetByName("Notificari");
+  if (!sh) { sh = ss.insertSheet("Notificari"); sh.appendRow(FAM_NOTIF_COLS); sh.getRange(1, 1, 1, FAM_NOTIF_COLS.length).setFontWeight("bold"); }
+  return sh;
+}
+function famAddNotif(ss, n) {
+  famNotifSheet(ss).appendRow(["N-" + Date.now() + "-" + Math.floor(Math.random() * 1000), (n.dest || "").toLowerCase(),
+    Utilities.formatDate(new Date(), FAM_TZ, "yyyy-MM-dd HH:mm:ss"), n.titlu || "", n.mesaj || "", n.tab || "", "NU", n.tip || "", "", n.ref || "", n.deLa || ""]);
+}
+function famNotifRows(ss) {
+  const sh = famNotifSheet(ss);
+  if (sh.getLastRow() < 2) return [];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, FAM_NOTIF_COLS.length).getValues().map((r, i) => {
+    const o = { _row: i + 2 };
+    FAM_NOTIF_COLS.forEach((c, j) => { o[c] = (r[j] instanceof Date) ? Utilities.formatDate(r[j], FAM_TZ, "yyyy-MM-dd HH:mm:ss") : (r[j] || "").toString(); });
+    return o;
+  });
+}
+function familieGetNotificari(ss, auth) {
+  try {
+    const me = auth.profile.email;
+    return famNotifRows(ss).filter(r => r.Destinatar === me).slice(-100).reverse().map(r => ({
+      id: r.ID, creat: r.Creat, titlu: r.Titlu, mesaj: r.Mesaj, tab: r.Tab, citit: r.Citit === "DA", tip: r.Tip, status: r.Status, ref: r.Ref, deLa: r.DeLa
+    }));
+  } catch (err) { return []; }
+}
+function famNotifUpdate(ss, me, pred, changes, onMatch) {
+  const sh = famNotifSheet(ss);
+  famNotifRows(ss).forEach(r => {
+    if (r.Destinatar !== me || !pred(r)) return;
+    if (onMatch) onMatch(r);
+    Object.keys(changes).forEach(k => sh.getRange(r._row, FAM_NOTIF_COLS.indexOf(k) + 1).setValue(changes[k]));
+  });
+}
+function famCleanupNotif(ss) {
+  const sh = famNotifSheet(ss);
+  const limit = Utilities.formatDate(new Date(Date.now() - 90 * 86400000), FAM_TZ, "yyyy-MM-dd");
+  const rows = famNotifRows(ss);
+  for (let i = rows.length - 1; i >= 0; i--) if (rows[i].Citit === "DA" && rows[i].Creat < limit) sh.deleteRow(rows[i]._row);
+}
+function famLog(ss, what, err) {
+  try { logToAppSheet(ss, { modul: "Familie", actiune: what, status: "ERROR", detalii: err && err.message ? err.message : String(err), user: "-" }); } catch (e) {}
+}
+
+// ---------- Sfinții zilei (doxologia.ro) ----------
+function famDecode(s) {
+  const map = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", icirc: "î", Icirc: "Î", acirc: "â", Acirc: "Â", abreve: "ă", Abreve: "Ă", rsquo: "’", lsquo: "‘", rdquo: "”", ldquo: "„", bdquo: "„", ndash: "–", mdash: "—", hellip: "…" };
+  return (s || "").replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCharCode(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (m, d) => String.fromCharCode(parseInt(d, 10)))
+    .replace(/&([a-z]+);/gi, (m, n) => map[n] !== undefined ? map[n] : m);
+}
+function famText(html) {
+  return famDecode((html || "").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "")).replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
+}
+function famAbs(href) {
+  if (!href) return "";
+  if (/^https?:\/\//.test(href)) return href;
+  return "https://doxologia.ro" + (href.charAt(0) === "/" ? "" : "/") + href;
+}
+function famFetch(url) {
+  const r = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true, headers: { "User-Agent": "Mozilla/5.0 (DIiH)" } });
+  if (r.getResponseCode() !== 200) throw new Error("doxologia.ro a răspuns " + r.getResponseCode());
+  return r.getContentText("UTF-8");
+}
+function doxologiaZi(fresh) {
+  const key = "dox_zi_" + Utilities.formatDate(new Date(), FAM_TZ, "yyyyMMdd");
+  const cache = CacheService.getScriptCache();
+  if (!fresh) { const c = cache.get(key); if (c) return JSON.parse(c); }
+  const html = famFetch("https://doxologia.ro/calendarul-zilei");
+  const start = Math.max(0, html.search(/<h1[^>]*>[^<]*Calendarul zilei/i));
+  let end = html.indexOf("Apostolul zilei", start);
+  if (end < 0) end = start + 150000;
+  const region = html.slice(start, end);
+  const firstH2 = region.search(/<h2/i);
+  const antet = famText(region.slice(region.indexOf(">") + 1, firstH2 > 0 ? firstH2 : 2000)).replace(/^Calendarul zilei\s*/i, "").split("\n").filter(Boolean).slice(0, 3);
+  const sfinti = [];
+  const re = /<h2[^>]*>([\s\S]*?)<\/h2>/gi;
+  let m;
+  while ((m = re.exec(region)) && sfinti.length < 20) {
+    const nume = famText(m[1]);
+    if (!nume || nume.length > 200) continue;
+    const href = (m[1].match(/href="([^"]+)"/i) || [])[1] || "";
+    sfinti.push({ nume: nume, url: famAbs(href), cruce: /^\s*[✝†]/.test(nume) || /\(\+\)/.test(nume) });
+  }
+  const citire = label => {
+    const i = html.indexOf(label, end - 10);
+    if (i < 0) return null;
+    const a = html.slice(i, i + 4000).match(/<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i);
+    return a ? { text: famText(a[2]), url: famAbs(a[1]) } : null;
+  };
+  const out = { data: Utilities.formatDate(new Date(), FAM_TZ, "yyyy-MM-dd"), antet: antet, sfinti: sfinti, apostol: citire("Apostolul zilei"), evanghelie: citire("Evanghelia zilei"), sursa: "https://doxologia.ro/calendarul-zilei" };
+  cache.put(key, JSON.stringify(out), 3 * 3600);
+  return out;
+}
+function doxologiaPagina(url) {
+  if (!/^https:\/\/(www\.)?doxologia\.ro\/[A-Za-z0-9\-\/_%+.]+$/.test(url)) throw new Error("Link invalid.");
+  const cache = CacheService.getScriptCache();
+  const key = "dox_p_" + Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, url)).slice(0, 20);
+  const c = cache.get(key);
+  if (c) return JSON.parse(c);
+  const html = famFetch(url);
+  const titlu = famText((html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1] || "");
+  let body = html.slice(Math.max(0, html.search(/<h1/i)));
+  const stop = body.search(/Rugăciuni zilnice|Recomandările zilei|Propuneri de lectură|<footer/i);
+  if (stop > 0) body = body.slice(0, stop);
+  const paragrafe = [];
+  const re = /<(p|h2|h3|h4|blockquote)[^>]*>([\s\S]*?)<\/\1>/gi;
+  let m;
+  while ((m = re.exec(body)) && paragrafe.length < 80) {
+    const t = famText(m[2]);
+    if (!t || t.length < 3) continue;
+    paragrafe.push({ tip: m[1].toLowerCase().charAt(0) === "h" ? "titlu" : "text", text: t });
+  }
+  const img = (body.match(/<img[^>]+src="([^"]+\.(?:jpe?g|png|webp)[^"]*)"/i) || [])[1] || "";
+  const out = { titlu: titlu, paragrafe: paragrafe, imagine: img ? famAbs(img) : "", url: url };
+  try { cache.put(key, JSON.stringify(out).slice(0, 95000), 6 * 3600); } catch (err) {}
+  return out;
+}
