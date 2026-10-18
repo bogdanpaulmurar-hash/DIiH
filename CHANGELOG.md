@@ -1,5 +1,10 @@
 # CHANGELOG — DIiH Hub
 
+## v24.14 — 2026-10-18 — Ecran pornit: pagină separată pentru iPhone (PiP din Safari)
+
+- `pip.html` nou: numărătoarea 5/10/30 min ca video simplu, deschisă în Safari (din meniul ☀️ → „🍎 iPhone: deschide în Safari”). Pe iPhone, aplicația instalată pe ecranul principal nu permite fereastra plutitoare; în Safari merge prin ⧉ sau prin ecran complet + glisare în sus (cu „Pornește PiP automat” activ în Setări).
+- În aplicație, pe iPhone se încearcă întâi API-ul WebKit pentru fereastra plutitoare.
+
 ## v24.13 — 2026-10-18 — Remindere programate pentru familie
 
 Frontend (`familie.js`, `index.html`, `sw.js`) și backend (`Familie.gs` 24.13 + 4 reguli noi în `_API.gs`). **Necesită deploy** (împreună cu v24.9).

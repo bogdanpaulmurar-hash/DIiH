@@ -168,6 +168,7 @@
             <button onclick="famAw.pipEnter()" class="w-full py-2 rounded-xl bg-cyan-700 text-white font-bold">⧉ Mută peste aplicații</button>
             <p class="text-[9px] text-slate-500">Dacă butonul nu merge, apasă iconița ⧉ (Picture-in-Picture) din colțul video-ului, apoi treci în Teams.</p>
           </div>
+          <a href="./pip.html?m=30" target="_blank" rel="noopener" class="block w-full py-2 rounded-xl bg-slate-800 border border-slate-500 text-center font-bold">🍎 iPhone: deschide în Safari (ecran complet → glisează în sus)</a>
         </div>
         <p class="text-[9px] text-slate-500 leading-snug">Funcționează cât DIiH e deschis pe ecran. Când treci în altă aplicație, telefonul preia controlul; la revenire se reia automat până expiră timpul.</p>
         <button onclick="famAw.fab(false)" class="text-[9px] text-slate-500 underline">Ascunde butonul (îl reafișezi din 🔔 Notificări)</button>
@@ -213,6 +214,11 @@
     if (!v) return;
     if (v.paused) v.play().catch(() => {});
     try {
+      if (typeof v.webkitSupportsPresentationMode === 'function' && v.webkitSupportsPresentationMode('picture-in-picture') && /iPhone|iPad/.test(navigator.userAgent)) {
+        v.webkitSetPresentationMode('picture-in-picture');
+        awMenu(false);
+        return;
+      }
       if (document.pictureInPictureEnabled && typeof v.requestPictureInPicture === 'function') {
         v.requestPictureInPicture()
           .then(() => { toast('⧉ Numărătoarea plutește. Poți trece în Teams.'); awMenu(false); })
