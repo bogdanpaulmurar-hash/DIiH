@@ -158,17 +158,19 @@
         <div class="pt-2 border-t border-slate-700 space-y-1.5">
           <p class="text-[10px] font-bold text-cyan-300">⧉ Varianta 2 (experimental): fereastră plutitoare</p>
           <p class="text-[9px] text-slate-500 leading-snug">Numărătoarea roșie plutește peste Teams / browser, ca un video mic. Cât rulează video-ul, telefonul de obicei nu stinge ecranul. De testat pe fiecare telefon.</p>
-          <div class="grid grid-cols-3 gap-1">
-            <button onclick="famAw.pip(5)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">⧉ 5′</button>
-            <button onclick="famAw.pip(10)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">⧉ 10′</button>
-            <button onclick="famAw.pip(30)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">⧉ 30′</button>
+          <div class="grid grid-cols-5 gap-1">
+            <button onclick="famAw.pip(5)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">5′</button>
+            <button onclick="famAw.pip(10)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">10′</button>
+            <button onclick="famAw.pip(30)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">30′</button>
+            <button onclick="famAw.pip(60)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">1h</button>
+            <button onclick="famAw.pipCustom()" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">⏱…</button>
           </div>
           <div id="awPipBox" class="hidden space-y-1.5">
             <div id="awPipSlot" class="rounded-lg overflow-hidden border border-red-800 bg-black"></div>
             <button onclick="famAw.pipEnter()" class="w-full py-2 rounded-xl bg-cyan-700 text-white font-bold">⧉ Mută peste aplicații</button>
             <p class="text-[9px] text-slate-500">Dacă butonul nu merge, apasă iconița ⧉ (Picture-in-Picture) din colțul video-ului, apoi treci în Teams.</p>
           </div>
-          <a href="./pip.html?m=30" target="_blank" rel="noopener" class="block w-full py-2 rounded-xl bg-slate-800 border border-slate-500 text-center font-bold">🍎 iPhone: deschide în Safari (ecran complet → glisează în sus)</a>
+          <a href="./pip.html?m=60" target="_blank" rel="noopener" class="block w-full py-2 rounded-xl bg-slate-800 border border-slate-500 text-center font-bold">🍎 iPhone: deschide în Safari (ecran complet → glisează în sus)</a>
         </div>
         <p class="text-[9px] text-slate-500 leading-snug">Funcționează cât DIiH e deschis pe ecran. Când treci în altă aplicație, telefonul preia controlul; la revenire se reia automat până expiră timpul.</p>
         <button onclick="famAw.fab(false)" class="text-[9px] text-slate-500 underline">Ascunde butonul (îl reafișezi din 🔔 Notificări)</button>
@@ -188,10 +190,14 @@
   function pipEl() {
     if (pipVideo) return pipVideo;
     const v = document.createElement('video');
-    v.muted = true; v.playsInline = true; v.controls = true; v.preload = 'auto';
-    v.setAttribute('playsinline', ''); v.setAttribute('muted', ''); v.setAttribute('webkit-playsinline', '');
+    // Video CU sunet (o pistă audio de liniște, nu „muted”): telefoanele tratează doar redarea reală ca video
+    // și abia atunci nu sting ecranul. Un video mut era ignorat pe 13 Pro Max și S24.
+    v.muted = false; v.volume = 1; v.playsInline = true; v.controls = true; v.preload = 'metadata';
+    v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
     v.style.cssText = 'width:100%;display:block;aspect-ratio:8/3;background:#000';
     v.addEventListener('ended', () => {
+      // peste 2 ore: video-ul se reia până expiră timpul ales
+      if (aw.mode === 'timer' && aw.until - Date.now() > 5000) { v.currentTime = 0; v.play().catch(() => {}); return; }
       if (aw.mode === 'timer') { awStop(true); toast('⏱ Timpul pentru ecran pornit s-a încheiat.'); }
       pipStop();
     });
@@ -205,9 +211,22 @@
     const box = document.getElementById('awPipBox');
     if (box) box.classList.remove('hidden');
     const v = pipEl();
-    v.src = `./pip/pip-${min}.mp4`;
-    try { v.currentTime = 0; } catch (e) {}
-    v.play().then(() => pipEnter(true)).catch(() => toast('Apasă ▶ pe video, apoi „Mută peste aplicații”.'));
+    // Un singur video de 2 ore cu numărătoare; pornim de la poziția care arată exact timpul ales
+    const offset = Math.max(0, 7200 - min * 60);
+    if (!/pip-120\.mp4$/.test(v.currentSrc || '')) v.src = './pip/pip-120.mp4';
+    const seek = () => { try { v.currentTime = offset; } catch (e) {} };
+    if (v.readyState >= 1) seek(); else v.addEventListener('loadedmetadata', seek, { once: true });
+    v.muted = false;
+    v.play().then(() => pipEnter(true)).catch(() => {
+      // fără gest valid sau cu sunet blocat: încercăm mut, apoi utilizatorul apasă „Mută peste aplicații”
+      v.muted = true;
+      v.play().catch(() => {});
+      toast('Apasă ▶ pe video (cu sunet), apoi „Mută peste aplicații”.');
+    });
+  }
+  function pipCustom() {
+    const n = parseInt(prompt('Câte minute? (peste 120, video-ul se reia până la final)', '45'), 10);
+    if (n > 0 && n <= 600) pipStart(n);
   }
   function pipEnter(auto) {
     const v = pipVideo;
@@ -242,7 +261,7 @@
     const box = document.getElementById('awPipBox');
     if (box) box.classList.add('hidden');
   }
-  window.famAw = { start: awStart, stop: awStop, menu: awMenu, custom: awCustom, fab: awSetFabVisible, pip: pipStart, pipEnter: () => pipEnter(false) };
+  window.famAw = { start: awStart, stop: awStop, menu: awMenu, custom: awCustom, fab: awSetFabVisible, pip: pipStart, pipCustom, pipEnter: () => pipEnter(false) };
 
   // =====================================================================
   // 2. CENTRUL DE NOTIFICĂRI

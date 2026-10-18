@@ -21,9 +21,9 @@
 <body>
   <h1>☀️ Ecran pornit — fereastră plutitoare</h1>
   <div class="row">
-    <button data-m="5">5′</button><button data-m="10">10′</button><button data-m="30">30′</button>
+    <button data-m="5">5′</button><button data-m="10">10′</button><button data-m="30">30′</button><button data-m="60">1h</button><button data-m="0">⏱…</button>
   </div>
-  <video id="v" playsinline webkit-playsinline muted controls preload="auto"></video>
+  <video id="v" playsinline webkit-playsinline controls preload="metadata" src="./pip/pip-120.mp4"></video>
   <div class="row">
     <button class="main" id="pip">⧉ Fereastră plutitoare</button>
     <button id="fs">⛶ Ecran complet</button>
@@ -38,14 +38,21 @@
   <script>
     const v = document.getElementById('v');
     const msg = t => { document.getElementById('msg').textContent = t || ''; };
-    let min = Number(new URLSearchParams(location.search).get('m')) || 30;
+    // Un singur video de 2 ore, cu pistă audio de liniște (telefonul îl tratează ca video real și nu stinge ecranul).
+    // Pornim de la poziția care arată timpul ales; peste 2 ore se reia până la final.
+    let min = Number(new URLSearchParams(location.search).get('m')) || 60;
+    let until = 0;
+    function seek() { try { v.currentTime = Math.max(0, 7200 - min * 60); } catch (e) {} }
     function pick(m) {
-      min = [5, 10, 30].includes(m) ? m : 30;
-      document.querySelectorAll('button[data-m]').forEach(b => b.classList.toggle('on', Number(b.dataset.m) === min));
-      v.src = `./pip/pip-${min}.mp4`;
-      v.load();
+      if (m === 0) { const n = parseInt(prompt('Câte minute?', '45'), 10); if (!(n > 0 && n <= 600)) return; m = n; }
+      min = m;
+      until = Date.now() + min * 60000;
+      document.querySelectorAll('button[data-m]').forEach(b => b.classList.toggle('on', Number(b.dataset.m) === min || (b.dataset.m === '0' && ![5, 10, 30, 60].includes(min))));
+      if (v.readyState >= 1) seek(); else v.addEventListener('loadedmetadata', seek, { once: true });
+      v.muted = false;
+      v.play().catch(() => msg('Apasă ▶ pe video.'));
     }
-    document.querySelectorAll('button[data-m]').forEach(b => b.onclick = () => { pick(Number(b.dataset.m)); v.play().catch(() => {}); });
+    document.querySelectorAll('button[data-m]').forEach(b => b.onclick = () => pick(Number(b.dataset.m)));
     document.getElementById('pip').onclick = () => {
       v.play().catch(() => {});
       try {
@@ -66,8 +73,14 @@
         else if (v.requestFullscreen) v.requestFullscreen();
       } catch (e) { msg(e.message); }
     };
-    v.addEventListener('ended', () => msg('⏱ Timpul s-a încheiat.'));
-    pick(min);
+    v.addEventListener('ended', () => {
+      if (until - Date.now() > 5000) { v.currentTime = 0; v.play().catch(() => {}); return; }
+      msg('⏱ Timpul s-a încheiat.');
+    });
+    v.addEventListener('timeupdate', () => { if (until && Date.now() >= until) { v.pause(); msg('⏱ Timpul s-a încheiat.'); until = 0; } });
+    document.querySelectorAll('button[data-m]').forEach(b => b.classList.toggle('on', Number(b.dataset.m) === min));
+    v.addEventListener('loadedmetadata', seek, { once: true });
+    v.addEventListener('play', () => { if (!until) until = Date.now() + min * 60000; });
   </script>
 </body>
 </html>

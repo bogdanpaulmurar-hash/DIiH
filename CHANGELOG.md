@@ -1,5 +1,11 @@
 # CHANGELOG — DIiH Hub
 
+## v24.15 — 2026-10-18 — Ecran pornit: video cu sunet (liniște), 1 oră și timp la alegere
+
+- Fereastra plutitoare folosește acum un singur video de 2 ore (`pip/pip-120.mp4`) **cu pistă audio de liniște** și redat **fără mute**. Telefoanele nu tratau video-ul mut ca redare reală (pe 13 Pro Max și S24 ecranul se stingea); un video cu sunet e tratat ca YouTube.
+- Butoane 5′ / 10′ / 30′ / **1h** / **⏱ la alegere**; video-ul pornește de la poziția care arată exact timpul ales, iar peste 2 ore se reia până la final. La fel în `pip.html` (Safari).
+- Atenție: redarea cu sunet poate opri muzica pornită în altă aplicație.
+
 ## v24.14 — 2026-10-18 — Ecran pornit: pagină separată pentru iPhone (PiP din Safari)
 
 - `pip.html` nou: numărătoarea 5/10/30 min ca video simplu, deschisă în Safari (din meniul ☀️ → „🍎 iPhone: deschide în Safari”). Pe iPhone, aplicația instalată pe ecranul principal nu permite fereastra plutitoare; în Safari merge prin ⧉ sau prin ecran complet + glisare în sus (cu „Pornește PiP automat” activ în Setări).
