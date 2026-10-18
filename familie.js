@@ -360,6 +360,7 @@
     const n = allItems().find(x => x.id === id);
     if (!n) return;
     if (n.tip !== 'eveniment' || n.status) markRead([id], false);
+    if (n.tab === 'remindere') { remShow(); return; }
     if (n.tab && n.tab !== 'notificari') {
       famCloseCenter();
       try { switchTab(n.tab); } catch (e) {}
@@ -782,6 +783,292 @@
   }
 
   // =====================================================================
+  // 3b. REMINDERE PROGRAMATE (tabul „Remindere” din registru, prin Familie.gs)
+  // =====================================================================
+  // Recurență: o dată / zilnic / anumite zile / lunar / anual; 1-3 (max. 6) ore pe zi; pentru unul sau mai mulți membri.
+  // Fiecare reminder activ ajunge în calendarul destinatarilor (opțional) și ca notificare în aplicație pe telefonul lor.
+  const REM_KEY = 'diih_remindere';
+  let remList = LS.get(REM_KEY, []);
+  let remEditId = null;
+  const ZI_SCURT = ['D', 'L', 'Ma', 'Mi', 'J', 'V', 'S'];
+  const REC_LABEL = { once: 'O singură dată', daily: 'Zilnic', weekly: 'Anumite zile', monthly: 'Lunar', yearly: 'Anual' };
+
+  function profName(email) {
+    const p = famProfiles.find(x => x.email === email);
+    return p ? (p.nume || email).split(' ')[0] : (email || '').split('@')[0];
+  }
+  function remDescriere(r) {
+    let t = REC_LABEL[r.recurenta] || r.recurenta;
+    if (r.recurenta === 'weekly') t = (r.zile || []).slice().sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)).map(z => ZI_SCURT[z]).join(', ') || 'săptămânal';
+    if (r.recurenta === 'monthly') t = `Lunar, în ziua ${Number((r.dataStart || '').slice(8, 10))}`;
+    if (r.recurenta === 'yearly') t = `Anual, ${(r.dataStart || '').slice(8, 10)}.${(r.dataStart || '').slice(5, 7)}`;
+    if (r.recurenta === 'once') t = `Pe ${(r.dataStart || '').split('-').reverse().join('.')}`;
+    return `${t} • ${(r.ore || []).join(', ')}${r.dataSfarsit ? ` • până la ${r.dataSfarsit.split('-').reverse().join('.')}` : ''}`;
+  }
+  // Apare azi? (aceeași logică și pentru alerta din aplicație)
+  function remAzi(r, d) {
+    const t = ymd(d);
+    if (!r.activ || !r.dataStart || t < r.dataStart || (r.dataSfarsit && t > r.dataSfarsit)) return false;
+    if (r.recurenta === 'once') return t === r.dataStart;
+    if (r.recurenta === 'daily') return true;
+    if (r.recurenta === 'weekly') return (r.zile && r.zile.length ? r.zile : [new Date(r.dataStart + 'T00:00').getDay()]).includes(d.getDay());
+    if (r.recurenta === 'monthly') return t.slice(8) === r.dataStart.slice(8);
+    if (r.recurenta === 'yearly') return t.slice(5) === r.dataStart.slice(5);
+    return false;
+  }
+  function remCheckAlerts() {
+    const me = myEmail();
+    if (!me) return;
+    const now = new Date();
+    const fired = LS.get('diih_rem_fired', {});
+    const today = ymd(now);
+    Object.keys(fired).forEach(k => { if (!k.includes(today)) delete fired[k]; });
+    remList.forEach(r => {
+      if (!r.notifApp || !(r.destinatari || []).includes(me) || !remAzi(r, now)) return;
+      (r.ore || []).forEach(o => {
+        const [hh, mm] = o.split(':').map(Number);
+        const diff = (now.getHours() * 60 + now.getMinutes()) - (hh * 60 + mm);
+        const key = `${r.id}_${today}_${o}`;
+        if (diff >= 0 && diff <= 90 && !fired[key]) {
+          fired[key] = 1;
+          const from = r.creatDe && r.creatDe !== me ? ` (de la ${profName(r.creatDe)})` : '';
+          try { window.triggerNotification(`⏰ ${r.titlu}${from}`, r.detalii || `Reminder ${o}`); } catch (e) {}
+        }
+      });
+    });
+    LS.set('diih_rem_fired', fired);
+  }
+  function remLoad() {
+    if (!(typeof getAuthSession === 'function' && getAuthSession())) return Promise.resolve();
+    return api({ action: 'remList' }).then(r => {
+      if (r && Array.isArray(r.remindere)) { remList = r.remindere; LS.set(REM_KEY, remList); remRenderList(); }
+      else if (r && r.error) remSetInfo(r.error);
+      else remSetInfo('Serverul nu are încă Familie.gs v24.13 (tabul Remindere).');
+    }).catch(e => remSetInfo(e.message));
+  }
+  function remSetInfo(t) { const el = document.getElementById('remInfo'); if (el) el.textContent = t || ''; }
+
+  function remRenderList() {
+    const box = document.getElementById('remList');
+    if (!box) return;
+    const me = myEmail();
+    const f = (document.getElementById('remFilter') || {}).value || 'toate';
+    const fa = (document.getElementById('remFilterActiv') || {}).value || 'active';
+    let items = remList.slice();
+    if (f === 'trimise') items = items.filter(r => r.creatDe === me && (r.destinatari || []).some(x => x !== me));
+    if (f === 'mele') items = items.filter(r => (r.destinatari || []).includes(me));
+    if (f.startsWith('pers:')) items = items.filter(r => (r.destinatari || []).includes(f.slice(5)));
+    if (fa === 'active') items = items.filter(r => r.activ);
+    if (fa === 'inactive') items = items.filter(r => !r.activ);
+    // notițele cu reminder (o singură dată), ca să fie toate la un loc
+    const note = (typeof allGanduri !== 'undefined' ? allGanduri : []).filter(g => g.reminder && (fa !== 'inactive')).filter(g => {
+      if (f === 'trimise') return g.creatDe === me && g.proprietar && g.proprietar !== me;
+      if (f === 'mele') return !g.proprietar || g.proprietar === me;
+      if (f.startsWith('pers:')) return g.proprietar === f.slice(5);
+      return true;
+    });
+    const canManage = r => isAdminUser() || r.creatDe === me;
+    const inactiveCount = remList.filter(r => !r.activ && canManage(r)).length;
+    document.getElementById('remSummary').textContent = `${remList.filter(r => r.activ).length} active • ${remList.filter(r => !r.activ).length} inactive` + (note.length ? ` • ${note.length} din notițe` : '');
+    const delAll = document.getElementById('remDelInactive');
+    if (delAll) delAll.classList.toggle('hidden', inactiveCount === 0);
+    let h = items.map(r => `
+      <div class="p-3 rounded-xl border ${r.activ ? 'bg-darkbg border-violet-800/70' : 'bg-darkbg/50 border-bordercol opacity-60'}">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="text-[12px] font-bold text-white">⏰ ${esc(r.titlu)}</p>
+            <p class="text-[10px] text-violet-300 mt-0.5">${esc(remDescriere(r))}</p>
+            ${r.detalii ? `<p class="text-[10px] text-slate-400 mt-0.5">${esc(r.detalii)}</p>` : ''}
+            <div class="flex flex-wrap gap-1 mt-1.5">
+              ${(r.destinatari || []).map(x => `<span class="text-[10px] px-1.5 py-0.5 rounded-md bg-violet-950 border border-violet-800 text-violet-200">👤 ${esc(profName(x))}${x === me ? ' (eu)' : ''}</span>`).join('')}
+              <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-400">de la ${esc(profName(r.creatDe))}</span>
+              ${r.inCalendar ? `<span class="text-[10px] px-1.5 py-0.5 rounded-md ${r.areEvenimente ? 'bg-emerald-950 text-emerald-300' : 'bg-amber-950 text-amber-300'}">📅 ${r.areEvenimente || !r.activ ? 'în calendar' : 'calendar în așteptare'}</span>` : ''}
+              ${r.notifApp ? '<span class="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-800 text-slate-300">🔔 în aplicație</span>' : ''}
+            </div>
+          </div>
+          <span class="shrink-0 text-[10px] font-bold ${r.activ ? 'text-emerald-400' : 'text-slate-500'}">${r.activ ? '● Activ' : '○ Inactiv'}</span>
+        </div>
+        ${canManage(r) ? `<div class="flex gap-1.5 mt-2">
+          <button onclick="famRem.edit('${esc(r.id)}')" class="flex-1 py-1 rounded-lg bg-slate-800 border border-slate-600 text-[11px]">✏️ Editează</button>
+          <button onclick="famRem.toggle('${esc(r.id)}', ${!r.activ})" class="flex-1 py-1 rounded-lg ${r.activ ? 'bg-amber-950 border-amber-700' : 'bg-emerald-950 border-emerald-700'} border text-[11px]">${r.activ ? '⏸ Oprește' : '▶ Activează'}</button>
+          ${!r.activ ? `<button onclick="famRem.del('${esc(r.id)}')" class="flex-1 py-1 rounded-lg bg-red-950 border border-red-800 text-[11px]">🗑 Șterge</button>` : ''}
+        </div>` : ''}
+      </div>`).join('');
+    if (note.length) {
+      h += `<p class="text-[10px] font-bold text-slate-400 uppercase pt-2">📝 Remindere din notițe</p>` + note.map(g => `
+        <div class="p-2.5 rounded-xl border bg-darkbg border-bordercol text-[11px]">
+          <p class="text-slate-200">${esc((g.gand || '').slice(0, 120))}</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">${esc(typeof formatNoteReminder === 'function' ? formatNoteReminder(g.reminder) : g.reminder)} • pentru ${esc(profName(g.proprietar || me))}${g.creatDe && g.creatDe !== (g.proprietar || me) ? ` • de la ${esc(profName(g.creatDe))}` : ''}</p>
+        </div>`).join('');
+    }
+    box.innerHTML = h || '<p class="text-center text-slate-500 text-xs py-8">Niciun reminder aici.</p>';
+  }
+
+  function remFillPeople(sel) {
+    const box = document.getElementById('remDest');
+    const flt = document.getElementById('remFilter');
+    const me = myEmail();
+    if (box) box.innerHTML = famProfiles.length ? famProfiles.map(p => `<label class="flex items-center gap-1 px-2 py-1 rounded-lg bg-darkbg border border-bordercol text-[11px]">
+      <input type="checkbox" value="${esc(p.email)}" ${(sel || [me]).includes(p.email) ? 'checked' : ''} class="accent-violet-500"> ${esc((p.nume || p.email).split(' ')[0])}${p.email === me ? ' (eu)' : ''}</label>`).join('') : '<span class="text-[10px] text-slate-500">Se încarcă membrii familiei…</span>';
+    if (flt && famProfiles.length && !flt.querySelector('option[value^="pers:"]')) {
+      flt.insertAdjacentHTML('beforeend', famProfiles.map(p => `<option value="pers:${esc(p.email)}">Pentru ${esc((p.nume || p.email).split(' ')[0])}</option>`).join(''));
+    }
+  }
+  function remOreRender(ore) {
+    const box = document.getElementById('remOre');
+    box.innerHTML = ore.map((o, i) => `<div class="flex items-center gap-1"><input type="time" value="${o}" class="remOra bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">${ore.length > 1 ? `<button onclick="famRem.oraDel(${i})" class="text-slate-400 px-1">✕</button>` : ''}</div>`).join('')
+      + (ore.length < 6 ? '<button onclick="famRem.oraAdd()" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-600 text-[11px]">➕ încă o oră</button>' : '');
+  }
+  function remOreCurente() { return Array.from(document.querySelectorAll('#remOre .remOra')).map(x => x.value).filter(Boolean); }
+  function remRecChange() {
+    const v = document.getElementById('remRec').value;
+    document.getElementById('remZileBox').classList.toggle('hidden', v !== 'weekly');
+    document.getElementById('remEndBox').classList.toggle('hidden', v === 'once');
+  }
+  function remOpenForm(r) {
+    remEditId = r ? r.id : null;
+    const f = document.getElementById('remForm');
+    f.classList.remove('hidden');
+    document.getElementById('remFormTitle').textContent = r ? '✏️ Editează reminderul' : '➕ Reminder nou';
+    document.getElementById('remTitlu').value = r ? r.titlu : '';
+    document.getElementById('remDetalii').value = r ? (r.detalii || '') : '';
+    document.getElementById('remRec').value = r ? r.recurenta : 'daily';
+    document.getElementById('remStart').value = r ? r.dataStart : ymd(new Date());
+    document.getElementById('remEnd').value = r ? (r.dataSfarsit || '') : '';
+    document.getElementById('remCal').checked = r ? r.inCalendar : true;
+    document.getElementById('remApp').checked = r ? r.notifApp : true;
+    document.querySelectorAll('#remZile input').forEach(x => { x.checked = r ? (r.zile || []).includes(Number(x.value)) : [1, 2, 3, 4, 5].includes(Number(x.value)); });
+    remOreRender(r ? r.ore.slice() : ['08:00']);
+    remFillPeople(r ? r.destinatari : null);
+    remRecChange();
+    f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function remSave() {
+    const data = {
+      id: remEditId, titlu: document.getElementById('remTitlu').value.trim(), detalii: document.getElementById('remDetalii').value.trim(),
+      destinatari: Array.from(document.querySelectorAll('#remDest input:checked')).map(x => x.value),
+      recurenta: document.getElementById('remRec').value,
+      zile: Array.from(document.querySelectorAll('#remZile input:checked')).map(x => Number(x.value)),
+      ore: Array.from(new Set(remOreCurente())).sort(), dataStart: document.getElementById('remStart').value,
+      dataSfarsit: document.getElementById('remRec').value === 'once' ? '' : document.getElementById('remEnd').value,
+      inCalendar: document.getElementById('remCal').checked, notifApp: document.getElementById('remApp').checked, activ: true
+    };
+    if (!data.titlu) return toast('Scrie ce trebuie amintit.');
+    if (!data.destinatari.length) return toast('Alege pentru cine e reminderul.');
+    if (!data.ore.length) return toast('Pune cel puțin o oră.');
+    if (data.recurenta === 'weekly' && !data.zile.length) return toast('Alege zilele.');
+    if (data.dataSfarsit && data.dataSfarsit < data.dataStart) return toast('Data de sfârșit e înaintea începutului.');
+    const btn = document.getElementById('remSaveBtn');
+    btn.disabled = true; btn.textContent = 'Se salvează…';
+    api({ action: 'remSave', data: JSON.stringify(data) }).then(r => {
+      if (r && r.success) {
+        remList = r.remindere; LS.set(REM_KEY, remList);
+        document.getElementById('remForm').classList.add('hidden');
+        remRenderList();
+        toast(data.inCalendar ? '⏰ Reminder salvat și trimis în calendar.' : '⏰ Reminder salvat.');
+      } else toast('Nu s-a salvat' + (r && r.error ? ': ' + r.error : ' — ai lipit Familie.gs v24.13?'));
+    }).catch(e => toast(e.message)).finally(() => { btn.disabled = false; btn.textContent = '💾 Salvează și trimite'; });
+  }
+  function remAction(action, params, okMsg) {
+    api(Object.assign({ action }, params)).then(r => {
+      if (r && r.success) { remList = r.remindere; LS.set(REM_KEY, remList); remRenderList(); if (okMsg) toast(okMsg); }
+      else toast((r && r.error) || 'Nu s-a putut.');
+    }).catch(e => toast(e.message));
+  }
+  function remShow() {
+    const c = document.getElementById('famRemCenter');
+    c.classList.remove('hidden');
+    famCloseCenter();
+    remRenderList();
+    famLoadProfilesThen(() => { remFillPeople(); remRenderList(); });
+    remLoad();
+  }
+  function famLoadProfilesThen(cb) {
+    if (famProfiles.length) cb();
+    api({ action: 'famProfiles' }).then(r => { if (r && Array.isArray(r.profiles)) { famProfiles = r.profiles; LS.set('diih_fam_profiles', famProfiles); cb(); } }).catch(() => {});
+  }
+  function remBuild() {
+    addEl(`<div id="famRemCenter" class="hidden fixed inset-0 z-[81] bg-darkbg/98 backdrop-blur flex flex-col">
+      <div class="max-w-lg w-full mx-auto flex flex-col h-full">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-bordercol">
+          <div><h2 class="text-base font-bold text-white">⏰ Remindere</h2><p id="remSummary" class="text-[10px] text-slate-400"></p></div>
+          <div class="flex items-center gap-1.5">
+            <button onclick="famRem.nou()" class="px-2.5 py-1.5 rounded-xl bg-violet-800 border border-violet-600 text-white text-[11px] font-bold">➕ Nou</button>
+            <button onclick="document.getElementById('famRemCenter').classList.add('hidden')" class="px-2.5 py-1.5 rounded-xl bg-cardbg border border-bordercol text-slate-300 text-[11px] font-bold">✕</button>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto">
+          <div id="remForm" class="hidden px-4 py-3 space-y-2 border-b border-bordercol bg-cardbg/60 text-xs">
+            <p id="remFormTitle" class="font-bold text-violet-300"></p>
+            <input id="remTitlu" type="text" placeholder="Ce? (ex: Medicamentul, Temele, Sună la bunica)" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+            <input id="remDetalii" type="text" placeholder="Detalii (opțional)" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+            <p class="text-[10px] text-slate-400 font-bold">Pentru cine</p>
+            <div id="remDest" class="flex flex-wrap gap-1.5"></div>
+            <p class="text-[10px] text-slate-400 font-bold">Ore (de 1, 2 sau 3 ori pe zi)</p>
+            <div id="remOre" class="flex flex-wrap items-center gap-1.5"></div>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="space-y-0.5"><span class="text-[10px] text-slate-400 font-bold">Repetă</span>
+                <select id="remRec" onchange="famRem.recChange()" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
+                  <option value="once">O singură dată</option><option value="daily">Zilnic</option><option value="weekly">Anumite zile</option><option value="monthly">Lunar</option><option value="yearly">Anual</option>
+                </select></label>
+              <label class="space-y-0.5"><span class="text-[10px] text-slate-400 font-bold">Începe pe</span>
+                <input id="remStart" type="date" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></label>
+            </div>
+            <div id="remZileBox" class="hidden">
+              <div id="remZile" class="flex gap-1">${[1, 2, 3, 4, 5, 6, 0].map(z => `<label class="flex-1 text-center"><input type="checkbox" value="${z}" class="peer hidden"><span class="block py-1.5 rounded-lg bg-darkbg border border-bordercol peer-checked:bg-violet-700 peer-checked:border-violet-400 peer-checked:text-white text-slate-400 font-bold text-[11px] cursor-pointer">${ZI_SCURT[z]}</span></label>`).join('')}</div>
+            </div>
+            <label id="remEndBox" class="block space-y-0.5"><span class="text-[10px] text-slate-400 font-bold">Până pe (opțional — gol = fără sfârșit)</span>
+              <input id="remEnd" type="date" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white"></label>
+            <div class="flex flex-wrap gap-3 text-[11px] text-slate-300">
+              <label class="flex items-center gap-1.5"><input id="remCal" type="checkbox" class="accent-violet-500"> 📅 Trimite în calendarul lor</label>
+              <label class="flex items-center gap-1.5"><input id="remApp" type="checkbox" class="accent-violet-500"> 🔔 Notificare în aplicație</label>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="document.getElementById('remForm').classList.add('hidden')" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-600 font-bold">Renunță</button>
+              <button id="remSaveBtn" onclick="famRem.save()" class="flex-1 py-2 rounded-xl bg-violet-700 text-white font-bold">💾 Salvează și trimite</button>
+            </div>
+          </div>
+          <div class="px-4 py-2 flex flex-wrap items-center gap-2 border-b border-bordercol">
+            <select id="remFilter" onchange="famRem.render()" class="bg-cardbg border border-bordercol rounded-lg px-2 py-1 text-[11px] text-slate-200">
+              <option value="toate">Toate</option><option value="trimise">Trimise de mine altora</option><option value="mele">Pentru mine</option>
+            </select>
+            <select id="remFilterActiv" onchange="famRem.render()" class="bg-cardbg border border-bordercol rounded-lg px-2 py-1 text-[11px] text-slate-200">
+              <option value="active">Active</option><option value="inactive">Inactive</option><option value="toate">Active + inactive</option>
+            </select>
+            <button id="remDelInactive" onclick="famRem.delInactive()" class="hidden ml-auto px-2 py-1 rounded-lg bg-red-950 border border-red-800 text-red-200 text-[11px] font-bold">🗑 Șterge inactivele</button>
+          </div>
+          <p id="remInfo" class="px-4 pt-2 text-[10px] text-amber-400"></p>
+          <div id="remList" class="px-4 py-2 space-y-2"></div>
+        </div>
+      </div>
+    </div>`);
+    // Intrări: în centrul de notificări și sus în tabul Notițe
+    const evBtn = document.querySelector('#famNotifCenter button[onclick="famNotif.toggleEv()"]');
+    if (evBtn) evBtn.insertAdjacentHTML('beforebegin', '<button onclick="famRem.show()" class="ml-auto px-2.5 py-1 rounded-lg bg-violet-900/70 border border-violet-700 text-violet-100 text-[11px] font-bold">⏰ Remindere</button>'), evBtn.classList.remove('ml-auto');
+    const notite = document.getElementById('tab-notite');
+    if (notite) notite.insertAdjacentHTML('afterbegin', '<button onclick="famRem.show()" class="w-full p-3 rounded-2xl bg-gradient-to-r from-violet-950 to-cardbg border border-violet-700/70 text-left flex items-center justify-between"><span class="text-xs font-bold text-violet-200">⏰ Remindere programate <span class="text-violet-400 font-normal">— recurente, pe zile, de mai multe ori pe zi, pentru familie</span></span><span class="text-violet-300">›</span></button>');
+    remLoad();
+    setInterval(remCheckAlerts, 60000);
+    setTimeout(remCheckAlerts, 5000);
+    setInterval(() => { if (!document.hidden) remLoad(); }, 10 * 60000);
+  }
+  window.famRem = {
+    show: remShow, nou: () => remOpenForm(null), edit: id => { const r = remList.find(x => x.id === id); if (r) remOpenForm(r); },
+    save: remSave, render: remRenderList, recChange: remRecChange,
+    oraAdd: () => { const o = remOreCurente(); o.push('20:00'); remOreRender(o); },
+    oraDel: i => { const o = remOreCurente(); o.splice(i, 1); remOreRender(o.length ? o : ['08:00']); },
+    toggle: (id, activ) => remAction('remToggle', { id, activ: String(activ) }, activ ? 'Reminder activat.' : 'Reminder oprit (scos din calendar).'),
+    del: id => { if (confirm('Ștergi definitiv reminderul?')) remAction('remDelete', { id }, 'Reminder șters.'); },
+    delInactive: () => {
+      const me = myEmail();
+      const ids = remList.filter(r => !r.activ && (isAdminUser() || r.creatDe === me)).map(r => r.id);
+      if (!ids.length || !confirm(`Ștergi ${ids.length} remindere inactive?`)) return;
+      ids.reduce((pr, id) => pr.then(() => api({ action: 'remDelete', id }).then(r => { if (r && r.remindere) remList = r.remindere; })), Promise.resolve())
+        .then(() => { LS.set(REM_KEY, remList); remRenderList(); toast('Remindere inactive șterse.'); });
+    }
+  };
+
+  // =====================================================================
   // 4. PORNIRE INTELIGENTĂ + REVENIRE ÎN ACELAȘI LOC
   // =====================================================================
   const VIEW_KEY = 'diih_last_view';
@@ -832,6 +1119,7 @@
     hookSwitchTab();
     awBuild();
     famBuildCenter();
+    remBuild();
     doxBuild();
     bootRoute();
     // Lista de pe server vine la fiecare sincronizare; până la primul răspuns o cerem o dată separat

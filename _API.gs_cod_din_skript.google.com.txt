@@ -1755,7 +1755,8 @@ const AUTH_ACTION_RULES = {
   updateNoteAnania: ["scriptura", "edit"], restoreNoteAnania: ["scriptura", "edit"], softDeleteNoteAnania: ["scriptura", "edit"],
   // v24.9 — Familie.gs (fiecare își vede doar notificările lui; calSyncSarbatori verifică singur adminul)
   notifList: ["*"], notifMarkRead: ["*"], notifRespond: ["*"], calAddEvent: ["*"], calStatus: ["*"], calSyncSarbatori: ["*"],
-  famProfiles: ["*"], doxologiaZi: ["*"], doxologiaPagina: ["*"]
+  famProfiles: ["*"], doxologiaZi: ["*"], doxologiaPagina: ["*"],
+  remList: ["*"], remSave: ["*"], remToggle: ["*"], remDelete: ["*"]
 };
 
 // Ce cheie din răspunsul de sincronizare ține de ce modul (cheile nelistate, ex. settings, se trimit tuturor)

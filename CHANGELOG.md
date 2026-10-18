@@ -1,5 +1,17 @@
 # CHANGELOG — DIiH Hub
 
+## v24.13 — 2026-10-18 — Remindere programate pentru familie
+
+Frontend (`familie.js`, `index.html`, `sw.js`) și backend (`Familie.gs` 24.13 + 4 reguli noi în `_API.gs`). **Necesită deploy** (împreună cu v24.9).
+
+- Ecran nou **⏰ Remindere** (din 🔔 Notificări și sus în tabul Notițe), cu datele în tabul nou `Remindere` din registru.
+- Reminder nou: ce, detalii, **pentru cine** (unul sau mai mulți membri), **1–6 ore pe zi**, repetare **o dată / zilnic / anumite zile (L–D) / lunar / anual**, dată de început și (opțional) de sfârșit; „📅 Trimite în calendarul lor” și „🔔 Notificare în aplicație”.
+- În calendar: fiecare oră devine o serie de evenimente în „DIiH Familie”, cu destinatarii invitați. Editarea reface seria, Oprește o scoate din calendar, Activează o pune la loc.
+- Lista arată pentru fiecare: a cui e, de la cine, programul, dacă e activ, dacă e în calendar. Filtre: toate / trimise de mine altora / pentru mine / pentru o anumită persoană; active / inactive. Doar cele inactive se pot șterge (și „Șterge inactivele”). Adminul gestionează tot, ceilalți doar ce au creat ei.
+- Tot acolo apar și reminderele din notițe (o singură dată), ca să fie toate la un loc.
+- Destinatarul primește notificare „⏰ X ți-a setat un reminder” în centru, iar la ora setată alertă pe telefon (dacă e bifat „în aplicație”).
+- Reminderul din notițe: cheia alertei nu mai depinde de rowId (o notiță nouă putea suna de două ori după sincronizare).
+
 ## v24.12 — 2026-10-18 — Ecran pornit: varianta 2, fereastră plutitoare (experimental)
 
 Doar frontend (`familie.js`, `pip/pip-5|10|30.mp4` noi, `index.html`, `sw.js`).

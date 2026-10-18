@@ -1,5 +1,5 @@
 /**
- * DIiH — Familie.gs (v24.9)
+ * DIiH — Familie.gs (v24.13)
  * Fișier NOU în Apps Script: + lângă „Fișiere” → Script → nume „Familie” → lipești tot conținutul.
  *
  * 1. Calendarul familiei: evenimentele (remindere din notițe, evenimente trimise între membri, sărbători legale)
@@ -21,11 +21,12 @@ const FAM_NOTIF_COLS = ["ID", "Destinatar", "Creat", "Titlu", "Mesaj", "Tab", "C
 
 // ---------- Rutare acțiuni noi (apelată din doGet, înainte de restul acțiunilor) ----------
 function familieHandleAction(ss, e, action, auth) {
-  const FAM_ACTIONS = ["notifList", "notifMarkRead", "notifRespond", "calAddEvent", "calStatus", "calSyncSarbatori", "famProfiles", "doxologiaZi", "doxologiaPagina"];
+  const FAM_ACTIONS = ["remList", "remSave", "remToggle", "remDelete", "notifList", "notifMarkRead", "notifRespond", "calAddEvent", "calStatus", "calSyncSarbatori", "famProfiles", "doxologiaZi", "doxologiaPagina"];
   if (FAM_ACTIONS.indexOf(action) === -1) return null;
   const p = e.parameter;
   const me = auth.profile.email;
   try {
+    if (action.indexOf("rem") === 0) { const rr = remHandle(ss, e, action, auth); if (rr) return returnResponse(e, rr); }
     if (action === "notifList") return returnResponse(e, { success: true, notificari: familieGetNotificari(ss, auth) });
     if (action === "notifMarkRead") {
       const ids = (p.ids || "").split(",").map(x => x.trim()).filter(Boolean);
@@ -350,4 +351,147 @@ function doxologiaPagina(url) {
   const out = { titlu: titlu, paragrafe: paragrafe, imagine: img ? famAbs(img) : "", url: url };
   try { cache.put(key, JSON.stringify(out).slice(0, 95000), 6 * 3600); } catch (err) {}
   return out;
+}
+
+// ---------- Remindere programate (v24.13) ----------
+// Tabul „Remindere” din registru: un rând = un reminder (pentru unul sau mai mulți membri), cu una-trei ore pe zi
+// și recurență. Fiecare oră devine o serie de evenimente în calendarul „DIiH Familie”, cu destinatarii invitați.
+const REM_COLS = ["ID", "Titlu", "Detalii", "Destinatari", "CreatDe", "Recurenta", "Zile", "Ore", "DataStart", "DataSfarsit", "Activ", "InCalendar", "NotifApp", "EventIds", "Creat", "Actualizat"];
+
+function remSheet(ss) {
+  let sh = ss.getSheetByName("Remindere");
+  if (!sh) { sh = ss.insertSheet("Remindere"); sh.appendRow(REM_COLS); sh.getRange(1, 1, 1, REM_COLS.length).setFontWeight("bold"); sh.setFrozenRows(1); }
+  return sh;
+}
+function remRows(ss) {
+  const sh = remSheet(ss);
+  if (sh.getLastRow() < 2) return [];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, REM_COLS.length).getValues().map((r, i) => {
+    const o = { _row: i + 2 };
+    REM_COLS.forEach((c, j) => {
+      const v = r[j];
+      o[c] = v instanceof Date ? Utilities.formatDate(v, FAM_TZ, c === "Ore" ? "HH:mm" : "yyyy-MM-dd") : (v === null || v === undefined ? "" : v.toString());
+    });
+    return o;
+  }).filter(o => o.ID);
+}
+function remToClient(o) {
+  return {
+    id: o.ID, titlu: o.Titlu, detalii: o.Detalii, destinatari: o.Destinatari.split(",").map(x => x.trim()).filter(Boolean),
+    creatDe: o.CreatDe, recurenta: o.Recurenta || "once", zile: o.Zile ? o.Zile.split(",").map(Number) : [],
+    ore: o.Ore.split(",").map(x => x.trim()).filter(Boolean), dataStart: o.DataStart, dataSfarsit: o.DataSfarsit,
+    activ: o.Activ !== "NU", inCalendar: o.InCalendar !== "NU", notifApp: o.NotifApp !== "NU",
+    areEvenimente: !!(o.EventIds && o.EventIds !== "[]"), creat: o.Creat, actualizat: o.Actualizat
+  };
+}
+function remCanSee(o, auth) {
+  const me = auth.profile.email;
+  return auth.profile.rol === "admin" || o.CreatDe === me || o.Destinatari.split(",").map(x => x.trim()).indexOf(me) !== -1;
+}
+function remCanManage(o, auth) { return auth.profile.rol === "admin" || o.CreatDe === auth.profile.email; }
+
+function remDeleteEvents(o) {
+  let ids = [];
+  try { ids = JSON.parse(o.EventIds || "[]"); } catch (e) { ids = []; }
+  if (!ids.length) return;
+  const cal = famCalendar();
+  ids.forEach(id => {
+    try { const s = cal.getEventSeriesById(id); if (s) { s.deleteEventSeries(); return; } } catch (e) {}
+    try { const ev = cal.getEventById(id); if (ev) ev.deleteEvent(); } catch (e) {}
+  });
+}
+function remCreateEvents(o, autorNume) {
+  const cal = famCalendar();
+  const owner = (Session.getEffectiveUser().getEmail() || "").toLowerCase();
+  const guests = o.Destinatari.split(",").map(x => x.trim().toLowerCase()).filter(x => x && x !== owner);
+  const zile = o.Zile ? o.Zile.split(",").map(Number) : [];
+  const WD = [CalendarApp.Weekday.SUNDAY, CalendarApp.Weekday.MONDAY, CalendarApp.Weekday.TUESDAY, CalendarApp.Weekday.WEDNESDAY, CalendarApp.Weekday.THURSDAY, CalendarApp.Weekday.FRIDAY, CalendarApp.Weekday.SATURDAY];
+  const desc = (o.Detalii ? o.Detalii + "\n\n" : "") + "Reminder DIiH de la " + autorNume;
+  const ids = [];
+  o.Ore.split(",").map(x => x.trim()).filter(Boolean).forEach(hhmm => {
+    let start = famParseLocal(o.DataStart + "T" + hhmm);
+    if (!start) return;
+    // La „anumite zile”, prima apariție trebuie să cadă într-una din zilele alese
+    if (o.Recurenta === "weekly" && zile.length) {
+      for (let k = 0; k < 7 && zile.indexOf(Number(Utilities.formatDate(start, FAM_TZ, "u")) % 7) === -1; k++) start = new Date(start.getTime() + 86400000);
+    }
+    const end = new Date(start.getTime() + 15 * 60000);
+    const opts = { description: desc, guests: guests.join(","), sendInvites: true };
+    let ev;
+    if (!o.Recurenta || o.Recurenta === "once") {
+      ev = cal.createEvent("⏰ " + o.Titlu, start, end, opts);
+    } else {
+      const rec = CalendarApp.newRecurrence();
+      let rule = o.Recurenta === "daily" ? rec.addDailyRule()
+        : o.Recurenta === "weekly" ? rec.addWeeklyRule().onlyOnWeekdays((zile.length ? zile : [Number(Utilities.formatDate(start, FAM_TZ, "u")) % 7]).map(d => WD[d]))
+        : o.Recurenta === "monthly" ? rec.addMonthlyRule() : rec.addYearlyRule();
+      if (o.DataSfarsit) rule = rule.until(famParseLocal(o.DataSfarsit + "T23:59"));
+      ev = cal.createEventSeries("⏰ " + o.Titlu, start, end, rec, opts);
+    }
+    try { ev.removeAllReminders(); ev.addPopupReminder(0); ev.setColor(CalendarApp.EventColor.MAUVE); } catch (e) {}
+    ids.push(ev.getId());
+  });
+  return ids;
+}
+
+function remHandle(ss, e, action, auth) {
+  const p = e.parameter;
+  const me = auth.profile.email;
+  const sh = remSheet(ss);
+  const now = Utilities.formatDate(new Date(), FAM_TZ, "yyyy-MM-dd HH:mm:ss");
+  const find = id => remRows(ss).find(o => o.ID === id);
+  const list = () => remRows(ss).filter(o => remCanSee(o, auth)).map(remToClient);
+
+  if (action === "remList") return { success: true, remindere: list() };
+
+  if (action === "remSave") {
+    const r = JSON.parse(p.data || "{}");
+    const dest = (r.destinatari || []).map(x => (x || "").toLowerCase().trim()).filter(x => x && authFindProfile(ss, x));
+    const ore = (r.ore || []).filter(x => /^\d{2}:\d{2}$/.test(x)).slice(0, 6);
+    if (!r.titlu || !dest.length || !ore.length || !r.dataStart) return { success: false, error: "Completează titlul, cel puțin o persoană, o oră și data de început." };
+    let o = r.id ? find(r.id) : null;
+    if (o && !remCanManage(o, auth)) return { success: false, forbidden: true, error: "Poți modifica doar reminderele create de tine." };
+    const row = {
+      ID: o ? o.ID : "REM-" + Date.now(), Titlu: r.titlu, Detalii: r.detalii || "", Destinatari: dest.join(","), CreatDe: o ? o.CreatDe : me,
+      Recurenta: ["once", "daily", "weekly", "monthly", "yearly"].indexOf(r.recurenta) !== -1 ? r.recurenta : "once",
+      Zile: (r.zile || []).join(","), Ore: ore.join(","), DataStart: r.dataStart, DataSfarsit: r.dataSfarsit || "",
+      Activ: r.activ === false ? "NU" : "DA", InCalendar: r.inCalendar === false ? "NU" : "DA", NotifApp: r.notifApp === false ? "NU" : "DA",
+      EventIds: "[]", Creat: o ? o.Creat : now, Actualizat: now
+    };
+    if (o) { try { remDeleteEvents(o); } catch (err) { famLog(ss, "rem_delete_events", err); } }
+    if (row.Activ === "DA" && row.InCalendar === "DA") {
+      try { row.EventIds = JSON.stringify(remCreateEvents(row, auth.profile.nume || me)); } catch (err) { famLog(ss, "rem_calendar", err); }
+    }
+    const values = [REM_COLS.map(c => row[c])];
+    if (o) sh.getRange(o._row, 1, 1, REM_COLS.length).setValues(values); else sh.appendRow(values[0]);
+    if (!o || r.notificaDinNou) {
+      dest.filter(x => x !== me).forEach(x => famAddNotif(ss, {
+        dest: x, titlu: "⏰ " + (auth.profile.nume || me).split(" ")[0] + " ți-a setat un reminder", mesaj: r.titlu + " — " + ore.join(", "), tab: "remindere", tip: "reminder", deLa: me
+      }));
+    }
+    return { success: true, remindere: list() };
+  }
+
+  if (action === "remToggle" || action === "remDelete") {
+    const o = find(p.id);
+    if (!o) return { success: false, error: "Reminderul nu mai există." };
+    if (!remCanManage(o, auth)) return { success: false, forbidden: true, error: "Poți modifica doar reminderele create de tine." };
+    if (action === "remDelete") {
+      if (o.Activ !== "NU") return { success: false, error: "Oprește întâi reminderul (doar cele inactive se pot șterge)." };
+      try { remDeleteEvents(o); } catch (err) {}
+      sh.deleteRow(o._row);
+      return { success: true, remindere: list() };
+    }
+    const activ = p.activ === "true";
+    let ids = "[]";
+    try { remDeleteEvents(o); } catch (err) {}
+    if (activ && o.InCalendar !== "NU") {
+      try { ids = JSON.stringify(remCreateEvents(Object.assign({}, o, { Activ: "DA" }), auth.profile.nume || me)); } catch (err) { famLog(ss, "rem_calendar", err); }
+    }
+    sh.getRange(o._row, REM_COLS.indexOf("Activ") + 1).setValue(activ ? "DA" : "NU");
+    sh.getRange(o._row, REM_COLS.indexOf("EventIds") + 1).setValue(ids);
+    sh.getRange(o._row, REM_COLS.indexOf("Actualizat") + 1).setValue(now);
+    return { success: true, remindere: list() };
+  }
+  return null;
 }

@@ -1345,7 +1345,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.12 (Build 2026-10-18)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.13 (Build 2026-10-18)</span>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -2450,7 +2450,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.12";
+    const APP_VERSION = "v24.13";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -8557,7 +8557,8 @@
         if (!d) return;
         const diff = now - d.getTime();
         if (diff < 0 || diff > 2 * 3600000) return;
-        const key = `note_${g.rowId}_${g.reminder}`;
+        // cheia nu folosește rowId (notița nouă are întâi un rowId provizoriu, apoi cel real → alertă dublă)
+        const key = `note_${(g.gand || '').slice(0, 40)}_${g.reminder}`;
         if (triggeredToday[key]) return;
         markNotifTriggeredToday(key);
         const from = g.creatDe && g.creatDe !== me ? ` (de la ${noteOwnerLabel(g.creatDe)})` : '';
@@ -11586,6 +11587,6 @@
     }
 
   </script>
-  <script src="./familie.js?v=24.12"></script>
+  <script src="./familie.js?v=24.13"></script>
 </body>
 </html>
