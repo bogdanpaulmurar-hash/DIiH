@@ -1,5 +1,5 @@
 /**
- * ADSERVIO → DIiH (v24.6) — fișier separat în Apps Script: Adservio.gs
+ * ADSERVIO → DIiH (v24.6, interpretare v2 în v24.19) — fișier separat în Apps Script: Adservio.gs
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - codul se copiază manual în editorul Apps Script.
  *
  * Ce face: se loghează în Adservio cu datele părintelui și aduce absențele, calificativele/notele
@@ -284,13 +284,17 @@ function getAdservioData(ss) {
   const read = (name, n) => {
     const sh = ss.getSheetByName(name);
     if (!sh || sh.getLastRow() < 2) return [];
-    return sh.getRange(2, 1, sh.getLastRow() - 1, n).getValues();
+    return sh.getRange(2, 1, sh.getLastRow() - 1, n).getDisplayValues();
   };
   return {
     ultim: getSettingValueRaw(ss, "adservio_ultim"),
     eroare: getSettingValueRaw(ss, "adservio_eroare"),
-    absente: read(ADS_ABS_SHEET, 8).map(r => ({ id: String(r[0]), copil: String(r[1]), data: String(r[2]), materie: String(r[3]), motivata: String(r[4]) === "DA", profesor: String(r[6]), obs: String(r[7]) })),
-    note: read(ADS_NOTE_SHEET, 9).map(r => ({ id: String(r[0]), copil: String(r[1]), data: String(r[2]), materie: String(r[3]), valoare: String(r[4]), afisare: String(r[5]), tip: String(r[6]), obs: String(r[8]) }))
+    absente: read(ADS_ABS_SHEET, 12).map(r => ({ id: r[0], copil: r[1], data: r[2], materie: r[3], motivata: r[4] === "DA", modul: r[5], profesor: r[6], obs: r[7],
+      motivare: r[8], dataMotivare: r[9], document: r[10], anScolar: r[11] })),
+    note: read(ADS_NOTE_SHEET, 13).map(r => ({ id: r[0], copil: r[1], data: r[2], materie: r[3], valoare: r[4], afisare: r[5], tip: r[6], modul: r[7], obs: r[8],
+      dataPrimirii: r[9], profesor: r[10], perioada: r[11], anScolar: r[12] })),
+    medii: read(ADS_MEDII_SHEET, 5).map(r => ({ copil: r[0], materie: r[1], perioada: r[2], medie: r[3], anScolar: r[4] })),
+    extra: read(ADS_EXTRA_SHEET, 8).map(r => ({ tip: r[0], copil: r[1], data: r[2], sfarsit: r[3], titlu: r[4], text: r[5], link: r[6], anScolar: r[7] }))
   };
 }
 
@@ -324,24 +328,24 @@ function adservioHandlePush(ss, e) {
   const given = (e && e.parameter && e.parameter.key) || "";
   if (given !== key) return { success: false, error: "Cheie invalidă." };
 
+  // Corpul vine ca text (fetch) sau, dacă site-ul blochează fetch, din formularul de rezervă (câmpul „payload”)
   let payload = {};
-  try { payload = JSON.parse(e.postData.contents); } catch (err) { return { success: false, error: "Date invalide: " + err }; }
+  try {
+    const raw = (e.parameter && e.parameter.payload) || (e.postData && e.postData.contents) || "";
+    payload = JSON.parse(raw);
+  } catch (err) { return { success: false, error: "Date invalide: " + err }; }
+
+  // v2 (din v24.19): marcajul trimite răspunsurile brute; interpretarea se face aici
+  if (Array.isArray(payload.calls)) return adsHandleRawPush(ss, payload);
+
+  // v1 (marcajul vechi): {absente, note, teme} deja interpretate
   const absente = Array.isArray(payload.absente) ? payload.absente : [];
   const note = Array.isArray(payload.note) ? payload.note : [];
   const teme = Array.isArray(payload.teme) ? payload.teme : [];
-
-  absente.sort((a, b) => String(b.data).localeCompare(String(a.data)));
-  note.sort((a, b) => String(b.data).localeCompare(String(a.data)));
-  adsWriteSheet(ss, ADS_ABS_SHEET, ["ID", "Copil", "Data", "Materie", "Motivata", "Modul", "Profesor", "Observatii"],
-    absente.map(a => [String(a.id), a.copil || "", a.data || "", a.materie || "", a.motivata ? "DA" : "NU", a.modul || "", a.profesor || "", a.obs || ""]));
-  adsWriteSheet(ss, ADS_NOTE_SHEET, ["ID", "Copil", "Data", "Materie", "Valoare", "Afisare", "Tip", "Modul", "Observatii"],
-    note.map(n => [String(n.id), n.copil || "", n.data || "", n.materie || "", n.valoare, n.afisare || "", n.tip || "", n.modul || "", n.obs || ""]));
+  adsWriteParsed(ss, { absente: absente, note: note, teme: teme, medii: [], scutiri: [], avertismente: [], vacante: [] });
   const temeNoi = adsMergeTeme(ss, teme);
-
   const rez = { success: true, absente: absente.length, note: note.length, teme: teme.length, temeNoi: temeNoi };
-  setSettingValue(ss.getSheetByName("Setari"), "adservio_ultim", authNow() + " — " + absente.length + " absențe, " + note.length + " note, " + teme.length + " teme (din browser)");
-  setSettingValue(ss.getSheetByName("Setari"), "adservio_eroare", "");
-  logToAppSheet(ss, { modul: "Adservio", actiune: "push_browser", status: "OK", detalii: JSON.stringify(rez), user: "-" });
+  adsMarkDone(ss, rez, "marcaj vechi");
   return rez;
 }
 
@@ -352,4 +356,211 @@ function aratamCheiaPush() {
   if (!key) { key = Utilities.getUuid().replace(/-/g, ""); props.setProperty("ADSERVIO_PUSH_KEY", key); }
   Logger.log("ADSERVIO_PUSH_KEY = " + key);
   return key;
+}
+
+// =====================================================================================================
+// ADSERVIO v2 (v24.19) — interpretarea răspunsurilor brute trimise de marcaj (adservio-marcaj.js din aplicație)
+// Câmpurile Adservio nu sunt documentate: fiecare valoare se caută după mai multe nume posibile, iar
+// tabul Adservio_Raw păstrează mostre din fiecare răspuns, ca interpretarea să poată fi corectată pe date reale.
+// Documentele (ex. scutirea medicală la o absență) rămân în Adservio: păstrăm doar linkul spre ele.
+// =====================================================================================================
+const ADS_RAW_SHEET = "Adservio_Raw";
+const ADS_MEDII_SHEET = "Adservio_Medii";
+const ADS_EXTRA_SHEET = "Adservio_Extra";
+const ADS_ABS_HEADER = ["ID", "Copil", "Data", "Materie", "Motivata", "Modul", "Profesor", "Observatii", "Motivare", "DataMotivare", "Document", "AnScolar"];
+const ADS_NOTE_HEADER = ["ID", "Copil", "Data", "Materie", "Valoare", "Afisare", "Tip", "Modul", "Observatii", "DataPrimirii", "Profesor", "Perioada", "AnScolar"];
+const ADS_TIP_NOTA = { NT_TEST: "Test", NT_ORAL: "Oral", NT_PROIECT: "Proiect", NT_TEZA: "Teză", NT_LUCRARE: "Lucrare", NT_TEMA: "Temă", NT_ACTIVITATE: "Activitate" };
+const ADS_TIP_SCUTIRE = { medical: "Medical", parental: "Cererea părintelui", school: "Școala", sport: "Sport" };
+
+function adsList(js) {
+  if (js && Array.isArray(js.data)) return js.data;
+  if (Array.isArray(js)) return js;
+  if (js && js.data && typeof js.data === "object") return [js.data];
+  return js && typeof js === "object" ? [js] : [];
+}
+
+function adsTextOf(v) {
+  return v === null || v === undefined ? "" : String(v);
+}
+
+// „san_modul_1” → „Modulul 1”; altfel numele perioadei așa cum vine
+function adsPeriodName(n) {
+  const m = /modul_?(\d+)/i.exec(n || "");
+  if (m) return "Modulul " + m[1];
+  const s = /sem(estrul)?_?(\d+)/i.exec(n || "");
+  return s ? "Semestrul " + s[2] : adsTextOf(n);
+}
+
+// Media (0 = încă nu există). În anul școlar curent, o medie neîncheiată (…IsLocked ≠ 1) e „provizorie”.
+function adsMedie(oficial, calculat, incheiata, anCurent) {
+  const v = (oficial && String(oficial) !== "0") ? oficial : ((calculat && String(calculat) !== "0") ? calculat : "");
+  if (!v) return null;
+  return { v: v, eticheta: anCurent && String(incheiata) !== "1" ? " (provizorie)" : "" };
+}
+
+// Calificativele (sistemul SN_CALIFICATIVE) vin ca 10/8/6/4
+function adsDisplayGrade(v, scale) {
+  if (v === "" || v === null || v === undefined) return "";
+  return scale === "calificative" ? (ADS_CALIFICATIVE[Number(v)] || String(v)) : String(v);
+}
+
+// Răspunsurile brute de la marcaj (adservio-marcaj.js), cu structura verificată pe date reale (2026-10-19)
+function adsHandleRawPush(ss, payload) {
+  const calls = payload.calls.filter(c => c && typeof c === "object");
+  adsWriteRawSamples(ss, calls);
+  const byKind = k => calls.filter(c => c.kind === k);
+
+  const names = {};
+  byKind("parinti").concat(byKind("detalii")).forEach(c => adsList(c.json).forEach(el => {
+    if (el && el.elevID && el.elevPrenume) names[String(el.elevID)] = String(el.elevPrenume);
+  }));
+  const childName = ctx => (ctx && names[ctx.elevID]) || "Copil";
+  // Anul școlar al fiecărei clase (ex. „2026/2027”), din lista claselor elevului
+  const yearsByAsc = {};
+  byKind("clase").forEach(c => adsList(c.json).forEach(cl => { if (cl.asc && cl.asc.ascID) yearsByAsc[String(cl.asc.ascID)] = adsTextOf(cl.asc.ascNume); }));
+  const yearOf = ctx => String((ctx && (ctx.an || yearsByAsc[ctx.ascID])) || "").replace("/", "-");
+
+  const periods = {};
+  byKind("perioade").forEach(c => adsList(c.json).forEach(pr => { if (pr.sanID) periods[String(pr.sanID)] = adsPeriodName(pr.sanNume); }));
+  const periodOf = id => periods[String(id || "")] || "";
+
+  // Scutirile: motivul și documentul absențelor din intervalul lor (dateStart–dateEnd)
+  const extra = [];
+  const scutiri = [];
+  byKind("scutiri").forEach(c => adsList(c.json).forEach(x => {
+    const files = (x.files || []).map(f => f.fsUrl || (f.fsID ? ADSERVIO_BASE + "/api/v2/fisiere/view?fsID=" + f.fsID : "")).filter(Boolean);
+    const tip = ADS_TIP_SCUTIRE[x.type] || adsTextOf(x.type) || "Scutire";
+    const materie = x.subject ? adsTextOf(x.subject.matNume || x.subject.name || x.subject) : "";
+    const sc = { elevID: c.ctx.elevID, start: adsDay(x.dateStart), end: adsDay(x.dateEnd) || adsDay(x.dateStart), tip: tip,
+      detalii: adsStripHtml(x.details), files: files, motiveaza: String(x.justifyAbsences) === "1" };
+    scutiri.push(sc);
+    extra.push({ tip: "Scutire", copil: childName(c.ctx), anScolar: yearOf(c.ctx), data: sc.start, sfarsit: sc.end,
+      titlu: tip + (materie ? " — " + materie : "") + (String(x.isFullYear) === "1" ? " (tot anul)" : ""),
+      text: sc.detalii + (x.justifiedAbsences ? " · " + x.justifiedAbsences + " absențe motivate" : ""), link: files[0] || "" });
+  }));
+
+  const absente = [];
+  byKind("absente").forEach(c => adsList(c.json).forEach(a => {
+    const data = adsDay(a.absData);
+    const motivata = String(a.absStatus) === "2" || !!a.absMotivareData;
+    const sc = motivata ? scutiri.find(x => x.elevID === c.ctx.elevID && x.start && data >= x.start && data <= x.end) : null;
+    absente.push({
+      id: adsTextOf(a.absID), copil: childName(c.ctx), data: data,
+      materie: a.materie ? adsTextOf(a.materie.matNume) : "",
+      motivata: motivata, modul: periodOf(a.absSanID), profesor: adsPersonName(a.cadruInfo), obs: adsStripHtml(a.absObs),
+      motivare: sc ? sc.tip + (sc.detalii ? ": " + sc.detalii : "") : "",
+      dataMotivare: adsDay(a.absMotivareData),
+      document: sc && sc.files.length ? sc.files[0] : "",
+      anScolar: yearOf(c.ctx)
+    });
+  }));
+
+  const note = [];
+  const medii = [];
+  byKind("repartizare").forEach(c => adsList(c.json).forEach(m => {
+    const materie = m.cmcMaterie ? adsTextOf(m.cmcMaterie.matNume) : "";
+    let scale = "";
+    (Array.isArray(m.note) ? m.note : []).forEach(n => {
+      scale = (n.type && n.type.scale) || scale;
+      const tipCod = n.type ? adsTextOf(n.type.name) : "";
+      note.push({
+        id: adsTextOf(n.notaID), copil: childName(c.ctx), data: adsDay(n.notaData || n.notaDataInsert), materie: materie,
+        valoare: n.notaValoare, afisare: adsDisplayGrade(n.notaValoare, n.type && n.type.scale),
+        tip: adsTextOf(n.ntNume) || ADS_TIP_NOTA[tipCod] || tipCod.replace(/^NT_/, "").toLowerCase(),
+        modul: periodOf(n.notaSanID),
+        obs: [adsStripHtml(n.notaObs), adsStripHtml(n.notaExtraInfo)].filter(Boolean).join(" · "),
+        dataPrimirii: adsTextOf(n.notaDataInsert).substring(0, 16),
+        profesor: adsPersonName(n.cadru) || adsPersonName(m.cmcCadru),
+        anScolar: yearOf(c.ctx)
+      });
+    });
+    // Mediile pe materie: doar cele încheiate (valoare diferită de 0)
+    const md = m.medii || {};
+    (md.semestriale || md.perioade || []).forEach(x => {
+      const mv = adsMedie(x.msmValoare, x.msmValoareAds, x.msmIsLocked, c.ctx.activ);
+      if (mv) medii.push({ copil: childName(c.ctx), materie: materie, perioada: periodOf(x.sanID) + mv.eticheta, medie: adsDisplayGrade(mv.v, scale || "calificative"), anScolar: yearOf(c.ctx) });
+    });
+    if (md.anuala) {
+      const mv = adsMedie(md.anuala.mgmValoare, md.anuala.mgmValoareAds, md.anuala.mgmIsLocked, c.ctx.activ);
+      if (mv) medii.push({ copil: childName(c.ctx), materie: materie, perioada: "Anual" + mv.eticheta, medie: adsDisplayGrade(mv.v, scale || "calificative"), anScolar: yearOf(c.ctx) });
+    }
+  }));
+  // Media generală (pe toate materiile)
+  byKind("medii").forEach(c => {
+    const md = (c.json && c.json.data) || c.json || {};
+    (md.semestriale || md.perioade || []).forEach(x => {
+      const mv = adsMedie(x.mgsValoare, x.mgsValoareAds, x.mgsIsLocked, c.ctx.activ);
+      if (mv) medii.push({ copil: childName(c.ctx), materie: "Media generală", perioada: periodOf(x.sanID) + mv.eticheta, medie: String(mv.v), anScolar: yearOf(c.ctx) });
+    });
+    if (md.anuala) {
+      const mv = adsMedie(md.anuala.mgaValoare, md.anuala.mgaValoareAds, md.anuala.mgaIsLocked, c.ctx.activ);
+      if (mv) medii.push({ copil: childName(c.ctx), materie: "Media generală", perioada: "Anual" + mv.eticheta, medie: String(mv.v), anScolar: yearOf(c.ctx) });
+    }
+  });
+
+  byKind("avertismente").forEach(c => adsList(c.json).forEach(x => extra.push({
+    tip: "Avertisment", copil: childName(c.ctx), anScolar: yearOf(c.ctx), data: adsDay(x.avtData), sfarsit: "",
+    titlu: adsTextOf(x.avtTitlu || x.avtTip || "Avertisment"), text: adsStripHtml(x.avtText || x.avtMotiv || x.avtObs), link: ""
+  })));
+  byKind("vacante").forEach(c => adsList(c.json).forEach(x => extra.push({
+    tip: "Vacanță", copil: "", anScolar: yearOf(c.ctx), data: adsDay(x.v2pStartDate), sfarsit: adsDay(x.v2pEndDate),
+    titlu: adsTextOf(x.v2pName) || "Vacanță", text: "", link: ""
+  })));
+  byKind("sarbatori").forEach(c => adsList(c.json).forEach(x => extra.push({
+    tip: "Zi liberă", copil: "", anScolar: "", data: adsDay(x.holDate), sfarsit: adsDay(x.holDate),
+    titlu: adsTextOf(x.holName) || "Zi liberă", text: "", link: ""
+  })));
+
+  // Temele: doar din anul școlar curent (cele vechi ar apărea ca întârziate)
+  const now = new Date();
+  const startAn = (now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1) + "-09-01";
+  const teme = [];
+  byKind("teme").forEach(c => adsList(c.json).forEach(h => {
+    if (!h.hwID || adsDay(h.hwDueDate || h.hwInsertDate) < startAn) return;
+    teme.push({
+      id: "ADS-" + h.hwID, child: childName(c.ctx), subject: h.materie ? adsTextOf(h.materie.matNume) : "",
+      text: (h.hwName || "Temă") + (h.hwDescription ? " — " + adsStripHtml(h.hwDescription) : ""),
+      givenDate: adsDay(h.hwInsertDate), dueDate: adsDay(h.hwDueDate), submitted: !!h.hwsSubmitted
+    });
+  }));
+
+  adsWriteParsed(ss, { absente: absente, note: note, medii: medii, extra: extra });
+  const temeNoi = adsMergeTeme(ss, teme);
+  const rez = { success: true, cereri: calls.length, absente: absente.length, note: note.length, medii: medii.length, extra: extra.length, teme: teme.length, temeNoi: temeNoi };
+  adsMarkDone(ss, rez, "marcaj v2");
+  return rez;
+}
+
+function adsWriteParsed(ss, d) {
+  const absente = (d.absente || []).slice().sort((a, b) => String(b.data).localeCompare(String(a.data)));
+  const note = (d.note || []).slice().sort((a, b) => String(b.data).localeCompare(String(a.data)));
+  adsWriteSheet(ss, ADS_ABS_SHEET, ADS_ABS_HEADER, absente.map(a => [String(a.id), a.copil || "", a.data || "", a.materie || "",
+    a.motivata ? "DA" : "NU", a.modul || "", a.profesor || "", a.obs || "", a.motivare || "", a.dataMotivare || "", a.document || "", a.anScolar || ""]));
+  adsWriteSheet(ss, ADS_NOTE_SHEET, ADS_NOTE_HEADER, note.map(n => [String(n.id), n.copil || "", n.data || "", n.materie || "", String(n.valoare),
+    n.afisare || "", n.tip || "", n.modul || "", n.obs || "", n.dataPrimirii || "", n.profesor || "", n.perioada || n.modul || "", n.anScolar || ""]));
+  if (d.medii) adsWriteSheet(ss, ADS_MEDII_SHEET, ["Copil", "Materie", "Perioada", "Medie", "AnScolar"],
+    d.medii.map(m => [m.copil, m.materie, m.perioada, m.medie, m.anScolar]));
+  if (d.extra) adsWriteSheet(ss, ADS_EXTRA_SHEET, ["Tip", "Copil", "Data", "Sfarsit", "Titlu", "Text", "Link", "AnScolar"],
+    d.extra.sort((a, b) => String(b.data).localeCompare(String(a.data))).map(x => [x.tip, x.copil, x.data, x.sfarsit, x.titlu, String(x.text || "").substring(0, 2000), x.link, x.anScolar]));
+}
+
+// Mostre din fiecare răspuns (primele 2 elemente), ca să vedem câmpurile reale. Se rescrie la fiecare trimitere.
+function adsWriteRawSamples(ss, calls) {
+  const rows = calls.map(c => {
+    const items = adsList(c.json);
+    const keys = {};
+    items.slice(0, 20).forEach(it => { if (it && typeof it === "object") Object.keys(it).forEach(k => { keys[k] = 1; }); });
+    let sample = c.error ? "EROARE: " + c.error : JSON.stringify(items.slice(0, 2));
+    if (sample.length > 45000) sample = sample.substring(0, 45000) + "…";
+    return [c.kind || "", String(c.path || "").substring(0, 300), String(c.status || ""), items.length, Object.keys(keys).join(", ").substring(0, 5000), sample];
+  });
+  adsWriteSheet(ss, ADS_RAW_SHEET, ["Tip", "Cerere", "Status", "Elemente", "Chei", "Mostra (primele 2)"], rows);
+}
+
+function adsMarkDone(ss, rez, sursa) {
+  const sh = ss.getSheetByName("Setari");
+  setSettingValue(sh, "adservio_ultim", authNow() + " — " + rez.absente + " absențe, " + rez.note + " note" +
+    (rez.medii !== undefined ? ", " + rez.medii + " medii" : "") + ", " + rez.teme + " teme (" + sursa + ")");
+  setSettingValue(sh, "adservio_eroare", "");
+  logToAppSheet(ss, { modul: "Adservio", actiune: "push_browser", status: "OK", detalii: JSON.stringify(rez), user: "-" });
 }

@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.9
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.19
  * Autor: Bogdan Murar (Z003FU5C)
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.9";
+const BACKEND_VERSION = "24.19";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -626,6 +626,12 @@ function doGet(e) {
   // 8a2. ADSERVIO (v24.6) — datele aduse de sincronizare (fișierul Adservio.gs) + sincronizare la cerere
   if (action === "getAdservioData") {
     return returnResponse(e, { adservio: getAdservioData(ss) });
+  }
+
+  // Cheia de trimitere pentru marcajul „Adservio → DIiH” — doar admin (acțiune nelistată în AUTH_ACTION_RULES)
+  if (action === "adservioMarcajKey") {
+    if (typeof aratamCheiaPush !== "function") return returnResponse(e, { success: false, error: "Lipsește fișierul Adservio.gs din proiect." });
+    return returnResponse(e, { success: true, key: aratamCheiaPush() });
   }
 
   if (action === "adservioSyncNow") {

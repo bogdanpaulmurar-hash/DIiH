@@ -1,5 +1,20 @@
 # CHANGELOG — DIiH Hub
 
+## v24.19 — 2026-10-19 — Adservio complet: marcaj nou, interpretare pe date reale
+
+Frontend (`index.html`, `sw.js`, fișier nou `adservio-marcaj.js`) și backend (`_API.gs` 24.19 + `Adservio.gs`). **Necesită deploy** (ambele fișiere) și reinstalarea marcajului.
+
+- **Marcaj nou** (`adservio-marcaj.js`): găsește copilul din profilul părintelui (`parinti/elev?epID=`), apoi, pentru fiecare clasă (toți anii), cere perioadele, calificativele cu mediile, absențele, scutirile, avertismentele, mediile generale, temele, vacanțele, zilele libere și orarul zilei. Trimite răspunsurile **neprelucrate**; interpretarea o face serverul, deci marcajul nu se mai reinstalează când se schimbă ce extragem. Dacă site-ul blochează trimiterea, folosește un formular într-un tab nou.
+- **Generare din aplicație** (doar admin): Școală → Adservio → „🔖 Generează marcajul”. Aplicația cere cheia de trimitere de la server (`adservioMarcajKey`) și o pune în marcaj; nicio cheie în repo.
+- **Interpretare pe structura reală** (verificată pe contul real, 2026-10-19):
+  - absențe: motivată = `absStatus` 2; **motivul și documentul** vin din scutirea care acoperă ziua (medical / cererea părintelui, cu detalii și link spre document);
+  - calificative: tip (test / oral / proiect), **data primirii** (`notaDataInsert`, când diferă de data notei), profesor, modul, **explicația** profesorului (`notaObs`);
+  - medii pe materie și media generală; în anul curent, cele neîncheiate apar „(provizorie)”;
+  - vacanțele și zilele libere oficiale (pot colora calendarele aplicației, punctul următor).
+- Taburi noi în sheet: `Adservio_Medii`, `Adservio_Extra` (scutiri, avertismente, vacanțe, zile libere) și `Adservio_Raw` (mostre din fiecare răspuns, pentru diagnostic). `Adservio_Absente` și `Adservio_Note` primesc coloane noi la final.
+- **Subtab Adservio**: alegerea anului școlar (implicit cel curent), absențe cu motiv și 📎 document, calificative pe materie cu medii și detalii la apăsare (data primirii, profesor, 💬 explicație), listă de scutiri, vacanțe și zile libere viitoare. Linkurile spre documente se acceptă doar de pe domeniile Adservio.
+- Marcajul vechi (format v1) e acceptat în continuare.
+
 ## v24.18 — 2026-10-18 — Cumpărături: cantitatea mai mare de 1 sare în ochi
 
 Doar frontend (`index.html`, `sw.js`).
