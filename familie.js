@@ -100,7 +100,6 @@
     if (!keepMenu) awMenu(false);
   }
   function awStop(silent) {
-    pipStop();
     aw = { mode: null, until: 0 };
     LS.set(AW_KEY, aw);
     awRelease();
@@ -127,6 +126,7 @@
     if (!m) return;
     const open = typeof show === 'boolean' ? show : m.classList.contains('hidden');
     m.classList.toggle('hidden', !open);
+    if (open) ytRender();
     awRender();
   }
   function awCustom() {
@@ -156,21 +156,18 @@
         </div>
         <button onclick="famAw.stop()" class="w-full py-1.5 rounded-xl bg-red-900/60 border border-red-700 font-bold">⏹ Oprește</button>
         <div class="pt-2 border-t border-slate-700 space-y-1.5">
-          <p class="text-[10px] font-bold text-cyan-300">⧉ Varianta 2 (experimental): fereastră plutitoare</p>
-          <p class="text-[9px] text-slate-500 leading-snug">Numărătoarea roșie plutește peste Teams / browser, ca un video mic. Cât rulează video-ul, telefonul de obicei nu stinge ecranul. De testat pe fiecare telefon.</p>
-          <div class="grid grid-cols-5 gap-1">
-            <button onclick="famAw.pip(5)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">5′</button>
-            <button onclick="famAw.pip(10)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">10′</button>
-            <button onclick="famAw.pip(30)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">30′</button>
-            <button onclick="famAw.pip(60)" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">1h</button>
-            <button onclick="famAw.pipCustom()" class="py-2 rounded-xl bg-cyan-950 border border-cyan-700 font-bold">⏱…</button>
-          </div>
-          <div id="awPipBox" class="hidden space-y-1.5">
-            <div id="awPipSlot" class="rounded-lg overflow-hidden border border-red-800 bg-black"></div>
-            <button onclick="famAw.pipEnter()" class="w-full py-2 rounded-xl bg-cyan-700 text-white font-bold">⧉ Mută peste aplicații</button>
-            <p class="text-[9px] text-slate-500">Dacă butonul nu merge, apasă iconița ⧉ (Picture-in-Picture) din colțul video-ului, apoi treci în Teams.</p>
-          </div>
-          <a href="./pip.html?m=60" target="_blank" rel="noopener" class="block w-full py-2 rounded-xl bg-slate-800 border border-slate-500 text-center font-bold">🍎 iPhone: deschide în Safari (ecran complet → glisează în sus)</a>
+          <p class="text-[10px] font-bold text-red-300">▶ Varianta 2: YouTube peste Teams (ecranul rămâne aprins)</p>
+          <div id="awYtButtons" class="grid grid-cols-5 gap-1"></div>
+          <details class="text-[9px] text-slate-400 leading-snug">
+            <summary class="cursor-pointer text-slate-300 font-bold">Cum se folosește</summary>
+            <ol class="list-decimal pl-4 space-y-0.5 mt-1">
+              <li>Apasă timpul: se deschide YouTube cu numărătoarea.</li>
+              <li>Cât rulează, ieși din YouTube (Samsung: Acasă; iPhone: glisează în sus) sau treci direct în Teams. Clipul se micșorează singur în fereastra plutitoare.</li>
+              <li>Ca să închizi: atinge fereastra mică → ✕ (sau trage-o jos, la ✕).</li>
+              <li>O singură dată: Samsung → Setări → Aplicații → YouTube → Picture-in-picture: Permis. iPhone → Setări → General → Picture in Picture → Pornește PiP automat.</li>
+            </ol>
+          </details>
+          <button id="awYtConfig" onclick="famAw.ytConfig()" class="hidden w-full py-1 rounded-lg bg-slate-800 border border-slate-600 text-[10px]">⚙ Linkuri YouTube (admin)</button>
         </div>
         <p class="text-[9px] text-slate-500 leading-snug">Funcționează cât aplicația e deschisă pe ecran. Când treci în altă aplicație, telefonul preia controlul; la revenire se reia automat până expiră timpul.</p>
         <button onclick="famAw.fab(false)" class="text-[9px] text-slate-500 underline">Ascunde butonul (îl reafișezi din 🔔 Notificări)</button>
@@ -185,83 +182,45 @@
       if (document.visibilityState === 'visible' && aw.mode) { awAcquire(); awLoop(); }
     });
   }
-  // ---- Varianta 2: Picture-in-Picture cu numărătoare (video pre-generat 5/10/30 min, în /pip) ----
-  let pipVideo = null;
-  function pipEl() {
-    if (pipVideo) return pipVideo;
-    const v = document.createElement('video');
-    // Video CU sunet (o pistă audio de liniște, nu „muted”): telefoanele tratează doar redarea reală ca video
-    // și abia atunci nu sting ecranul. Un video mut era ignorat pe 13 Pro Max și S24.
-    v.muted = false; v.volume = 1; v.playsInline = true; v.controls = true; v.preload = 'metadata';
-    v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
-    v.style.cssText = 'width:100%;display:block;aspect-ratio:8/3;background:#000';
-    v.addEventListener('ended', () => {
-      // peste 2 ore: video-ul se reia până expiră timpul ales
-      if (aw.mode === 'timer' && aw.until - Date.now() > 5000) { v.currentTime = 0; v.play().catch(() => {}); return; }
-      if (aw.mode === 'timer') { awStop(true); toast('⏱ Timpul pentru ecran pornit s-a încheiat.'); }
-      pipStop();
-    });
-    const slot = document.getElementById('awPipSlot');
-    if (slot) slot.appendChild(v);
-    pipVideo = v;
-    return v;
+  // ---- Varianta 2: clipuri YouTube cu numărătoare (5/10/30/60/120 min), linkuri în Setari → YoutubeEcranPornit ----
+  // Doar fereastra plutitoare a YouTube ține ecranul aprins peste Teams pe toate telefoanele (testat 18.10).
+  const YT_KEY = 'YoutubeEcranPornit';
+  const YT_DUR = [[5, '5′'], [10, '10′'], [30, '30′'], [60, '1h'], [120, '2h']];
+  function ytLinks() {
+    try { return JSON.parse((typeof settingsRaw !== 'undefined' && settingsRaw[YT_KEY]) || '{}') || {}; } catch (e) { return {}; }
   }
-  function pipStart(min) {
-    awStart('timer', min, true);
-    const box = document.getElementById('awPipBox');
-    if (box) box.classList.remove('hidden');
-    const v = pipEl();
-    // Un singur video de 2 ore cu numărătoare; pornim de la poziția care arată exact timpul ales
-    const offset = Math.max(0, 7200 - min * 60);
-    if (!/pip-120\.mp4$/.test(v.currentSrc || '')) v.src = './pip/pip-120.mp4';
-    const seek = () => { try { v.currentTime = offset; } catch (e) {} };
-    if (v.readyState >= 1) seek(); else v.addEventListener('loadedmetadata', seek, { once: true });
-    v.muted = false;
-    v.play().then(() => pipEnter(true)).catch(() => {
-      // fără gest valid sau cu sunet blocat: încercăm mut, apoi utilizatorul apasă „Mută peste aplicații”
-      v.muted = true;
-      v.play().catch(() => {});
-      toast('Apasă ▶ pe video (cu sunet), apoi „Mută peste aplicații”.');
-    });
+  function ytNorm(u) {
+    u = (u || '').trim();
+    if (!u) return '';
+    const id = (u.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/) || [])[1];
+    return id ? 'https://youtu.be/' + id : (/^https:\/\/(www\.|m\.)?youtu/.test(u) ? u : '');
   }
-  function pipCustom() {
-    const n = parseInt(prompt('Câte minute? (peste 120, video-ul se reia până la final)', '45'), 10);
-    if (n > 0 && n <= 600) pipStart(n);
+  function ytRender() {
+    const box = document.getElementById('awYtButtons');
+    if (!box) return;
+    const links = ytLinks();
+    box.innerHTML = YT_DUR.map(([m, l]) => links[m]
+      ? `<a href="${esc(links[m])}" target="_blank" rel="noopener" onclick="famAw.menu(false)" class="py-2 rounded-xl bg-red-900/70 border border-red-600 font-bold text-center text-white">${l}</a>`
+      : `<button onclick="famAw.ytMissing()" class="py-2 rounded-xl bg-slate-800 border border-slate-700 font-bold text-slate-500">${l}</button>`).join('');
+    const cfg = document.getElementById('awYtConfig');
+    try { if (cfg) cfg.classList.toggle('hidden', !isAdminUser()); } catch (e) {}
   }
-  function pipEnter(auto) {
-    const v = pipVideo;
-    if (!v) return;
-    if (v.paused) v.play().catch(() => {});
-    try {
-      if (typeof v.webkitSupportsPresentationMode === 'function' && v.webkitSupportsPresentationMode('picture-in-picture') && /iPhone|iPad/.test(navigator.userAgent)) {
-        v.webkitSetPresentationMode('picture-in-picture');
-        awMenu(false);
-        return;
-      }
-      if (document.pictureInPictureEnabled && typeof v.requestPictureInPicture === 'function') {
-        v.requestPictureInPicture()
-          .then(() => { toast('⧉ Numărătoarea plutește. Poți trece în Teams.'); awMenu(false); })
-          .catch(() => { if (!auto) toast('Fereastra plutitoare a fost refuzată. Încearcă iconița ⧉ din video.'); });
-        return;
-      }
-      if (typeof v.webkitSupportsPresentationMode === 'function' && v.webkitSupportsPresentationMode('picture-in-picture')) {
-        v.webkitSetPresentationMode('picture-in-picture');
-        awMenu(false);
-        return;
-      }
-    } catch (e) {}
-    if (!auto) toast('Telefonul/browserul nu permite fereastra plutitoare aici.');
+  function ytConfig() {
+    const links = ytLinks();
+    const out = {};
+    for (const [m, l] of YT_DUR) {
+      const v = prompt(`Linkul YouTube pentru ${l} (gol = fără):`, links[m] || '');
+      if (v === null) return;
+      const n = ytNorm(v);
+      if (v.trim() && !n) { toast(`Linkul pentru ${l} nu pare de YouTube.`); return; }
+      if (n) out[m] = n;
+    }
+    saveSettingRaw(YT_KEY, JSON.stringify(out));
+    ytRender();
+    toast('Linkurile YouTube au fost salvate pentru toată familia.');
   }
-  function pipStop() {
-    const v = pipVideo;
-    if (!v) return;
-    try { if (document.pictureInPictureElement) document.exitPictureInPicture(); } catch (e) {}
-    try { if (v.webkitPresentationMode === 'picture-in-picture') v.webkitSetPresentationMode('inline'); } catch (e) {}
-    try { v.pause(); } catch (e) {}
-    const box = document.getElementById('awPipBox');
-    if (box) box.classList.add('hidden');
-  }
-  window.famAw = { start: awStart, stop: awStop, menu: awMenu, custom: awCustom, fab: awSetFabVisible, pip: pipStart, pipCustom, pipEnter: () => pipEnter(false) };
+  function ytMissing() { toast(isAdminUser() ? 'Pune linkul cu ⚙ Linkuri YouTube.' : 'Linkul pentru acest timp nu e setat încă.'); }
+  window.famAw = { start: awStart, stop: awStop, menu: awMenu, custom: awCustom, fab: awSetFabVisible, ytConfig, ytMissing };
 
   // =====================================================================
   // 2. CENTRUL DE NOTIFICĂRI

@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.24 — 2026-10-19 — Ecran pornit: varianta 2 prin YouTube (5′ / 10′ / 30′ / 1h / 2h)
+
+Doar frontend (`familie.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+
+- Testat pe 18.10: doar fereastra plutitoare (PiP) a YouTube ține ecranul aprins peste Teams pe toate telefoanele. Varianta 2 din meniul ☀️ are acum 5 butoane, 5′ / 10′ / 30′ / 1h / 2h; fiecare deschide în YouTube clipul cu numărătoarea respectivă (clipuri proprii, nelistate).
+- Linkurile se salvează în Setari (`YoutubeEcranPornit`), deci sunt aceleași pentru toată familia. Le pune adminul din „⚙ Linkuri YouTube” (acceptă orice format de link YouTube). Butoanele fără link apar gri.
+- Instrucțiuni scurte în meniu („Cum se folosește”): ieși din YouTube cât rulează clipul → fereastră plutitoare; setările de activat o dată pe Samsung și iPhone.
+- Eliminate `pip.html` și `pip/pip-120.mp4` (PiP cu video propriu nu ținea ecranul aprins). Varianta 1 (ecran aprins cât aplicația e deschisă) rămâne.
+
 ## v24.23 — 2026-10-19 — Căutare pe coloane, Adservio în calendar, ore ocupate mutate automat
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.23). **Necesită deploy** (doar `API.gs`).
