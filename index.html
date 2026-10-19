@@ -664,8 +664,18 @@
               <span>📅</span>
               <span>Astăzi</span>
             </button>
+            <button onclick="toggleSchoolSearch()" class="text-[10px] bg-darkbg border border-bordercol text-slate-300 px-2 py-0.5 rounded-lg hover:text-cyan-300 font-bold transition" title="Caută în activități">🔍</button>
           </div>
           <button onclick="changeSchoolPeriod(1)" class="p-2 bg-darkbg rounded-xl border border-bordercol hover:text-cyan-400 text-xs">Înainte ▶</button>
+        </div>
+
+        <!-- Căutare în activitățile școlare (ascunsă până la apăsarea 🔍) -->
+        <div id="schoolSearchBox" class="hidden space-y-1">
+          <div class="flex items-center space-x-1">
+            <input id="schoolSearchInput" type="search" autocomplete="off" oninput="renderSchoolSearchSuggestions()" onkeydown="if(event.key==='Escape')toggleSchoolSearch(false)" placeholder="Caută: titlu, sumă, notă, dată, instituție…" class="flex-1 bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
+            <button onclick="toggleSchoolSearch(false)" class="text-[10px] px-2 py-1 bg-darkbg border border-bordercol rounded-lg text-slate-400">✕</button>
+          </div>
+          <div id="schoolSearchResults" class="max-h-64 overflow-y-auto space-y-0.5 text-[11px]"></div>
         </div>
 
         <!-- Filtru Sumar: Zi / Lună / An / Luna trecută / Ultimele 30 zile / Personalizat -->
@@ -2489,7 +2499,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.21";
+    const APP_VERSION = "v24.22";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -4818,6 +4828,60 @@
       }
       box.innerHTML = html;
       box.classList.toggle('hidden', !html);
+    }
+
+    // Căutare în activitățile școlare: sugestii după titlu, sumă, notă, dată, instituție, copil, status
+    function toggleSchoolSearch(show) {
+      const box = document.getElementById('schoolSearchBox');
+      if (!box) return;
+      const open = (typeof show === 'boolean') ? show : box.classList.contains('hidden');
+      box.classList.toggle('hidden', !open);
+      const input = document.getElementById('schoolSearchInput');
+      if (open) { input.focus(); renderSchoolSearchSuggestions(); }
+      else { input.value = ''; document.getElementById('schoolSearchResults').innerHTML = ''; }
+    }
+
+    function normSchoolSearch(v) {
+      return String(v == null ? '' : v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    function renderSchoolSearchSuggestions() {
+      const out = document.getElementById('schoolSearchResults');
+      const raw = (document.getElementById('schoolSearchInput').value || '').trim();
+      if (!out) return;
+      if (raw.length < 2 && !/^\d+$/.test(raw)) {
+        out.innerHTML = raw ? '' : `<p class="text-slate-500 italic px-1">Scrie cel puțin 2 litere sau o sumă.</p>`;
+        return;
+      }
+      const words = normSchoolSearch(raw).split(' ').filter(Boolean);
+      const numQuery = /^\d+([.,]\d+)?$/.test(raw) ? parseFloat(raw.replace(',', '.')) : null;
+      const results = [];
+      getRealSchoolActivities().forEach(a => {
+        if (!a || !a.date) return;
+        const [y, m, d] = String(a.date).split('-');
+        const hay = normSchoolSearch([a.title, a.institution, a.child, a.paymentStatus, a.dayMessage, a.comentariuPlata,
+          a.paymentType, a.total, a.rate, `${a.total} lei`, a.date, `${d}.${m}.${y}`, `${d}.${m}`].join(' | '));
+        const exactAmount = numQuery !== null && (Number(a.total) === numQuery || Number(a.rate) === numQuery);
+        if (!exactAmount && !words.every(w => hay.includes(w))) return;
+        results.push({ a, score: (exactAmount ? 0 : 1) });
+      });
+      results.sort((x, y) => x.score - y.score || String(y.a.date).localeCompare(String(x.a.date)));
+      if (!results.length) { out.innerHTML = `<p class="text-slate-500 italic px-1">Nimic găsit pentru „${escapeHtmlText(raw)}”.</p>`; return; }
+      const shown = results.slice(0, 30);
+      out.innerHTML = `<p class="text-slate-500 px-1">${results.length} rezultate${results.length > shown.length ? ' (primele 30, cele mai noi)' : ''} — apasă ca să mergi la zi.</p>` +
+        shown.map(({ a }) => {
+          const [y, m, d] = String(a.date).split('-');
+          const note = [a.dayMessage, a.comentariuPlata].filter(Boolean).join(' · ');
+          return `<div onclick="pickSchoolSearchResult('${a.date}')" class="cursor-pointer p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-600">
+            <div class="flex items-center justify-between gap-2"><span class="text-white font-semibold truncate">${escapeHtmlText(a.title || 'Activitate')}</span><span class="text-emerald-400 whitespace-nowrap">${Number(a.total) || 0} Lei</span></div>
+            <div class="text-slate-400 truncate">${d}.${m}.${y}${a.institution && a.institution !== '-' ? ' · ' + escapeHtmlText(a.institution) : ''} · ${escapeHtmlText(a.paymentStatus || '')}${note ? ' · ' + escapeHtmlText(note) : ''}</div>
+          </div>`;
+        }).join('');
+    }
+
+    function pickSchoolSearchResult(dateStr) {
+      toggleSchoolSearch(false);
+      jumpToSchoolDate(dateStr);
     }
 
     function jumpToSchoolDate(dateStr) {

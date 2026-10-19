@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.22 — 2026-10-19 — Căutare în activitățile școlare
+
+Doar frontend (`index.html`, `sw.js`). Backend neschimbat, nu e nevoie de deploy în Apps Script.
+
+- Lângă butonul **📅 Astăzi** din calendarul Școală e un buton **🔍**. Deschide un câmp de căutare (ascuns în rest).
+- Pe măsură ce scrii, apar sugestii din toate activitățile: după titlu, sumă (ex. „70” găsește activitățile de 70 lei), notă, comentariul plății, instituție, copil, status sau dată (ex. „23.09” sau „2023-09”). Nu contează diacriticele.
+- Fiecare sugestie arată data, suma, statusul și nota. Apeși pe ea și calendarul sare direct la ziua respectivă, cu ziua selectată.
+
 ## v24.21 — 2026-10-19 — „În atenția dvs.” pe Astăzi; plusuri/minusuri de activitate
 
 Frontend (`index.html`, `sw.js`) și `Adservio.gs` (doar fișierul Adservio, pentru plusuri/minusuri).
