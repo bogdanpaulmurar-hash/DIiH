@@ -1,5 +1,15 @@
 # CHANGELOG — DIiH Hub
 
+## v24.21 — 2026-10-19 — „În atenția dvs.” pe Astăzi; plusuri/minusuri de activitate
+
+Frontend (`index.html`, `sw.js`) și `Adservio.gs` (doar fișierul Adservio, pentru plusuri/minusuri).
+
+- Widgetul **Școală** de pe Astăzi are secțiunea **„În atenția dvs.”** (apare doar când e ceva de văzut, din anul școlar curent):
+  - ⚠️ absențele **nemotivate** din Adservio (câte sunt, cu materia și data);
+  - 📗 calificativele **noi din ultimele 7 zile** (după data intrării în catalog), 💬 dacă au explicație;
+  - 💰 **de plată**: suma activităților neachitate până azi și câte au termenul depășit.
+- **Plusuri / minusuri de activitate** la oră (Adservio le ține ca număr pe materie, fără dată): apar lângă mediile materiei, ca „Activitate: +3 / −1”. Se preiau la următoarea apăsare a marcajului.
+
 ## v24.20 — 2026-10-19 — Notificări pornite/oprite pe categorii; actualizare sigură după deploy
 
 Doar frontend (`index.html`, `familie.js`, `sw.js`). Backend neschimbat, nu e nevoie de deploy în Apps Script.

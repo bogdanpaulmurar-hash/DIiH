@@ -474,6 +474,9 @@ function adsHandleRawPush(ss, payload) {
         anScolar: yearOf(c.ctx)
       });
     });
+    // Plusuri / minusuri de activitate la oră (contoare pe materie, fără dată)
+    const plus = parseInt(m.e2mAoPlus, 10) || 0, minus = parseInt(m.e2mAoMinus, 10) || 0;
+    if (plus || minus) medii.push({ copil: childName(c.ctx), materie: materie, perioada: "Activitate", medie: (plus ? "+" + plus : "") + (plus && minus ? " / " : "") + (minus ? "−" + minus : ""), anScolar: yearOf(c.ctx) });
     // Mediile pe materie: doar cele încheiate (valoare diferită de 0)
     const md = m.medii || {};
     (md.semestriale || md.perioade || []).forEach(x => {

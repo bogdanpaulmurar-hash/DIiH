@@ -1382,7 +1382,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.20 (Build 2026-10-19)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.21 (Build 2026-10-19)</span>
             <p class="text-[11px] text-slate-300">Pe server (GitHub): <span id="serverAppVersionLabel" class="font-mono text-slate-400">se verifică…</span></p>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
@@ -2489,7 +2489,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.20";
+    const APP_VERSION = "v24.21";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -8462,6 +8462,7 @@
       adservioData = d;
       try { localStorage.setItem('diih_adservio', JSON.stringify(d)); } catch (e) {}
       if (schoolSubTab === 'adservio') renderAdservio();
+      if (typeof updateTodayWidgetView === 'function') updateTodayWidgetView();
     }
 
     async function adservioSyncNow() {
@@ -8578,6 +8579,34 @@
             ${x.text || link ? `<p class="text-[10px] text-slate-400">${escapeHtmlText(x.text)}${link ? ` <a href="${escapeHtmlText(link)}" target="_blank" rel="noopener" class="text-cyan-300 underline">📎 document</a>` : ''}</p>` : ''}
           </div>`;
           }).join('');
+    }
+
+    // „În atenția dvs.” (widgetul Școală de pe Astăzi): absențe nemotivate, calificative din ultimele 7 zile,
+    // plăți restante. Doar anul școlar curent și doar dacă profilul are acces la Școală.
+    function getSchoolAttentionItems() {
+      if (typeof hasNotifAccessModule === 'function' && !hasNotifAccessModule('scoala')) return [];
+      const out = [];
+      const d = adservioData || {};
+      const year = getDefaultSchoolYear();
+      const inYear = x => !x.anScolar || x.anScolar === year;
+      const nemot = (d.absente || []).filter(a => !a.motivata && inYear(a)).sort((a, b) => b.data.localeCompare(a.data));
+      if (nemot.length) {
+        out.push({ cls: 'text-rose-300 font-semibold', html: `⚠️ ${nemot.length === 1 ? '1 absență de motivat' : nemot.length + ' absențe de motivat'}: ${nemot.slice(0, 3).map(a => `${escapeHtmlText(a.materie)} (${formatTemaDate(a.data)})`).join(', ')}${nemot.length > 3 ? '…' : ''}` });
+      }
+      const since = localDateStr(new Date(Date.now() - 7 * 86400000));
+      const recente = (d.note || []).filter(n => inYear(n) && (n.dataPrimirii || n.data || '').slice(0, 10) >= since)
+        .sort((a, b) => (b.dataPrimirii || b.data).localeCompare(a.dataPrimirii || a.data));
+      if (recente.length) {
+        out.push({ cls: 'text-emerald-200', html: `📗 ${recente.length === 1 ? 'Calificativ nou' : recente.length + ' calificative noi'}: ${recente.slice(0, 4).map(n => `<b>${escapeHtmlText(n.afisare)}</b> ${escapeHtmlText(n.materie)}${n.obs ? ' 💬' : ''}`).join(', ')}${recente.length > 4 ? '…' : ''}` });
+      }
+      const today = localDateStr();
+      const neplatite = getRealSchoolActivities().filter(a => !isActivitySettled(a.paymentStatus) && (parseFloat(a.total) || 0) > 0 && a.date <= today);
+      if (neplatite.length) {
+        const suma = neplatite.reduce((t, a) => t + (parseFloat(a.total) || 0), 0);
+        const depasite = neplatite.filter(a => a.deadline && a.deadline !== '-' && String(a.deadline).slice(0, 10) < today).length;
+        out.push({ cls: depasite ? 'text-rose-300' : 'text-amber-200', html: `💰 De plată: <b>${fmtLei(suma)}</b> (${neplatite.length} ${neplatite.length === 1 ? 'activitate' : 'activități'}${depasite ? `, ${depasite} cu termen depășit` : ''})` });
+      }
+      return out;
     }
 
     // Marcajul „Adservio → DIiH”: codul din adservio-marcaj.js + adresa serverului + cheia de trimitere (doar admin)
@@ -9701,6 +9730,13 @@
         const tc = getOpenTemeCounts();
         if (tc.overdue || tc.soon) {
           schoolContent.innerHTML += `<p class="text-xs font-semibold text-amber-300">📚 Teme: ${tc.soon ? tc.soon + ' pentru azi/mâine' : ''}${tc.soon && tc.overdue ? ', ' : ''}${tc.overdue ? '<span class="text-rose-400">' + tc.overdue + ' întârziate</span>' : ''}</p>`;
+        }
+        const att = getSchoolAttentionItems();
+        if (att.length) {
+          schoolContent.innerHTML += `<div class="mt-1.5 pt-1.5 border-t border-bordercol/60 space-y-0.5">
+            <p class="text-[10px] uppercase tracking-wider font-bold text-amber-300">În atenția dvs.</p>
+            ${att.map(x => `<p class="text-xs ${x.cls}">${x.html}</p>`).join('')}
+          </div>`;
         }
       }
 
