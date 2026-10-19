@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.25 — 2026-10-19 — Ecran pornit: clipurile de 5′ și 10′ puse; 30′/1h/2h = 10′ repetat
+
+Doar frontend (`familie.js`, `index.html`, `sw.js`).
+
+- Clipurile YouTube pentru 5′ și 10′ sunt puse direct în aplicație (cele din Setari, dacă există, au prioritate).
+- 30′ / 1h / 2h: până se pot încărca clipurile lungi (YouTube cere verificarea contului pentru clipuri peste 15 minute), butonul redă clipul de 10′ de 3 / 6 / 12 ori la rând, printr-un playlist generat de YouTube. Pe buton apare „10′×3” etc. Numărătoarea din clip pornește de la 10:00 la fiecare repetare.
+- Linkurile ignoră parametrii de urmărire (ex. `?is=…`).
+
 ## v24.24 — 2026-10-19 — Ecran pornit: varianta 2 prin YouTube (5′ / 10′ / 30′ / 1h / 2h)
 
 Doar frontend (`familie.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.

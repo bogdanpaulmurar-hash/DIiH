@@ -186,13 +186,25 @@
   // Doar fereastra plutitoare a YouTube ține ecranul aprins peste Teams pe toate telefoanele (testat 18.10).
   const YT_KEY = 'YoutubeEcranPornit';
   const YT_DUR = [[5, '5′'], [10, '10′'], [30, '30′'], [60, '1h'], [120, '2h']];
+  // Clipurile încărcate deja (19.10); cele din Setari au prioritate. 30′/1h/2h: până există clipuri proprii,
+  // se redă clipul de 10′ de câte ori e nevoie (playlist generat de YouTube din același clip repetat).
+  const YT_DEFAULT = { 5: 'https://youtu.be/YPpm-L2pbzw', 10: 'https://youtu.be/dGQZAply_S0' };
+  function ytId(u) { return ((u || '').match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/) || [])[1] || ''; }
   function ytLinks() {
-    try { return JSON.parse((typeof settingsRaw !== 'undefined' && settingsRaw[YT_KEY]) || '{}') || {}; } catch (e) { return {}; }
+    let saved = {};
+    try { saved = JSON.parse((typeof settingsRaw !== 'undefined' && settingsRaw[YT_KEY]) || '{}') || {}; } catch (e) { saved = {}; }
+    const out = Object.assign({}, YT_DEFAULT, saved);
+    const id10 = ytId(out[10]);
+    [30, 60, 120].forEach(m => {
+      if (!out[m] && id10) out[m] = { loop: true, url: 'https://www.youtube.com/watch_videos?video_ids=' + Array(m / 10).fill(id10).join(',') };
+    });
+    return out;
   }
+  function ytUrl(v) { return v && typeof v === 'object' ? v.url : v; }
   function ytNorm(u) {
     u = (u || '').trim();
     if (!u) return '';
-    const id = (u.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/) || [])[1];
+    const id = ytId(u);
     return id ? 'https://youtu.be/' + id : (/^https:\/\/(www\.|m\.)?youtu/.test(u) ? u : '');
   }
   function ytRender() {
@@ -200,7 +212,7 @@
     if (!box) return;
     const links = ytLinks();
     box.innerHTML = YT_DUR.map(([m, l]) => links[m]
-      ? `<a href="${esc(links[m])}" target="_blank" rel="noopener" onclick="famAw.menu(false)" class="py-2 rounded-xl bg-red-900/70 border border-red-600 font-bold text-center text-white">${l}</a>`
+      ? `<a href="${esc(ytUrl(links[m]))}" target="_blank" rel="noopener" onclick="famAw.menu(false)" title="${links[m].loop ? `clipul de 10′ × ${m / 10}` : ''}" class="py-2 rounded-xl bg-red-900/70 border border-red-600 font-bold text-center text-white">${l}${links[m].loop ? '<span class="block text-[8px] font-normal text-red-200">10′×' + (m / 10) + '</span>' : ''}</a>`
       : `<button onclick="famAw.ytMissing()" class="py-2 rounded-xl bg-slate-800 border border-slate-700 font-bold text-slate-500">${l}</button>`).join('');
     const cfg = document.getElementById('awYtConfig');
     try { if (cfg) cfg.classList.toggle('hidden', !isAdminUser()); } catch (e) {}
@@ -209,7 +221,8 @@
     const links = ytLinks();
     const out = {};
     for (const [m, l] of YT_DUR) {
-      const v = prompt(`Linkul YouTube pentru ${l} (gol = fără):`, links[m] || '');
+      const cur = links[m] && !links[m].loop ? ytUrl(links[m]) : '';
+      const v = prompt(`Linkul YouTube pentru ${l}${m >= 30 ? ' (gol = clipul de 10′ repetat)' : ''}:`, cur);
       if (v === null) return;
       const n = ytNorm(v);
       if (v.trim() && !n) { toast(`Linkul pentru ${l} nu pare de YouTube.`); return; }
