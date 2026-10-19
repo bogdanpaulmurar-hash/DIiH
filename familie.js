@@ -410,7 +410,8 @@
     list.forEach(n => {
       if (!seen.has(n.id)) {
         seen.add(n.id);
-        if (!firstTime && !n.citit && n.tip !== 'cumparaturi') {
+        // „🔔 Centrul de notificări” oprit din Setări → Notificări: rămâne în clopoțel, fără alertă pe telefon
+        if (!firstTime && !n.citit && n.tip !== 'cumparaturi' && (!window.isNotifOn || window.isNotifOn('familie'))) {
           try { origTrigger(n.titlu, n.mesaj); } catch (e) {}
         }
       }
@@ -857,7 +858,9 @@
         if (diff >= 0 && diff <= 90 && !fired[key]) {
           fired[key] = 1;
           const from = r.creatDe && r.creatDe !== me ? ` (de la ${profName(r.creatDe)})` : '';
-          try { window.triggerNotification(`⏰ ${r.titlu}${from}`, r.detalii || `Reminder ${o}`); } catch (e) {}
+          if (!window.isNotifOn || window.isNotifOn('remindere')) {
+            try { window.triggerNotification(`⏰ ${r.titlu}${from}`, r.detalii || `Reminder ${o}`); } catch (e) {}
+          }
         }
       });
     });

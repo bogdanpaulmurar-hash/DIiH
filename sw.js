@@ -1,4 +1,4 @@
-const CACHE_NAME = 'diih-cache-v24.19';
+const CACHE_NAME = 'diih-cache-v24.20';
 const ASSETS = [
   './index.html',
   './familie.js',
@@ -44,8 +44,12 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
+  // Fișierele proprii (același domeniu): mereu verificate la server (cache: 'no-cache' → 304 rapid dacă nu s-au schimbat),
+  // ca un deploy nou să ajungă fără să aștepte expirarea cache-ului HTTP. Restul (CDN-uri): ca înainte.
+  const sameOrigin = url.startsWith(self.location.origin);
+  const req = sameOrigin && e.request.method === 'GET' ? fetch(url, { cache: 'no-cache', credentials: 'same-origin' }) : fetch(e.request);
   e.respondWith(
-    fetch(e.request)
+    req
       .then((res) => {
         return caches.open(CACHE_NAME).then((cache) => {
           cache.put(e.request, res.clone());

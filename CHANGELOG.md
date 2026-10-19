@@ -1,5 +1,20 @@
 # CHANGELOG — DIiH Hub
 
+## v24.20 — 2026-10-19 — Notificări pornite/oprite pe categorii; actualizare sigură după deploy
+
+Doar frontend (`index.html`, `familie.js`, `sw.js`). Backend neschimbat, nu e nevoie de deploy în Apps Script.
+
+### Ce notificări primești
+- Setări → Notificări are sus cardul **„✅ Ce notificări primești”**: câte o bifă pentru fiecare categorie — Psaltire, zile de naștere, pomeniri, aniversare pe persoană, școală, gânduri/cumpărături (amintire), remindere din notițe, produs adăugat de altcineva, ⏰ remindere programate, 🔔 centrul de notificări.
+- Fiecare profil își vede **doar categoriile la care are acces** (permisiunile date de admin în Admin → Profile).
+- Bifa se salvează **imediat**, pe profil (aceeași configurație ca „Salvează Toate Notificările”), deci e la fel pe toate dispozitivele contului. Cardul cu orele unei categorii oprite apare estompat, dar rămâne editabil.
+- O categorie oprită nu mai declanșează alerta pe telefon. La „Centrul de notificări”, mesajele rămân în 🔔, doar fără alertă.
+
+### Curăță cache-ul și versiuni noi
+- „⚡ Curăță Cache & Reîncarcă” cere acum fișierele aplicației **direct de la server** (ocolind cache-ul HTTP de 10 minute al GitHub Pages) și redeschide aplicația la o adresă nouă, ca să nu poată rămâne pe versiunea veche. Datele, contul și setările rămân.
+- Service worker-ul verifică la server fișierele aplicației la fiecare încărcare (răspuns mic dacă nu s-au schimbat), deci un deploy nou ajunge singur.
+- La pornire și la revenirea în aplicație (cel mult o dată la 10 minute), aplicația compară versiunea ei cu cea publicată; dacă e una mai nouă, apare o bandă **„Versiune nouă … Actualizează”**. În Setări apare și „Pe server (GitHub): vX”.
+
 ## v24.19 — 2026-10-19 — Adservio complet: marcaj nou, interpretare pe date reale
 
 Frontend (`index.html`, `sw.js`, fișier nou `adservio-marcaj.js`) și backend (`_API.gs` 24.19 + `Adservio.gs`). **Necesită deploy** (ambele fișiere) și reinstalarea marcajului.

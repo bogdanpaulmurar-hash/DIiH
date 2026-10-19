@@ -49,6 +49,15 @@
 
   <div id="printablePomelnicArea" class="hidden"></div>
 
+  <!-- v24.20: versiune nouă publicată pe server -->
+  <div id="appUpdateBanner" class="hidden fixed left-0 right-0 z-[80] flex justify-center px-4" style="top: calc(env(safe-area-inset-top, 0px) + 8px);">
+    <div class="flex items-center gap-2 bg-cyan-950 border border-cyan-600 text-cyan-100 text-xs rounded-xl px-3 py-2 shadow-xl">
+      <span id="appUpdateText">Versiune nouă disponibilă.</span>
+      <button onclick="forceCleanStorageAndReload()" class="px-2.5 py-1 rounded-lg bg-cyan-700 hover:bg-cyan-600 text-white font-bold">Actualizează</button>
+      <button onclick="document.getElementById('appUpdateBanner').classList.add('hidden')" class="px-1 text-cyan-300" aria-label="Închide">✕</button>
+    </div>
+  </div>
+
   <!-- TOAST DISCRET -->
   <div id="toastSuccess" class="fixed top-4 right-4 z-50 bg-emerald-900 border border-emerald-600 text-emerald-100 text-xs px-3 py-2 rounded-xl shadow-xl flex items-center space-x-2 transition-all opacity-0 pointer-events-none transform -translate-y-2">
     <span>✔</span>
@@ -1250,6 +1259,12 @@
             </p>
           </div>
 
+          <div class="p-3 bg-darkbg rounded-xl border border-emerald-800 space-y-2">
+            <span class="font-bold text-emerald-300 block">✅ Ce notificări primești</span>
+            <p class="text-[10px] text-slate-500">Debifează ce nu vrei să primești pe acest profil. Se salvează imediat și e la fel pe toate dispozitivele tale. Vezi doar categoriile la care ai acces.</p>
+            <div id="notifToggleList" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
+          </div>
+
           <div class="p-3 bg-darkbg rounded-xl border border-bordercol space-y-2">
             <span class="font-bold text-rose-300 block">📖 Citirea Psaltirii (3 Alerte)</span>
             <div id="notifPsaltireRows" class="space-y-1.5"></div>
@@ -1367,7 +1382,8 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.19 (Build 2026-10-19)</span>
+            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.20 (Build 2026-10-19)</span>
+            <p class="text-[11px] text-slate-300">Pe server (GitHub): <span id="serverAppVersionLabel" class="font-mono text-slate-400">se verifică…</span></p>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
             <p class="text-[10px] text-slate-400 font-mono break-all">ID: 107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY</p>
@@ -1402,6 +1418,7 @@
             <button onclick="forceCleanStorageAndReload()" class="w-full bg-rose-950 hover:bg-rose-900 border border-rose-700 text-rose-200 py-2.5 rounded-xl font-bold active:scale-95 transition">
               ⚡ Curăță Cache & Reîncarcă Aplicația ACUM
             </button>
+            <p class="text-[10px] text-slate-500">Aduce ultima versiune publicată (după un deploy). Datele, contul și setările rămân.</p>
           </div>
 
           <!-- Personalizare Nume și Simbol / Logo -->
@@ -2472,7 +2489,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.19";
+    const APP_VERSION = "v24.20";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -3956,6 +3973,7 @@
       initNotificationInputs();
       fetchDataFromSheet(false);
       registerServiceWorker();
+      setTimeout(() => checkForAppUpdate(true), 4000);
       setupOnlineOfflineHandlers();
       logEventToCloud('app_start', 'session', deviceId, 'DIiH v24 pornit');
 
@@ -3981,6 +3999,7 @@
 
       // Trezire imediată notificări pe mobil când utilizatorul deblochează ecranul sau schimbă tabul
       document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkForAppUpdate(false);
         if (!document.hidden) checkAndTriggerScheduledNotifications();
       });
       window.addEventListener('pageshow', () => {
@@ -4204,22 +4223,61 @@
       }
     }
 
+    // Fișierele aplicației, reîncărcate direct de pe server (ocolind cache-ul HTTP al browserului, 10 min pe GitHub Pages)
+    const APP_SHELL_FILES = ['./', './index.html', './familie.js', './sw.js', './manifest.json', './adservio-marcaj.js'];
+
+    // Curăță cache-ul aplicației și aduce ultima versiune publicată. localStorage (date, cont, setări) rămâne.
     async function forceCleanStorageAndReload() {
-      showToast("Se curăță cache-ul...");
+      showToast("Se aduce ultima versiune...");
       try {
-        if ('caches' in window) {
-          const keys = await caches.keys();
-          await Promise.all(keys.map(k => caches.delete(k)));
-        }
         if ('serviceWorker' in navigator) {
           const regs = await navigator.serviceWorker.getRegistrations();
           await Promise.all(regs.map(r => r.unregister()));
         }
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+        // cache: 'reload' = cere fișierul de la server și înlocuiește copia din cache-ul HTTP
+        await Promise.all(APP_SHELL_FILES.map(f => fetch(f, { cache: 'reload' }).catch(() => null)));
         sessionStorage.clear();
       } catch (e) {}
+      // Adresă nouă (?v=…), ca browserul să nu poată refolosi pagina veche
+      const url = new URL(window.location.href);
+      url.searchParams.set('v', Date.now().toString(36));
+      url.hash = '';
+      window.location.replace(url.toString());
+    }
 
-      showToast("Resetat!");
-      setTimeout(() => { window.location.reload(true); }, 500);
+    // Versiunea publicată = cea din sw.js (CACHE_NAME 'diih-cache-vX'), fișier mic, citit fără cache
+    function compareAppVersions(a, b) {
+      const pa = String(a).replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+      const pb = String(b).replace(/^v/, '').split('.').map(n => parseInt(n, 10) || 0);
+      for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+        if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) - (pb[i] || 0);
+      }
+      return 0;
+    }
+    let lastAppVersionCheck = 0;
+    async function checkForAppUpdate(force) {
+      if (!force && Date.now() - lastAppVersionCheck < 10 * 60 * 1000) return;
+      lastAppVersionCheck = Date.now();
+      try {
+        const txt = await (await fetch('./sw.js?nc=' + Date.now(), { cache: 'no-store' })).text();
+        const m = /diih-cache-(v[\d.]+)/.exec(txt);
+        if (!m) return;
+        const server = m[1];
+        const label = document.getElementById('serverAppVersionLabel');
+        const newer = compareAppVersions(server, APP_VERSION) > 0;
+        if (label) {
+          label.textContent = newer ? `${server} (mai nouă — apasă „Curăță Cache”)` : `${server} ✅`;
+          label.className = `font-mono ${newer ? 'text-amber-400' : 'text-emerald-400'}`;
+        }
+        if (newer) {
+          document.getElementById('appUpdateText').textContent = `Versiune nouă: ${server} (ai ${APP_VERSION}).`;
+          document.getElementById('appUpdateBanner').classList.remove('hidden');
+        }
+      } catch (e) { /* offline */ }
     }
 
     function setupOnlineOfflineHandlers() {
@@ -9024,7 +9082,7 @@
           const magazinStr = it.magazin ? ` la magazinul ${it.magazin}` : '';
           const title = `🛒 Cumpărături • ${senderName}`;
           const msg = `${senderName} a adăugat pe listă: ${it.produs}${cantitateStr}${magazinStr}.`;
-          triggerNotification(title, msg);
+          if (isNotifOn('shopping')) triggerNotification(title, msg);
           showToast(`🛒 ${msg}`);
           logEventToCloud('SHOPPING_NOTIF', 'shopping', it.produs, `Notificare cumpărături partajate: ${title} - ${msg}`);
         });
@@ -9266,6 +9324,59 @@
       { id: 'misc', container: 'notifMiscRows', defaults: [{t:'12:00', m:'💡 O clipă de reflecție: Verifică gândul zilei.'}, {t:'18:00', m:'🛒 Verifică lista de cumpărături înainte de plecare.'}, {t:'', m:''}] }
     ];
 
+    // v24.20: fiecare categorie se poate opri din „Ce notificări primești” (config.off[id] = true, salvat per profil).
+    // Modulul arată cine are acces (permisiunile din Admin → Profile); null = toată lumea.
+    const NOTIF_TOGGLES = [
+      { id: 'psaltire', label: '📖 Citirea Psaltirii', module: 'psaltire', card: 'notifPsaltireRows' },
+      { id: 'birth', label: '🎂 Zile de naștere', module: 'pomelnic', card: 'notifBirthRows' },
+      { id: 'death', label: '† Zile de adormire / pomenire', module: 'pomelnic', card: 'notifDeathRows' },
+      { id: 'individualAnniversary', label: '🎉 Aniversare pe persoană', module: 'pomelnic', card: 'individualAnniversaryEnabled' },
+      { id: 'school', label: '🎓 Școală, plăți, ridicare copil', module: 'scoala', card: 'notifSchoolRows' },
+      { id: 'misc', label: '💡 Gânduri & 🛒 amintire cumpărături', module: null, card: 'notifMiscRows' },
+      { id: 'note', label: '📝 Remindere din notițe', module: 'notite' },
+      { id: 'shopping', label: '🛒 Produs adăugat de altcineva', module: 'cumparaturi' },
+      { id: 'remindere', label: '⏰ Remindere programate', module: null },
+      { id: 'familie', label: '🔔 Centrul de notificări (evenimente, mesaje)', module: null }
+    ];
+    function getNotifOff() {
+      try { return (JSON.parse(localStorage.getItem('diih_notifications_multi') || '{}').off) || {}; } catch (e) { return {}; }
+    }
+    function isNotifOn(id) {
+      return !getNotifOff()[id];
+    }
+    window.isNotifOn = isNotifOn;
+
+    function renderNotifToggles() {
+      const box = document.getElementById('notifToggleList');
+      if (!box) return;
+      const off = getNotifOff();
+      const visible = NOTIF_TOGGLES.filter(t => !t.module || hasNotifAccessModule(t.module));
+      box.innerHTML = visible.map(t => `
+        <label class="flex items-center gap-2 p-2 bg-cardbg border border-bordercol rounded-lg cursor-pointer">
+          <input type="checkbox" id="notifOn_${t.id}" ${off[t.id] ? '' : 'checked'} onchange="setNotifCategoryOn('${t.id}', this.checked)" class="rounded text-emerald-500 focus:ring-0">
+          <span class="text-[11px] ${off[t.id] ? 'text-slate-500 line-through' : 'text-slate-200'}">${t.label}</span>
+        </label>`).join('');
+      // Cardurile cu ore și mesaje ale categoriilor oprite apar estompate (rămân editabile)
+      NOTIF_TOGGLES.forEach(t => {
+        const el = t.card && document.getElementById(t.card);
+        const card = el && el.closest('.p-3');
+        if (card) card.classList.toggle('opacity-40', !!off[t.id]);
+      });
+    }
+
+    function setNotifCategoryOn(id, on) {
+      let cfg = {};
+      try { cfg = JSON.parse(localStorage.getItem('diih_notifications_multi') || '{}') || {}; } catch (e) { cfg = {}; }
+      cfg.off = cfg.off || {};
+      if (on) delete cfg.off[id]; else cfg.off[id] = true;
+      localStorage.setItem('diih_notifications_multi', JSON.stringify(cfg));
+      renderNotifToggles();
+      // salvare pe profil (aceeași cheie ca „Salvează Toate Notificările”)
+      sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveNotificationConfigs&configJson=${encodeURIComponent(JSON.stringify(cfg))}&callback=void`);
+      const t = NOTIF_TOGGLES.find(x => x.id === id);
+      showToast(`${t ? t.label : id}: ${on ? 'pornite' : 'oprite'}`);
+    }
+
     // Modulul de care ține fiecare categorie de notificări (null = fără restricție)
     const NOTIF_CATEGORY_MODULES = { psaltire: 'psaltire', birth: 'pomelnic', death: 'pomelnic', school: 'scoala', misc: null, individualAnniversary: 'pomelnic' };
     function hasNotifAccessModule(mod) {
@@ -9315,6 +9426,7 @@
       const indivTimeEl = document.getElementById('individualAnniversaryTime');
       if (indivEnabledEl) indivEnabledEl.checked = !!indivConfig.enabled;
       if (indivTimeEl) indivTimeEl.value = indivConfig.time || '09:00';
+      renderNotifToggles();
     }
 
     function saveAdvancedNotificationConfigs() {
@@ -9332,6 +9444,7 @@
         enabled: document.getElementById('individualAnniversaryEnabled').checked,
         time: document.getElementById('individualAnniversaryTime').value || '09:00'
       };
+      config.off = getNotifOff();
 
       localStorage.setItem('diih_notifications_multi', JSON.stringify(config));
       showToast("Toate notificările au fost salvate!");
@@ -9405,12 +9518,14 @@
 
       const savedConfig = JSON.parse(localStorage.getItem('diih_notifications_multi') || '{}');
       const triggeredToday = getNotifsTriggeredToday();
-      if (((getAuthSession() || {}).profile || { rol: 'admin' }).rol === 'admin' || hasNotifAccessModule('notite')) checkNoteReminders(triggeredToday);
+      if ((((getAuthSession() || {}).profile || { rol: 'admin' }).rol === 'admin' || hasNotifAccessModule('notite')) && isNotifOn('note')) checkNoteReminders(triggeredToday);
       if (!savedConfig || Object.keys(savedConfig).length === 0) return;
 
       Object.keys(savedConfig).forEach(catId => {
-        if (catId === 'individualAnniversary') return; // tratat separat mai jos, nu e un array de praguri
+        if (catId === 'individualAnniversary' || catId === 'off') return; // tratate separat, nu sunt praguri
         if (!hasNotifAccess(catId)) return; // fără acces la modul -> fără notificări din el
+        if (!isNotifOn(catId)) return; // oprită din „Ce notificări primești”
+        if (!Array.isArray(savedConfig[catId])) return;
         const slots = savedConfig[catId] || [];
         slots.forEach((slot, idx) => {
           if (!slot.t || !isTimeSlotDue(slot.t, currentMinutes)) return;
@@ -9443,7 +9558,7 @@
 
       // Notificare individuală per persoană (nume + vârstă) pentru fiecare aniversare/pomenire de astăzi
       const indivConfig = savedConfig.individualAnniversary;
-      if (indivConfig && indivConfig.enabled && hasNotifAccess('individualAnniversary') && isTimeSlotDue(indivConfig.time, currentMinutes)) {
+      if (indivConfig && indivConfig.enabled && isNotifOn('individualAnniversary') && hasNotifAccess('individualAnniversary') && isTimeSlotDue(indivConfig.time, currentMinutes)) {
         const matches = computeTodaysAnniversaries(allPeople);
         matches.forEach(m => {
           const key = `indiv_${m.person.rowId}_${m.type}_${indivConfig.time}`;
