@@ -1,13 +1,13 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.19
- * Autor: Bogdan Murar (Z003FU5C)
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.23
+ * Autor: Bogdan Murar
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
  * în editorul Google Apps Script (script.google.com) de către utilizator. Nu există acces
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.19";
+const BACKEND_VERSION = "24.23";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -1060,6 +1060,8 @@ function getSchoolActivitiesData(ss) {
       color: color,
       startHour: startHour,
       endHour: endHour,
+      // true = rândul nu are oră salvată (importuri vechi / metadate fără ore): nu ocupă un interval orar
+      noHours: !(isMetaObj && meta.startHour),
       author: author,
       dataAchitat: r[cols["Data_Achitat"] - 1] ? parseDateToText(r[cols["Data_Achitat"] - 1]) : "",
       comentariuPlata: r[cols["Comentariu_Plata"] - 1] || ""

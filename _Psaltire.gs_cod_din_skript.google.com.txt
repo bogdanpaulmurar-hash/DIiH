@@ -1,6 +1,6 @@
 /**
  * SISTEM CLOUD: CITIREA PSALTIRII CU RÂNDUIALA CANONICĂ INTEGRALĂ BOR (Doxologia)
- * Autor: Bogdan Murar (Z003FU5C)
+ * Autor: Bogdan Murar
  */
 
 const PSALTIRE_CONFIG = {

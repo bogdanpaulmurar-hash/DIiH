@@ -1,5 +1,24 @@
 # CHANGELOG — DIiH Hub
 
+## v24.23 — 2026-10-19 — Căutare pe coloane, Adservio în calendar, ore ocupate mutate automat
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.23). **Necesită deploy** (doar `API.gs`).
+
+### Căutare
+- Rezultatele apar într-o **listă pe coloane**: Data, tip (📌 activitate, 📗 calificativ, ⚠️ absență), Titlu, Sumă, Status, Detalii. Apeși pe capul unei coloane ca să sortezi.
+- Sus apar numărul de rezultate și **totalul sumelor** găsite.
+- Apeși pe un rând și calendarul sare la zi. Lista se strânge, iar bara **◀ 3/27 ▶** te duce la rezultatul următor sau anterior. „☰ Listă” o redeschide.
+- Se caută și în calificativele și absențele din Adservio.
+
+### Adservio în calendar
+- Zilele cu calificative au 📗. Zilele cu absențe au ⚠️ (nemotivată) sau 🩺 (motivată).
+- La selectarea zilei, sub activități apare caseta **Adservio**, cu calificativul, materia, tipul, profesorul, explicația și absențele zilei.
+
+### Ore ocupate
+- Dacă salvezi o activitate peste o oră deja ocupată în aceeași zi, la același copil, aplicația o **mută singură în primul interval liber** de aceeași durată și îți spune noua oră. Funcționează la adăugare, la editare și la editarea la calup.
+- Activitățile fără oră salvată (cele importate și cele mai vechi) nu mai sunt raportate ca suprapuse. La ele scrie „fără oră”.
+- În „🔎 Verificare” apare butonul **„⏰ Mută automat suprapunerile”**. Rămân pe loc activitățile care nu se suprapun și se mută doar cele în plus. Cere confirmare.
+
 ## v24.22 — 2026-10-19 — Căutare în activitățile școlare
 
 Doar frontend (`index.html`, `sw.js`). Backend neschimbat, nu e nevoie de deploy în Apps Script.

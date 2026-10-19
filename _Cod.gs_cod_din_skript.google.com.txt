@@ -1,6 +1,6 @@
 /**
  * SISTEM CLOUD DEFINITIV SINCRONIZARE DIiH -> GOOGLE CALENDAR (v13 - P0 Fix)
- * Autor: Bogdan Murar (Z003FU5C)
+ * Autor: Bogdan Murar
  * Arhitectură: Auto-Ștafetă sigură, distincție trigger noapte vs temporar, audit extins
  * Calendare: 'DIiH - Zile de nastere' | 'DIiH - Zile de adormire'
  */

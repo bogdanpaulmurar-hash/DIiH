@@ -77,7 +77,7 @@
         <span>⚠️</span>
         <span id="genericConfirmTitle">Confirmare ștergere</span>
       </div>
-      <p id="genericConfirmMessage" class="text-xs text-slate-300 leading-relaxed"></p>
+      <p id="genericConfirmMessage" class="text-xs text-slate-300 leading-relaxed whitespace-pre-line"></p>
       <div class="flex items-center justify-end space-x-2 pt-1">
         <button onclick="closeGenericConfirm()" class="px-3 py-1.5 bg-slate-800 border border-bordercol text-slate-300 rounded-xl text-xs font-medium">Anulează</button>
         <button id="genericConfirmBtn" onclick="runGenericConfirm()" class="px-3 py-1.5 bg-rose-800 hover:bg-rose-700 text-white rounded-xl text-xs font-bold">Șterge</button>
@@ -675,7 +675,8 @@
             <input id="schoolSearchInput" type="search" autocomplete="off" oninput="renderSchoolSearchSuggestions()" onkeydown="if(event.key==='Escape')toggleSchoolSearch(false)" placeholder="Caută: titlu, sumă, notă, dată, instituție…" class="flex-1 bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs">
             <button onclick="toggleSchoolSearch(false)" class="text-[10px] px-2 py-1 bg-darkbg border border-bordercol rounded-lg text-slate-400">✕</button>
           </div>
-          <div id="schoolSearchResults" class="max-h-64 overflow-y-auto space-y-0.5 text-[11px]"></div>
+          <div id="schoolSearchNav"></div>
+          <div id="schoolSearchResults" class="max-h-[60vh] overflow-y-auto space-y-1 text-[11px]"></div>
         </div>
 
         <!-- Filtru Sumar: Zi / Lună / An / Luna trecută / Ultimele 30 zile / Personalizat -->
@@ -2499,7 +2500,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.22";
+    const APP_VERSION = "v24.23";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2849,7 +2850,7 @@
     const AUTH_EDIT_GUARDS = {
       pomelnic: ['applyBatchAtentie', 'applyBatchAndreeaToggle', 'toggleEditMode', 'savePersonEdit', 'openAddPersonModal', 'saveNewPerson'],
       psaltire: ['openAddPsaltireModal', 'openEditPsaltireModal', 'savePsaltirePerson', 'deletePsaltirePerson'],
-      scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar', 'cleanupGeneratedSpecialWeekActivities', 'saveSchoolTema', 'toggleSchoolTemaDone', 'deleteSchoolTema', 'startEditSchoolTema', 'adservioSyncNow'],
+      scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar', 'cleanupGeneratedSpecialWeekActivities', 'saveSchoolTema', 'toggleSchoolTemaDone', 'deleteSchoolTema', 'startEditSchoolTema', 'adservioSyncNow', 'autoFixSchoolOverlaps'],
       notite: ['saveOrUpdateGand', 'deleteGand', 'deleteSelectedGanduri', 'softDeleteManyGanduri', 'undoDeleteGanduri', 'startEditGand'],
       cumparaturi: ['addShoppingItem', 'removeShoppingItem', 'markWholeStoreCompleted', 'quickAddShopping'],
       inventar: ['addCustomInventoryCategory', 'deleteCustomInventoryCategory', 'addCustomInventorySpace', 'deleteCustomInventorySpace', 'saveInventoryItem', 'deleteInventoryItem', 'confirmMoveInventoryItem'],
@@ -4780,7 +4781,8 @@
           issues.push({ date: '', text: `„${a.title || 'Fără titlu'}” (${a.child || '-'}) nu are o dată validă.` });
           return;
         }
-        const st = toMin(a.startHour || '08:00'), en = toMin(a.endHour || '16:00');
+        const untimed = isSchoolActUntimed(a);
+        const st = untimed ? null : toMin(a.startHour || '08:00'), en = untimed ? null : toMin(a.endHour || '16:00');
         if (st !== null && en !== null && en <= st) issues.push({ date: a.date, text: `${a.date}: „${a.title}” (${a.child}) se termină înainte să înceapă (${a.startHour}–${a.endHour}).` });
         const sw = getSchoolSpecialWeekForDate(a.date, weeks);
         if (sw) issues.push({ date: a.date, info: true, text: `${a.date}: „${a.title}” (${a.child}) e în ${sw.label}. Verifică dacă are loc.` });
@@ -4794,7 +4796,7 @@
             if ((x.a.child || '') === 'Toți' || (y.a.child || '') === 'Toți') continue;
             if (x.a.title === y.a.title && x.a.startHour === y.a.startHour && x.a.institution === y.a.institution) {
               issues.push({ date: x.a.date, text: `${x.a.date}: „${x.a.title}” (${x.a.child}) apare de două ori.` });
-            } else if (x.st !== null && y.st !== null && x.st < y.en && y.st < x.en) {
+            } else if (x.st !== null && y.st !== null && x.en !== null && y.en !== null && x.st < y.en && y.st < x.en) {
               issues.push({ date: x.a.date, text: `${x.a.date}: ${x.a.child} are activități suprapuse: „${x.a.title}” ${x.a.startHour}–${x.a.endHour} și „${y.a.title}” ${y.a.startHour}–${y.a.endHour}.` });
             }
           }
@@ -4810,6 +4812,7 @@
       const issues = getSchoolConsistencyIssues();
       const problems = issues.filter(i => !i.info).length;
       const admin = isCurrentUserAdmin();
+      const fixable = authCanEdit('scoala') ? planSchoolOverlapFixes().length : 0;
       let html = alerts.map(al => `
         <div onclick="jumpToSchoolDate('${al.week.start}')" class="p-2 rounded-xl text-xs cursor-pointer" style="background-color: ${al.week.color}22; border: 1px solid ${al.week.color}88;">
           <span class="text-white font-semibold">${al.text}</span>
@@ -4822,6 +4825,7 @@
           <details class="bg-cardbg border ${problems ? 'border-amber-700/70' : 'border-bordercol'} rounded-xl px-3 py-2 text-[11px]">
             <summary class="cursor-pointer select-none font-semibold ${problems ? 'text-amber-300' : 'text-slate-400'}">🔎 Verificare: ${problems} ${problems === 1 ? 'problemă' : 'probleme'}${issues.length > problems ? `, ${issues.length - problems} de confirmat` : ''}</summary>
             <div class="space-y-1 pt-2">
+              ${fixable ? `<button onclick="autoFixSchoolOverlaps()" class="w-full my-1 text-[11px] bg-cyan-900 border border-cyan-700 text-cyan-100 px-2 py-1.5 rounded-lg font-bold">⏰ Mută automat suprapunerile în intervale libere (${fixable})</button>` : ''}
               ${issues.map(i => `<p onclick="${i.date ? `jumpToSchoolDate('${i.date}')` : ''}" class="${i.date ? 'cursor-pointer hover:underline' : ''} ${i.info ? 'text-slate-400' : 'text-amber-200'}">${i.info ? 'ℹ️' : '⚠️'} ${escapeHtmlText(i.text)}</p>`).join('')}
             </div>
           </details>`;
@@ -4830,7 +4834,10 @@
       box.classList.toggle('hidden', !html);
     }
 
-    // Căutare în activitățile școlare: sugestii după titlu, sumă, notă, dată, instituție, copil, status
+    // Căutare în activitățile școlare + Adservio: listă pe coloane, sortabilă; apăsarea pe un rând sare la zi,
+    // iar bara ◀ ▶ trece prin rezultate pe rând fără să redeschidă lista.
+    let schoolSearchState = { results: [], idx: -1, listOpen: true, sort: 'date', dir: -1 };
+
     function toggleSchoolSearch(show) {
       const box = document.getElementById('schoolSearchBox');
       if (!box) return;
@@ -4838,50 +4845,261 @@
       box.classList.toggle('hidden', !open);
       const input = document.getElementById('schoolSearchInput');
       if (open) { input.focus(); renderSchoolSearchSuggestions(); }
-      else { input.value = ''; document.getElementById('schoolSearchResults').innerHTML = ''; }
+      else {
+        input.value = '';
+        schoolSearchState = { results: [], idx: -1, listOpen: true, sort: 'date', dir: -1 };
+        document.getElementById('schoolSearchResults').innerHTML = '';
+        document.getElementById('schoolSearchNav').innerHTML = '';
+      }
     }
 
     function normSchoolSearch(v) {
-      return String(v == null ? '' : v).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+      return String(v == null ? '' : v).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+    }
+
+    function fmtRoDateShort(iso) {
+      const [y, m, d] = String(iso || '').split('-');
+      return d && m && y ? `${d}.${m}.${y}` : (iso || '');
+    }
+
+    // Toate înregistrările în care se poate căuta: activități + calificative + absențe din Adservio
+    function getSchoolSearchRecords() {
+      const recs = getRealSchoolActivities().filter(a => a && a.date).map(a => ({
+        kind: 'Activitate', date: String(a.date).substring(0, 10), title: a.title || 'Activitate',
+        amount: Number(a.total) || 0, rate: Number(a.rate) || 0, status: a.paymentStatus || '',
+        place: a.institution && a.institution !== '-' ? a.institution : '', child: a.child || '',
+        time: isSchoolActUntimed(a) ? '' : `${a.startHour || ''}–${a.endHour || ''}`,
+        note: [a.dayMessage, a.comentariuPlata].filter(Boolean).join(' · ')
+      }));
+      const d = adservioData || {};
+      (d.note || []).forEach(n => n && n.data && recs.push({
+        kind: 'Calificativ', date: n.data, title: `${n.materie}: ${n.afisare}`, amount: null, rate: 0,
+        status: n.tip || 'calificativ', place: n.profesor || '', child: n.copil || '', time: '', note: n.obs || ''
+      }));
+      (d.absente || []).forEach(a => a && a.data && recs.push({
+        kind: 'Absență', date: a.data, title: `Absență ${a.materie || ''}`.trim(), amount: null, rate: 0,
+        status: a.motivata ? 'motivată' : 'nemotivată', place: '', child: a.copil || '', time: '', note: [a.motivare, a.obs].filter(Boolean).join(' · ')
+      }));
+      return recs;
     }
 
     function renderSchoolSearchSuggestions() {
-      const out = document.getElementById('schoolSearchResults');
       const raw = (document.getElementById('schoolSearchInput').value || '').trim();
-      if (!out) return;
-      if (raw.length < 2 && !/^\d+$/.test(raw)) {
-        out.innerHTML = raw ? '' : `<p class="text-slate-500 italic px-1">Scrie cel puțin 2 litere sau o sumă.</p>`;
-        return;
-      }
+      const st = schoolSearchState;
+      st.idx = -1; st.listOpen = true;
+      if (raw.length < 2 && !/^\d+$/.test(raw)) { st.results = []; return renderSchoolSearchPanel(raw); }
       const words = normSchoolSearch(raw).split(' ').filter(Boolean);
       const numQuery = /^\d+([.,]\d+)?$/.test(raw) ? parseFloat(raw.replace(',', '.')) : null;
-      const results = [];
-      getRealSchoolActivities().forEach(a => {
-        if (!a || !a.date) return;
-        const [y, m, d] = String(a.date).split('-');
-        const hay = normSchoolSearch([a.title, a.institution, a.child, a.paymentStatus, a.dayMessage, a.comentariuPlata,
-          a.paymentType, a.total, a.rate, `${a.total} lei`, a.date, `${d}.${m}.${y}`, `${d}.${m}`].join(' | '));
-        const exactAmount = numQuery !== null && (Number(a.total) === numQuery || Number(a.rate) === numQuery);
-        if (!exactAmount && !words.every(w => hay.includes(w))) return;
-        results.push({ a, score: (exactAmount ? 0 : 1) });
+      st.results = getSchoolSearchRecords().filter(r => {
+        if (numQuery !== null && r.amount !== null && (r.amount === numQuery || r.rate === numQuery)) { r.exact = true; return true; }
+        r.exact = false;
+        const hay = normSchoolSearch([r.kind, r.title, r.status, r.place, r.child, r.note, r.time,
+          r.amount !== null ? `${r.amount} lei` : '', r.date, fmtRoDateShort(r.date), fmtRoDateShort(r.date).slice(0, 5)].join(' | '));
+        return words.every(w => hay.includes(w));
       });
-      results.sort((x, y) => x.score - y.score || String(y.a.date).localeCompare(String(x.a.date)));
-      if (!results.length) { out.innerHTML = `<p class="text-slate-500 italic px-1">Nimic găsit pentru „${escapeHtmlText(raw)}”.</p>`; return; }
-      const shown = results.slice(0, 30);
-      out.innerHTML = `<p class="text-slate-500 px-1">${results.length} rezultate${results.length > shown.length ? ' (primele 30, cele mai noi)' : ''} — apasă ca să mergi la zi.</p>` +
-        shown.map(({ a }) => {
-          const [y, m, d] = String(a.date).split('-');
-          const note = [a.dayMessage, a.comentariuPlata].filter(Boolean).join(' · ');
-          return `<div onclick="pickSchoolSearchResult('${a.date}')" class="cursor-pointer p-1.5 bg-darkbg border border-bordercol rounded-lg hover:border-cyan-600">
-            <div class="flex items-center justify-between gap-2"><span class="text-white font-semibold truncate">${escapeHtmlText(a.title || 'Activitate')}</span><span class="text-emerald-400 whitespace-nowrap">${Number(a.total) || 0} Lei</span></div>
-            <div class="text-slate-400 truncate">${d}.${m}.${y}${a.institution && a.institution !== '-' ? ' · ' + escapeHtmlText(a.institution) : ''} · ${escapeHtmlText(a.paymentStatus || '')}${note ? ' · ' + escapeHtmlText(note) : ''}</div>
-          </div>`;
-        }).join('');
+      sortSchoolSearch();
+      renderSchoolSearchPanel(raw);
     }
 
-    function pickSchoolSearchResult(dateStr) {
-      toggleSchoolSearch(false);
-      jumpToSchoolDate(dateStr);
+    function sortSchoolSearch() {
+      const { sort, dir } = schoolSearchState;
+      schoolSearchState.results.sort((x, y) => {
+        let c = 0;
+        if (sort === 'amount') c = (x.amount || 0) - (y.amount || 0);
+        else if (sort === 'title') c = x.title.localeCompare(y.title, 'ro');
+        else if (sort === 'kind') c = x.kind.localeCompare(y.kind, 'ro');
+        else if (sort === 'status') c = x.status.localeCompare(y.status, 'ro');
+        return (c || x.date.localeCompare(y.date)) * dir;
+      });
+    }
+
+    function setSchoolSearchSort(col) {
+      const st = schoolSearchState;
+      if (st.sort === col) st.dir = -st.dir; else { st.sort = col; st.dir = (col === 'date' || col === 'amount') ? -1 : 1; }
+      sortSchoolSearch();
+      st.idx = -1;
+      renderSchoolSearchPanel((document.getElementById('schoolSearchInput').value || '').trim());
+    }
+
+    function renderSchoolSearchPanel(raw) {
+      const out = document.getElementById('schoolSearchResults');
+      const nav = document.getElementById('schoolSearchNav');
+      if (!out || !nav) return;
+      const st = schoolSearchState, res = st.results;
+      if (!raw) { out.innerHTML = `<p class="text-slate-500 italic px-1">Scrie cel puțin 2 litere sau o sumă.</p>`; nav.innerHTML = ''; return; }
+      if (!res.length) { out.innerHTML = raw.length < 2 && !/^\d+$/.test(raw) ? '' : `<p class="text-slate-500 italic px-1">Nimic găsit pentru „${escapeHtmlText(raw)}”.</p>`; nav.innerHTML = ''; return; }
+
+      // Bara de navigare pe rând (apare după ce ai ales un rezultat)
+      if (st.idx >= 0) {
+        const r = res[st.idx];
+        nav.innerHTML = `<div class="flex items-center gap-1 p-1.5 bg-cyan-950/60 border border-cyan-800 rounded-lg">
+          <button onclick="stepSchoolSearch(-1)" class="px-2 py-1 bg-darkbg border border-bordercol rounded text-xs ${st.idx === 0 ? 'opacity-40' : ''}">◀</button>
+          <div class="flex-1 min-w-0 text-[11px] leading-tight"><span class="text-cyan-300 font-bold">${st.idx + 1}/${res.length}</span> <span class="text-white truncate">${escapeHtmlText(r.title)}</span><br><span class="text-slate-400">${fmtRoDateShort(r.date)}${r.amount ? ` · ${r.amount} Lei` : ''}${r.status ? ` · ${escapeHtmlText(r.status)}` : ''}</span></div>
+          <button onclick="stepSchoolSearch(1)" class="px-2 py-1 bg-darkbg border border-bordercol rounded text-xs ${st.idx === res.length - 1 ? 'opacity-40' : ''}">▶</button>
+          <button onclick="toggleSchoolSearchList()" class="px-2 py-1 bg-darkbg border border-bordercol rounded text-[10px] whitespace-nowrap">${st.listOpen ? 'Ascunde' : '☰ Listă'}</button>
+        </div>`;
+      } else nav.innerHTML = '';
+
+      if (!st.listOpen) { out.innerHTML = ''; return; }
+      const sumAmt = res.reduce((t, r) => t + (r.amount || 0), 0);
+      const kinds = {}; res.forEach(r => { kinds[r.kind] = (kinds[r.kind] || 0) + 1; });
+      const arrow = c => st.sort === c ? (st.dir > 0 ? ' ▲' : ' ▼') : '';
+      const th = (c, label, extra = '') => `<th onclick="setSchoolSearchSort('${c}')" class="px-1.5 py-1 text-left cursor-pointer select-none whitespace-nowrap ${extra}">${label}${arrow(c)}</th>`;
+      const kindIcon = { 'Activitate': '📌', 'Calificativ': '📗', 'Absență': '⚠️' };
+      const shown = res.slice(0, 300);
+      out.innerHTML = `
+        <p class="text-slate-400 px-1">${res.length} rezultate (${Object.entries(kinds).map(([k, v]) => `${v} ${k.toLowerCase()}`).join(', ')})${sumAmt ? ` · total <b class="text-emerald-400">${Math.round(sumAmt * 100) / 100} Lei</b>` : ''}${res.length > shown.length ? ' · se văd primele 300' : ''}. Apasă un rând ca să mergi la zi.</p>
+        <div class="overflow-x-auto rounded-lg border border-bordercol">
+          <table class="w-full text-[11px] border-collapse">
+            <thead class="bg-darkbg text-slate-400 sticky top-0">
+              <tr>${th('date', 'Data')}${th('kind', '')}${th('title', 'Titlu')}${th('amount', 'Sumă', 'text-right')}${th('status', 'Status')}<th class="px-1.5 py-1 text-left">Detalii</th></tr>
+            </thead>
+            <tbody>${shown.map((r, i) => `
+              <tr onclick="pickSchoolSearchResult(${i})" class="cursor-pointer border-t border-bordercol/60 ${i === st.idx ? 'bg-cyan-900/50' : 'hover:bg-slate-800'}">
+                <td class="px-1.5 py-1 whitespace-nowrap text-slate-300">${fmtRoDateShort(r.date)}</td>
+                <td class="px-1 py-1" title="${r.kind}">${kindIcon[r.kind] || ''}</td>
+                <td class="px-1.5 py-1 text-white">${escapeHtmlText(r.title)}${r.time ? `<span class="text-slate-500"> ${escapeHtmlText(r.time)}</span>` : ''}</td>
+                <td class="px-1.5 py-1 text-right whitespace-nowrap ${r.exact ? 'text-emerald-300 font-bold' : 'text-emerald-400'}">${r.amount === null ? '' : r.amount + ' Lei'}</td>
+                <td class="px-1.5 py-1 whitespace-nowrap ${/nemotivat|așteptare|neachitat/i.test(r.status) ? 'text-amber-300' : 'text-slate-400'}">${escapeHtmlText(r.status)}</td>
+                <td class="px-1.5 py-1 text-slate-400 min-w-[8rem]">${escapeHtmlText([r.place, r.note].filter(Boolean).join(' · '))}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function pickSchoolSearchResult(i) {
+      const st = schoolSearchState;
+      if (!st.results[i]) return;
+      st.idx = i; st.listOpen = false;
+      jumpToSchoolDate(st.results[i].date);
+      renderSchoolSearchPanel((document.getElementById('schoolSearchInput').value || '').trim());
+      const nav = document.getElementById('schoolSearchNav');
+      if (nav) nav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function stepSchoolSearch(delta) {
+      const st = schoolSearchState;
+      const i = st.idx + delta;
+      if (i < 0 || i >= st.results.length) return;
+      const keepOpen = st.listOpen;
+      pickSchoolSearchResult(i);
+      if (keepOpen) toggleSchoolSearchList(true);
+    }
+
+    function toggleSchoolSearchList(force) {
+      const st = schoolSearchState;
+      st.listOpen = typeof force === 'boolean' ? force : !st.listOpen;
+      renderSchoolSearchPanel((document.getElementById('schoolSearchInput').value || '').trim());
+    }
+
+    // ---- Adservio în calendar: calificative și absențe pe zile ----
+    function getAdservioByDate() {
+      const map = {};
+      const d = adservioData || {};
+      (d.note || []).forEach(n => { if (n && n.data) (map[n.data] = map[n.data] || { note: [], abs: [] }).note.push(n); });
+      (d.absente || []).forEach(a => { if (a && a.data) (map[a.data] = map[a.data] || { note: [], abs: [] }).abs.push(a); });
+      return map;
+    }
+
+    function adservioDayMarkers(info) {
+      if (!info) return '';
+      const nemot = info.abs.some(a => !a.motivata);
+      return `${info.note.length ? `<span title="${info.note.length} calificativ(e)">📗</span>` : ''}${info.abs.length ? `<span title="${info.abs.length} absență(e)">${nemot ? '⚠️' : '🩺'}</span>` : ''}`;
+    }
+
+    function adservioDayDetailsHtml(info) {
+      if (!info || (!info.note.length && !info.abs.length)) return '';
+      return `<div class="mt-1 p-1.5 rounded-lg bg-darkbg border border-indigo-900 text-[10px] space-y-0.5">
+        <p class="text-indigo-300 font-semibold">Adservio</p>
+        ${info.note.map(n => `<p class="text-slate-300">📗 ${escapeHtmlText(n.materie)}: <b class="text-white">${escapeHtmlText(n.afisare)}</b>${n.tip ? ` · ${escapeHtmlText(n.tip)}` : ''}${n.profesor ? ` · ${escapeHtmlText(n.profesor)}` : ''}${n.obs ? `<br><span class="text-amber-200">💬 ${escapeHtmlText(n.obs)}</span>` : ''}</p>`).join('')}
+        ${info.abs.map(a => `<p class="${a.motivata ? 'text-slate-300' : 'text-rose-300'}">${a.motivata ? '🩺' : '⚠️'} Absență ${escapeHtmlText(a.materie || '')} · ${a.motivata ? 'motivată' : 'nemotivată'}${a.motivare ? ` · ${escapeHtmlText(a.motivare)}` : ''}</p>`).join('')}
+      </div>`;
+    }
+
+    // ---- Ore ocupate: mutarea automată într-un interval liber ----
+    // Activitățile fără oră salvată (importurile vechi, rândurile fără ore) nu ocupă un interval.
+    function isSchoolActUntimed(a) {
+      if (!a) return true;
+      if (a.noHours === true) return true;
+      if (a.noHours === false) return false;
+      return Array.isArray(a.reminders) && a.reminders.length === 0;
+    }
+
+    function schoolToMin(h) { const [hh, mm] = String(h || '').split(':').map(Number); return isNaN(hh) ? null : hh * 60 + (mm || 0); }
+    function schoolFromMin(m) { return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; }
+
+    // Caută primul interval liber de aceeași durată, în aceeași zi, pentru același copil.
+    // busyOverride: listă de intervale [start, end] în minute (folosită la rezolvarea în calup).
+    function findFreeSchoolSlot(dateStr, child, startHour, endHour, excludeId, busyOverride) {
+      const st = schoolToMin(startHour), en = schoolToMin(endHour);
+      if (st === null || en === null || en <= st) return { startHour, endHour, moved: false };
+      if ((child || '') === 'Toți') return { startHour, endHour, moved: false };
+      const dur = en - st;
+      const busy = busyOverride || getRealSchoolActivities()
+        .filter(a => a.date === dateStr && a.id !== excludeId && !isSchoolActUntimed(a) && (a.child || '') !== 'Toți' && (a.child || '').toLowerCase() === (child || '').toLowerCase())
+        .map(a => [schoolToMin(a.startHour), schoolToMin(a.endHour)]).filter(([x, y]) => x !== null && y !== null && y > x);
+      const clash = s => busy.some(([bs, be]) => s < be && bs < s + dur);
+      if (!clash(st)) return { startHour, endHour, moved: false };
+      const after = busy.map(b => b[1]).filter(c => c >= st).sort((x, y) => x - y);
+      for (const c of after) if (c + dur <= 24 * 60 && !clash(c)) return { startHour: schoolFromMin(c), endHour: schoolFromMin(c + dur), moved: true };
+      const before = busy.map(b => b[0] - dur).filter(c => c >= 6 * 60 && c < st).sort((x, y) => y - x);
+      for (const c of before) if (!clash(c)) return { startHour: schoolFromMin(c), endHour: schoolFromMin(c + dur), moved: true };
+      return { startHour, endHour, moved: false, noRoom: true };
+    }
+
+    function schoolSlotToast(movedList, noRoom) {
+      if (movedList.length === 1) showToast(`⏰ Ora era ocupată: „${movedList[0].title}” a fost mutată la ${movedList[0].startHour}–${movedList[0].endHour}.`);
+      else if (movedList.length > 1) showToast(`⏰ Ora era ocupată în ${movedList.length} zile: activitatea a fost mutată în primul interval liber din fiecare zi.`);
+      if (noRoom) setTimeout(() => showToast('⚠️ Într-o zi nu mai e niciun interval liber de aceeași durată; am păstrat ora aleasă.'), movedList.length ? 3200 : 0);
+    }
+
+    // Suprapunerile existente (doar activități cu oră): ce s-ar muta
+    function planSchoolOverlapFixes() {
+      const groups = {};
+      getRealSchoolActivities().forEach(a => {
+        if (isSchoolActUntimed(a) || (a.child || '') === 'Toți') return;
+        const s0 = schoolToMin(a.startHour), e0 = schoolToMin(a.endHour);
+        if (s0 === null || e0 === null || e0 <= s0) return;
+        const key = `${a.date}|${(a.child || '').toLowerCase()}`;
+        (groups[key] = groups[key] || []).push({ a, s0, e0 });
+      });
+      const changes = [];
+      Object.values(groups).forEach(list => {
+        if (list.length < 2) return;
+        list.sort((x, y) => x.s0 - y.s0 || String(x.a.id).localeCompare(String(y.a.id)));
+        // 1) rămân pe loc toate activitățile care nu se suprapun cu cele păstrate deja; 2) doar restul se mută
+        const kept = [], toMove = [];
+        list.forEach(it => {
+          if (kept.some(([bs, be]) => it.s0 < be && bs < it.e0)) toMove.push(it);
+          else kept.push([it.s0, it.e0]);
+        });
+        toMove.forEach(({ a }) => {
+          const r = findFreeSchoolSlot(a.date, a.child, a.startHour, a.endHour, a.id, kept.slice());
+          if (r.moved) { changes.push({ a, startHour: r.startHour, endHour: r.endHour }); kept.push([schoolToMin(r.startHour), schoolToMin(r.endHour)]); }
+        });
+      });
+      return changes;
+    }
+
+    function autoFixSchoolOverlaps() {
+      const changes = planSchoolOverlapFixes();
+      if (!changes.length) return showToast('Nu e nimic de mutat.');
+      const preview = changes.slice(0, 5).map(c => `• ${fmtRoDateShort(c.a.date)} „${c.a.title}” ${c.a.startHour}–${c.a.endHour} → ${c.startHour}–${c.endHour}`).join('\n');
+      showGenericConfirm(`Mut ${changes.length} ${changes.length === 1 ? 'activitate' : 'activități'} în primul interval liber din aceeași zi:\n${preview}${changes.length > 5 ? '\n…' : ''}`, async () => {
+        changes.forEach(c => { c.a.startHour = c.startHour; c.a.endHour = c.endHour; c.a.noHours = false; });
+        localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+        renderSchoolDisplay();
+        const items = changes.map(c => c.a);
+        try {
+          for (let i = 0; i < items.length; i += 10) {
+            await apiJsonp({ ...apiAuthParams(), action: 'saveSchoolActivities', data: JSON.stringify(items.slice(i, i + 10)) });
+          }
+          showToast(`⏰ ${items.length} activități mutate în intervale libere.`);
+        } catch (e) {
+          showToast('Mutările s-au făcut în aplicație, dar nu toate au ajuns în sheet: ' + (e.message || 'eroare'));
+        }
+      }, 'Rezolvă suprapunerile', 'Mută');
     }
 
     function jumpToSchoolDate(dateStr) {
@@ -7716,6 +7934,7 @@
       document.getElementById('calendarMonthTitle').textContent = `${monthNames[month]} ${year}`;
       const realActivities = getRealSchoolActivities();
       const specialWeeks = getSchoolSpecialWeeks();
+      const adservioByDate = getAdservioByDate();
       renderSchoolAlertsBox();
 
       // Calcul Sumar în funcție de filtru (Zi / Lună curentă / Luna trecută / An / Ultimele 30 zile / Personalizat)
@@ -7813,7 +8032,7 @@
             <div onclick="toggleSchoolDaySelection('${dateStr}')" ${swStyle} title="${sw ? sw.label : ''}" class="h-16 p-1 rounded-xl ${cardClasses} cursor-pointer hover:border-slate-400 transition flex flex-col justify-between overflow-hidden relative">
               <div class="flex items-center justify-between">
                 <span class="text-[10px] font-bold ${isSelected ? 'text-cyan-300' : (isToday ? 'text-amber-300' : 'text-slate-300')}">${d}</span>
-                ${isToday ? '<span class="bg-amber-400 text-slate-950 text-[7px] font-black px-1 rounded uppercase tracking-tighter">AZI</span>' : (sw ? `<span class="text-[8px]" aria-label="${sw.label}">${sw.icon}</span>` : '')}
+                <span class="flex items-center gap-0.5 text-[8px] leading-none">${adservioDayMarkers(adservioByDate[dateStr])}${isToday ? '<span class="bg-amber-400 text-slate-950 text-[7px] font-black px-1 rounded uppercase tracking-tighter">AZI</span>' : (sw ? `<span aria-label="${sw.label}">${sw.icon}</span>` : '')}</span>
               </div>
               <div class="flex-1 overflow-hidden space-y-0.5">${actsHtml}</div>
             </div>
@@ -7960,6 +8179,7 @@
       }
 
       let html = '';
+      const adservioByDate = getAdservioByDate();
       activeDays.forEach(d => {
         const acts = schoolActivities.filter(a => a.date === d);
         html += `<div class="py-1"><span class="font-bold text-cyan-300 block text-[11px]">${d}</span>`;
@@ -7968,7 +8188,7 @@
         } else {
           acts.forEach(a => {
             const actColor = getSchoolActivityColor(a);
-            const timeStr = (a.startHour && a.endHour && a.startHour !== 'undefined' && a.endHour !== 'undefined') ? `${a.startHour} - ${a.endHour} • ` : '';
+            const timeStr = isSchoolActUntimed(a) ? 'fără oră • ' : ((a.startHour && a.endHour && a.startHour !== 'undefined' && a.endHour !== 'undefined') ? `${a.startHour} - ${a.endHour} • ` : '');
             html += `
               <div class="flex items-center justify-between p-2 rounded-lg bg-darkbg border border-bordercol mt-1" style="border-left: 3px solid ${actColor};">
                 <div class="overflow-hidden pr-2">
@@ -7984,6 +8204,7 @@
             `;
           });
         }
+        html += adservioDayDetailsHtml(adservioByDate[d]);
         html += `</div>`;
       });
 
@@ -8097,15 +8318,22 @@
 
       const pickupReminders = [60, 30, 10];
 
+      const movedSlots = [];
+      let noRoomSlot = false;
+
       // Dacă suntem în mod editare pe o activitate specifică
       if (editingSchoolActivity) {
         const targetAct = schoolActivities.find(a => a.id === editingSchoolActivity.id);
         if (targetAct) {
+          const slot = findFreeSchoolSlot(targetAct.date, child, startHour, endHour, targetAct.id);
+          if (slot.moved) movedSlots.push({ title, ...slot });
+          if (slot.noRoom) noRoomSlot = true;
           targetAct.child = child;
           targetAct.institution = institution;
           targetAct.title = title;
-          targetAct.startHour = startHour;
-          targetAct.endHour = endHour;
+          targetAct.startHour = slot.startHour;
+          targetAct.endHour = slot.endHour;
+          targetAct.noHours = false;
           targetAct.hours = hours;
           targetAct.rate = rate;
           targetAct.total = total;
@@ -8120,7 +8348,7 @@
           targetAct.comentariuPlata = comentariuPlata;
         }
         localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
-        showToast("Activitate modificată cu succes!");
+        if (movedSlots.length || noRoomSlot) schoolSlotToast(movedSlots, noRoomSlot); else showToast("Activitate modificată cu succes!");
 
         const script = document.createElement('script');
         script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify([targetAct]))}&callback=void`;
@@ -8134,14 +8362,18 @@
       // Adăugare nouă pe zilele selectate
       const payload = [];
       selectedSchoolDays.forEach(dateStr => {
+        const slot = findFreeSchoolSlot(dateStr, child, startHour, endHour, null);
+        if (slot.moved) movedSlots.push({ title, ...slot });
+        if (slot.noRoom) noRoomSlot = true;
         const item = {
           id: 'ACT-' + dateStr + '-' + Date.now() + Math.random().toString(36).substring(2,5),
           date: dateStr,
           child: child,
           institution: institution,
           title: title,
-          startHour: startHour,
-          endHour: endHour,
+          startHour: slot.startHour,
+          endHour: slot.endHour,
+          noHours: false,
           hours: hours,
           rate: rate,
           total: total,
@@ -8160,7 +8392,7 @@
       });
 
       localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
-      showToast("Activitate salvată!");
+      if (movedSlots.length || noRoomSlot) schoolSlotToast(movedSlots, noRoomSlot); else showToast("Activitate salvată!");
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(payload))}&callback=void`;
@@ -8189,11 +8421,17 @@
       const comentariuPlata = (paymentStatus === 'Achitat') ? document.getElementById('schoolComentariuPlata').value.trim() : '';
 
       const updatedPayload = [];
+      const movedSlots = [];
+      let noRoomSlot = false;
       schoolActivities.forEach(a => {
         if (selectedSchoolDays.has(a.date) && a.title === editingSchoolActivity.title && a.child === editingSchoolActivity.child) {
+          const slot = findFreeSchoolSlot(a.date, a.child, startHour, endHour, a.id);
+          if (slot.moved) movedSlots.push({ title: a.title, ...slot });
+          if (slot.noRoom) noRoomSlot = true;
           a.institution = institution;
-          a.startHour = startHour;
-          a.endHour = endHour;
+          a.startHour = slot.startHour;
+          a.endHour = slot.endHour;
+          a.noHours = false;
           a.hours = hours;
           a.rate = rate;
           a.total = total;
@@ -8210,6 +8448,7 @@
 
       localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
       showToast(`${updatedPayload.length} activități actualizate la calup!`);
+      if (movedSlots.length || noRoomSlot) setTimeout(() => schoolSlotToast(movedSlots, noRoomSlot), 2500);
 
       const script = document.createElement('script');
       script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(updatedPayload))}&callback=void`;
