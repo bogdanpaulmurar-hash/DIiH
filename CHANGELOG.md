@@ -1,5 +1,15 @@
 # CHANGELOG — DIiH Hub
 
+## v24.26 — 2026-10-20 — Aniversări: „Astăzi” și „Urmează”
+
+Doar frontend (`index.html`, `sw.js`). Backend neschimbat, nu e nevoie de deploy în Apps Script.
+
+- Widgetul **🎉 Aniversările Zilei** de pe Astăzi are două file:
+  - **Astăzi (n)**: aniversările și pomenirile zilei, ca până acum;
+  - **Urmează**: următoarele **5** aniversări (naștere și pomenire), de la cea mai apropiată, cu data, vârsta pe care o împlinește și **în câte zile** e („mâine”, „poimâine”, „în 12 zile”). Cele din următoarele 3 zile sunt evidențiate.
+- Apeși pe o persoană și se deschide fișa ei, ca la lista de azi.
+- Notificările de aniversare rămân neschimbate.
+
 ## v24.25 — 2026-10-19 — Ecran pornit: clipurile de 5′ și 10′ puse; 30′/1h/2h = 10′ repetat
 
 Doar frontend (`familie.js`, `index.html`, `sw.js`).

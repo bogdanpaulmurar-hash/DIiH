@@ -288,7 +288,12 @@
           <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">🎉 Aniversările Zilei</span>
           <span id="anniversaryBadge" class="bg-slate-800 px-2 py-0.5 rounded-full text-slate-300 text-xs">0</span>
         </div>
+        <div class="flex gap-1 text-[11px]">
+          <button id="annivTabToday" onclick="setAnniversaryTab('today')" class="flex-1 px-2 py-1 rounded-lg font-bold">Astăzi</button>
+          <button id="annivTabNext" onclick="setAnniversaryTab('next')" class="flex-1 px-2 py-1 rounded-lg font-bold">Urmează</button>
+        </div>
         <div id="anniversaryList" class="space-y-2"></div>
+        <div id="anniversaryUpcomingList" class="hidden space-y-1.5"></div>
       </div>
 
       <!-- Pomelnicul de Astăzi (Coloana C: isActivPomelnic) -->
@@ -2500,7 +2505,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.25";
+    const APP_VERSION = "v24.26";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -6854,11 +6859,90 @@
       return matches;
     }
 
+    // Următoarele aniversări (naștere și pomenire), începând de mâine, cele mai apropiate primele
+    function computeUpcomingAnniversaries(peopleList, max = 5) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const parse = str => {
+        const parts = String(str || '').split(/[\.\/\-]/);
+        if (parts.length !== 3) return null;
+        const d = parseInt(parts[0], 10), m = parseInt(parts[1], 10), y = parseInt(parts[2], 10);
+        return (d >= 1 && d <= 31 && m >= 1 && m <= 12) ? { d, m, y: (y > 1800 ? y : null) } : null;
+      };
+      const nextOccurrence = ({ d, m }) => {
+        for (let k = 0; k <= 8; k++) { // după 29 februarie poate urma abia peste câțiva ani
+          const dt = new Date(today.getFullYear() + k, m - 1, d);
+          if (dt.getMonth() !== m - 1 || dt <= today) continue;
+          return dt;
+        }
+        return null;
+      };
+      const out = [];
+      (peopleList || []).forEach(p => {
+        const b = parse(p.dn);
+        const deceased = p.stare === 'Adormit';
+        const dd = deceased ? parse(p.da) : null;
+        if (b) {
+          const dt = nextOccurrence(b);
+          if (dt) out.push({ type: deceased ? 'BIRTH_DECEASED' : 'BIRTH', person: p, date: dt, years: b.y ? dt.getFullYear() - b.y : null });
+        }
+        if (dd) {
+          const dt = nextOccurrence(dd);
+          if (dt) out.push({ type: 'DEATH', person: p, date: dt, years: dd.y ? dt.getFullYear() - dd.y : null });
+        }
+      });
+      out.forEach(x => { x.days = Math.round((x.date - today) / 86400000); });
+      out.sort((a, b) => a.days - b.days || String(a.person.prenume || '').localeCompare(String(b.person.prenume || ''), 'ro'));
+      return out.slice(0, max);
+    }
+
+    let anniversaryTab = 'today';
+    function setAnniversaryTab(tab) {
+      anniversaryTab = tab === 'next' ? 'next' : 'today';
+      renderAnniversariesToday();
+    }
+
+    function renderUpcomingAnniversaries() {
+      const box = document.getElementById('anniversaryUpcomingList');
+      if (!box) return;
+      const list = computeUpcomingAnniversaries(allPeople, 5);
+      if (!list.length) { box.innerHTML = `<p class="text-xs text-slate-500 italic py-1 text-center">Nicio aniversare viitoare găsită.</p>`; return; }
+      const zile = n => n === 1 ? 'mâine' : (n === 2 ? 'poimâine' : `în ${n} zile`);
+      box.innerHTML = list.map(x => {
+        const name = `${escapeHtmlText(x.person.prenume || '')} ${escapeHtmlText(x.person.nume || '')}`.trim();
+        const dateTxt = `${String(x.date.getDate()).padStart(2, '0')}.${String(x.date.getMonth() + 1).padStart(2, '0')}`;
+        const icon = x.type === 'BIRTH' ? '🎂' : (x.type === 'BIRTH_DECEASED' ? '🕯️' : '†');
+        const color = x.type === 'BIRTH' ? 'text-emerald-300' : 'text-amber-300';
+        const detail = x.years === null ? (x.type === 'DEATH' ? 'Pomenire' : 'Naștere')
+          : (x.type === 'BIRTH' ? `Împlinește ${x.years} ani` : (x.type === 'BIRTH_DECEASED' ? `Ar fi împlinit ${x.years} ani` : `Pomenire: ${x.years} ani de la adormire`));
+        return `
+          <div onclick="openPersonModal(${x.person.rowId})" class="p-2 rounded-xl bg-slate-900/80 border border-bordercol flex items-center justify-between gap-2 cursor-pointer active:scale-98 transition">
+            <div class="min-w-0">
+              <span class="text-xs font-bold ${color} block truncate">${icon} ${name}</span>
+              <p class="text-[11px] text-slate-400">${dateTxt} • ${detail}</p>
+            </div>
+            <span class="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full ${x.days <= 3 ? 'bg-amber-900 text-amber-200' : 'bg-slate-800 text-slate-300'}">${zile(x.days)}</span>
+          </div>`;
+      }).join('');
+    }
+
     function renderAnniversariesToday() {
       const container = document.getElementById('anniversaryList');
       const matches = computeTodaysAnniversaries(allPeople);
 
       document.getElementById('anniversaryBadge').textContent = matches.length;
+
+      const tabToday = document.getElementById('annivTabToday'), tabNext = document.getElementById('annivTabNext');
+      const upcomingBox = document.getElementById('anniversaryUpcomingList');
+      if (tabToday && tabNext && upcomingBox) {
+        const on = 'bg-cyan-900 text-cyan-200', off = 'bg-darkbg border border-bordercol text-slate-400';
+        tabToday.className = `flex-1 px-2 py-1 rounded-lg font-bold ${anniversaryTab === 'today' ? on : off}`;
+        tabNext.className = `flex-1 px-2 py-1 rounded-lg font-bold ${anniversaryTab === 'next' ? on : off}`;
+        tabToday.textContent = `Astăzi (${matches.length})`;
+        container.classList.toggle('hidden', anniversaryTab !== 'today');
+        upcomingBox.classList.toggle('hidden', anniversaryTab !== 'next');
+        if (anniversaryTab === 'next') renderUpcomingAnniversaries();
+      }
 
       if (matches.length === 0) {
         container.innerHTML = `<p class="text-xs text-slate-500 italic py-1 text-center">Nicio aniversare sau comemorare în această zi.</p>`;
