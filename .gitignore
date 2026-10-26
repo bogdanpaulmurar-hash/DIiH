@@ -1,3 +1,29 @@
+# Date personale: nu se publică pe GitHub
+# Exporturi de date / foi de calcul
+*.xlsx
+*.xls
+*.csv
 
-# Export local al sheet-ului cu date personale: nu se publică pe GitHub (repo public)
-DIiH.xlsx
+# Fișiere de test și date extrase din registru
+test_*.json
+test_query.*
+all_*.json
+rows*.json
+luca.json
+melanom.json
+murar_output.json
+
+# Note locale, scurtături, capturi de ecran
+claudechat.md
+*.lnk
+Screenshot*.png
+Captură*.png
+
+# Arhive și foldere locale
+_arhiva_versiune_veche/
+DIiH_App_Fisiere/
+Backup/
+*.bak
+*.zip
+.env
+.env.*
