@@ -1,5 +1,13 @@
 # DIiH — note pentru Claude
 
+Reguli generale (v1.1; textul complet: repo `dev-framework`, GLOBAL_RULES.md):
+- Răspunde în română, scurt; rezultatul primul; spune ce nu ai putut verifica.
+- Lucrează în etape mici: citește doar ce trebuie (caută, apoi deschide porțiunea), scrie doar funcțiile modificate, plan de 3–5 rânduri înainte de schimbări mari.
+- După fiecare etapă rulează testele proiectului și notează în CHANGELOG.md.
+- Parolele și cheile stau în keyring sau variabile de mediu; documentația vizibilă omite numele angajatorului, e-mailurile de firmă, ID-urile și numerele interne.
+- Aplicații Windows: Python cu `pythonw`, tray, fără `.exe`; respectă DevPilot (`DEVPILOT_MANAGED`, `DEVPILOT_SUPPRESS`).
+- Git: GitHub e sursa de adevăr; un singur laptop o dată; commit și push înainte de schimbarea laptopului; lasă Drive să termine sincronizarea.
+
 Aplicația familiei (PWA): Astăzi, Pomelnic, Calendar, Notițe, Cumpărături, Scriptură, Nota zilei, Școală/Adservio, remindere, „Ecran pornit”. Frontend static + backend Google Apps Script cu date în Google Sheets.
 
 ## Unde e codul
