@@ -29,10 +29,9 @@ Aplicația familiei (PWA): Astăzi, Pomelnic, Calendar, Notițe, Cumpărături, 
 - Fiecare membru își poate redenumi aplicația. Ce primesc ceilalți (evenimente, remindere, notificări) **nu** conține „DIiH”, doar prenumele expeditorului. Calendarul comun: „Familia-ABL_Murar”.
 - Datele Adservio vin din sincronizarea din Apps Script; nu se apelează Adservio din browser.
 - Comentarii, CHANGELOG și commit-uri în română; răspunsuri scurte, ușor de citit pe telefon.
-- De verificat: „Încarcă în Drive” din Calendarul Anului Școlar dădea eroarea de permisiune `DriveApp.createFolder` (scope Drive în `appsscript.json` + reautorizare).
 
-## Context comun
-Prezentarea proiectelor și lista de erori/modificări sunt în două Google Docs: **PROIECTE_CONTEXT (live)** și **MODIFICARI_PROIECTE (live)** — citește doar secțiunea DIiH. Ce s-a implementat și confirmat se șterge din MODIFICARI.
+## Stare și jurnale
+- Erori și modificări deschise: `KNOWN_ISSUES.md`. Istoric: `CHANGELOG.md`. Ce e implementat și confirmat se mută din KNOWN_ISSUES în CHANGELOG.
 
 ## Când se actualizează fișierul
 În același commit, când apare un modul sau un fișier nou, se schimbă procesul de versiune/deploy sau un defect scoate la iveală o regulă de ținut minte. Nu pentru funcții obișnuite. Sub ~60 de rânduri.
