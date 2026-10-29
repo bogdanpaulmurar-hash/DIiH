@@ -481,12 +481,16 @@
 
           <!-- Categorii adăugate mereu (max 4) -->
           <div class="bg-darkbg p-2 rounded-xl border border-bordercol space-y-1.5">
-            <span class="text-[11px] text-slate-400 block">➕ Categorii incluse mereu, pe lângă tranșă (max 4):</span>
+            <span class="text-[11px] text-slate-400 block">➕ Categorii incluse mereu, pe lângă tranșă (max 8):</span>
             <div class="grid grid-cols-2 gap-1.5">
               <select id="pomExtraGrad_0" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
               <select id="pomExtraGrad_1" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
               <select id="pomExtraGrad_2" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
               <select id="pomExtraGrad_3" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
+              <select id="pomExtraGrad_4" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
+              <select id="pomExtraGrad_5" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
+              <select id="pomExtraGrad_6" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
+              <select id="pomExtraGrad_7" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
             </div>
             <p id="pomExtraGradInfo" class="text-[10px] text-slate-500"></p>
           </div>
@@ -2517,7 +2521,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.28";
+    const APP_VERSION = "v24.29";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -5667,7 +5671,7 @@
       localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
       localStorage.setItem('diih_psaltire_batch_size', psaltireBatchSize.toString());
       if (settings.pomelnicExtraGradeJson) {
-        try { localStorage.setItem('diih_pomelnic_extra_grade', JSON.stringify(JSON.parse(settings.pomelnicExtraGradeJson).slice(0, 4))); } catch (e) {}
+        try { localStorage.setItem('diih_pomelnic_extra_grade', JSON.stringify(JSON.parse(settings.pomelnicExtraGradeJson).slice(0, 8))); } catch (e) {}
       }
       applyAppBrandUI();
 
@@ -7000,16 +7004,16 @@
     let currentDailyPomelnicVii = [];
     let currentDailyPomelnicAdormiti = [];
 
-    // Categorii (grade) incluse mereu în pomelnicul zilei, pe lângă tranșa rotativă (max 4, salvate pe acest dispozitiv)
+    // Categorii (grade) incluse mereu în pomelnicul zilei, pe lângă tranșa rotativă (max 8, salvate pe acest dispozitiv)
     function getPomelnicExtraGrade() {
       try {
         const a = JSON.parse(localStorage.getItem('diih_pomelnic_extra_grade') || '[]');
-        return Array.isArray(a) ? a.slice(0, 4) : [];
+        return Array.isArray(a) ? a.slice(0, 8) : [];
       } catch (e) { return []; }
     }
     function handlePomelnicExtraGradChange() {
       const vals = [];
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 8; i++) {
         const el = document.getElementById('pomExtraGrad_' + i);
         if (el && el.value && !vals.includes(el.value)) vals.push(el.value);
       }
@@ -7025,7 +7029,7 @@
       const grads = Array.from(new Set(getVisiblePeople().map(p => (p.grad || '').trim()).filter(Boolean))).sort();
       saved.forEach(g => { if (!grads.includes(g)) grads.push(g); });
       const opts = '<option value="">— fără —</option>' + grads.map(g => `<option value="${g.replace(/"/g, '&quot;')}">${g}</option>`).join('');
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 8; i++) {
         const el = document.getElementById('pomExtraGrad_' + i);
         if (!el) continue;
         el.innerHTML = opts;

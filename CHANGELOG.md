@@ -1,5 +1,11 @@
 # CHANGELOG — DIiH Hub
 
+## v24.29 — 2026-10-29 — Pomelnicul zilei: 8 categorii incluse mereu
+
+Doar frontend (`index.html`, `sw.js`). Backend neschimbat față de v24.28 (nu e nevoie de alt deploy).
+
+- Câmpurile „Categorii incluse mereu” sunt acum **8** (în loc de 4). Cele lăsate pe „— fără —” nu influențează nimic.
+
 ## v24.28 — 2026-10-29 — Pomelnic: tipar curat pentru altar, categorii pe toate dispozitivele
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.28). **Necesită deploy** (doar `API.gs`; fără el aplicația merge, dar categoriile rămân doar pe dispozitivul respectiv).
