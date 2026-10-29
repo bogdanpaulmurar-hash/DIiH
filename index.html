@@ -2517,7 +2517,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.27";
+    const APP_VERSION = "v24.28";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -5666,6 +5666,9 @@
       if (settings.psaltireBatchSize) psaltireBatchSize = parseInt(settings.psaltireBatchSize, 10) || 20;
       localStorage.setItem('diih_batch_size', pomelnicBatchSize.toString());
       localStorage.setItem('diih_psaltire_batch_size', psaltireBatchSize.toString());
+      if (settings.pomelnicExtraGradeJson) {
+        try { localStorage.setItem('diih_pomelnic_extra_grade', JSON.stringify(JSON.parse(settings.pomelnicExtraGradeJson).slice(0, 4))); } catch (e) {}
+      }
       applyAppBrandUI();
 
       if (settings.notificationsJson) {
@@ -7012,6 +7015,10 @@
       }
       try { localStorage.setItem('diih_pomelnic_extra_grade', JSON.stringify(vals)); } catch (e) {}
       renderDailyPomelnic20();
+      // Salvăm și în Setari (pe toate dispozitivele); fără backend-ul nou rămâne doar pe acest dispozitiv
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updateGlobalSettings&pomelnicExtraGradeJson=${encodeURIComponent(JSON.stringify(vals))}&callback=void`;
+      document.body.appendChild(script);
     }
     function renderPomelnicExtraGradSelects() {
       const saved = getPomelnicExtraGrade();
@@ -7454,11 +7461,6 @@
 
       const printContainer = document.getElementById('printablePomelnicArea');
       let html = `
-        <div style="text-align: center; margin-bottom: 25px;">
-          <h1 style="font-size: 26px; font-weight: bold; margin: 0; text-transform: uppercase; letter-spacing: 2px;">POMELNIC</h1>
-          <p style="font-size: 13px; margin: 4px 0 0 0; font-style: italic;">Data: ${new Date().toLocaleDateString('ro-RO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-        </div>
-
         <div style="display: flex; justify-content: space-between; gap: 40px;">
           <div style="flex: 1;">
             <h2 style="font-size: 18px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 12px; text-align: center;">POMELNICUL CELOR VII</h2>
@@ -7490,35 +7492,10 @@
       printPomelnicAltar(vii, adormiti);
     }
 
+    // „PDF Print”: doar prenumele, vii pe o parte și adormiți pe cealaltă (pentru altar), fără alte informații
     function printDailyPomelnicFamilyPDF() {
-      const combined = [...currentDailyPomelnicVii, ...currentDailyPomelnicAdormiti];
-      if (combined.length === 0) return showToast("Nicio persoană în pomelnicul de astăzi.");
-      
-      const printContainer = document.getElementById('printablePomelnicArea');
-      let html = `
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 18px;">
-          <h1 style="font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 2px;">POMELNIC DE RÂND (FAMILIE)</h1>
-          <p style="font-size: 12px; margin: 4px 0 0 0;">${new Date().toLocaleDateString('ro-RO')}</p>
-        </div>
-        <div style="display: flex; justify-content: space-between; gap: 30px;">
-          <div style="flex: 1;">
-            <h2 style="font-size: 16px; font-weight: bold; border-bottom: 1px solid #000; text-align: center;">VII</h2>
-            <ol style="font-size: 13px; line-height: 1.8;">
-              ${currentDailyPomelnicVii.map(p => `<li><strong>${p.prenume} ${p.nume || ''}</strong> (${p.grad || 'Viu'})</li>`).join('')}
-            </ol>
-          </div>
-          <div style="flex: 1;">
-            <h2 style="font-size: 16px; font-weight: bold; border-bottom: 1px solid #000; text-align: center;">ADORMIȚI</h2>
-            <ol style="font-size: 13px; line-height: 1.8;">
-              ${currentDailyPomelnicAdormiti.map(p => `<li><strong>${p.prenume} ${p.nume || ''}</strong> (${p.grad || 'Adormit'})</li>`).join('')}
-            </ol>
-          </div>
-        </div>
-      `;
-      printContainer.innerHTML = html;
-      printContainer.classList.remove('hidden');
-      window.print();
-      setTimeout(() => { printContainer.classList.add('hidden'); printContainer.innerHTML = ''; }, 1000);
+      if (currentDailyPomelnicVii.length + currentDailyPomelnicAdormiti.length === 0) return showToast("Nicio persoană în pomelnicul de astăzi.");
+      printPomelnicAltar(currentDailyPomelnicVii, currentDailyPomelnicAdormiti);
     }
 
     // 4. POMELNICUL GRUPULUI DE PSALTIRE (INTEGRAT ÎN CATISMĂ CU ROTAȚIE ZILNICĂ & SELECTOR BATCH)

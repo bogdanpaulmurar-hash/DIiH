@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.23
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.28
  * Autor: Bogdan Murar
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.23";
+const BACKEND_VERSION = "24.28";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -77,6 +77,7 @@ function doGet(e) {
     if (e.parameter.appIconPath) setSettingValue(sh, "app_icon_path", e.parameter.appIconPath);
     if (e.parameter.pomelnicBatchSize) setSettingValue(sh, "pomelnic_batch_size", e.parameter.pomelnicBatchSize);
     if (e.parameter.psaltireBatchSize) setSettingValue(sh, "psaltire_batch_size", e.parameter.psaltireBatchSize);
+    if (e.parameter.pomelnicExtraGradeJson !== undefined) setSettingValue(sh, "pomelnic_extra_grade_json", e.parameter.pomelnicExtraGradeJson);
     if (e.parameter.randuialaTrackerJson) setSettingValue(sh, "randuiala_tracker_json", e.parameter.randuialaTrackerJson);
     return returnResponse(e, { success: true });
   }
@@ -934,7 +935,8 @@ function getSettingsData(ss) {
     pomelnicBatchSize: 20, 
     psaltireBatchSize: 20, 
     notificationsJson: "",
-    randuialaTrackerJson: ""
+    randuialaTrackerJson: "",
+    pomelnicExtraGradeJson: ""
   };
   if (!sh || sh.getLastRow() < 2) return cfg;
   const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 2).getValues();
@@ -948,6 +950,7 @@ function getSettingsData(ss) {
     if (k === "psaltire_batch_size" && v) cfg.psaltireBatchSize = parseInt(v, 10) || 20;
     if (k === "notifications_config_json" && v) cfg.notificationsJson = v.toString();
     if (k === "randuiala_tracker_json" && v) cfg.randuialaTrackerJson = v.toString();
+    if (k === "pomelnic_extra_grade_json" && v) cfg.pomelnicExtraGradeJson = v.toString();
   });
   return cfg;
 }

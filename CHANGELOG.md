@@ -1,5 +1,12 @@
 # CHANGELOG — DIiH Hub
 
+## v24.28 — 2026-10-29 — Pomelnic: tipar curat pentru altar, categorii pe toate dispozitivele
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.28). **Necesită deploy** (doar `API.gs`; fără el aplicația merge, dar categoriile rămân doar pe dispozitivul respectiv).
+
+- **PDF Print** și **Format Altar** tipăresc acum doar **prenumele**: cei vii pe o parte, cei adormiți pe cealaltă. Fără titlu, dată, nume de familie sau categorii.
+- Categoriile incluse mereu în pomelnicul zilei (max 4) se salvează în Setari și apar la fel pe toate dispozitivele.
+
 ## v24.27 — 2026-10-29 — Pomelnicul zilei: categorii incluse mereu
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
