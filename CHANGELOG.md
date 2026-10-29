@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.27 — 2026-10-29 — Pomelnicul zilei: categorii incluse mereu
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+
+- În **Pomelnic → Pomelnicul Zilei**, sub „Tranșă zilnică”, apar 4 câmpuri „Categorii incluse mereu”. Alegi până la 4 categorii (ex. 2. Familie, 2.1. Familie, 2.3. Familie).
+- Toți cei din categoriile alese se adaugă la lista zilei: cei vii la „Pentru cei vii”, cei adormiți la „Pentru cei adormiți”, pe lângă tranșa rotativă (10/20/…). Un câmp lăsat pe „— fără —” nu afectează nimic; o persoană nu apare de două ori.
+- Formatul Altar și PDF Print includ și aceste categorii. Alegerea se păstrează pe dispozitivul respectiv.
+- Butonul „PDF Familie” a fost redenumit **„PDF Print”** (tipărește tot ce e în lista zilei).
+
 ## v24.26 — 2026-10-20 — Aniversări: „Astăzi” și „Urmează”
 
 Doar frontend (`index.html`, `sw.js`). Backend neschimbat, nu e nevoie de deploy în Apps Script.

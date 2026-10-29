@@ -321,7 +321,7 @@
             <span>Format Altar (Doar Prenume)</span>
           </button>
           <button onclick="printDailyPomelnicFamilyPDF()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
-            PDF Familie
+            PDF Print
           </button>
         </div>
 
@@ -479,6 +479,18 @@
             </button>
           </div>
 
+          <!-- Categorii adăugate mereu (max 4) -->
+          <div class="bg-darkbg p-2 rounded-xl border border-bordercol space-y-1.5">
+            <span class="text-[11px] text-slate-400 block">➕ Categorii incluse mereu, pe lângă tranșă (max 4):</span>
+            <div class="grid grid-cols-2 gap-1.5">
+              <select id="pomExtraGrad_0" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
+              <select id="pomExtraGrad_1" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
+              <select id="pomExtraGrad_2" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
+              <select id="pomExtraGrad_3" onchange="handlePomelnicExtraGradChange()" class="bg-cardbg text-slate-200 border border-bordercol rounded px-1.5 py-1 text-[11px] min-w-0"></select>
+            </div>
+            <p id="pomExtraGradInfo" class="text-[10px] text-slate-500"></p>
+          </div>
+
           <!-- Butoane Tipar -->
           <div class="grid grid-cols-2 gap-2">
             <button onclick="printPomelnicAltar(currentDailyPomelnicVii, currentDailyPomelnicAdormiti)" class="bg-amber-950 hover:bg-amber-900 border border-amber-700 text-amber-200 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition">
@@ -487,7 +499,7 @@
             </button>
             <button onclick="printDailyPomelnicFamilyPDF()" class="bg-slate-800 hover:bg-slate-700 border border-bordercol text-slate-200 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition">
               <span>📄</span>
-              <span>PDF Familie (Complet)</span>
+              <span>PDF Print</span>
             </button>
           </div>
 
@@ -2505,7 +2517,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.26";
+    const APP_VERSION = "v24.27";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -6985,6 +6997,35 @@
     let currentDailyPomelnicVii = [];
     let currentDailyPomelnicAdormiti = [];
 
+    // Categorii (grade) incluse mereu în pomelnicul zilei, pe lângă tranșa rotativă (max 4, salvate pe acest dispozitiv)
+    function getPomelnicExtraGrade() {
+      try {
+        const a = JSON.parse(localStorage.getItem('diih_pomelnic_extra_grade') || '[]');
+        return Array.isArray(a) ? a.slice(0, 4) : [];
+      } catch (e) { return []; }
+    }
+    function handlePomelnicExtraGradChange() {
+      const vals = [];
+      for (let i = 0; i < 4; i++) {
+        const el = document.getElementById('pomExtraGrad_' + i);
+        if (el && el.value && !vals.includes(el.value)) vals.push(el.value);
+      }
+      try { localStorage.setItem('diih_pomelnic_extra_grade', JSON.stringify(vals)); } catch (e) {}
+      renderDailyPomelnic20();
+    }
+    function renderPomelnicExtraGradSelects() {
+      const saved = getPomelnicExtraGrade();
+      const grads = Array.from(new Set(getVisiblePeople().map(p => (p.grad || '').trim()).filter(Boolean))).sort();
+      saved.forEach(g => { if (!grads.includes(g)) grads.push(g); });
+      const opts = '<option value="">— fără —</option>' + grads.map(g => `<option value="${g.replace(/"/g, '&quot;')}">${g}</option>`).join('');
+      for (let i = 0; i < 4; i++) {
+        const el = document.getElementById('pomExtraGrad_' + i);
+        if (!el) continue;
+        el.innerHTML = opts;
+        el.value = saved[i] || '';
+      }
+    }
+
     function renderDailyPomelnic20() {
       const today = new Date();
       today.setHours(0,0,0,0);
@@ -7018,6 +7059,22 @@
           currentDailyPomelnicAdormiti.push(allActiveAdormiti[(startA + i) % allActiveAdormiti.length]);
         }
       }
+
+      // Categorii incluse mereu: toți cei din gradele alese (vii / adormiți), fără dubluri cu tranșa rotativă
+      const extraGrade = getPomelnicExtraGrade();
+      let extraV = 0, extraA = 0;
+      if (extraGrade.length) {
+        const seen = new Set([...currentDailyPomelnicVii, ...currentDailyPomelnicAdormiti].map(p => p.rowId));
+        basePeople.forEach(p => {
+          if (!extraGrade.includes((p.grad || '').trim()) || seen.has(p.rowId)) return;
+          seen.add(p.rowId);
+          if (p.stare === 'Adormit') { currentDailyPomelnicAdormiti.push(p); extraA++; }
+          else { currentDailyPomelnicVii.push(p); extraV++; }
+        });
+      }
+      renderPomelnicExtraGradSelects();
+      const extraInfo = document.getElementById('pomExtraGradInfo');
+      if (extraInfo) extraInfo.textContent = extraGrade.length ? `Adăugate: +${extraV} vii, +${extraA} adormiți (la tipar intră și ele).` : 'Nicio categorie adăugată.';
 
       const badgeText = `${currentDailyPomelnicVii.length} Vii • ${currentDailyPomelnicAdormiti.length} Adormiți`;
       const badgeEl = document.getElementById('pomelnicBatchBadge');
