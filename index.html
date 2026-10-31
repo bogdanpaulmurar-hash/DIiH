@@ -48,8 +48,8 @@
     /* Antetul widgetului Biblia: butoanele trec pe rândul următor în loc să strângă titlul */
     #ownerWidget_biblia360 > div:first-child { flex-wrap: wrap; gap: 8px; }
 
-    /* Calculator (≥ 1024px): meniu lateral și conținut pe toată lățimea */
-    @media (min-width: 1024px) {
+    /* Calculator (≥ 900px, inclusiv „site desktop” pe telefon): meniu lateral și conținut pe toată lățimea */
+    @media (min-width: 900px) {
       body { padding-left: 232px; padding-bottom: 2.5rem; }
       .app-header > div, .app-main { max-width: 1180px !important; }
       .app-main { padding-left: 2rem !important; padding-right: 2rem !important; margin-top: 1.75rem !important; }
@@ -71,14 +71,37 @@
       #bottomNavBar > button > * { margin-top: 0 !important; }
       #bottomNavBar > button:hover { background: #131b2e; }
       #bottomNavBar > button.text-cyan-400 { background: #0e3a4a; }
-      /* Astăzi: widgeturile pe două coloane */
-      #todayOwnerContent { columns: 2; column-gap: 1.25rem; }
+      /* Astăzi: widgeturile pe coloane (vezi mai jos, după lățime) */
+      #todayOwnerContent { column-gap: 1.25rem; }
       #todayOwnerContent > * { break-inside: avoid; margin: 0 0 1.25rem 0 !important; }
       /* Mai multe: mai multe butoane pe rând */
       .more-menu-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 0.75rem !important; }
       .more-menu-grid > button { padding: 1rem 0.5rem !important; }
       /* Ferestrele (modale) puțin mai late pe calculator */
       .fixed .max-w-lg { max-width: 44rem !important; }
+    }
+    /* v24.33: grupele din „Mai multe”; o grupă fără butoane vizibile dispare */
+    .more-group:not(:has(button:not(.hidden))) { display: none; }
+    .more-menu-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    @media (min-width: 900px) {
+      /* Meniul lateral pe grupe (doar ordinea vizuală; pe telefon bara de jos rămâne neschimbată) */
+      #bottomNavBar > .nav-group-label.hidden {
+        display: block !important; font-size: 12px; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; color: #8d97ab; padding: 14px 14px 4px;
+      }
+      .more-menu-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
+      #nav-today { order: 1; }
+      .nav-lbl-rugaciune { order: 2; } #nav-pomelnic { order: 3; } #nav-scriptura { order: 4; } #nav-notazilei { order: 5; }
+      .nav-lbl-familie { order: 6; } #nav-calendar { order: 7; }
+      .nav-lbl-casa { order: 8; } #nav-notite, #nav-ganduri { order: 9; } #nav-cumparaturi { order: 10; } #nav-inventar { order: 11; }
+      #nav-more { order: 20; margin-top: 14px !important; border-top: 1px solid #232f48; border-radius: 0 0 12px 12px; }
+      #bottomNavBar:not(:has(#nav-pomelnic:not(.hidden), #nav-scriptura:not(.hidden), #nav-notazilei:not(.hidden))) .nav-lbl-rugaciune,
+      #bottomNavBar:not(:has(#nav-calendar:not(.hidden))) .nav-lbl-familie,
+      #bottomNavBar:not(:has(#nav-notite:not(.hidden), #nav-ganduri:not(.hidden), #nav-cumparaturi:not(.hidden), #nav-inventar:not(.hidden))) .nav-lbl-casa { display: none !important; }
+    }
+    /* Astăzi pe 2 coloane doar când fiecare coloană e cel puțin cât un telefon */
+    @media (min-width: 1200px) {
+      #todayOwnerContent { columns: 2; }
     }
     @media (min-width: 1500px) {
       #todayOwnerContent { columns: 3; }
@@ -1221,67 +1244,87 @@
     <section id="tab-more" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-bordercol pb-2">⋯ Meniu Extins</h3>
-        <div class="more-menu-grid grid grid-cols-3 gap-2">
-          <button onclick="switchSubTab('psaltire-grup')" id="btnSubPsaltire" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">📿</span>
-            <span class="text-[9px] font-bold">Psaltire</span>
-          </button>
-          <button onclick="switchSubTab('notificari')" id="btnSubNotif" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">🔔</span>
-            <span class="text-[9px] font-bold">Notificări</span>
-          </button>
-          <button onclick="switchSubTab('widget')" id="btnSubWidget" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">📱</span>
-            <span class="text-[9px] font-bold">Widget</span>
-          </button>
-          <button onclick="switchSubTab('inventar')" id="btnSubInventar" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">📦</span>
-            <span class="text-[9px] font-bold">Inventar</span>
-          </button>
-          <button onclick="switchSubTab('setari')" id="btnSubSetari" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">⚙️</span>
-            <span class="text-[9px] font-bold">Setări</span>
-          </button>
-          <button onclick="switchSubTab('admin')" id="btnSubAdmin" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">🛡️</span>
-            <span class="text-[9px] font-bold">Admin</span>
-          </button>
-          <button onclick="switchTab('scriptura')" id="btnSubScriptura" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">📖</span>
-            <span class="text-[9px] font-bold">Scriptură</span>
-          </button>
-          <button onclick="switchTab('notazilei')" id="btnSubNotazilei" class="p-2.5 bg-darkbg border border-amber-900/60 rounded-xl flex flex-col items-center space-y-1 text-amber-300 hover:text-white">
-            <span class="text-lg">📜</span>
-            <span class="text-[9px] font-bold">Nota Zilei</span>
-          </button>
-          <button onclick="switchSubTab('notebiblia')" id="btnSubNoteBiblia" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">🔎</span>
-            <span class="text-[9px] font-bold">Note Biblia</span>
-          </button>
-          <button onclick="switchSubTab('info')" id="btnSubInfo" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">ℹ️</span>
-            <span class="text-[9px] font-bold">Info</span>
-          </button>
-          <button onclick="switchTab('pomelnic')" id="btnSubPomelnic" class="hidden p-2.5 bg-darkbg border border-rose-900/60 rounded-xl flex flex-col items-center space-y-1 text-rose-300 hover:text-white">
-            <span class="text-lg">📜</span>
-            <span class="text-[9px] font-bold">Pomelnic</span>
-          </button>
-          <button onclick="switchTab('calendar')" id="btnSubCalendar" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">🎓</span>
-            <span class="text-[9px] font-bold">Școală</span>
-          </button>
-          <button onclick="switchTab('cumparaturi')" id="btnSubCumparaturi" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">🛒</span>
-            <span class="text-[9px] font-bold">Cumpărături</span>
-          </button>
-          <button onclick="switchTab('notite')" id="btnSubNotite" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">📝</span>
-            <span class="text-[9px] font-bold">Notițe</span>
-          </button>
-          <button onclick="switchTab('notite')" id="btnSubGanduri" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
-            <span class="text-lg">📝</span>
-            <span class="text-[9px] font-bold">Notițe</span>
-          </button>
+        <div class="more-menu-groups space-y-4">
+          <div class="more-group space-y-2">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-rose-300">Rugăciune</p>
+            <div class="more-menu-grid grid grid-cols-3 gap-2">
+              <button onclick="switchTab('pomelnic')" id="btnSubPomelnic" class="hidden p-2.5 bg-darkbg border border-rose-900/60 rounded-xl flex flex-col items-center space-y-1 text-rose-300 hover:text-white">
+                <span class="text-lg">📜</span>
+                <span class="text-[9px] font-bold">Pomelnic</span>
+              </button>
+              <button onclick="switchSubTab('psaltire-grup')" id="btnSubPsaltire" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">📿</span>
+                <span class="text-[9px] font-bold">Psaltire</span>
+              </button>
+              <button onclick="switchTab('scriptura')" id="btnSubScriptura" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">📖</span>
+                <span class="text-[9px] font-bold">Scriptură</span>
+              </button>
+              <button onclick="switchTab('notazilei')" id="btnSubNotazilei" class="p-2.5 bg-darkbg border border-amber-900/60 rounded-xl flex flex-col items-center space-y-1 text-amber-300 hover:text-white">
+                <span class="text-lg">📜</span>
+                <span class="text-[9px] font-bold">Nota Zilei</span>
+              </button>
+              <button onclick="switchSubTab('notebiblia')" id="btnSubNoteBiblia" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">🔎</span>
+                <span class="text-[9px] font-bold">Note Biblia</span>
+              </button>
+            </div>
+          </div>
+          <div class="more-group space-y-2">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-sky-300">Familie</p>
+            <div class="more-menu-grid grid grid-cols-3 gap-2">
+              <button onclick="switchTab('calendar')" id="btnSubCalendar" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">🎓</span>
+                <span class="text-[9px] font-bold">Școală</span>
+              </button>
+              <button onclick="switchSubTab('notificari')" id="btnSubNotif" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">🔔</span>
+                <span class="text-[9px] font-bold">Notificări</span>
+              </button>
+            </div>
+          </div>
+          <div class="more-group space-y-2">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-emerald-300">Casă</p>
+            <div class="more-menu-grid grid grid-cols-3 gap-2">
+              <button onclick="switchTab('cumparaturi')" id="btnSubCumparaturi" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">🛒</span>
+                <span class="text-[9px] font-bold">Cumpărături</span>
+              </button>
+              <button onclick="switchSubTab('inventar')" id="btnSubInventar" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">📦</span>
+                <span class="text-[9px] font-bold">Inventar</span>
+              </button>
+              <button onclick="switchTab('notite')" id="btnSubNotite" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">📝</span>
+                <span class="text-[9px] font-bold">Notițe</span>
+              </button>
+              <button onclick="switchTab('notite')" id="btnSubGanduri" class="hidden p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">📝</span>
+                <span class="text-[9px] font-bold">Notițe</span>
+              </button>
+            </div>
+          </div>
+          <div class="more-group space-y-2">
+            <p class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Aplicație</p>
+            <div class="more-menu-grid grid grid-cols-3 gap-2">
+              <button onclick="switchSubTab('setari')" id="btnSubSetari" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">⚙️</span>
+                <span class="text-[9px] font-bold">Setări</span>
+              </button>
+              <button onclick="switchSubTab('widget')" id="btnSubWidget" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">📱</span>
+                <span class="text-[9px] font-bold">Widget</span>
+              </button>
+              <button onclick="switchSubTab('admin')" id="btnSubAdmin" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">🛡️</span>
+                <span class="text-[9px] font-bold">Admin</span>
+              </button>
+              <button onclick="switchSubTab('info')" id="btnSubInfo" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
+                <span class="text-lg">ℹ️</span>
+                <span class="text-[9px] font-bold">Info</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1854,6 +1897,9 @@
         <span class="text-base">🏠</span>
         <span>Astăzi</span>
       </button>
+      <div class="nav-group-label nav-lbl-rugaciune hidden">Rugăciune</div>
+      <div class="nav-group-label nav-lbl-familie hidden">Familie</div>
+      <div class="nav-group-label nav-lbl-casa hidden">Casă</div>
       <button onclick="switchTab('pomelnic')" id="nav-pomelnic" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-white">
         <span class="text-base">📜</span>
         <span>Pomelnic</span>
@@ -2572,7 +2618,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.32";
+    const APP_VERSION = "v24.33";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
