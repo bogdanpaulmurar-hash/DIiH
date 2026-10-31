@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.34 — 2026-10-31 — Astăzi: widgeturi aerisite
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Ordinea widgeturilor și ce e bifat în Widget rămân cum le-ai setat.
+
+- Antetele widgeturilor nu se mai înghesuie. Când nu încap pe un rând, insignele (ex. „Rânduială & Pomelnic Grup”, „0 Vii • 0 Adormiți”) și butoanele trec pe rândul următor, în loc să se rupă pe două rânduri sau să iasă din card.
+- La **Gândul Zilei**, butoanele ◀ ▶ 🎲 📅 ⚙️ nu mai ies în afara cardului și sunt mai mari, mai ușor de apăsat. Mai mari sunt și ◀ ▶ de la Biblia.
+- Spațiu ceva mai mare între widgeturi.
+
 ## v24.33 — 2026-10-31 — „Mai multe” pe grupe, meniul lateral pe grupe
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele și funcțiile sunt aceleași; s-au schimbat doar aranjarea și aspectul.
