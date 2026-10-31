@@ -106,6 +106,7 @@
     :is(.app-main, .fixed) .uppercase:is(.font-bold, .font-semibold):is(.text-\[10px\], .text-\[11px\]):not(.more-group > p) {
       text-transform: none !important; letter-spacing: 0 !important;
     }
+    :is(.app-main, .fixed) h4.uppercase.tracking-wider { text-transform: none !important; letter-spacing: 0 !important; font-size: 15px; }
     /* Insignele numerice: fontul aplicației, fără margine */
     :is(.app-main, .fixed) .rounded-full.font-mono, :is(.app-main, .fixed) .rounded.font-mono { font-family: inherit !important; letter-spacing: 0; }
     :is(.app-main, .fixed) .rounded-full.font-mono { border-color: transparent !important; }
@@ -371,6 +372,7 @@
     <!-- TAB 1: ASTĂZI -->
     <section id="tab-today" class="tab-content space-y-4">
 
+      <p id="todayGreeting" class="text-xl font-bold text-white px-1" style="margin:2px 0 0"></p>
       <div id="todayOwnerContent" class="space-y-4">
       <!-- Catisma Zilei (Click: Deschide Rânduiala & Pomelnicul Grupului de Psaltire) -->
       <div id="ownerWidget_psaltire" onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
@@ -1066,7 +1068,7 @@
       <div id="schoolSubView_adservio" class="hidden space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2 text-xs text-slate-300">
           <div class="flex items-center justify-between gap-2">
-            <h3 class="font-bold text-cyan-300 uppercase text-xs">🏫 Catalog Adservio</h3>
+            <h3 class="font-bold text-cyan-300 uppercase text-xs"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5-10-5zM6 11v5c3 2 9 2 12 0v-5"></path></svg> Catalog Adservio</h3>
             <a href="https://www.adservio.ro/ro/auth" target="_blank" rel="noopener" class="text-[10px] px-2 py-1 rounded-lg bg-darkbg border border-indigo-700 text-indigo-200">🔗 Deschide site-ul</a>
           </div>
           <p id="adservioStatus" class="text-[11px] text-slate-400">Încă nu s-a adus nimic din Adservio.</p>
@@ -1150,7 +1152,7 @@
     <!-- TAB 5: CUMPĂRĂTURI (Cu Enter, Magazin Păstrat și Cursor Automat) -->
     <section id="tab-cumparaturi" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 space-y-3 shadow-sm">
-        <h3 class="text-xs font-semibold text-emerald-300 uppercase tracking-wider">🛒 Adaugă Produs</h3>
+        <h3 class="text-xs font-semibold text-emerald-300 uppercase tracking-wider"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.5 11h10L20 8H6.5M9 20a1 1 0 100-2 1 1 0 000 2zM17 20a1 1 0 100-2 1 1 0 000 2z"></path></svg> Adaugă Produs</h3>
         <div class="grid grid-cols-2 gap-2">
           <select id="shopMagazin" onchange="onShopStoreChange(this)" class="bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white font-bold"><option value="Oriunde">Oriunde</option></select>
           <input type="text" id="shopCantitate" onkeydown="handleShopKeyDown(event)" placeholder="Cantitate (1 kg, 2 buc)" value="1" class="bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500">
@@ -1309,7 +1311,7 @@
     <!-- TAB 6: MAI MULTE (Grup Psaltire, Notificări 3 Praguri, Setări, Widget) -->
     <section id="tab-more" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
-        <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-bordercol pb-2">⋯ Meniu Extins</h3>
+        <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-bordercol pb-2">Meniu extins</h3>
         <div class="more-menu-groups space-y-4">
           <div class="more-group space-y-2">
             <p class="text-[11px] font-bold uppercase tracking-wider text-rose-300">Rugăciune</p>
@@ -1431,7 +1433,7 @@
       <div id="subtab-notificari" class="subtab-content hidden space-y-3">
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           <div class="border-b border-bordercol pb-2 flex items-center justify-between">
-            <h3 class="font-bold text-white uppercase tracking-wider">🔔 Centru Notificări (3 Praguri & Mesaje)</h3>
+            <h3 class="font-bold text-white uppercase tracking-wider"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 1112 0v5l2 2H4zM10 21h4"></path></svg> Centru Notificări (3 Praguri & Mesaje)</h3>
             <div class="flex items-center space-x-1.5">
               <button onclick="requestNotificationPermissionPrompt()" class="bg-cyan-900 border border-cyan-700 text-cyan-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-cyan-800">📱 Activează Notificări</button>
               <button onclick="triggerTestNotification()" class="bg-emerald-900 border border-emerald-700 text-emerald-200 px-2.5 py-1 rounded-lg text-xs font-bold hover:bg-emerald-800">Test</button>
@@ -1503,7 +1505,7 @@
         <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-4 text-xs">
           <div class="border-b border-bordercol pb-2 flex items-center justify-between">
             <div>
-              <h3 class="font-bold text-white uppercase tracking-wider">📱 Personalizare Widget-uri «Astăzi»</h3>
+              <h3 class="font-bold text-white uppercase tracking-wider"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10v18H7zM11 18h2"></path></svg> Personalizare Widget-uri «Astăzi»</h3>
               <p class="text-[10px] text-slate-400">Alege ce carduri și funcții dorești să apară pe ecranul principal «Astăzi».</p>
             </div>
             <span class="text-[10px] bg-cyan-950 border border-cyan-700 text-cyan-300 px-2 py-0.5 rounded-full font-bold">Astăzi</span>
@@ -1574,7 +1576,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.25 (Build 2026-10-19)</span>
+            <span class="font-bold text-cyan-300 block">Versiune pe acest dispozitiv: <span id="localAppVersionLabel">—</span></span>
             <p class="text-[11px] text-slate-300">Pe server (GitHub): <span id="serverAppVersionLabel" class="font-mono text-slate-400">se verifică…</span></p>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
@@ -1720,7 +1722,7 @@
         <div class="bg-cardbg border border-cyan-800/70 rounded-2xl p-4 shadow-sm space-y-3 text-xs">
           <div class="flex items-start justify-between gap-2 border-b border-bordercol pb-2">
             <div>
-              <h3 class="font-bold text-white uppercase tracking-wider">👥 Profile și acces</h3>
+              <h3 class="font-bold text-white uppercase tracking-wider"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a3 3 0 100-6 3 3 0 000 6zM3 20c0-3 3-5 6-5s6 2 6 5M17 6a3 3 0 010 6M21 20c0-2-1-4-3-4.5"></path></svg> Profile și acces</h3>
               <p class="text-[10px] text-slate-400 mt-1">Cine se poate conecta cu Google și ce vede. Datele unui modul fără acces nu mai pleacă din server.</p>
               <span id="adminAuthModeLabel" class="text-[10px] font-bold text-slate-400"></span>
             </div>
@@ -1926,7 +1928,7 @@
     <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] flex flex-col space-y-3 text-xs">
       <div class="flex items-center justify-between border-b border-bordercol pb-2">
         <div>
-          <h2 id="drillDownModalTitle" class="text-sm font-bold text-white uppercase tracking-wider">📋 Detalii Activități</h2>
+          <h2 id="drillDownModalTitle" class="text-sm font-bold text-white uppercase tracking-wider"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v3H8zM6 6h12v15H6zM9 12h6M9 16h6"></path></svg> Detalii Activități</h2>
           <p id="drillDownModalSubtitle" class="text-[11px] text-slate-400">Filtru curent</p>
         </div>
         <button onclick="closeSchoolDrillDownModal()" class="text-slate-400 hover:text-white p-1 text-lg">✕</button>
@@ -2338,7 +2340,7 @@
   <div id="addPersonModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-2.5 text-xs">
       <div class="flex items-center justify-between border-b border-bordercol pb-2">
-        <h3 class="font-bold text-emerald-300 uppercase">➕ Persoană Nouă</h3>
+        <h3 class="font-bold text-emerald-300 uppercase"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg> Persoană Nouă</h3>
         <button onclick="closeAddPersonModal()" class="text-slate-400 hover:text-white text-base">✕</button>
       </div>
 
@@ -2419,7 +2421,7 @@
   <div id="schoolReportModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-3 text-xs">
       <div class="flex items-center justify-between border-b border-bordercol pb-2">
-        <h3 class="font-bold text-violet-300 uppercase">📊 Raport Detaliat</h3>
+        <h3 class="font-bold text-violet-300 uppercase"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"></path></svg> Raport Detaliat</h3>
         <button onclick="closeSchoolReportModal()" class="text-slate-400 hover:text-white text-base">✕</button>
       </div>
 
@@ -2604,7 +2606,7 @@
   <!-- MODAL MUTARE OBIECT ÎNTRE SPAȚII -->
   <div id="inventoryMoveModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="bg-cardbg border border-bordercol w-full max-w-sm rounded-t-3xl sm:rounded-2xl p-5 space-y-3 text-xs">
-      <h3 class="font-bold text-violet-300 uppercase">📦 Mută în alt spațiu</h3>
+      <h3 class="font-bold text-violet-300 uppercase"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"></path></svg> Mută în alt spațiu</h3>
       <p id="inventoryMoveItemName" class="text-white font-bold"></p>
       <p class="text-slate-400">Spațiu curent: <span id="inventoryMoveCurrentSpace" class="text-violet-300 font-bold"></span></p>
       <input type="text" id="inventoryMoveNewSpace" list="inventorySpaceList" placeholder="Spațiu nou" class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white">
@@ -2620,7 +2622,7 @@
     <div class="bg-cardbg border border-bordercol w-full max-w-lg rounded-t-3xl sm:rounded-2xl p-5 max-h-[90vh] overflow-y-auto space-y-4 text-xs">
       <div class="flex items-center justify-between border-b border-bordercol pb-2">
         <div>
-          <h3 class="font-bold text-violet-300 uppercase tracking-wider text-sm">⚙️ Categorii & Spații Inventar</h3>
+          <h3 class="font-bold text-violet-300 uppercase tracking-wider text-sm"><svg class="w-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4"></path></svg> Categorii & Spații Inventar</h3>
           <p class="text-[10px] text-slate-400">Personalizează listele predefinite</p>
         </div>
         <button onclick="closeInventoryConfigModal()" class="text-slate-400 hover:text-white text-base">✕</button>
@@ -2684,7 +2686,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.38";
+    const APP_VERSION = "v24.40";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -4457,6 +4459,8 @@
     async function checkForAppUpdate(force) {
       if (!force && Date.now() - lastAppVersionCheck < 10 * 60 * 1000) return;
       lastAppVersionCheck = Date.now();
+      const localLbl = document.getElementById('localAppVersionLabel');
+      if (localLbl) localLbl.textContent = APP_VERSION;
       try {
         const txt = await (await fetch('./sw.js?nc=' + Date.now(), { cache: 'no-store' })).text();
         const m = /diih-cache-(v[\d.]+)/.exec(txt);
@@ -11725,7 +11729,23 @@
       container.innerHTML = itemsHtml + extraHtml;
     }
 
+    // Salut în Astăzi (v24.40): doar text, nu atinge widgeturile
+    function updateTodayGreeting() {
+      const el = document.getElementById('todayGreeting');
+      if (!el) return;
+      let nume = '';
+      try {
+        const sesiune = (typeof getAuthSession === 'function') ? getAuthSession() : null;
+        nume = (sesiune && sesiune.profile) ? (sesiune.profile.nume || '') : '';
+      } catch (e) {}
+      const prenume = nume.split(/[\s@]/)[0];
+      const h = new Date().getHours();
+      const salut = h < 5 ? 'Noapte bună' : (h < 12 ? 'Bună dimineața' : (h < 18 ? 'Bună ziua' : 'Bună seara'));
+      el.textContent = prenume ? salut + ', ' + prenume : salut;
+    }
+
     function applyOwnerWidgetsVisibility() {
+      try { updateTodayGreeting(); } catch (e) {}
       const order = getOwnerWidgetsOrder();
       const active = getOwnerWidgetsConfig();
       const container = document.getElementById('todayOwnerContent');

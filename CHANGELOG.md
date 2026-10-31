@@ -1,5 +1,19 @@
 # CHANGELOG — DIiH Hub
 
+## v24.40 — 2026-10-31 — Salut în Astăzi și iconițe în ferestre
+
+Doar frontend (index.html, sw.js). Nu necesită deploy în Apps Script.
+- În „Astăzi” apare un salut cu prenumele tău („Bună dimineața, Bogdan”), după ora zilei.
+- Emoji-urile din titlurile ferestrelor și ale secțiunilor din Setări (notificări, widgeturi, profile, raport, inventar, persoană nouă ș.a.) au fost înlocuite cu iconițe în același stil ca meniul.
+- Widgeturile din Astăzi rămân separate, în ordinea setată pe fiecare profil.
+
+## v24.39 — 2026-10-31 — Versiunea afișată corect în Setări
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+
+- În **Setări**, rândul „Versiune Curentă: v24.25 (Build 2026-10-19)” rămăsese scris de mână și nu se mai actualiza. A devenit **„Versiune pe acest dispozitiv”** și arată versiunea reală a aplicației. Dacă e aceeași cu „Pe server (GitHub)”, ai ultima versiune.
+- Titlurile „Instalare aplicație” și „Curățare date” din Setări sunt scrise cu litere normale, ca restul aplicației.
+
 ## v24.38 — 2026-10-31 — Același stil în toate taburile
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele și funcțiile sunt aceleași.
