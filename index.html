@@ -54,6 +54,12 @@
     #tab-today [id^="ownerWidget_"] .rounded-full { white-space: nowrap; }
     /* Butoanele mici cu iconiță (◀ ▶ 🎲 📅 ⚙️) ușor de apăsat cu degetul */
     #tab-today button[title] { min-width: 34px; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; }
+    /* v24.35: rândurile de butoane (subtaburi Pomelnic, filtre, acțiuni pe selecție, filtre Scriptură) trec pe mai multe rânduri,
+       ca toate opțiunile să se vadă fără derulare laterală */
+    .chip-row { flex-wrap: wrap; gap: 6px; overflow: visible !important; justify-content: flex-start !important; }
+    .chip-row > * { margin: 0 !important; }
+    /* Insignele rotunjite (ex. „0 / 1347 cap.”) rămân pe un singur rând */
+    .app-main span.rounded-full { white-space: nowrap; }
     /* Spațiu puțin mai mare între widgeturi */
     #todayOwnerContent.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem; }
 
@@ -524,7 +530,7 @@
     <!-- TAB 2: POMELNIC COMPLET -->
     <section id="tab-pomelnic" class="tab-content hidden space-y-3">
       <!-- Bara Celor 6 Subtaburi Pomelnic -->
-      <div class="flex items-center space-x-1 overflow-x-auto pb-1 border-b border-bordercol/80">
+      <div class="chip-row flex items-center space-x-1 overflow-x-auto pb-1 border-b border-bordercol/80">
         <button onclick="setPomelnicSubtab('astazi')" id="btnPomSub_astazi" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">📿 Pomelnicul Zilei</button>
         <button onclick="setPomelnicSubtab('total')" id="btnPomSub_total" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cyan-900 text-cyan-200 whitespace-nowrap">I. Personal</button>
         <button onclick="setPomelnicSubtab('psaltire')" id="btnPomSub_psaltire" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">II. Psaltire Grup</button>
@@ -640,7 +646,7 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-between px-1 pt-1 overflow-x-auto space-x-1 pb-1">
+      <div class="chip-row flex items-center justify-between px-1 pt-1 overflow-x-auto space-x-1 pb-1">
         <button onclick="filterPomelnic('ALL')" id="filterAll" class="px-2.5 py-1 text-xs rounded-lg bg-cyan-900/60 text-cyan-200 border border-cyan-700 font-medium whitespace-nowrap">Toți (<span id="totalCount">0</span>)</button>
         <button onclick="filterPomelnic('ATENTIE')" id="filterAtentie" class="px-2.5 py-1 text-xs rounded-lg bg-rose-950/80 text-rose-300 border border-rose-800 hover:text-white font-medium whitespace-nowrap">⚠️ Atenție (<span id="atentieCount">0</span>)</button>
         <button onclick="filterPomelnic('VIU')" id="filterViu" class="px-2.5 py-1 text-xs rounded-lg bg-cardbg text-slate-400 border border-bordercol hover:text-white whitespace-nowrap">Vii</button>
@@ -650,7 +656,7 @@
 
       <div id="batchActionBar" class="hidden sticky top-14 z-30 bg-slate-900/95 border border-cyan-700/60 p-2 rounded-2xl shadow-2xl flex items-center justify-between text-xs space-x-1.5">
         <span class="text-cyan-300 font-bold pl-1 text-[11px] shrink-0"><span id="batchCount">0</span> sel.</span>
-        <div class="flex items-center space-x-1 overflow-x-auto">
+        <div class="chip-row flex items-center space-x-1 overflow-x-auto">
           <button onclick="printSelectedAltarPDF()" class="px-2 py-1.5 bg-amber-950 border border-amber-700 text-amber-200 rounded-xl font-bold hover:bg-amber-900 transition whitespace-nowrap text-[10px]">⛪ Altar</button>
           <button onclick="applyBatchAtentie(true)" class="px-2 py-1.5 bg-rose-950 border border-rose-700 text-rose-200 rounded-xl font-bold hover:bg-rose-900 transition whitespace-nowrap text-[10px]">⚠️ Atenție</button>
           <button onclick="applyBatchAtentie(false)" class="px-2 py-1.5 bg-emerald-950 border border-emerald-700 text-emerald-200 rounded-xl font-bold hover:bg-emerald-900 transition whitespace-nowrap text-[10px]">✅ Scoate</button>
@@ -1209,14 +1215,14 @@
 
       <!-- Filtre Cărți Scriptură -->
       <div class="space-y-2">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap gap-2 items-center justify-between">
           <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">📜 Canonic (Anania)</span>
           <label class="flex items-center space-x-1.5 text-[10px] text-slate-400 cursor-pointer">
             <input type="checkbox" id="modelCitireCanonicFilterToggle" onchange="renderScripturaBooksList()" class="rounded text-violet-500 focus:ring-0">
             <span>Doar modelul activ</span>
           </label>
         </div>
-        <div class="flex items-center space-x-1 overflow-x-auto pb-1 text-xs">
+        <div class="chip-row flex items-center space-x-1 overflow-x-auto pb-1 text-xs">
           <button onclick="filterScripturaTestament('ALL')" id="btnScripturaFilterAll" class="px-3 py-1.5 rounded-xl bg-cyan-900 text-cyan-200 font-bold whitespace-nowrap">Toate (76)</button>
           <button onclick="filterScripturaTestament('VT')" id="btnScripturaFilterVT" class="px-3 py-1.5 rounded-xl bg-darkbg border border-bordercol text-slate-400 hover:text-white whitespace-nowrap">Vechiul Testament (49)</button>
           <button onclick="filterScripturaTestament('NT')" id="btnScripturaFilterNT" class="px-3 py-1.5 rounded-xl bg-darkbg border border-bordercol text-slate-400 hover:text-white whitespace-nowrap">Noul Testament (27)</button>
@@ -2627,7 +2633,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.34";
+    const APP_VERSION = "v24.35";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
