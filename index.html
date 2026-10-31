@@ -47,6 +47,15 @@
     #bottomNavBar > button > span:first-child { font-size: 1.25rem; line-height: 1.6rem; }
     /* Antetul widgetului Biblia: butoanele trec pe rândul următor în loc să strângă titlul */
     #ownerWidget_biblia360 > div:first-child { flex-wrap: wrap; gap: 8px; }
+    /* v24.34 Astăzi: antetele widgeturilor trec pe două rânduri în loc să se înghesuie sau să iasă din card */
+    #tab-today [id^="ownerWidget_"] > .flex.justify-between:first-child { flex-wrap: wrap; gap: 8px 10px; }
+    #tab-today [id^="ownerWidget_"] > .flex.justify-between:first-child > div:first-child > span { white-space: nowrap; }
+    #tab-today [id^="ownerWidget_"] > .flex.justify-between:first-child > div:first-child { flex-wrap: wrap; row-gap: 4px; min-width: 0; }
+    #tab-today [id^="ownerWidget_"] .rounded-full { white-space: nowrap; }
+    /* Butoanele mici cu iconiță (◀ ▶ 🎲 📅 ⚙️) ușor de apăsat cu degetul */
+    #tab-today button[title] { min-width: 34px; min-height: 34px; display: inline-flex; align-items: center; justify-content: center; }
+    /* Spațiu puțin mai mare între widgeturi */
+    #todayOwnerContent.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem; }
 
     /* Calculator (≥ 900px, inclusiv „site desktop” pe telefon): meniu lateral și conținut pe toată lățimea */
     @media (min-width: 900px) {
@@ -2618,7 +2627,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.33";
+    const APP_VERSION = "v24.34";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
