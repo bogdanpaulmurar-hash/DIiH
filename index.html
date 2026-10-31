@@ -2521,7 +2521,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.29";
+    const APP_VERSION = "v24.30";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -7050,42 +7050,49 @@
 
       // Verificăm strict boolean, text sau numeric
       const basePeople = getVisiblePeople();
-      const allActiveVii = basePeople.filter(p => (p.isActivPomelnic === true || p.isActivPomelnic === "TRUE" || p.isActivPomelnic === 1) && p.stare !== 'Adormit');
-      const allActiveAdormiti = basePeople.filter(p => (p.isActivPomelnic === true || p.isActivPomelnic === "TRUE" || p.isActivPomelnic === 1) && p.stare === 'Adormit');
+      const isActivPom = p => (p.isActivPomelnic === true || p.isActivPomelnic === "TRUE" || p.isActivPomelnic === 1);
 
-      currentDailyPomelnicVii = [];
+      // v24.30: cei din „Categorii incluse mereu” vin primii și sunt în plus față de tranșă;
+      // rotația zilnică se face doar din ceilalți, ca tranșa aleasă (ex. 20) să fie întreagă.
+      const extraGrade = getPomelnicExtraGrade();
+      const extraVii = [], extraAdormiti = [];
+      const extraIds = new Set();
+      if (extraGrade.length) {
+        basePeople.forEach(p => {
+          if (!extraGrade.includes((p.grad || '').trim()) || extraIds.has(p.rowId)) return;
+          extraIds.add(p.rowId);
+          if (p.stare === 'Adormit') extraAdormiti.push(p); else extraVii.push(p);
+        });
+      }
+      const extraV = extraVii.length, extraA = extraAdormiti.length;
+
+      const allActiveVii = basePeople.filter(p => isActivPom(p) && p.stare !== 'Adormit' && !extraIds.has(p.rowId));
+      const allActiveAdormiti = basePeople.filter(p => isActivPom(p) && p.stare === 'Adormit' && !extraIds.has(p.rowId));
+
+      const rotVii = [];
       if (allActiveVii.length > 0) {
         const countV = Math.min(targetVii, allActiveVii.length);
         const startV = (diffDays * countV) % allActiveVii.length;
         for (let i = 0; i < countV; i++) {
-          currentDailyPomelnicVii.push(allActiveVii[(startV + i) % allActiveVii.length]);
+          rotVii.push(allActiveVii[(startV + i) % allActiveVii.length]);
         }
       }
 
-      currentDailyPomelnicAdormiti = [];
+      const rotAdormiti = [];
       if (allActiveAdormiti.length > 0) {
         const countA = Math.min(targetAdormiti, allActiveAdormiti.length);
         const startA = (diffDays * countA) % allActiveAdormiti.length;
         for (let i = 0; i < countA; i++) {
-          currentDailyPomelnicAdormiti.push(allActiveAdormiti[(startA + i) % allActiveAdormiti.length]);
+          rotAdormiti.push(allActiveAdormiti[(startA + i) % allActiveAdormiti.length]);
         }
       }
 
-      // Categorii incluse mereu: toți cei din gradele alese (vii / adormiți), fără dubluri cu tranșa rotativă
-      const extraGrade = getPomelnicExtraGrade();
-      let extraV = 0, extraA = 0;
-      if (extraGrade.length) {
-        const seen = new Set([...currentDailyPomelnicVii, ...currentDailyPomelnicAdormiti].map(p => p.rowId));
-        basePeople.forEach(p => {
-          if (!extraGrade.includes((p.grad || '').trim()) || seen.has(p.rowId)) return;
-          seen.add(p.rowId);
-          if (p.stare === 'Adormit') { currentDailyPomelnicAdormiti.push(p); extraA++; }
-          else { currentDailyPomelnicVii.push(p); extraV++; }
-        });
-      }
+      // Ordinea: întâi categoriile, apoi rotația zilnică (și la tipar)
+      currentDailyPomelnicVii = extraVii.concat(rotVii);
+      currentDailyPomelnicAdormiti = extraAdormiti.concat(rotAdormiti);
       renderPomelnicExtraGradSelects();
       const extraInfo = document.getElementById('pomExtraGradInfo');
-      if (extraInfo) extraInfo.textContent = extraGrade.length ? `Adăugate: +${extraV} vii, +${extraA} adormiți (la tipar intră și ele).` : 'Nicio categorie adăugată.';
+      if (extraInfo) extraInfo.textContent = extraGrade.length ? `În plus față de tranșă: +${extraV} vii, +${extraA} adormiți (apar primii; la tipar intră și ele).` : 'Nicio categorie adăugată.';
 
       const badgeText = `${currentDailyPomelnicVii.length} Vii • ${currentDailyPomelnicAdormiti.length} Adormiți`;
       const badgeEl = document.getElementById('pomelnicBatchBadge');
@@ -7112,10 +7119,11 @@
         if (containerVii) containerVii.innerHTML = emptyV;
         if (subContainerVii) subContainerVii.innerHTML = emptyV;
       } else {
-        const htmlV = currentDailyPomelnicVii.map(p => {
+        const htmlV = currentDailyPomelnicVii.map((p, idx) => {
           const fullName = getPersonFullName(p);
           const ageSummary = getPersonAgeSummary(p);
-          return `
+          const sep = (idx === extraV && idx > 0) ? `<div class="my-1 mx-2 border-t border-slate-500/20" aria-hidden="true"></div>` : '';
+          return sep + `
             <div onclick="openPersonModal(${p.rowId})" class="py-1.5 px-2 bg-darkbg border border-bordercol/60 hover:border-emerald-600 rounded-xl flex items-center justify-between cursor-pointer transition shadow-sm">
               <div class="space-y-0.5 truncate pr-2">
                 <div class="flex items-center space-x-2">
@@ -7139,10 +7147,11 @@
         if (containerAdormiti) containerAdormiti.innerHTML = emptyA;
         if (subContainerAdormiti) subContainerAdormiti.innerHTML = emptyA;
       } else {
-        const htmlA = currentDailyPomelnicAdormiti.map(p => {
+        const htmlA = currentDailyPomelnicAdormiti.map((p, idx) => {
           const fullName = getPersonFullName(p);
           const ageSummary = getPersonAgeSummary(p);
-          return `
+          const sep = (idx === extraA && idx > 0) ? `<div class="my-1 mx-2 border-t border-slate-500/20" aria-hidden="true"></div>` : '';
+          return sep + `
             <div onclick="openPersonModal(${p.rowId})" class="py-1.5 px-2 bg-darkbg border border-bordercol/60 hover:border-amber-600 rounded-xl flex items-center justify-between cursor-pointer transition shadow-sm">
               <div class="space-y-0.5 truncate pr-2">
                 <div class="flex items-center space-x-2">
