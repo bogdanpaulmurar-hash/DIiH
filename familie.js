@@ -257,7 +257,19 @@
     const loc = inboxLocal.filter(n => !n.owner || n.owner === myEmail()).map(n => Object.assign({}, n, { src: 'loc' }));
     return srv.concat(loc).sort((a, b) => (b.creat || '').localeCompare(a.creat || ''));
   }
-  function isUnread(n) { return !n.citit || (n.tip === 'eveniment' && !n.status); }
+  // v24.31: o notificare din categoria oprită în Setări → Notificări rămâne în listă (estompată),
+  // dar nu mai face clopoțelul roșu și nu mai deschide centrul la pornire.
+  function notifCat(n) {
+    if (n.src === 'loc') return null; // cele de pe dispozitiv apar doar dacă categoria era pornită
+    if (n.tip === 'cumparaturi') return 'shopping';
+    if (n.tip === 'reminder') return 'remindere';
+    return 'familie'; // evenimente, notițe, mesaje
+  }
+  function isMuted(n) {
+    const c = notifCat(n);
+    return !!c && typeof window.isNotifOn === 'function' && !window.isNotifOn(c);
+  }
+  function isUnread(n) { return !isMuted(n) && (!n.citit || (n.tip === 'eveniment' && !n.status)); }
   function unreadCount() { return allItems().filter(isUnread).length; }
 
   function famRenderBell() {
@@ -307,10 +319,11 @@
           <button onclick="event.stopPropagation(); famNotif.respond('${esc(n.id)}','accept')" class="flex-1 py-1.5 rounded-lg bg-emerald-800 border border-emerald-600 text-[11px] font-bold">✔ Accept</button>
           <button onclick="event.stopPropagation(); famNotif.respond('${esc(n.id)}','ignora')" class="flex-1 py-1.5 rounded-lg bg-slate-800 border border-slate-600 text-[11px] font-bold">✕ Ignoră</button>
         </div>` : (ev && n.status ? `<div class="mt-1 text-[10px] ${n.status === 'acceptat' ? 'text-emerald-400' : 'text-slate-500'}">${n.status === 'acceptat' ? '✔ Acceptat — e în calendarul tău' : '✕ Ignorat — scos din calendarul tău'}</div>` : '');
-      return `<div onclick="famNotif.open('${esc(n.id)}','${n.src}')" class="p-3 rounded-xl border cursor-pointer ${unread ? 'bg-red-950/40 border-red-700/70' : 'bg-darkbg border-bordercol opacity-80'}">
+      const muted = isMuted(n);
+      return `<div onclick="famNotif.open('${esc(n.id)}','${n.src}')" class="p-3 rounded-xl border cursor-pointer ${unread ? 'bg-red-950/40 border-red-700/70' : 'bg-darkbg border-bordercol ' + (muted ? 'opacity-50' : 'opacity-80')}">
         <div class="flex items-start justify-between gap-2">
           <span class="text-[12px] font-bold ${unread ? 'text-white' : 'text-slate-300'}">${unread ? '<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>' : ''}${esc(n.titlu)}</span>
-          <span class="text-[9px] text-slate-500 whitespace-nowrap">${esc(fmtWhen(n.creat))}</span>
+          <span class="text-[9px] text-slate-500 whitespace-nowrap">${muted ? '🔕 ' : ''}${esc(fmtWhen(n.creat))}</span>
         </div>
         ${n.mesaj ? `<p class="text-[11px] text-slate-300 mt-1 leading-snug">${esc(n.mesaj)}</p>` : ''}
         ${actions}
@@ -512,7 +525,7 @@
     </div>`);
     famRenderBell();
   }
-  window.famNotif = { open: famOpenItem, close: famCloseCenter, show: famOpenCenter, markAll: () => markRead([], true), respond: famRespond, render: famRenderCenter, toggleEv: famEvToggleForm, sendEv: famEvSubmit, setInbox: famSetInbox };
+  window.famNotif = { open: famOpenItem, close: famCloseCenter, show: famOpenCenter, markAll: () => markRead([], true), respond: famRespond, render: famRenderCenter, toggleEv: famEvToggleForm, sendEv: famEvSubmit, setInbox: famSetInbox, renderBell: () => { famRenderBell(); if (centerOpen) famRenderCenter(); } };
 
   // =====================================================================
   // 3. SFINȚII ZILEI + SĂRBĂTORI LEGALE

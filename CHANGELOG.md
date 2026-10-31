@@ -1,5 +1,22 @@
 # CHANGELOG — DIiH Hub
 
+## v24.31 — 2026-10-31 — Clopoțelul respectă notificările oprite
+
+Doar frontend (`familie.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+
+- Dacă oprești o categorie din **Setări → Notificări → Ce notificări primești** (🛒 produs adăugat de altcineva, ⏰ remindere, 🔔 centrul de notificări), ce vine din ea rămâne în clopoțel, estompat și cu 🔕, dar **nu mai face clopoțelul roșu** și **nu mai deschide singur centrul de notificări** la pornire.
+- Invitațiile la evenimente se pot accepta sau ignora în continuare din listă.
+- Schimbarea se vede imediat ce bifezi sau debifezi o categorie.
+
+## v24.30 — 2026-10-31 — Pomelnicul zilei: tranșa întreagă, categoriile în plus și primele
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+
+- **Tranșa zilnică** (ex. 20/zi) se alege acum doar din ceilalți: cei din „Categorii incluse mereu” nu mai ocupă locuri în rotație, deci ai mereu tranșa întreagă (jumătate vii, jumătate adormiți) plus categoriile, în plus.
+- În listă, cei din categorii apar **primii**, apoi cei care se schimbă zilnic. Nimeni nu apare de două ori.
+- Între cele două grupuri e o linie subțire, abia vizibilă, doar în aplicație. PDF Print și Format Altar nu o au (dar păstrează aceeași ordine).
+- Rotația zilnică se recalculează pe lista fără categorii, așa că de azi pot apărea alte persoane decât ar fi apărut înainte.
+
 ## v24.29 — 2026-10-29 — Pomelnicul zilei: 8 categorii incluse mereu
 
 Doar frontend (`index.html`, `sw.js`). Backend neschimbat față de v24.28 (nu e nevoie de alt deploy).
