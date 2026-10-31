@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.38 — 2026-10-31 — Același stil în toate taburile
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele și funcțiile sunt aceleași.
+
+- Titlurile de card din **Pomelnic, Școală, Notițe, Cumpărături, Scriptură, Mai multe** și din ferestrele care se deschid sunt scrise cu litere normale, la fel ca în Astăzi, nu cu MAJUSCULE mici.
+- Insignele cu numere (ex. „0 / 50 cap.”) folosesc peste tot fontul aplicației.
+- Câmpurile de scris și listele de ales sunt puțin mai înalte, cu colțuri egale. Când apeși într-unul, primește un contur albastru, ca să vezi unde scrii.
+
 ## v24.37 — 2026-10-31 — Astăzi: carduri în stilul nou
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele, ordinea widgeturilor și funcțiile sunt aceleași.

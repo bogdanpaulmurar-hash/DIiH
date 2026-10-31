@@ -97,6 +97,23 @@
     #tab-today [id^="ownerWidget_"] .font-mono:not(.rounded-full):not(.rounded) { font-family: inherit; color: #9aa4b8; }
     /* Carduri: mai mult spațiu interior */
     #tab-today [id^="ownerWidget_"].p-4, #famSfintiCard { padding: 1.25rem !important; }
+    /* ====== v24.38: ACELAȘI STIL ÎN TOATE TABURILE ȘI FERESTRELE ====== */
+    /* Titlurile de card: litere normale, 14px, în loc de MAJUSCULE mici */
+    :is(.app-main, .fixed) .text-xs.uppercase.tracking-wider,
+    :is(.app-main, .fixed) .text-xs.uppercase.tracking-wide {
+      text-transform: none !important; letter-spacing: 0 !important; font-size: 14px !important;
+    }
+    :is(.app-main, .fixed) .uppercase:is(.font-bold, .font-semibold):is(.text-\[10px\], .text-\[11px\]):not(.more-group > p) {
+      text-transform: none !important; letter-spacing: 0 !important;
+    }
+    /* Insignele numerice: fontul aplicației, fără margine */
+    :is(.app-main, .fixed) .rounded-full.font-mono, :is(.app-main, .fixed) .rounded.font-mono { font-family: inherit !important; letter-spacing: 0; }
+    :is(.app-main, .fixed) .rounded-full.font-mono { border-color: transparent !important; }
+    /* Câmpurile de formular: puțin mai înalte și cu colțuri egale, ușor de atins */
+    .app-main input[type="text"], .app-main input[type="search"], .app-main input[type="number"], .app-main select, .app-main textarea {
+      min-height: 40px; border-radius: 12px;
+    }
+    .app-main input:focus, .app-main select:focus, .app-main textarea:focus { outline: 2px solid #5cc8e0; outline-offset: 1px; }
     /* Calculator (≥ 900px, inclusiv „site desktop” pe telefon): meniu lateral și conținut pe toată lățimea */
     @media (min-width: 900px) {
       body { padding-left: 232px; padding-bottom: 2.5rem; }
@@ -2667,7 +2684,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.37";
+    const APP_VERSION = "v24.38";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
