@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.35 — 2026-10-31 — Pomelnic și Scriptură: toate opțiunile la vedere
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele și funcțiile sunt aceleași.
+
+- **Pomelnic:** subtaburile (Pomelnicul Zilei, I. Personal, II. Psaltire Grup, III. Bolnavi, IV. Adormiți, V. Categorii), filtrele (Toți, Atenție, Vii, Adormiți, Selectează) și butoanele pentru persoanele selectate trec pe două rânduri. Nu mai trebuie derulate în lateral, iar cele de la capăt nu mai sunt tăiate.
+- **Scriptură:** filtrele Toate / Vechiul / Noul Testament și „Doar modelul activ” nu mai ies din ecran.
+- Insignele rotunjite (ex. „0 / 1347 cap.”, „0 / 50 cap.”) nu se mai rup pe două rânduri, în toată aplicația.
+- Am verificat și Școală, Notițe și Cumpărături: nu a fost nevoie de schimbări.
+
 ## v24.34 — 2026-10-31 — Astăzi: widgeturi aerisite
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Ordinea widgeturilor și ce e bifat în Widget rămân cum le-ai setat.
