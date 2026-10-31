@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.37 — 2026-10-31 — Astăzi: carduri în stilul nou
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele, ordinea widgeturilor și funcțiile sunt aceleași.
+
+- Titlurile widgeturilor din Astăzi au acum **iconițe simple, cu linie**, în loc de emoji și sunt scrise cu litere normale, nu cu MAJUSCULE: Citirea Psaltirii, Biblia, Scriptura, Aniversările zilei, Pomelnicul de astăzi, Școală și activități, Cumpărături, Notițe și remindere, Gândul zilei, Inventar personal. La fel și „Sfinții zilei”.
+- Insignele (ex. „0 Vii • 0 Adormiți”, „Capitol 1/50”, „0 de luat”) folosesc același font ca restul textului și au un fond discret.
+- Cardurile au puțin mai mult spațiu în interior.
+
 ## v24.36 — 2026-10-31 — Aspect nou: font, culori calme, iconițe simple
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele și funcțiile sunt aceleași.
