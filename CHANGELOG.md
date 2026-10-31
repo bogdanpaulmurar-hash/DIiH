@@ -1,5 +1,12 @@
 # CHANGELOG — DIiH Hub
 
+## v24.39 — 2026-10-31 — Versiunea afișată corect în Setări
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+
+- În **Setări**, rândul „Versiune Curentă: v24.25 (Build 2026-10-19)” rămăsese scris de mână și nu se mai actualiza. A devenit **„Versiune pe acest dispozitiv”** și arată versiunea reală a aplicației. Dacă e aceeași cu „Pe server (GitHub)”, ai ultima versiune.
+- Titlurile „Instalare aplicație” și „Curățare date” din Setări sunt scrise cu litere normale, ca restul aplicației.
+
 ## v24.38 — 2026-10-31 — Același stil în toate taburile
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele și funcțiile sunt aceleași.

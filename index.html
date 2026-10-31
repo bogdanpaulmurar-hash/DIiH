@@ -106,6 +106,7 @@
     :is(.app-main, .fixed) .uppercase:is(.font-bold, .font-semibold):is(.text-\[10px\], .text-\[11px\]):not(.more-group > p) {
       text-transform: none !important; letter-spacing: 0 !important;
     }
+    :is(.app-main, .fixed) h4.uppercase.tracking-wider { text-transform: none !important; letter-spacing: 0 !important; font-size: 15px; }
     /* Insignele numerice: fontul aplicației, fără margine */
     :is(.app-main, .fixed) .rounded-full.font-mono, :is(.app-main, .fixed) .rounded.font-mono { font-family: inherit !important; letter-spacing: 0; }
     :is(.app-main, .fixed) .rounded-full.font-mono { border-color: transparent !important; }
@@ -1574,7 +1575,7 @@
           </div>
 
           <div class="p-3 bg-darkbg border border-cyan-800/60 rounded-xl space-y-2">
-            <span class="font-bold text-cyan-300 block">Versiune Curentă: v24.25 (Build 2026-10-19)</span>
+            <span class="font-bold text-cyan-300 block">Versiune pe acest dispozitiv: <span id="localAppVersionLabel">—</span></span>
             <p class="text-[11px] text-slate-300">Pe server (GitHub): <span id="serverAppVersionLabel" class="font-mono text-slate-400">se verifică…</span></p>
             <p class="text-[11px] text-slate-300">Backend (Apps Script): <span id="backendVersionLabel" class="font-mono text-slate-400">se verifică la sincronizare…</span></p>
             <div id="adminSheetLinkBox" class="hidden space-y-2">
@@ -2684,7 +2685,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.38";
+    const APP_VERSION = "v24.39";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -4457,6 +4458,8 @@
     async function checkForAppUpdate(force) {
       if (!force && Date.now() - lastAppVersionCheck < 10 * 60 * 1000) return;
       lastAppVersionCheck = Date.now();
+      const localLbl = document.getElementById('localAppVersionLabel');
+      if (localLbl) localLbl.textContent = APP_VERSION;
       try {
         const txt = await (await fetch('./sw.js?nc=' + Date.now(), { cache: 'no-store' })).text();
         const m = /diih-cache-(v[\d.]+)/.exec(txt);
