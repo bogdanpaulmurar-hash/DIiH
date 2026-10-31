@@ -183,7 +183,12 @@
         padding: 25px; font-family: 'Times New Roman', serif;
       }
     }
-  </style>
+  
+    /* v24.41: casetele „Bara de jos” din Setări, mai aerisite */
+    label:has(> input[id^="navOpt_"]) { min-height: 44px; padding: 8px 12px !important; gap: 10px; }
+    label:has(> input[id^="navOpt_"]) > span { font-size: 14px !important; }
+    label:has(> input[id^="navOpt_"]) > input { width: 18px; height: 18px; flex-shrink: 0; }
+</style>
   <script src="https://accounts.google.com/gsi/client" async defer onload="if (window.renderGoogleButtons) renderGoogleButtons()"></script>
 </head>
 <body class="bg-darkbg text-slate-100 font-sans pb-28 antialiased selection:bg-cyan-800" onclick="closeContextMenu()">
@@ -1669,8 +1674,8 @@
 
           <!-- Personalizare Meniu Principal Jos (Setări Utilizator) -->
           <div class="auth-setari-edit border-b border-bordercol pb-3 space-y-2">
-            <h4 class="font-bold text-cyan-300 uppercase tracking-wider">📌 Personalizare Bară de Meniu (Bara de Jos)</h4>
-            <p class="text-[10px] text-slate-400">Bifează ce taburi dorești direct pe bara de navigare de jos. Modulele debifate se mută automat în meniul «⋯ Mai multe»:</p>
+            <h4 class="font-bold text-cyan-300 uppercase tracking-wider">Personalizare bară de meniu (bara de jos)</h4>
+            <p class="text-[10px] text-slate-400">Bifează ce taburi dorești direct pe bara de navigare de jos. Modulele debifate se mută automat în meniul „Mai multe”:</p>
             <div class="grid grid-cols-2 gap-1.5">
               <label class="flex items-center space-x-2 p-2 bg-darkbg border border-bordercol rounded-lg cursor-pointer">
                 <input type="checkbox" id="navOpt_today" checked disabled class="rounded text-cyan-500 opacity-60">
@@ -2040,7 +2045,7 @@
           </div>
 
           <!-- Selector Pomenire Grup Psaltire (Rotație zilnică) -->
-          <div class="flex items-center justify-between bg-darkbg p-2 rounded-xl border border-bordercol">
+          <div class="flex flex-wrap items-center justify-between gap-2 bg-darkbg p-2 rounded-xl border border-bordercol">
             <div class="flex items-center space-x-1.5">
               <span class="text-[11px] text-rose-300 font-bold whitespace-nowrap">📿 Pomenire grup:</span>
               <select id="modalPsaltireBatchSelect" onchange="handlePsaltireBatchChange(this.value)" class="bg-cardbg text-rose-300 font-bold border border-rose-800 rounded px-2 py-1 text-xs">
@@ -2052,7 +2057,7 @@
                 <option value="ALL">Toți (Grup complet)</option>
               </select>
             </div>
-            <span id="modalPsaltireRosterStats" class="text-[10px] text-slate-400 font-mono"></span>
+            <span id="modalPsaltireRosterStats" class="text-[11px] text-slate-400 whitespace-nowrap"></span>
           </div>
 
           <!-- Bară de căutare dedicată în modalul Catismei -->
@@ -2686,7 +2691,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.40";
+    const APP_VERSION = "v24.41";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -7746,11 +7751,20 @@
       }
       const ciclulNum = grup.length > 0 ? (Math.floor((diffDays * batchGrup) / grup.length) + 1) : 1;
 
+      // 3. Bolnavi / alte nevoi: rotesc cu aceeași mărime ca grupul (ex. 15 + 15), până se pomenesc toți, apoi de la capăt
+      const batchBol = (psaltireBatchSize === 'ALL') ? bolnavi.length : (parseInt(psaltireBatchSize, 10) || 20);
+      const startBol = bolnavi.length > 0 ? ((diffDays * batchBol) % bolnavi.length) : 0;
+      const displayBol = [];
+      for (let i = 0; i < Math.min(batchBol, bolnavi.length); i++) {
+        displayBol.push(bolnavi[(startBol + i) % bolnavi.length]);
+      }
+      const ciclulBol = bolnavi.length > 0 ? (Math.floor((diffDays * batchBol) / bolnavi.length) + 1) : 1;
+
       // Actualizare selector și etichetă stats
       const batchSel = document.getElementById('modalPsaltireBatchSelect');
       if (batchSel) batchSel.value = psaltireBatchSize.toString();
       const statsEl = document.getElementById('modalPsaltireRosterStats');
-      if (statsEl) statsEl.textContent = `${displayGrup.length}/${grup.length} pers. (Ciclul ${ciclulNum})`;
+      if (statsEl) statsEl.textContent = `${displayGrup.length} din ${grup.length} · ciclul ${ciclulNum}`;
 
       let html = '';
 
@@ -7766,10 +7780,10 @@
         html += displayGrup.map(m => `<div class="py-0.5 text-slate-200 pl-2">• ${m.persoanaRaw} <span class="text-[9px] text-slate-500">(${m.subgrupColoana || 'Grup'})</span></div>`).join('');
       }
 
-      // Afișare Copii bolnavi / alte nevoi (Toți)
+      // Afișare Copii bolnavi / alte nevoi (cu rotație, ca grupul)
       if (bolnavi.length > 0) {
-        html += `<div class="font-bold text-rose-300 pt-2 pb-1">Copii bolnavi / alte nevoi (${bolnavi.length} persoane):</div>`;
-        html += bolnavi.map(b => `<div class="py-0.5 text-slate-300 pl-2">• ${b.persoanaRaw}</div>`).join('');
+        html += `<div class="font-bold text-rose-300 pt-2 pb-1">Copii bolnavi / alte nevoi (${displayBol.length} pomeniți azi din ${bolnavi.length}, ciclul ${ciclulBol}):</div>`;
+        html += displayBol.map(b => `<div class="py-0.5 text-slate-300 pl-2">• ${b.persoanaRaw}</div>`).join('');
       }
 
       cont.innerHTML = html || `<p class="text-slate-500 italic py-1 text-center">Nicio persoană găsită.</p>`;

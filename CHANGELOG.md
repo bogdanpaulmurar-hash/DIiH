@@ -1,5 +1,12 @@
 # CHANGELOG — DIiH Hub
 
+## v24.41 — 2026-10-31 — Bolnavii rotesc în Psaltirea de grup
+
+Doar frontend (index.html, sw.js). Nu necesită deploy în Apps Script.
+- În Psaltire (Catisma zilei), „Copii bolnavi / alte nevoi” nu mai apar toți odată: se rotesc cu aceeași mărime ca grupul (ex. 15 + 15 pe zi), până se pomenesc toți, apoi se reiau de la capăt. Titlul arată „X pomeniți azi din Y, ciclul Z”.
+- Eticheta „15 din 301 · ciclul 2” nu mai iese din cadru; se mută pe rând nou dacă nu încape.
+- Setări: casetele pentru bara de jos sunt mai mari și mai ușor de apăsat; titlul și textul fără simboluri ciudate.
+
 ## v24.40 — 2026-10-31 — Salut în Astăzi și iconițe în ferestre
 
 Doar frontend (index.html, sw.js). Nu necesită deploy în Apps Script.
