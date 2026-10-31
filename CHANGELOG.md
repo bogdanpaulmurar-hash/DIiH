@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.33 — 2026-10-31 — „Mai multe” pe grupe, meniul lateral pe grupe
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele și funcțiile sunt aceleași; s-au schimbat doar aranjarea și aspectul.
+
+- **Mai multe** e împărțit pe grupe: **Rugăciune** (Psaltire, Scriptură, Nota Zilei, Note Biblia), **Familie** (Notificări), **Casă** (Inventar) și **Aplicație** (Setări, Widget, Admin, Info). Pe telefon sunt 4 butoane pe rând. Modulele mutate din bara de jos apar în grupa lor, iar o grupă fără butoane nu se mai afișează.
+- **Meniul lateral** de pe calculator e pe aceleași grupe. Bara de jos de pe telefon rămâne în aceeași ordine.
+- Aspectul de calculator pornește de la 900px, ca să se vadă și cu **„Site desktop”** din browserul telefonului (aprox. 980px). Înainte pornea de la 1024px, așa că pe telefon nu apărea.
+- **Astăzi** are 2 coloane doar de la 1200px. Sub această lățime, coloanele ar fi mai înguste decât un telefon și butoanele n-ar mai încăpea.
+
 ## v24.32 — 2026-10-31 — Aspect aerisit pe telefon, meniu lateral pe calculator
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Toate butoanele și funcțiile au rămas aceleași; s-a schimbat doar aspectul.
