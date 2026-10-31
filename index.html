@@ -33,6 +33,57 @@
     ::-webkit-scrollbar-track { background: #090d16; }
     ::-webkit-scrollbar-thumb { background: #232f48; border-radius: 4px; }
 
+    /* ====== v24.32: AERISIRE + ASPECT PE CALCULATOR (doar stil, fără schimbări de funcții) ====== */
+    /* Text minim mai mare: textele foarte mici devin lizibile pe telefon */
+    .text-\[7px\], .text-\[8px\] { font-size: 10px !important; line-height: 1.35; }
+    .text-\[9px\]  { font-size: 11px !important; line-height: 1.4; }
+    .text-\[10px\] { font-size: 12px !important; line-height: 1.45; }
+    .text-\[11px\] { font-size: 13px !important; line-height: 1.45; }
+    .app-main { line-height: 1.5; }
+    .app-main .rounded-2xl.p-4 { padding: 1.125rem; }
+    /* Bara de jos pe telefon: etichete ceva mai mari, butoane mai ușor de apăsat */
+    #bottomNavBar { font-size: 10.5px !important; }
+    #bottomNavBar > button { min-height: 46px; justify-content: center; }
+    #bottomNavBar > button > span:first-child { font-size: 1.25rem; line-height: 1.6rem; }
+    /* Antetul widgetului Biblia: butoanele trec pe rândul următor în loc să strângă titlul */
+    #ownerWidget_biblia360 > div:first-child { flex-wrap: wrap; gap: 8px; }
+
+    /* Calculator (≥ 1024px): meniu lateral și conținut pe toată lățimea */
+    @media (min-width: 1024px) {
+      body { padding-left: 232px; padding-bottom: 2.5rem; }
+      .app-header > div, .app-main { max-width: 1180px !important; }
+      .app-main { padding-left: 2rem !important; padding-right: 2rem !important; margin-top: 1.75rem !important; }
+      .app-nav {
+        top: 0; bottom: 0; left: 0; right: auto !important; width: 232px;
+        border-top: 0 !important; border-right: 1px solid #232f48;
+        padding: 1.25rem 0.75rem !important; overflow-y: auto;
+      }
+      #bottomNavBar {
+        display: flex !important; flex-direction: column; gap: 4px;
+        max-width: none !important; margin: 0 !important; text-align: left;
+        font-size: 15px !important;
+      }
+      #bottomNavBar > button:not(.hidden) {
+        display: flex !important; flex-direction: row !important; align-items: center;
+        justify-content: flex-start; gap: 12px; padding: 10px 14px; border-radius: 12px;
+        min-height: 44px;
+      }
+      #bottomNavBar > button > * { margin-top: 0 !important; }
+      #bottomNavBar > button:hover { background: #131b2e; }
+      #bottomNavBar > button.text-cyan-400 { background: #0e3a4a; }
+      /* Astăzi: widgeturile pe două coloane */
+      #todayOwnerContent { columns: 2; column-gap: 1.25rem; }
+      #todayOwnerContent > * { break-inside: avoid; margin: 0 0 1.25rem 0 !important; }
+      /* Mai multe: mai multe butoane pe rând */
+      .more-menu-grid { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; gap: 0.75rem !important; }
+      .more-menu-grid > button { padding: 1rem 0.5rem !important; }
+      /* Ferestrele (modale) puțin mai late pe calculator */
+      .fixed .max-w-lg { max-width: 44rem !important; }
+    }
+    @media (min-width: 1500px) {
+      #todayOwnerContent { columns: 3; }
+    }
+
     @media print {
       body * { visibility: hidden; }
       #printablePomelnicArea, #printablePomelnicArea * { visibility: visible; }
@@ -202,7 +253,7 @@
   </div>
 
   <!-- HEADER -->
-  <header class="sticky top-0 z-40 bg-darkbg/95 backdrop-blur-md border-b border-bordercol px-4 py-3">
+  <header class="app-header sticky top-0 z-40 bg-darkbg/95 backdrop-blur-md border-b border-bordercol px-4 py-3">
     <div class="flex items-center justify-between max-w-lg mx-auto">
       <div class="flex items-center space-x-2">
         <span id="headerAppLogo" class="text-xl">🧭</span>
@@ -226,7 +277,7 @@
   </header>
 
   <!-- CONȚINUT TABS -->
-  <main class="max-w-lg mx-auto px-4 mt-4 space-y-4">
+  <main class="app-main max-w-lg mx-auto px-4 mt-4 space-y-4">
 
     <!-- TAB 1: ASTĂZI -->
     <section id="tab-today" class="tab-content space-y-4">
@@ -1170,7 +1221,7 @@
     <section id="tab-more" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-bordercol pb-2">⋯ Meniu Extins</h3>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="more-menu-grid grid grid-cols-3 gap-2">
           <button onclick="switchSubTab('psaltire-grup')" id="btnSubPsaltire" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
             <span class="text-lg">📿</span>
             <span class="text-[9px] font-bold">Psaltire</span>
@@ -1797,7 +1848,7 @@
   </main>
 
   <!-- BARA DE NAVIGARE INFERIOARĂ -->
-  <nav class="fixed bottom-0 inset-x-0 bg-darkbg/95 backdrop-blur-md border-t border-bordercol z-40 py-2">
+  <nav class="app-nav fixed bottom-0 inset-x-0 bg-darkbg/95 backdrop-blur-md border-t border-bordercol z-40 py-2">
     <div id="bottomNavBar" class="max-w-lg mx-auto grid grid-cols-6 text-center text-[9px] font-medium text-slate-400">
       <button onclick="switchTab('today')" id="nav-today" class="flex flex-col items-center space-y-1 text-cyan-400 font-bold">
         <span class="text-base">🏠</span>
@@ -2521,7 +2572,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.31";
+    const APP_VERSION = "v24.32";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;

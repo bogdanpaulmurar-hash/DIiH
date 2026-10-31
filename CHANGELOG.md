@@ -1,5 +1,15 @@
 # CHANGELOG — DIiH Hub
 
+## v24.32 — 2026-10-31 — Aspect aerisit pe telefon, meniu lateral pe calculator
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Toate butoanele și funcțiile au rămas aceleași; s-a schimbat doar aspectul.
+
+- **Pe telefon:** textele foarte mici sunt acum mai mari și se citesc mai ușor. Bara de jos are iconițe mai mari și butoane mai ușor de apăsat. În widgetul Biblia, butoanele Dimineața/Seara trec pe rândul al doilea și titlul nu mai e strâns.
+- **Pe calculator** (fereastră de cel puțin 1024px): bara de jos devine **meniu lateral** în stânga, iar conținutul folosește toată lățimea, nu doar o bandă îngustă ca pe telefon.
+- **Astăzi** pe calculator: widgeturile se aranjează pe 2 coloane (3 pe ecrane foarte late).
+- **Mai multe** pe calculator: 6 butoane pe rând. Ferestrele care se deschid sunt ceva mai late.
+- Verificat (fără date reale, doar aranjarea): niciun tab nu mai iese în lateral la 390px (telefon) sau la 1440px (calculator).
+
 ## v24.31 — 2026-10-31 — Clopoțelul respectă notificările oprite
 
 Doar frontend (`familie.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
