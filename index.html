@@ -2521,7 +2521,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.30";
+    const APP_VERSION = "v24.31";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -9834,6 +9834,7 @@
       if (on) delete cfg.off[id]; else cfg.off[id] = true;
       localStorage.setItem('diih_notifications_multi', JSON.stringify(cfg));
       renderNotifToggles();
+      if (window.famNotif && window.famNotif.renderBell) window.famNotif.renderBell();
       // salvare pe profil (aceeași cheie ca „Salvează Toate Notificările”)
       sendWrite(`${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveNotificationConfigs&configJson=${encodeURIComponent(JSON.stringify(cfg))}&callback=void`);
       const t = NOTIF_TOGGLES.find(x => x.id === id);

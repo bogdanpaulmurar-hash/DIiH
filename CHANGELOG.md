@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.31 — 2026-10-31 — Clopoțelul respectă notificările oprite
+
+Doar frontend (`familie.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+
+- Dacă oprești o categorie din **Setări → Notificări → Ce notificări primești** (🛒 produs adăugat de altcineva, ⏰ remindere, 🔔 centrul de notificări), ce vine din ea rămâne în clopoțel, estompat și cu 🔕, dar **nu mai face clopoțelul roșu** și **nu mai deschide singur centrul de notificări** la pornire.
+- Invitațiile la evenimente se pot accepta sau ignora în continuare din listă.
+- Schimbarea se vede imediat ce bifezi sau debifezi o categorie.
+
 ## v24.30 — 2026-10-31 — Pomelnicul zilei: tranșa întreagă, categoriile în plus și primele
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
