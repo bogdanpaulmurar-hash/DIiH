@@ -84,6 +84,19 @@
     .app-header > div > div:first-child { min-width: 0; flex: 1 1 auto; margin-right: 8px; }
     .app-header > div > div:last-child { flex-shrink: 0; }
     @media (min-width: 900px) { .nav-ic { width: 20px; height: 20px; } }
+    /* ====== v24.37: CARDURILE DIN ASTĂZI ÎN STILUL MACHETEI ====== */
+    .w-ic { display: inline-block; width: 18px; height: 18px; vertical-align: -3px; margin-right: 7px; flex-shrink: 0; }
+    /* Titluri: litere normale (nu majuscule), puțin mai mari */
+    #tab-today [id^="ownerWidget_"] > .flex:first-child.uppercase,
+    #tab-today [id^="ownerWidget_"] > .flex:first-child .uppercase,
+    #famSfintiCard > .flex:first-child .uppercase {
+      text-transform: none !important; letter-spacing: 0 !important; font-size: 15px !important; font-weight: 600 !important;
+    }
+    /* Insignele: același font ca restul, fond discret, fără margine */
+    #tab-today .rounded-full.font-mono { font-family: inherit !important; font-weight: 600; letter-spacing: 0; border-color: transparent !important; }
+    #tab-today [id^="ownerWidget_"] .font-mono:not(.rounded-full):not(.rounded) { font-family: inherit; color: #9aa4b8; }
+    /* Carduri: mai mult spațiu interior */
+    #tab-today [id^="ownerWidget_"].p-4, #famSfintiCard { padding: 1.25rem !important; }
     /* Calculator (≥ 900px, inclusiv „site desktop” pe telefon): meniu lateral și conținut pe toată lățimea */
     @media (min-width: 900px) {
       body { padding-left: 232px; padding-bottom: 2.5rem; }
@@ -345,7 +358,7 @@
       <!-- Catisma Zilei (Click: Deschide Rânduiala & Pomelnicul Grupului de Psaltire) -->
       <div id="ownerWidget_psaltire" onclick="openPsaltireIframeModal()" class="bg-gradient-to-br from-cardbg to-[#1a1c38] border border-bordercol rounded-2xl p-4 shadow-lg cursor-pointer hover:border-rose-700/60 active:scale-98 transition">
         <div class="flex items-center justify-between text-xs font-semibold text-rose-300 uppercase tracking-wider mb-2">
-          <span>📖 Citirea Psaltirii</span>
+          <span><svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 100 18 9 9 0 000-18zM12 7v10M8.5 10.5h7"></path></svg>Citirea Psaltirii</span>
           <span class="bg-rose-950/80 border border-rose-800 text-rose-200 px-2 py-0.5 rounded-full font-bold">Rânduială & Pomelnic Grup</span>
         </div>
         <h2 id="psaltireTitle" class="text-base font-bold text-white leading-snug">Se calculează...</h2>
@@ -356,7 +369,7 @@
       <div id="ownerWidget_biblia360" class="bg-cardbg border border-amber-800/80 rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <div class="flex items-center space-x-2">
-            <span class="text-xs font-bold text-amber-300 uppercase tracking-wider">📜 Biblia — Ediția Bartolomeu Anania</span>
+            <span class="text-xs font-bold text-amber-300 uppercase tracking-wider"><svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5M8 7h7"></path></svg>Biblia — Ediția Bartolomeu Anania</span>
             <span id="biblicalDayBadge" class="text-[10px] text-slate-400 font-mono"></span>
           </div>
           <div class="flex items-center space-x-1">
@@ -375,7 +388,7 @@
       <div id="ownerWidget_scriptura" onclick="switchTab('scriptura')" class="bg-cardbg border border-amber-800/80 rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-500 active:scale-98 transition space-y-2">
         <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
           <div class="flex items-center space-x-1.5">
-            <span>📑</span>
+            <svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h11v13a3 3 0 01-3 3H6a2 2 0 01-2-2v-2h11M7 4a2 2 0 00-2 2v10M10 8h5M10 12h5"></path></svg>
             <span>Continuitate Sf. Scriptură</span>
           </div>
           <span id="ownerWidgetScripturaBadge" class="bg-amber-950 border border-amber-800 text-amber-200 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0 / 1337 cap.</span>
@@ -395,7 +408,7 @@
       <!-- Aniversările Zilei -->
       <div id="ownerWidget_anniversaries" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-2">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
-          <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">🎉 Aniversările Zilei</span>
+          <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider"><svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11h16v10H4zM3 7h18v4H3zM12 7v14M12 7c-2-4-6-3-5 0M12 7c2-4 6-3 5 0"></path></svg>Aniversările zilei</span>
           <span id="anniversaryBadge" class="bg-slate-800 px-2 py-0.5 rounded-full text-slate-300 text-xs">0</span>
         </div>
         <div class="flex gap-1 text-[11px]">
@@ -410,7 +423,7 @@
       <div id="ownerWidget_pomelnic" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-bordercol pb-2">
           <div>
-            <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider">📿 Pomelnicul de Astăzi</span>
+            <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider"><svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1.6 2 1.6 3.6 0 5-1.6-1.4-1.6-3 0-5zM9 10h6v11H9z"></path></svg>Pomelnicul de astăzi</span>
             <p class="text-[10px] text-slate-400">Pomenire din Coloana C</p>
           </div>
           <span id="pomelnicBatchBadge" class="bg-emerald-950 border border-emerald-800 text-emerald-300 text-[11px] px-2.5 py-1 rounded-full font-mono font-bold">10 Vii • 10 Adormiți</span>
@@ -480,7 +493,7 @@
       <!-- Școală & Activități -->
       <div id="ownerWidget_school" onclick="switchTab('calendar')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-cyan-600/60 active:scale-98 transition space-y-2">
         <div class="flex items-center justify-between text-xs font-bold text-cyan-300 uppercase tracking-wider">
-          <span>🎓 Școală & Activități</span>
+          <span><svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5-10-5zM6 11v5c3 2 9 2 12 0v-5"></path></svg>Școală și activități</span>
           <span id="ownerWidgetSchoolBadge" class="bg-cyan-950 border border-cyan-800 px-2 py-0.5 rounded-full text-[10px]">0 azi</span>
         </div>
         <div id="ownerWidgetSchoolContent" class="space-y-1 text-xs text-slate-300"></div>
@@ -489,7 +502,7 @@
       <!-- Cumpărături Urgente -->
       <div id="ownerWidget_shopping" onclick="if (!event.target.closest('.no-tab-switch')) switchTab('cumparaturi')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-emerald-600/60 active:scale-98 transition space-y-2">
         <div class="flex items-center justify-between text-xs font-bold text-emerald-300 uppercase tracking-wider">
-          <span>🛒 Cumpărături</span>
+          <span><svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.5 11h10L20 8H6.5M9 20a1 1 0 100-2 1 1 0 000 2zM17 20a1 1 0 100-2 1 1 0 000 2z"></path></svg>Cumpărături</span>
           <span id="ownerWidgetShoppingBadge" class="bg-emerald-950 border border-emerald-800 px-2 py-0.5 rounded-full text-[10px]">0 de luat</span>
         </div>
         <div id="ownerWidgetShoppingContent" class="space-y-1 text-xs text-slate-300"></div>
@@ -504,7 +517,7 @@
       <div id="ownerWidget_notite" onclick="if (!event.target.closest('.no-tab-switch')) switchTab('notite')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-amber-600/60 active:scale-98 transition space-y-2">
         <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
           <div class="flex items-center space-x-1.5">
-            <span>📝 Notițe & remindere</span>
+            <span><svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM9 12h7M9 16h5"></path></svg>Notițe și remindere</span>
           </div>
           <span id="ownerWidgetNotiteBadge" class="bg-amber-950 border border-amber-800 px-2 py-0.5 rounded-full text-[10px]">0 notițe</span>
         </div>
@@ -520,7 +533,7 @@
       <div id="ownerWidget_gandul_zilei" class="bg-gradient-to-br from-cardbg to-[#221820] border border-amber-800/60 rounded-2xl p-4 shadow-sm space-y-2.5">
         <div class="flex items-center justify-between text-xs font-bold text-amber-300 uppercase tracking-wider">
           <div class="flex items-center space-x-1.5">
-            <span>💡 Gândul Zilei</span>
+            <span><svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0012 3z"></path></svg>Gândul zilei</span>
             <span id="gandulZileiThemeBadge" class="text-[9px] bg-amber-950/80 border border-amber-800/80 text-amber-300 font-bold px-1.5 py-0.2 rounded">Înțelepciune</span>
           </div>
           <div class="flex items-center space-x-1">
@@ -539,7 +552,7 @@
       <!-- Inventar & Mentenanță -->
       <div id="ownerWidget_inventory" onclick="switchTab('more'); switchSubTab('inventar');" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-violet-600/60 active:scale-98 transition space-y-2">
         <div class="flex items-center justify-between text-xs font-bold text-violet-300 uppercase tracking-wider">
-          <span>📦 Inventar Personal</span>
+          <span><svg class="w-ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"></path></svg>Inventar personal</span>
           <span id="ownerWidgetInventoryBadge" class="bg-violet-950 border border-violet-800 px-2 py-0.5 rounded-full text-[10px]">0 obiecte</span>
         </div>
         <div id="ownerWidgetInventoryContent" class="text-xs text-slate-300"></div>
@@ -2654,7 +2667,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.36";
+    const APP_VERSION = "v24.37";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
