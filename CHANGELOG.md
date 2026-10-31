@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.36 — 2026-10-31 — Aspect nou: font, culori calme, iconițe simple
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele și funcțiile sunt aceleași.
+
+- Font nou în toată aplicația (**Inter**), mai ușor de citit pe telefon. Fără internet se folosește fontul telefonului.
+- **Iconițe simple, desenate cu linie**, în locul emoji-urilor: în bara de jos, în meniul lateral de pe calculator și în „Mai multe”. În „Mai multe”, iconițele au culoarea grupei lor.
+- **Culori mai calme:** fundal și carduri ușor mai deschise, fără degradeuri. Marginile colorate ale cardurilor (galben, roșu, violet) sunt acum neutre, iar culoarea rămâne doar la titluri.
+- Pe telefon, data din antet nu se mai suprapune peste butonul de profil.
+
 ## v24.35 — 2026-10-31 — Pomelnic și Scriptură: toate opțiunile la vedere
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script. Butoanele și funcțiile sunt aceleași.
