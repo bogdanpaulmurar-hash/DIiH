@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.42 — 2026-11-06 — Adservio dintr-un buton, fără marcaj
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.42 + `Adservio.gs`). **Necesită deploy** în Apps Script (ambele fișiere).
+- În Școală → Adservio, butonul **„Actualizează din Adservio”** aduce absențele, notele, mediile și temele direct, de pe telefon sau de pe laptop. Nu mai e nevoie să deschizi Adservio și să apeși marcajul.
+- Dacă Adservio cere cod de verificare, aplicația afișează o casetă: scrii codul primit (e-mail, SMS sau aplicația de autentificare) o singură dată. Cu „Ține minte” bifat, data viitoare nu mai cere cod.
+- După primul cod acceptat, actualizarea automată de la 07:00 și 16:00 pornește singură.
+- Doar administratorul poate scrie codul. Ceilalți, cu drept de editare pe Școală, pot apăsa butonul după ce codul a fost acceptat o dată.
+- Datele aduse de server trec prin aceeași interpretare ca marcajul, deci arată la fel. Marcajul rămâne ca rezervă, pentru cazul în care Adservio refuză serverul („nu sunt robot”).
+
 ## v24.41 — 2026-10-31 — Bolnavii rotesc în Psaltirea de grup
 
 Doar frontend (index.html, sw.js). Nu necesită deploy în Apps Script.

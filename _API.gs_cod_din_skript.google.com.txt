@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.28
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.42
  * Autor: Bogdan Murar
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.28";
+const BACKEND_VERSION = "24.42";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -642,6 +642,19 @@ function doGet(e) {
     } catch (err) {
       return returnResponse(e, { success: false, error: err.message || String(err) });
     }
+  }
+
+  // v24.42 — „Actualizează din Adservio” din aplicație, cu pasul pentru codul de verificare (2FA)
+  if (action === "adservioConnect") {
+    if (typeof adservioConnect !== "function") return returnResponse(e, { success: false, error: "Lipsește fișierul Adservio.gs actualizat (v24.42)." });
+    return returnResponse(e, adservioConnect(ss, auth));
+  }
+  // Doar admin (acțiuni nelistate în AUTH_ACTION_RULES): cererea codului și verificarea lui
+  if (action === "adservioTfaSend") {
+    return returnResponse(e, adservioTfaSendAction(e.parameter.optId));
+  }
+  if (action === "adservioTfaVerify") {
+    return returnResponse(e, adservioTfaVerify(ss, auth, e.parameter.optId, e.parameter.code, e.parameter.trust));
   }
 
   // 8b. CRUD INVENTAR PERSONAL (Obiecte, spații de depozitare, mentenanță)
@@ -1760,7 +1773,7 @@ const AUTH_ACTION_RULES = {
   uploadDriveFile: ["setari", "edit"],
   saveSchoolActivities: ["scoala", "edit"], deleteSchoolActivity: ["scoala", "edit"], batchUpdateSchoolStatus: ["scoala", "edit"],
   saveSchoolTema: ["scoala", "edit"], deleteSchoolTema: ["scoala", "edit"],
-  getAdservioData: ["scoala", "view"], adservioSyncNow: ["scoala", "edit"],
+  getAdservioData: ["scoala", "view"], adservioSyncNow: ["scoala", "edit"], adservioConnect: ["scoala", "edit"],
   addPsaltirePerson: ["psaltire", "edit"], updatePsaltirePerson: ["psaltire", "edit"], deletePsaltirePerson: ["psaltire", "edit"],
   addNotita: ["notite", "edit"], updateNotita: ["notite", "edit"], deleteNotita: ["notite", "edit"],
   addGand: ["notite", "edit"], updateGand: ["notite", "edit"], deleteGand: ["notite", "edit"],

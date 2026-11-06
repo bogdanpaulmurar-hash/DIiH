@@ -27,7 +27,8 @@ Aplicația familiei (PWA): Astăzi, Pomelnic, Calendar, Notițe, Cumpărături, 
 ## Reguli
 - Utilizatori: admin (Bogdan), Andreea, Luca — fiecare cu login Google și setări per profil.
 - Fiecare membru își poate redenumi aplicația. Ce primesc ceilalți (evenimente, remindere, notificări) **nu** conține „DIiH”, doar prenumele expeditorului. Calendarul comun: „Familia-ABL_Murar”.
-- Datele Adservio vin din sincronizarea din Apps Script; nu se apelează Adservio din browser.
+- Datele Adservio vin din sincronizarea din Apps Script (butonul „Actualizează din Adservio”, triggere 07:00/16:00; codul 2FA se scrie o dată în aplicație, dispozitivul de încredere stă în `ADSERVIO_TFA_COOKIES`). Marcajul din browser e doar rezervă.
+- Pașii de test pe versiune: `TESTING.md`.
 - Comentarii, CHANGELOG și commit-uri în română; răspunsuri scurte, ușor de citit pe telefon.
 - De verificat: „Încarcă în Drive” din Calendarul Anului Școlar dă eroarea de permisiune `DriveApp.createFolder` (scope Drive în `appsscript.json` + reautorizare).
 
