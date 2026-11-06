@@ -1078,11 +1078,14 @@
           </div>
           <p id="adservioStatus" class="text-[11px] text-slate-400">Încă nu s-a adus nimic din Adservio.</p>
           <div class="flex items-center gap-2">
-            <button id="btnAdservioSync" onclick="fetchDataFromSheet(true)" class="flex-1 bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs">🔄 Reîmprospătează</button>
+            <button id="btnAdservioConnect" onclick="adservioConnectNow()" class="flex-1 bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2">Actualizează din Adservio</button>
             <select id="adservioYearSelect" onchange="renderAdservio()" class="hidden bg-darkbg border border-bordercol rounded-xl p-2 text-white text-xs"></select>
           </div>
-          <p class="text-[10px] text-slate-500">Datele se trimit din marcajul „Adservio → DIiH”, pe care îl apeși în Adservio după ce ești logat. Apoi aici apasă „Reîmprospătează”. Temele apar în 📚 Teme, marcate „Adservio”.</p>
+          <!-- v24.42: pașii actualizării și caseta pentru codul de verificare (2FA) -->
+          <div id="adservioConnectZone" class="hidden space-y-2"></div>
+          <p class="text-[10px] text-slate-500">Serverul aplicației se conectează la Adservio cu contul de părinte; parola stă doar pe server. Dacă Adservio cere un cod, îl scrii aici o singură dată. Temele apar în Teme, marcate „Adservio”.</p>
           <div id="adservioMarcajBox" class="hidden pt-2 border-t border-bordercol space-y-1.5">
+            <p class="text-[10px] text-slate-400">Rezervă, dacă Adservio refuză serverul: marcajul din browser.</p>
             <button onclick="generateAdservioMarcaj()" class="w-full bg-slate-800 border border-indigo-700 text-indigo-100 font-bold py-1.5 rounded-xl text-xs">🔖 Generează marcajul „Adservio → DIiH”</button>
             <div id="adservioMarcajOut" class="hidden space-y-1.5">
               <div class="flex items-center gap-2">
@@ -2691,7 +2694,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.41";
+    const APP_VERSION = "v24.42";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2874,11 +2877,11 @@
       document.body.appendChild(script);
     }
 
-    function apiJsonp(params) {
+    function apiJsonp(params, timeoutMs) {
       return new Promise((resolve, reject) => {
         const cb = 'authCb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
         const script = document.createElement('script');
-        const timer = setTimeout(() => { delete window[cb]; script.remove(); reject(new Error('Serverul nu a răspuns. Încearcă din nou.')); }, 30000);
+        const timer = setTimeout(() => { delete window[cb]; script.remove(); reject(new Error('Serverul nu a răspuns. Încearcă din nou.')); }, timeoutMs || 30000);
         window[cb] = (data) => { clearTimeout(timer); delete window[cb]; script.remove(); resolve(data); };
         script.onerror = () => { clearTimeout(timer); delete window[cb]; reject(new Error('Nu s-a putut contacta serverul.')); };
         script.src = `${GOOGLE_SCRIPT_API_URL}?${new URLSearchParams({ ...params, callback: cb }).toString()}`;
@@ -3041,7 +3044,7 @@
     const AUTH_EDIT_GUARDS = {
       pomelnic: ['applyBatchAtentie', 'applyBatchAndreeaToggle', 'toggleEditMode', 'savePersonEdit', 'openAddPersonModal', 'saveNewPerson'],
       psaltire: ['openAddPsaltireModal', 'openEditPsaltireModal', 'savePsaltirePerson', 'deletePsaltirePerson'],
-      scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar', 'cleanupGeneratedSpecialWeekActivities', 'saveSchoolTema', 'toggleSchoolTemaDone', 'deleteSchoolTema', 'startEditSchoolTema', 'adservioSyncNow', 'autoFixSchoolOverlaps'],
+      scoala: ['toggleSingleActivityPaid', 'batchMarkSelectedAsPaid', 'saveSchoolActivity', 'saveSchoolActivityBulk', 'deleteSchoolActivity', 'saveSchoolSpecialWeeks', 'uploadSchoolInspectorCalendar', 'cleanupGeneratedSpecialWeekActivities', 'saveSchoolTema', 'toggleSchoolTemaDone', 'deleteSchoolTema', 'startEditSchoolTema', 'adservioSyncNow', 'adservioConnectNow', 'autoFixSchoolOverlaps'],
       notite: ['saveOrUpdateGand', 'deleteGand', 'deleteSelectedGanduri', 'softDeleteManyGanduri', 'undoDeleteGanduri', 'startEditGand'],
       cumparaturi: ['addShoppingItem', 'removeShoppingItem', 'markWholeStoreCompleted', 'quickAddShopping'],
       inventar: ['addCustomInventoryCategory', 'deleteCustomInventoryCategory', 'addCustomInventorySpace', 'deleteCustomInventorySpace', 'saveInventoryItem', 'deleteInventoryItem', 'confirmMoveInventoryItem'],
@@ -9102,6 +9105,156 @@
       }
     }
 
+    // ====== ADSERVIO DINTR-UN BUTON (v24.42): serverul se conectează; codul 2FA se scrie o singură dată ======
+    const ADS_TFA_LABELS = { '1': 'SMS', '2': 'e-mail', '3': 'aplicația de autentificare' };
+    let adsConnectBusy = false;
+    let adsTfaState = null; // { options: [{id, type, hint}], chosen }
+
+    function adsConnectZone(html) {
+      const z = document.getElementById('adservioConnectZone');
+      if (!z) return;
+      z.innerHTML = html || '';
+      z.classList.toggle('hidden', !html);
+    }
+
+    function adsSetConnectBtn(busy, text) {
+      const btn = document.getElementById('btnAdservioConnect');
+      if (!btn) return;
+      btn.disabled = !!busy;
+      btn.classList.toggle('opacity-60', !!busy);
+      btn.innerHTML = busy
+        ? `<span class="inline-block w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>${escapeHtmlText(text || 'Se actualizează…')}`
+        : escapeHtmlText(text || 'Actualizează din Adservio');
+    }
+
+    // Pașii afișați cât lucrează serverul (o singură cerere, deci pașii avansează după timp)
+    function adsStartSteps() {
+      const steps = ['Conectare la Adservio', 'Verificare cont', 'Aduc absențele, notele și temele', 'Salvez în aplicație'];
+      let i = 0;
+      const draw = () => adsConnectZone('<ul class="text-[11px] space-y-1">' + steps.map((t, k) =>
+        `<li class="${k < i ? 'text-slate-200' : (k === i ? 'text-cyan-300' : 'text-slate-500')}">${k < i ? '✓' : (k === i ? '•' : '○')} ${t}</li>`).join('') + '</ul>');
+      draw();
+      const t = setInterval(() => { if (i < steps.length - 1) { i++; draw(); } }, 4000);
+      return () => clearInterval(t);
+    }
+
+    function adsConnectDone(res) {
+      adsTfaState = null;
+      adsConnectZone('');
+      setAdservioData(res.adservio);
+      const r = res.rezultat || {};
+      let msg = `Adservio: ${r.absente || 0} absențe, ${r.note || 0} note, ${r.teme || 0} teme` + (r.temeNoi ? ` (${r.temeNoi} teme noi)` : '');
+      if (res.tinutMinte) msg = 'Gata. De acum butonul merge fără cod. ' + msg;
+      showToast(msg);
+      fetchDataFromSheet(false);
+    }
+
+    function adsShowBlocked(err) {
+      adsConnectZone(`<div class="p-2 rounded-xl border border-rose-800 bg-rose-950/40 text-[11px] text-rose-200 space-y-1">
+        <p>${escapeHtmlText(err || 'Adservio a refuzat conectarea de pe server.')}</p>
+        ${isCurrentUserAdmin() ? '<p class="text-rose-300">Folosește marcajul de mai jos: deschizi Adservio, te loghezi, apeși marcajul.</p>' : ''}
+      </div>`);
+    }
+
+    function adsShowTfa(opts) {
+      opts = opts || {};
+      const st = adsTfaState || { options: [], chosen: '' };
+      const cur = st.options.find(o => o.id === st.chosen);
+      const unde = cur ? ADS_TFA_LABELS[cur.type] || 'contul tău' : 'contul tău';
+      const hint = cur && cur.hint ? ` (${escapeHtmlText(cur.hint)})` : '';
+      const intro = cur && cur.type === '3'
+        ? 'Scrie codul din aplicația de autentificare:'
+        : (opts.sent === false ? `Nu am putut cere codul pe ${unde}${hint}. Apasă „Cere alt cod”.` : `Adservio ți-a trimis un cod pe ${unde}${hint}. Scrie-l aici:`);
+      const others = st.options.filter(o => o.id !== st.chosen).map(o =>
+        `<button onclick="adservioTfaChoose('${String(o.id).replace(/[^\w-]/g, '')}')" class="text-[10px] underline text-slate-400">Primește codul pe ${ADS_TFA_LABELS[o.type] || 'altă cale'}</button>`).join(' ');
+      adsConnectZone(`<div class="p-2.5 rounded-xl border border-amber-800 bg-amber-950/30 space-y-2">
+        <p class="text-[11px] text-amber-200">${intro}</p>
+        <input id="adsTfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="••••••"
+          class="w-full bg-darkbg border border-bordercol rounded-lg p-2 text-white text-lg text-center tracking-[0.35em]">
+        ${opts.error ? `<p class="text-[11px] text-rose-400">${escapeHtmlText(opts.error)}</p>` : ''}
+        <label class="flex items-center gap-2 text-[11px] text-slate-300"><input type="checkbox" id="adsTfaTrust" checked> Ține minte serverul, să nu mai ceară cod</label>
+        <button id="btnAdsTfaVerify" onclick="adservioTfaVerifyNow()" class="w-full bg-indigo-800 hover:bg-indigo-700 text-white font-bold py-2 rounded-xl text-xs">Trimite codul</button>
+        <div class="flex flex-wrap gap-x-3 gap-y-1 items-center">
+          ${cur && cur.type !== '3' ? `<button onclick="adservioTfaResend()" class="text-[10px] underline text-slate-400">Nu a venit codul? Cere alt cod</button>` : ''}
+          ${others}
+        </div>
+        <p class="text-[10px] text-slate-500">Codul ajunge la tine; aplicația îl trimite doar către Adservio.</p>
+      </div>`);
+      setTimeout(() => { const i = document.getElementById('adsTfaCode'); if (i) i.focus(); }, 50);
+    }
+
+    async function adservioConnectNow() {
+      if (adsConnectBusy) return;
+      adsConnectBusy = true;
+      adsSetConnectBtn(true);
+      const stop = adsStartSteps();
+      try {
+        const res = await apiJsonp({ ...apiAuthParams(), action: 'adservioConnect' }, 120000);
+        stop();
+        if (res && res.success) return adsConnectDone(res);
+        if (res && res.blocked) return adsShowBlocked(res.error);
+        if (res && res.tfaRequired) {
+          if (res.adminOnly || !(res.options || []).length) {
+            adsConnectZone(`<p class="text-[11px] text-amber-300">${escapeHtmlText(res.error || 'Adservio cere un cod de verificare.')}</p>`);
+            return;
+          }
+          adsTfaState = { options: res.options, chosen: res.chosen || res.options[0].id };
+          return adsShowTfa({ sent: res.sent, error: res.sendError });
+        }
+        adsConnectZone(`<p class="text-[11px] text-rose-400">${escapeHtmlText((res && res.error) || 'Eroare necunoscută.')}</p>`);
+      } catch (e) {
+        stop();
+        adsConnectZone(`<p class="text-[11px] text-rose-400">${escapeHtmlText(e.message || 'Nu s-a putut actualiza.')}</p>`);
+      } finally {
+        adsConnectBusy = false;
+        adsSetConnectBtn(false);
+      }
+    }
+
+    async function adservioTfaResend() {
+      if (!adsTfaState) return;
+      try {
+        const res = await apiJsonp({ ...apiAuthParams(), action: 'adservioTfaSend', optId: adsTfaState.chosen }, 60000);
+        showToast(res && res.success ? 'Am cerut un cod nou de la Adservio.' : ('Adservio: ' + ((res && res.error) || 'codul nu a fost trimis.')));
+      } catch (e) { showToast(e.message || 'Nu s-a putut cere codul.'); }
+    }
+
+    async function adservioTfaChoose(optId) {
+      if (!adsTfaState) return;
+      adsTfaState.chosen = optId;
+      const cur = adsTfaState.options.find(o => o.id === optId);
+      if (cur && cur.type !== '3') {
+        let sent = false;
+        try { const r = await apiJsonp({ ...apiAuthParams(), action: 'adservioTfaSend', optId: optId }, 60000); sent = !!(r && r.success); } catch (e) {}
+        return adsShowTfa({ sent: sent });
+      }
+      adsShowTfa({});
+    }
+
+    async function adservioTfaVerifyNow() {
+      if (!adsTfaState || adsConnectBusy) return;
+      const input = document.getElementById('adsTfaCode');
+      const code = ((input && input.value) || '').replace(/\s+/g, '');
+      if (code.length < 4) { if (input) input.focus(); return; }
+      const trust = document.getElementById('adsTfaTrust');
+      adsConnectBusy = true;
+      adsSetConnectBtn(true);
+      const stop = adsStartSteps();
+      try {
+        const res = await apiJsonp({ ...apiAuthParams(), action: 'adservioTfaVerify', optId: adsTfaState.chosen, code: code, trust: trust && !trust.checked ? '0' : '1' }, 120000);
+        stop();
+        if (res && res.success) return adsConnectDone(res);
+        if (res && res.blocked) return adsShowBlocked(res.error);
+        adsShowTfa({ error: (res && res.error) || 'Codul nu a fost acceptat.' });
+      } catch (e) {
+        stop();
+        adsShowTfa({ error: e.message || 'Nu s-a putut verifica codul.' });
+      } finally {
+        adsConnectBusy = false;
+        adsSetConnectBtn(false);
+      }
+    }
+
     // Adresele de documente acceptate din Adservio (fișierele lor stau pe adservio.ro sau în spațiul lor de stocare)
     function adservioSafeLink(u) {
       return /^https:\/\/(www\.adservio\.ro|adservio-prod-store\.s3\.[a-z0-9-]+\.amazonaws\.com)\//.test(u || '') ? u : '';
@@ -9111,7 +9264,7 @@
       const d = adservioData;
       const st = document.getElementById('adservioStatus');
       if (!st) return;
-      if (!d) { st.textContent = 'Încă nu s-a adus nimic. Apasă marcajul „Adservio → DIiH” în Adservio, apoi „Reîmprospătează”.'; }
+      if (!d) { st.textContent = 'Încă nu s-a adus nimic. Apasă „Actualizează din Adservio”.'; }
       else {
         st.innerHTML = (d.ultim ? `Ultima sincronizare: ${escapeHtmlText(d.ultim)}` : 'Încă nu s-a sincronizat.') +
           (d.eroare ? `<br><span class="text-rose-400">Ultima eroare: ${escapeHtmlText(d.eroare)}</span>` : '');
