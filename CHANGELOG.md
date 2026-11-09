@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.43 — 2026-11-09 — Pomelnicul comasat
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- În Pomelnic apare primul subtab, **„Comasat”**: o singură listă cu toți cei de pomenit azi, în ordinea: vii din pomelnicul personal (categoriile incluse mereu, ca familia, apar primele), apoi psaltirea (părinți duhovnici, grupul de rând, bolnavi / alte nevoi, cu aceeași rotație ca în Citirea Psaltirii), apoi adormiții din pomelnicul personal.
+- Numele se văd întregi, pe mai multe rânduri dacă e nevoie. La persoanele din pomelnicul personal apare doar categoria, fără vârstă.
+- Între grupuri poți scrie texte sau rugăciuni (după vii, după grupul de psaltire, după bolnavi, după adormiți), de până la 1.500 de caractere fiecare. Doar administratorul le scrie; se salvează în Setări (chei noi `PomelnicComasat_*`) și se văd pe toate dispozitivele. Un text gol nu lasă loc liber.
+- Sus sunt trimiteri spre Pomelnicul personal și spre lista de la catisme.
+- Widget nou în Astăzi, „Pomelnicul comasat” (se activează din Setări → widgeturi). Cine nu e administrator vede doar partea personală.
+
 ## v24.42 — 2026-11-06 — Adservio dintr-un buton, fără marcaj
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs` 24.42 + `Adservio.gs`). **Necesită deploy** în Apps Script (ambele fișiere).

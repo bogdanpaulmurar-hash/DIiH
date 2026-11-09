@@ -2,6 +2,19 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.43 — Pomelnicul comasat
+
+Înainte: doar frontend. Pe telefon: Setări → „Curăță Cache & Reîncarcă” până apare v24.43.
+
+1. Admin: Pomelnic → „Comasat” (primul subtab) → apar întâi vii (cu eticheta categoriei), apoi părinți duhovnici, grup, bolnavi, apoi adormiți.
+2. Compară vii și adormiții cu tabul „Pomelnicul Zilei” și grupul/bolnavii cu Citirea Psaltirii: aceleași nume.
+3. Categoria „inclusă mereu” (ex. familia) apare prima, separată de rest printr-o linie punctată.
+4. Nume lungi: se văd întregi, fără „...”, și nu apare vârsta.
+5. Scrie un text lung în „După cei vii” → apare pe loc în listă; ieși din casetă → „Text salvat”. Golește-l → dispare, fără spațiu rămas.
+6. Redeschide aplicația pe alt dispozitiv → textele apar (după sincronizare).
+7. Setări → widgeturi: bifează „Pomelnicul comasat” → widgetul din Astăzi arată numărul de vii / psaltire / adormiți și deschide pagina.
+8. Profil fără admin: vede doar vii și adormiți (fără psaltire), fără casetele de text.
+
 ## v24.42 — Adservio dintr-un buton
 
 Înainte: copiază `_API.gs` și `Adservio.gs` în Apps Script, Deploy → Manage deployments → editează → New version. În aplicație: Setări → „Curăță Cache & Reîncarcă” până apare v24.42.

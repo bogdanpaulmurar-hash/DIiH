@@ -513,6 +513,15 @@
           </div>
         </div>
       </div>
+      <!-- Pomelnicul comasat (v24.43) -->
+      <div id="ownerWidget_comasat" onclick="switchTab('pomelnic'); setPomelnicSubtab('comasat');" class="bg-cardbg border border-cyan-800/70 rounded-2xl p-4 shadow-sm cursor-pointer hover:border-cyan-500 active:scale-98 transition space-y-1">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">Pomelnicul comasat</span>
+          <span id="pcWidgetBadge" class="bg-cyan-950 border border-cyan-800 text-cyan-300 text-[11px] px-2.5 py-1 rounded-full font-mono font-bold">—</span>
+        </div>
+        <p class="text-[10px] text-slate-400">Vii, psaltire și adormiți, într-o singură listă</p>
+      </div>
+
 
       <!-- Școală & Activități -->
       <div id="ownerWidget_school" onclick="switchTab('calendar')" class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm cursor-pointer hover:border-cyan-600/60 active:scale-98 transition space-y-2">
@@ -589,12 +598,38 @@
     <section id="tab-pomelnic" class="tab-content hidden space-y-3">
       <!-- Bara Celor 6 Subtaburi Pomelnic -->
       <div class="chip-row flex items-center space-x-1 overflow-x-auto pb-1 border-b border-bordercol/80">
+        <button onclick="setPomelnicSubtab('comasat')" id="btnPomSub_comasat" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">🕯️ Comasat</button>
         <button onclick="setPomelnicSubtab('astazi')" id="btnPomSub_astazi" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">📿 Pomelnicul Zilei</button>
         <button onclick="setPomelnicSubtab('total')" id="btnPomSub_total" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cyan-900 text-cyan-200 whitespace-nowrap">I. Personal</button>
         <button onclick="setPomelnicSubtab('psaltire')" id="btnPomSub_psaltire" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">II. Psaltire Grup</button>
         <button onclick="setPomelnicSubtab('bolnavi')" id="btnPomSub_bolnavi" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">III. Bolnavi</button>
         <button onclick="setPomelnicSubtab('adormiti')" id="btnPomSub_adormiti" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">IV. Adormiți</button>
         <button onclick="setPomelnicSubtab('categorii')" id="btnPomSub_categorii" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-cardbg text-slate-400 hover:text-white border border-bordercol whitespace-nowrap">V. Categorii / Grad</button>
+      </div>
+
+      <!-- Subpagina: Pomelnicul comasat (v24.43): vii personali + psaltire + adormiți într-o singură listă, cu texte între grupuri -->
+      <div id="pomelnicSubView_comasat" class="hidden space-y-3">
+        <div class="p-3.5 bg-cardbg border border-cyan-800/70 rounded-2xl shadow-lg space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider block">Pomelnicul comasat</span>
+              <p id="pcSubtitle" class="text-[10px] text-slate-400"></p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="setPomelnicSubtab('total')" class="p-2 bg-darkbg border border-bordercol hover:border-cyan-500 rounded-xl text-left text-[11px] font-bold text-cyan-300">Pomelnicul personal<span class="block text-[9px] font-normal text-slate-400">de unde vin numele</span></button>
+            <button id="pcLinkPsaltire" onclick="setPomelnicSubtab('psaltire')" class="p-2 bg-darkbg border border-bordercol hover:border-rose-500 rounded-xl text-left text-[11px] font-bold text-rose-300">Lista de la catisme<span class="block text-[9px] font-normal text-slate-400">psaltire, grup și bolnavi</span></button>
+          </div>
+          <div id="pcBody" class="space-y-3"></div>
+        </div>
+        <div id="pcEditor" class="hidden p-3.5 bg-cardbg border border-bordercol rounded-2xl space-y-2.5">
+          <span class="text-xs font-bold text-slate-200 block">Texte și rugăciuni între grupuri</span>
+          <p class="text-[10px] text-slate-400">Fiecare text apare după grupul lui. Un text gol nu ocupă loc. Se salvează în Setări și se vede pe toate dispozitivele.</p>
+          <div><label for="pcTxt_vii" class="text-[11px] text-slate-300 block mb-1">După cei vii</label><textarea id="pcTxt_vii" maxlength="1500" oninput="pomComasatTextInput('vii')" onchange="pomComasatTextSave('vii')" class="w-full min-h-[70px] bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white"></textarea></div>
+          <div><label for="pcTxt_psa" class="text-[11px] text-slate-300 block mb-1">După grupul de psaltire</label><textarea id="pcTxt_psa" maxlength="1500" oninput="pomComasatTextInput('psa')" onchange="pomComasatTextSave('psa')" class="w-full min-h-[70px] bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white"></textarea></div>
+          <div><label for="pcTxt_bol" class="text-[11px] text-slate-300 block mb-1">După bolnavi</label><textarea id="pcTxt_bol" maxlength="1500" oninput="pomComasatTextInput('bol')" onchange="pomComasatTextSave('bol')" class="w-full min-h-[70px] bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white"></textarea></div>
+          <div><label for="pcTxt_ado" class="text-[11px] text-slate-300 block mb-1">După adormiți</label><textarea id="pcTxt_ado" maxlength="1500" oninput="pomComasatTextInput('ado')" onchange="pomComasatTextSave('ado')" class="w-full min-h-[70px] bg-darkbg border border-bordercol rounded-xl px-3 py-2 text-xs text-white"></textarea></div>
+        </div>
       </div>
 
       <!-- Subpagina 0: Pomelnicul Zilei (Subpagină Dedicată) -->
@@ -2694,7 +2729,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.42";
+    const APP_VERSION = "v24.43";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2777,7 +2812,7 @@
     };
     const AUTH_NAV_MODULES = { pomelnic: 'pomelnic', calendar: 'scoala', notite: 'notite', cumparaturi: 'cumparaturi', scriptura: 'scriptura', notazilei: 'scriptura', inventar: 'inventar' };
     const AUTH_WIDGET_MODULES = {
-      psaltire: 'psaltire', biblia360: 'biblia360', scriptura: 'scriptura', anniversaries: 'pomelnic', pomelnic: 'pomelnic',
+      psaltire: 'psaltire', biblia360: 'biblia360', scriptura: 'scriptura', anniversaries: 'pomelnic', pomelnic: 'pomelnic', comasat: 'pomelnic',
       school: 'scoala', shopping: 'cumparaturi', notite: 'notite', gandul_zilei: 'gandul', inventory: 'inventar'
     };
     const AUTH_ROLE_LABELS = { admin: 'Admin', membru: 'Membru', copil: 'Copil' };
@@ -7178,6 +7213,7 @@
     // 2. POMELNICUL ZILNIC (STANDARDIZAT PE COLOANA C - isActivPomelnic)
     let currentDailyPomelnicVii = [];
     let currentDailyPomelnicAdormiti = [];
+    let currentDailyExtraV = 0, currentDailyExtraA = 0;
 
     // Categorii (grade) incluse mereu în pomelnicul zilei, pe lângă tranșa rotativă (max 8, salvate pe acest dispozitiv)
     function getPomelnicExtraGrade() {
@@ -7265,6 +7301,7 @@
       // Ordinea: întâi categoriile, apoi rotația zilnică (și la tipar)
       currentDailyPomelnicVii = extraVii.concat(rotVii);
       currentDailyPomelnicAdormiti = extraAdormiti.concat(rotAdormiti);
+      currentDailyExtraV = extraV; currentDailyExtraA = extraA;
       renderPomelnicExtraGradSelects();
       const extraInfo = document.getElementById('pomExtraGradInfo');
       if (extraInfo) extraInfo.textContent = extraGrade.length ? `În plus față de tranșă: +${extraV} vii, +${extraA} adormiți (apar primii; la tipar intră și ele).` : 'Nicio categorie adăugată.';
@@ -7342,6 +7379,7 @@
         if (containerAdormiti) containerAdormiti.innerHTML = htmlA;
         if (subContainerAdormiti) subContainerAdormiti.innerHTML = htmlA;
       }
+      try { renderPomelnicComasat(); } catch (e) {}
     }
 
     // --- CENTRU DE POMENIRE (SUBTABURI POMELNIC) ---
@@ -7359,6 +7397,7 @@
     function getPomelnicTabCounts() {
       const vis = getVisiblePeople();
       return {
+        comasat: 1,
         astazi: 1,
         total: vis.length,
         psaltire: isAdminUser() ? Math.max(1, (psaltireGrupData || []).length) : 0,
@@ -7374,7 +7413,7 @@
         const btn = document.getElementById(`btnPomSub_${id}`);
         if (btn) btn.classList.toggle('hidden', !show);
         document.querySelectorAll(`button[onclick*="setPomelnicSubtab('${id}')"]`).forEach(b => {
-          if (b.id !== `btnPomSub_${id}` && id !== 'astazi') b.classList.toggle('hidden', !show);
+          if (b.id !== `btnPomSub_${id}` && id !== 'astazi' && id !== 'comasat') b.classList.toggle('hidden', !show);
         });
       });
       const w = document.getElementById('ownerWidget_psaltire');
@@ -7386,7 +7425,7 @@
       const tabCounts = applyPomelnicTabVisibility();
       if (!(tabCounts[subtabId] > 0)) subtabId = 'astazi';
       currentPomelnicSubtab = subtabId;
-      ['astazi', 'total', 'psaltire', 'bolnavi', 'adormiti', 'categorii'].forEach(id => {
+      ['comasat', 'astazi', 'total', 'psaltire', 'bolnavi', 'adormiti', 'categorii'].forEach(id => {
         const view = document.getElementById(`pomelnicSubView_${id}`);
         const btn = document.getElementById(`btnPomSub_${id}`);
         if (view) view.classList.toggle('hidden', id !== subtabId);
@@ -7399,7 +7438,8 @@
         }
       });
 
-      if (subtabId === 'astazi') renderDailyPomelnic20();
+      if (subtabId === 'comasat') { renderDailyPomelnic20(); renderPomelnicComasat(); }
+      else if (subtabId === 'astazi') renderDailyPomelnic20();
       else if (subtabId === 'psaltire') renderCenterPsaltireGrup();
       else if (subtabId === 'bolnavi') renderCenterBolnaviList();
       else if (subtabId === 'adormiti') renderCenterAdormitiList();
@@ -7407,6 +7447,103 @@
         populateCenterGradDropdown();
         renderCenterGradSliceList();
       }
+    }
+
+    // ====== POMELNICUL COMASAT (v24.43) ======
+    // O singură listă: vii din pomelnicul zilei (categoriile „incluse mereu” primele) → psaltire
+    // (părinți duhovnici, grup, bolnavi, cu aceeași rotație ca în Citirea Psaltirii) → adormiți.
+    // Textele dintre grupuri se țin în Setari (cheile PomelnicComasat_*), deci nu s-a schimbat nicio structură de date.
+    const POM_COMASAT_SLOTS = ['vii', 'psa', 'bol', 'ado'];
+    function pomComasatGetText(slot) { return ((settingsRaw && settingsRaw['PomelnicComasat_' + slot]) || '').toString(); }
+
+    function getPsaltireTodayLists() {
+      const out = { cler: [], grup: [], bol: [], totGrup: 0, totBol: 0, totCler: 0, ciclulBol: 1 };
+      if (!isAdminUser() || !psaltireGrupData || !psaltireGrupData.length) return out;
+      const sec = x => (x.sectiune || '').toLowerCase();
+      const all = psaltireGrupData.filter(x => !x.exclusLaPomenire);
+      const cler = all.filter(x => /parinti|duhovnici|cler/.test(sec(x)));
+      const grup = all.filter(x => /grup|psaltir/.test(sec(x)));
+      const bol = all.filter(x => /bolnav|nevoi/.test(sec(x)));
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const base = new Date(BASE_DATE.getTime()); base.setHours(0, 0, 0, 0);
+      const diffDays = Math.max(0, Math.round((today.getTime() - base.getTime()) / 86400000));
+      const take = (arr, n) => {
+        const r = [];
+        if (!arr.length) return r;
+        const start = (diffDays * n) % arr.length;
+        for (let i = 0; i < Math.min(n, arr.length); i++) r.push(arr[(start + i) % arr.length]);
+        return r;
+      };
+      const batch = (psaltireBatchSize === 'ALL') ? null : (parseInt(psaltireBatchSize, 10) || 20);
+      out.cler = take(cler, 5);
+      out.grup = take(grup, batch === null ? grup.length : batch);
+      out.bol = take(bol, batch === null ? bol.length : batch);
+      out.totCler = cler.length; out.totGrup = grup.length; out.totBol = bol.length;
+      out.ciclulBol = bol.length ? (Math.floor((diffDays * (batch === null ? bol.length : batch)) / bol.length) + 1) : 1;
+      return out;
+    }
+
+    function pomComasatTextBlock(slot) {
+      const t = pomComasatGetText(slot).trim();
+      return t ? `<div class="bg-darkbg border-l-4 border-cyan-600 rounded-lg px-3 py-2 text-xs text-slate-200 whitespace-pre-line break-words">${escapeHtmlText(t)}</div>` : '';
+    }
+
+    function renderPomelnicComasat() {
+      const body = document.getElementById('pcBody');
+      const widgetBadge = document.getElementById('pcWidgetBadge');
+      const vii = currentDailyPomelnicVii || [], ado = currentDailyPomelnicAdormiti || [];
+      const ps = getPsaltireTodayLists();
+      const nPsa = ps.cler.length + ps.grup.length + ps.bol.length;
+      if (widgetBadge) widgetBadge.textContent = `${vii.length} vii • ${nPsa} psaltire • ${ado.length} adormiți`;
+      if (!body) return;
+      const sub = document.getElementById('pcSubtitle');
+      if (sub) sub.textContent = `${vii.length} vii · ${nPsa} psaltire · ${ado.length} adormiți`;
+      const linkPs = document.getElementById('pcLinkPsaltire');
+      if (linkPs) linkPs.classList.toggle('hidden', !isAdminUser());
+
+      const head = (cls, txt, count) => `<div class="flex items-baseline justify-between gap-2 text-xs font-bold ${cls} border-b border-current/40 pb-1"><span class="uppercase tracking-wide">${txt}</span><span class="text-[10px] font-mono">${count}</span></div>`;
+      const personRows = (list, extra, color) => list.map((p, i) => {
+        const sep = (i === extra && i > 0) ? '<div class="mx-2 border-t border-dashed border-slate-500/30"></div>' : '';
+        const tag = (p.grad || '').toString().trim();
+        return sep + `<div onclick="openPersonModal(${p.rowId})" class="py-1.5 px-2.5 ${color} rounded-xl flex items-start justify-between gap-2 cursor-pointer"><span class="text-xs text-white font-semibold break-words min-w-0">${escapeHtmlText(getPersonFullName(p))}</span>${tag ? `<span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full border border-current text-slate-300 whitespace-nowrap">${escapeHtmlText(tag)}</span>` : ''}</div>`;
+      }).join('');
+      const nameRows = (list, color) => list.map(x => `<div class="py-1.5 px-2.5 ${color} rounded-xl text-xs text-white font-semibold break-words">${escapeHtmlText(x.persoanaRaw || '-')}</div>`).join('');
+
+      let html = '';
+      if (vii.length) html += `<div class="space-y-1.5">${head('text-emerald-400', 'Pomelnic personal · vii', vii.length)}${personRows(vii, currentDailyExtraV, 'bg-emerald-950/60')}</div>`;
+      html += pomComasatTextBlock('vii');
+      if (ps.cler.length) html += `<div class="space-y-1.5">${head('text-rose-300', 'Psaltire · părinți duhovnici', ps.cler.length)}${nameRows(ps.cler, 'bg-rose-950/50')}</div>`;
+      if (ps.grup.length) html += `<div class="space-y-1.5">${head('text-rose-300', 'Psaltire · grupul de rând', `${ps.grup.length} din ${ps.totGrup}`)}${nameRows(ps.grup, 'bg-rose-950/50')}</div>`;
+      html += pomComasatTextBlock('psa');
+      if (ps.bol.length) html += `<div class="space-y-1.5">${head('text-amber-300', 'Psaltire · bolnavi / alte nevoi', `${ps.bol.length} din ${ps.totBol}, ciclul ${ps.ciclulBol}`)}${nameRows(ps.bol, 'bg-amber-950/50')}</div>`;
+      html += pomComasatTextBlock('bol');
+      if (ado.length) html += `<div class="space-y-1.5">${head('text-slate-300', 'Pomelnic personal · adormiți', ado.length)}${personRows(ado, currentDailyExtraA, 'bg-slate-800/70')}</div>`;
+      html += pomComasatTextBlock('ado');
+      body.innerHTML = html || '<p class="text-center py-6 text-slate-500 text-xs italic">Nu sunt persoane de pomenit azi.</p>';
+
+      const ed = document.getElementById('pcEditor');
+      if (ed) {
+        ed.classList.toggle('hidden', !isAdminUser());
+        POM_COMASAT_SLOTS.forEach(sl => {
+          const ta = document.getElementById('pcTxt_' + sl);
+          if (ta && document.activeElement !== ta) ta.value = pomComasatGetText(sl);
+        });
+      }
+    }
+
+    // Scrii în casetă: lista se actualizează pe loc (fără salvare încă)
+    function pomComasatTextInput(slot) {
+      const ta = document.getElementById('pcTxt_' + slot);
+      if (!ta) return;
+      settingsRaw['PomelnicComasat_' + slot] = ta.value;
+      renderPomelnicComasat();
+    }
+    // La ieșirea din casetă se salvează în Setari
+    function pomComasatTextSave(slot) {
+      const ta = document.getElementById('pcTxt_' + slot);
+      if (!ta) return;
+      saveSettingRaw('PomelnicComasat_' + slot, ta.value);
+      showToast('Text salvat');
     }
 
     function renderCenterPsaltireGrup() {
@@ -11717,6 +11854,7 @@
       { id: 'scriptura', label: '📑 Continuitate Sf. Scriptură' },
       { id: 'anniversaries', label: '🎉 Aniversările Zilei' },
       { id: 'pomelnic', label: '📿 Pomelnicul de Astăzi' },
+      { id: 'comasat', label: '🕯️ Pomelnicul comasat' },
       { id: 'school', label: '🎓 Școală & Activități' },
       { id: 'shopping', label: '🛒 Cumpărături' },
       { id: 'gandul_zilei', label: '💡 Gândul Zilei (Citate & Înțelepciune)' },
