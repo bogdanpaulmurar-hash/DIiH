@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.44 — 2026-11-10 — Bolnavii în pomelnicul zilei și în cel comasat
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- Cei vii care au bifa **„Bolnav”** în pomelnic (coloana N) apar în fiecare zi, toți, într-o secțiune nouă **„Pentru cei bolnavi”**, între vii și adormiți: în Pomelnic → Pomelnicul Zilei și în widgetul din Astăzi.
+- În **Pomelnicul comasat** apar înaintea bolnavilor din psaltire, ca „Pomelnic personal · bolnavi”. Textul „După bolnavi” vine după ambele liste.
+- În Pomelnicul Zilei, sub „Categorii incluse mereu”, două bife: „Arată-i în pomelnicul zilei” și „Arată-i în pomelnicul comasat”. Fiecare profil alege pentru el; implicit sunt afișați. Se salvează în Setări (chei noi `PomelnicBolnavi_*`), iar la cine nu are drept pe Setări rămân pe dispozitiv.
+- Bolnavii rămân și în rotația celor vii, ca până acum; tiparul (Format Altar, PDF) nu s-a schimbat.
+
 ## v24.43 — 2026-11-09 — Pomelnicul comasat
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
