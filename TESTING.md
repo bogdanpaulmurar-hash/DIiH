@@ -2,6 +2,16 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.44 — Bolnavii în pomelnicul zilei
+
+Înainte: doar frontend. Pe telefon: Setări → „Curăță Cache & Reîncarcă” până apare v24.44.
+
+1. Pomelnic → Pomelnicul Zilei: între vii și adormiți apare „🏥 Pentru cei bolnavi” cu toți cei vii bifați „Bolnav”.
+2. Debifează „Arată-i în pomelnicul zilei” → secțiunea dispare (și din widgetul din Astăzi). Bifează la loc → revine.
+3. Pomelnic → Comasat: „Pomelnic personal · bolnavi” apare înaintea bolnavilor din psaltire; debifează „Arată-i în pomelnicul comasat” → dispare doar de acolo.
+4. Redeschide pe alt dispozitiv cu același profil → bifele rămân cum le-ai lăsat.
+5. Profil fără admin (Andreea): vede doar bolnavii din pomelnicul ei; bifele merg și se păstrează pe telefonul ei.
+
 ## v24.43 — Pomelnicul comasat
 
 Înainte: doar frontend. Pe telefon: Setări → „Curăță Cache & Reîncarcă” până apare v24.43.

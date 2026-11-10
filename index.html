@@ -503,6 +503,15 @@
             <div id="dailyPomelnicListVii" class="space-y-1 divide-y divide-bordercol/30"></div>
           </div>
 
+          <!-- Bolnavi (v24.44) -->
+          <div id="dailyBolnaviBlock" class="space-y-1 pt-1 hidden">
+            <div class="flex items-center justify-between text-xs font-bold text-orange-300 border-b border-orange-950/60 pb-1">
+              <span>🏥 PENTRU CEI BOLNAVI</span>
+              <span id="countBolnaviBadge" class="text-[10px] font-mono bg-orange-950 px-1.5 py-0.2 rounded">0</span>
+            </div>
+            <div id="dailyPomelnicListBolnavi" class="space-y-1 divide-y divide-bordercol/30"></div>
+          </div>
+
           <!-- Adormiți -->
           <div class="space-y-1 pt-1">
             <div class="flex items-center justify-between text-xs font-bold text-amber-400 border-b border-amber-950/60 pb-1">
@@ -677,6 +686,13 @@
             <p id="pomExtraGradInfo" class="text-[10px] text-slate-500"></p>
           </div>
 
+          <!-- Secțiunea Bolnavi (v24.44): se alege pe fiecare profil -->
+          <div class="bg-darkbg p-2 rounded-xl border border-bordercol space-y-1.5">
+            <span class="text-[11px] text-slate-400 block">🏥 Bolnavii (bifa „Bolnav” din pomelnic):</span>
+            <label class="flex items-center gap-2 text-[11px] text-slate-200 cursor-pointer"><input type="checkbox" id="pomBolnaviOpt_personal" onchange="pomBolnaviSetOpt('personal', this.checked)" class="w-4 h-4 accent-orange-500"> Arată-i în pomelnicul zilei</label>
+            <label class="flex items-center gap-2 text-[11px] text-slate-200 cursor-pointer"><input type="checkbox" id="pomBolnaviOpt_comasat" onchange="pomBolnaviSetOpt('comasat', this.checked)" class="w-4 h-4 accent-orange-500"> Arată-i în pomelnicul comasat</label>
+          </div>
+
           <!-- Butoane Tipar -->
           <div class="grid grid-cols-2 gap-2">
             <button onclick="printPomelnicAltar(currentDailyPomelnicVii, currentDailyPomelnicAdormiti)" class="bg-amber-950 hover:bg-amber-900 border border-amber-700 text-amber-200 py-2 rounded-xl text-xs font-bold flex items-center justify-center space-x-1.5 transition">
@@ -696,6 +712,15 @@
               <span id="subpageCountViiBadge" class="text-[10px] font-mono bg-emerald-950 px-2 py-0.5 rounded">0</span>
             </div>
             <div id="subpageDailyPomelnicVii" class="space-y-1.5 max-h-60 overflow-y-auto pr-1"></div>
+          </div>
+
+          <!-- Bolnavi (v24.44): cei cu bifa „Bolnav” din pomelnic, în fiecare zi -->
+          <div id="subpageBolnaviBlock" class="space-y-1.5 pt-2 hidden">
+            <div class="flex items-center justify-between text-xs font-bold text-orange-300 border-b border-orange-950/60 pb-1">
+              <span>🏥 PENTRU CEI BOLNAVI</span>
+              <span id="subpageCountBolnaviBadge" class="text-[10px] font-mono bg-orange-950 px-2 py-0.5 rounded">0</span>
+            </div>
+            <div id="subpageDailyPomelnicBolnavi" class="space-y-1.5 max-h-60 overflow-y-auto pr-1"></div>
           </div>
 
           <!-- Adormiți -->
@@ -2729,7 +2754,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.43";
+    const APP_VERSION = "v24.44";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -7248,6 +7273,31 @@
       }
     }
 
+    // ====== BOLNAVII ÎN POMELNICUL ZILEI (v24.44) ======
+    // Cei vii cu bifa „Bolnav” (coloana N din tabul Pomelnic) apar în fiecare zi, toți, fără rotație.
+    // Afișarea se alege pe profil: cheile PomelnicBolnavi_<personal|comasat>_<profil> din Setari,
+    // cu rezervă pe acest dispozitiv (pentru profilurile fără drept de scriere în Setari). Implicit: afișat.
+    let currentDailyPomelnicBolnavi = [];
+    function pomBolnaviKey(where) {
+      return 'PomelnicBolnavi_' + where + '_' + (getCurrentLoggedInUser() || 'profil').toString().replace(/[^A-Za-z0-9]+/g, '_');
+    }
+    function pomBolnaviShow(where) {
+      const k = pomBolnaviKey(where);
+      let v = settingsRaw && settingsRaw[k] !== undefined && settingsRaw[k] !== '' ? settingsRaw[k] : null;
+      if (v === null) { try { v = localStorage.getItem('diih_' + k); } catch (e) {} }
+      return !(v === false || v === 'false' || v === 'NU' || v === '0');
+    }
+    function pomBolnaviSetOpt(where, on) {
+      const k = pomBolnaviKey(where);
+      try { localStorage.setItem('diih_' + k, on ? 'true' : 'false'); } catch (e) {}
+      saveSettingRaw(k, on ? 'true' : 'false');
+      renderDailyPomelnic20();
+      showToast(on ? 'Bolnavii apar în listă' : 'Bolnavii nu mai apar în listă');
+    }
+    function getPersonalBolnaviToday() {
+      return getVisiblePeople().filter(p => p.bolnav === true && p.stare !== 'Adormit' && !(p.da && p.da.trim()));
+    }
+
     function renderDailyPomelnic20() {
       const today = new Date();
       today.setHours(0,0,0,0);
@@ -7379,6 +7429,24 @@
         if (containerAdormiti) containerAdormiti.innerHTML = htmlA;
         if (subContainerAdormiti) subContainerAdormiti.innerHTML = htmlA;
       }
+      // Bolnavii (v24.44)
+      currentDailyPomelnicBolnavi = getPersonalBolnaviToday();
+      const showBol = pomBolnaviShow('personal') && currentDailyPomelnicBolnavi.length > 0;
+      ['personal', 'comasat'].forEach(w => { const cb = document.getElementById('pomBolnaviOpt_' + w); if (cb) cb.checked = pomBolnaviShow(w); });
+      const htmlB = currentDailyPomelnicBolnavi.map(p => `
+            <div onclick="openPersonModal(${p.rowId})" class="py-1.5 px-2 bg-darkbg border border-bordercol/60 hover:border-orange-600 rounded-xl flex items-center justify-between cursor-pointer transition shadow-sm">
+              <div class="flex items-center space-x-2 truncate pr-2">
+                <span class="text-orange-300 text-xs font-bold">🏥</span>
+                <span class="text-xs text-white font-bold truncate">${escapeHtmlText(getPersonFullName(p))}</span>
+              </div>
+              <span class="text-[10px] px-2 py-0.5 rounded bg-orange-950 border border-orange-800 text-orange-300 font-bold shrink-0">${escapeHtmlText(p.grad || 'Bolnav')}</span>
+            </div>`).join('');
+      [['dailyBolnaviBlock', 'dailyPomelnicListBolnavi', 'countBolnaviBadge'], ['subpageBolnaviBlock', 'subpageDailyPomelnicBolnavi', 'subpageCountBolnaviBadge']].forEach(([b, l, c]) => {
+        const blk = document.getElementById(b), lst = document.getElementById(l), cnt = document.getElementById(c);
+        if (blk) blk.classList.toggle('hidden', !showBol);
+        if (lst) lst.innerHTML = showBol ? htmlB : '';
+        if (cnt) cnt.textContent = currentDailyPomelnicBolnavi.length;
+      });
       try { renderPomelnicComasat(); } catch (e) {}
     }
 
@@ -7494,10 +7562,12 @@
       const vii = currentDailyPomelnicVii || [], ado = currentDailyPomelnicAdormiti || [];
       const ps = getPsaltireTodayLists();
       const nPsa = ps.cler.length + ps.grup.length + ps.bol.length;
-      if (widgetBadge) widgetBadge.textContent = `${vii.length} vii • ${nPsa} psaltire • ${ado.length} adormiți`;
+      const bolP = pomBolnaviShow('comasat') ? (currentDailyPomelnicBolnavi || []) : [];
+      const bolTxt = bolP.length ? ` • ${bolP.length} bolnavi` : '';
+      if (widgetBadge) widgetBadge.textContent = `${vii.length} vii${bolTxt} • ${nPsa} psaltire • ${ado.length} adormiți`;
       if (!body) return;
       const sub = document.getElementById('pcSubtitle');
-      if (sub) sub.textContent = `${vii.length} vii · ${nPsa} psaltire · ${ado.length} adormiți`;
+      if (sub) sub.textContent = `${vii.length} vii${bolTxt.replace(' •', ' ·')} · ${nPsa} psaltire · ${ado.length} adormiți`;
       const linkPs = document.getElementById('pcLinkPsaltire');
       if (linkPs) linkPs.classList.toggle('hidden', !isAdminUser());
 
@@ -7515,6 +7585,7 @@
       if (ps.cler.length) html += `<div class="space-y-1.5">${head('text-rose-300', 'Psaltire · părinți duhovnici', ps.cler.length)}${nameRows(ps.cler, 'bg-rose-950/50')}</div>`;
       if (ps.grup.length) html += `<div class="space-y-1.5">${head('text-rose-300', 'Psaltire · grupul de rând', `${ps.grup.length} din ${ps.totGrup}`)}${nameRows(ps.grup, 'bg-rose-950/50')}</div>`;
       html += pomComasatTextBlock('psa');
+      if (bolP.length) html += `<div class="space-y-1.5">${head('text-orange-300', 'Pomelnic personal · bolnavi', bolP.length)}${personRows(bolP, -1, 'bg-orange-950/50')}</div>`;
       if (ps.bol.length) html += `<div class="space-y-1.5">${head('text-amber-300', 'Psaltire · bolnavi / alte nevoi', `${ps.bol.length} din ${ps.totBol}, ciclul ${ps.ciclulBol}`)}${nameRows(ps.bol, 'bg-amber-950/50')}</div>`;
       html += pomComasatTextBlock('bol');
       if (ado.length) html += `<div class="space-y-1.5">${head('text-slate-300', 'Pomelnic personal · adormiți', ado.length)}${personRows(ado, currentDailyExtraA, 'bg-slate-800/70')}</div>`;
