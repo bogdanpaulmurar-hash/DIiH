@@ -1,5 +1,32 @@
 # CHANGELOG — DIiH Hub
 
+## v24.48 — 2026-11-16 — Textele rugăciunilor în tabul Rugăciuni
+
+Doar frontend (`index.html`, `rugaciuni.js`, `rugaciuni-texte.js` nou, `sw.js`). Nu necesită deploy în Apps Script.
+- Subtaburile din Rugăciuni au acum textele: **Spovedanie** (înainte și după), **Împărtășanie** (canonul și rugăciunile dinainte de Sfânta Împărtășire), **Dimineață**, **Seară**, **Înainte de Psaltire** (rânduiala citirii Psaltirii) și un subtab nou, **Începerea lucrului**.
+- Titlurile sunt îngroșate (roz pentru rugăciune, auriu pentru subtitluri), iar indicațiile („Slavă...”, „de trei ori”, „Apoi:”) sunt în cursive.
+- La spovedanie, rugăciunile începătoare, Psalmul 50 și Crezul apar o singură dată în text complet, aceleași la „înainte” și „după”, cu varianta de la rugăciunile de dimineață.
+- Textele stau în `rugaciuni-texte.js`; se adaugă rugăciuni noi acolo, fără să umbli în `index.html`.
+
+## v24.47 — 2026-11-16 — Tab nou „Rugăciuni”
+
+Doar frontend (`index.html`, `rugaciuni.js` nou, `sw.js`). Nu necesită deploy în Apps Script.
+- În Mai multe → Rugăciune apare butonul **Rugăciuni**. Are subtaburile Spovedanie, Împărtășanie, Dimineață, Seară și Înainte de Psaltire, într-o bară care se derulează lateral. Aplicația ține minte ultimul subtab deschis.
+- Subtaburile sunt deocamdată goale; textele rugăciunilor se adaugă în versiunea următoare.
+
+## v24.46 — 2026-11-16 — Fără „Calendar Bife” în fereastra Psaltirii
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- În fereastra „Rânduială Zilnică” (Psaltire) au rămas două subtaburi: „Catisma & Pomelnic” și „Rugăciune Neam”. Subtabul „Calendar Bife” a fost scos.
+- Bifele deja făcute rămân salvate; nu se șterge nimic.
+
+## v24.45 — 2026-11-16 — Persoane noi în psaltire fără simboluri ciudate; note Biblia mai rapide
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- **Persoană nouă în grupul de psaltire:** numele ajungea în foaie cu un adaos ciudat („Nume§iune=…”) și secțiunea aleasă nu se salva. Cauza era o greșeală în adresa trimisă la salvare (la adăugare și la editare). S-a corectat: numele iese curat, iar secțiunea aleasă se salvează.
+- Rândurile deja adăugate greșit se curăță la afișare (numele fără adaos, secțiunea recuperată din adaos). Foaia nu se modifică; la prima editare a unei persoane din ele, numele curat se salvează.
+- **Note Biblia (registrul):** lista nu se mai desenează toată odată; apar câte 40, cu butonul „Arată încă 40”. Căutarea rămâne pe toate notele.
+
 ## v24.44 — 2026-11-10 — Bolnavii în pomelnicul zilei și în cel comasat
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.

@@ -2,6 +2,35 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.48 — Texte în tabul Rugăciuni
+
+Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.48.
+
+1. Mai multe → Rugăciuni: apar 6 subtaburi, cu scroll lateral.
+2. Fiecare subtab arată textul: titluri îngroșate, indicații în cursive, culori distincte; textul se citește ușor, fără simboluri ciudate.
+3. Spovedanie are două rugăciuni: „Înainte de spovedanie” și „După spovedanie”.
+4. Împărtășanie e lungă: derulează până la final, verifică canonul și cele 12 rugăciuni.
+5. Aplicația deschisă fără internet (după o primă încărcare) arată tot textele.
+
+## v24.46–24.47 — Fără Calendar Bife; tab Rugăciuni
+
+Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.47.
+
+1. Psaltire → fereastra „Rânduială Zilnică”: doar subtaburile „Catisma & Pomelnic” și „Rugăciune Neam”.
+2. Mai multe → Rugăciune: apare butonul „Rugăciuni”; se deschide tabul cu 5 subtaburi.
+3. Bara de subtaburi se derulează lateral; apeși unul → se evidențiază, iar mesajul „se adaugă în curând” își schimbă titlul.
+4. Închide și redeschide aplicația → tabul se deschide la ultimul subtab ales.
+
+## v24.45 — Psaltire fără simboluri ciudate, note Biblia mai rapide
+
+Înainte: doar frontend. Pe telefon: Setări → „Curăță Cache & Reîncarcă” până apare v24.45.
+
+1. Pomelnic → Psaltire grup → ➕ persoană, alege o secțiune (ex. bolnavi) → apare în secțiunea aleasă, cu numele curat.
+2. Deschide foaia Psaltire_Grup: numele nou nu conține „§iune=”, iar coloana Secțiune are valoarea aleasă.
+3. Persoanele adăugate înainte cu „§iune=” se văd acum curate în aplicație.
+4. Mai multe → Note Biblia: se încarcă repede, apar 40 de note, „Arată încă 40” adaugă altele; căutarea găsește și note de după primele 40.
+5. Profil fără admin: aceleași verificări, dacă are drept pe Psaltire.
+
 ## v24.44 — Bolnavii în pomelnicul zilei
 
 Înainte: doar frontend. Pe telefon: Setări → „Curăță Cache & Reîncarcă” până apare v24.44.

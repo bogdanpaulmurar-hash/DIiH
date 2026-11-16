@@ -1377,6 +1377,15 @@
     </section>
 
     <!-- TAB 6: MAI MULTE (Grup Psaltire, Notificări 3 Praguri, Setări, Widget) -->
+    <!-- TAB: RUGĂCIUNI (subtaburi pe orizontală; textele sunt în rugaciuni.js) -->
+    <section id="tab-rugaciuni" class="tab-content hidden space-y-3">
+      <div class="bg-cardbg border border-bordercol rounded-2xl p-3 shadow-sm space-y-3">
+        <h3 class="text-xs font-bold text-white uppercase tracking-wider">Rugăciuni</h3>
+        <div id="rugaciuniSubtabBar" class="flex space-x-2 overflow-x-auto pb-1"></div>
+        <div id="rugaciuniContinut" class="space-y-3"></div>
+      </div>
+    </section>
+
     <section id="tab-more" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-bordercol pb-2">Meniu extins</h3>
@@ -1391,6 +1400,10 @@
               <button onclick="switchSubTab('psaltire-grup')" id="btnSubPsaltire" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
                 <svg class="more-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 100 18 9 9 0 000-18zM12 7v10M8.5 10.5h7"></path></svg>
                 <span class="text-[9px] font-bold">Psaltire</span>
+              </button>
+              <button onclick="switchTab('rugaciuni')" id="btnSubRugaciuni" class="p-2.5 bg-darkbg border border-rose-900/60 rounded-xl flex flex-col items-center space-y-1 text-rose-300 hover:text-white">
+                <svg class="more-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1.6 2 1.6 3.6 0 5-1.6-1.4-1.6-3 0-5zM5 21v-6a7 7 0 0114 0v6M12 12v9"></path></svg>
+                <span class="text-[9px] font-bold">Rugăciuni</span>
               </button>
               <button onclick="switchTab('scriptura')" id="btnSubScriptura" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
                 <svg class="more-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5M8 7h7"></path></svg>
@@ -2086,11 +2099,10 @@
         <button onclick="closePsaltireIframeModal()" class="text-slate-400 hover:text-white p-2 text-lg">✕</button>
       </div>
 
-      <!-- 3 Subtaburi Psaltire & Rânduială -->
+      <!-- 2 Subtaburi Psaltire & Rânduială (Calendar Bife scos în v24.46) -->
       <div class="flex items-center space-x-1 border-b border-bordercol pb-1.5 shrink-0">
         <button onclick="setPsaltireModalSubtab('randuiala')" id="btnPsaltModal_randuiala" class="flex-1 py-1.5 px-1 rounded-xl text-[11px] font-bold bg-rose-900 text-rose-100 text-center transition">📖 Catisma & Pomelnic</button>
         <button onclick="setPsaltireModalSubtab('rugaciune')" id="btnPsaltModal_rugaciune" class="flex-1 py-1.5 px-1 rounded-xl text-[11px] font-bold bg-darkbg text-slate-400 hover:text-white border border-bordercol text-center transition">🕊️ Rugăciune Neam</button>
-        <button onclick="setPsaltireModalSubtab('calendar')" id="btnPsaltModal_calendar" class="flex-1 py-1.5 px-1 rounded-xl text-[11px] font-bold bg-darkbg text-slate-400 hover:text-white border border-bordercol text-center transition">📅 Calendar Bife</button>
       </div>
       
       <!-- Subtab 1: Rânduială Catisma & Pomelnic Grup -->
@@ -2754,7 +2766,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.44";
+    const APP_VERSION = "v24.48";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2787,6 +2799,17 @@
     let schoolActivities = [];
     let allSchoolTeme = [];
     let psaltireGrupData = [];
+    // v24.45: rândurile adăugate cu versiuni vechi au numele de forma „Nume§iune=Secțiune” (greșeală de trimitere); la afișare le curățăm
+    function cleanPsaltireGrup(arr) {
+      if (!Array.isArray(arr)) return arr;
+      return arr.map(x => {
+        const raw = (x && x.persoanaRaw || '').toString();
+        const i = raw.indexOf('\u00A7iune=');
+        if (i === -1) return x;
+        const sect = raw.slice(i + 6).trim();
+        return Object.assign({}, x, { persoanaRaw: raw.slice(0, i).trim(), sectiune: (sect && (!x.sectiune || x.sectiune === 'Grup Psaltire')) ? sect : x.sectiune });
+      });
+    }
     let biblia360List = [];
     let allNoteAnania = [];
     let currentBibliaMoment = (new Date().getHours() < 14) ? 'dimineata' : 'seara';
@@ -4489,7 +4512,7 @@
     }
 
     // Fișierele aplicației, reîncărcate direct de pe server (ocolind cache-ul HTTP al browserului, 10 min pe GitHub Pages)
-    const APP_SHELL_FILES = ['./', './index.html', './familie.js', './sw.js', './manifest.json', './adservio-marcaj.js'];
+    const APP_SHELL_FILES = ['./', './index.html', './familie.js', './rugaciuni-texte.js', './rugaciuni.js', './sw.js', './manifest.json', './adservio-marcaj.js'];
 
     // Curăță cache-ul aplicației și aduce ultima versiune publicată. localStorage (date, cont, setări) rămâne.
     async function forceCleanStorageAndReload() {
@@ -5833,6 +5856,7 @@
         }
         renderSchoolDisplay();
       }
+      if (tabId === 'rugaciuni' && typeof renderRugaciuni === 'function') renderRugaciuni();
       if (tabId === 'scriptura') {
         updateScripturaDisplays();
       }
@@ -6013,7 +6037,7 @@
         if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
         if (Array.isArray(data.notificari) && window.famNotif) window.famNotif.setInbox(data.notificari);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
-          psaltireGrupData = data.psaltireGrup;
+          psaltireGrupData = cleanPsaltireGrup(data.psaltireGrup);
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
         }
         if (data.bibliaBVA && Array.isArray(data.bibliaBVA)) {
@@ -6117,7 +6141,7 @@
         if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
         if (Array.isArray(data.notificari) && window.famNotif) window.famNotif.setInbox(data.notificari);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
-          psaltireGrupData = data.psaltireGrup;
+          psaltireGrupData = cleanPsaltireGrup(data.psaltireGrup);
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
         }
         if (data.gandulZilei && Array.isArray(data.gandulZilei)) {
@@ -6161,7 +6185,7 @@
       allSchoolTeme = JSON.parse(localStorage.getItem('diih_school_teme') || '[]');
       try { adservioData = JSON.parse(localStorage.getItem('diih_adservio') || 'null'); } catch (e) { adservioData = null; }
       try { updateSchoolTemeBadge(); } catch (e) {}
-      psaltireGrupData = JSON.parse(localStorage.getItem('diih_psaltire_grup') || '[]');
+      psaltireGrupData = cleanPsaltireGrup(JSON.parse(localStorage.getItem('diih_psaltire_grup') || '[]'));
       biblia360List = JSON.parse(localStorage.getItem('diih_biblia360') || '[]');
       allNoteAnania = JSON.parse(localStorage.getItem('diih_note_anania') || '[]');
       allGandulZilei = JSON.parse(localStorage.getItem('diih_gandul_zilei') || '[]');
@@ -6649,6 +6673,7 @@
     }
     function onNoteBibliaSearchInput() {
       noteBibliaJumpHistory = [];
+      noteBibliaShown = 40;
       renderNoteBibliaList();
     }
 
@@ -6813,6 +6838,9 @@
       `;
     }
 
+    // v24.45: lista de note se desenează câte 40, nu toate odată (era lentă)
+    let noteBibliaShown = 40;
+    function moreNoteBiblia() { noteBibliaShown += 40; renderNoteBibliaList(); }
     function renderNoteBibliaList() {
       const container = document.getElementById('noteBibliaListContainer');
       if (!container) return;
@@ -6828,7 +6856,8 @@
       if (!ref) {
         container.innerHTML = backBtn + (list.length === 0
           ? `<p class="text-xs text-slate-500 italic text-center py-4">Nicio notă găsită.</p>`
-          : list.map(renderNoteBibliaCard).join(''));
+          : list.slice(0, noteBibliaShown).map(renderNoteBibliaCard).join('')
+            + (list.length > noteBibliaShown ? `<button type="button" onclick="moreNoteBiblia()" class="w-full my-2 py-2 text-xs bg-slate-800 border border-bordercol text-amber-300 rounded-xl font-bold">Arată încă 40 (din ${list.length - noteBibliaShown} rămase)</button>` : ''));
         return;
       }
 
@@ -8086,7 +8115,7 @@
         }
         showToast("Persoană actualizată!");
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updatePsaltirePerson&rowId=${editingPsaltireRowId}&nume=${encodeURIComponent(nume)}§iune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updatePsaltirePerson&rowId=${editingPsaltireRowId}&nume=${encodeURIComponent(nume)}&sectiune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&callback=void`;
         document.body.appendChild(script);
       } else {
         const newRowId = psaltireGrupData.length + 2;
@@ -8101,7 +8130,7 @@
         });
         showToast("Persoană adăugată în grup!");
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addPsaltirePerson&nume=${encodeURIComponent(nume)}§iune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&numarRand=${psaltireGrupData.length}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addPsaltirePerson&nume=${encodeURIComponent(nume)}&sectiune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&numarRand=${psaltireGrupData.length}&callback=void`;
         document.body.appendChild(script);
       }
 
@@ -12864,5 +12893,7 @@
 
   </script>
   <script src="./familie.js?v=24.25"></script>
+  <script src="./rugaciuni-texte.js?v=24.48"></script>
+  <script src="./rugaciuni.js?v=24.48"></script>
 </body>
 </html>
