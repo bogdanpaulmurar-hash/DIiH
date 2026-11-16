@@ -1,5 +1,11 @@
 # CHANGELOG — DIiH Hub
 
+## v24.46 — 2026-11-16 — Fără „Calendar Bife” în fereastra Psaltirii
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- În fereastra „Rânduială Zilnică” (Psaltire) au rămas două subtaburi: „Catisma & Pomelnic” și „Rugăciune Neam”. Subtabul „Calendar Bife” a fost scos.
+- Bifele deja făcute rămân salvate; nu se șterge nimic.
+
 ## v24.45 — 2026-11-16 — Persoane noi în psaltire fără simboluri ciudate; note Biblia mai rapide
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
