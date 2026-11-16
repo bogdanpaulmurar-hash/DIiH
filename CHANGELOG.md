@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.48 — 2026-11-16 — Textele rugăciunilor în tabul Rugăciuni
+
+Doar frontend (`index.html`, `rugaciuni.js`, `rugaciuni-texte.js` nou, `sw.js`). Nu necesită deploy în Apps Script.
+- Subtaburile din Rugăciuni au acum textele: **Spovedanie** (înainte și după), **Împărtășanie** (canonul și rugăciunile dinainte de Sfânta Împărtășire), **Dimineață**, **Seară**, **Înainte de Psaltire** (rânduiala citirii Psaltirii) și un subtab nou, **Începerea lucrului**.
+- Titlurile sunt îngroșate (roz pentru rugăciune, auriu pentru subtitluri), iar indicațiile („Slavă...”, „de trei ori”, „Apoi:”) sunt în cursive.
+- La spovedanie, rugăciunile începătoare, Psalmul 50 și Crezul apar o singură dată în text complet, aceleași la „înainte” și „după”, cu varianta de la rugăciunile de dimineață.
+- Textele stau în `rugaciuni-texte.js`; se adaugă rugăciuni noi acolo, fără să umbli în `index.html`.
+
 ## v24.47 — 2026-11-16 — Tab nou „Rugăciuni”
 
 Doar frontend (`index.html`, `rugaciuni.js` nou, `sw.js`). Nu necesită deploy în Apps Script.

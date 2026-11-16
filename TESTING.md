@@ -2,6 +2,16 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.48 — Texte în tabul Rugăciuni
+
+Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.48.
+
+1. Mai multe → Rugăciuni: apar 6 subtaburi, cu scroll lateral.
+2. Fiecare subtab arată textul: titluri îngroșate, indicații în cursive, culori distincte; textul se citește ușor, fără simboluri ciudate.
+3. Spovedanie are două rugăciuni: „Înainte de spovedanie” și „După spovedanie”.
+4. Împărtășanie e lungă: derulează până la final, verifică canonul și cele 12 rugăciuni.
+5. Aplicația deschisă fără internet (după o primă încărcare) arată tot textele.
+
 ## v24.46–24.47 — Fără Calendar Bife; tab Rugăciuni
 
 Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.47.

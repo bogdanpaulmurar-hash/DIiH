@@ -1,12 +1,14 @@
 // Rugăciuni — subtaburi și texte. Pentru o rugăciune nouă: adaugi un obiect în RUGACIUNI_CATEGORII
 // (id, titlu, rugaciuni: [{ titlu, text }]). Paragrafele din text se despart printr-un rând gol.
+// Textele sunt în rugaciuni-texte.js (RUGACIUNI_TEXTE, după id).
 const RUGACIUNI_CATEGORII = [
-  { id: 'spovedanie', titlu: 'Spovedanie', rugaciuni: [] },
-  { id: 'impartasanie', titlu: 'Împărtășanie', rugaciuni: [] },
-  { id: 'dimineata', titlu: 'Dimineață', rugaciuni: [] },
-  { id: 'seara', titlu: 'Seară', rugaciuni: [] },
-  { id: 'inainte-psaltire', titlu: 'Înainte de Psaltire', rugaciuni: [] }
-];
+  { id: 'spovedanie', titlu: 'Spovedanie' },
+  { id: 'impartasanie', titlu: 'Împărtășanie' },
+  { id: 'dimineata', titlu: 'Dimineață' },
+  { id: 'seara', titlu: 'Seară' },
+  { id: 'inainte-psaltire', titlu: 'Înainte de Psaltire' },
+  { id: 'lucru', titlu: 'Începerea lucrului' }
+].map(c => Object.assign(c, { get rugaciuni() { return (typeof RUGACIUNI_TEXTE !== 'undefined' && RUGACIUNI_TEXTE[c.id]) || []; } }));
 
 let rugaciuniSubtabCurent = null;
 
@@ -43,8 +45,25 @@ function renderRugaciuni() {
     return;
   }
   cont.innerHTML = cat.rugaciuni.map(r => {
-    const paragrafe = String(r.text || '').split(/\n\s*\n/).map(p => '<p class="leading-relaxed">' + rugaciuniEsc(p.trim()).replace(/\n/g, '<br>') + '</p>').join('');
-    return '<article class="bg-darkbg border border-bordercol rounded-2xl p-4 space-y-2 text-[15px] text-slate-200">'
-      + (r.titlu ? '<h4 class="text-sm font-bold text-rose-300">' + rugaciuniEsc(r.titlu) + '</h4>' : '') + paragrafe + '</article>';
+    const paragrafe = String(r.text || '').split(/\n\s*\n/).map(rugaciuniParagraf).join('');
+    return '<article class="bg-darkbg border border-bordercol rounded-2xl p-4 space-y-3 text-[15px] text-slate-200">'
+      + (r.titlu ? '<h4 class="text-base font-extrabold text-rose-300 border-b border-rose-900/60 pb-2">' + rugaciuniEsc(r.titlu) + '</h4>' : '') + paragrafe + '</article>';
   }).join('');
+}
+
+// Un paragraf: „### Titlu” = subtitlu îngroșat auriu; „_text_” întreg = indicație cursivă roz; în rest text, cu **îngroșat** și _cursiv_
+function rugaciuniParagraf(p) {
+  p = p.trim();
+  if (!p) return '';
+  if (p.indexOf('### ') === 0) {
+    return '<h5 class="font-extrabold text-amber-300 text-[15px] pt-2">' + rugaciuniEsc(p.slice(4)) + '</h5>';
+  }
+  if (/^_[^_]+_,?$/.test(p)) {
+    return '<p class="italic text-rose-300/90 leading-relaxed">' + rugaciuniEsc(p.replace(/^_|_,?$/g, '')) + '</p>';
+  }
+  const html = rugaciuniEsc(p)
+    .replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white">$1</strong>')
+    .replace(/(^|[\s(])_([^_]+)_/g, '$1<em class="text-rose-300/90">$2</em>')
+    .replace(/\n/g, '<br>');
+  return '<p class="leading-relaxed">' + html + '</p>';
 }
