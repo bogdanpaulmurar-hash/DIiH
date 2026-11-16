@@ -2754,7 +2754,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.44";
+    const APP_VERSION = "v24.45";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -2787,6 +2787,17 @@
     let schoolActivities = [];
     let allSchoolTeme = [];
     let psaltireGrupData = [];
+    // v24.45: rândurile adăugate cu versiuni vechi au numele de forma „Nume§iune=Secțiune” (greșeală de trimitere); la afișare le curățăm
+    function cleanPsaltireGrup(arr) {
+      if (!Array.isArray(arr)) return arr;
+      return arr.map(x => {
+        const raw = (x && x.persoanaRaw || '').toString();
+        const i = raw.indexOf('\u00A7iune=');
+        if (i === -1) return x;
+        const sect = raw.slice(i + 6).trim();
+        return Object.assign({}, x, { persoanaRaw: raw.slice(0, i).trim(), sectiune: (sect && (!x.sectiune || x.sectiune === 'Grup Psaltire')) ? sect : x.sectiune });
+      });
+    }
     let biblia360List = [];
     let allNoteAnania = [];
     let currentBibliaMoment = (new Date().getHours() < 14) ? 'dimineata' : 'seara';
@@ -6013,7 +6024,7 @@
         if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
         if (Array.isArray(data.notificari) && window.famNotif) window.famNotif.setInbox(data.notificari);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
-          psaltireGrupData = data.psaltireGrup;
+          psaltireGrupData = cleanPsaltireGrup(data.psaltireGrup);
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
         }
         if (data.bibliaBVA && Array.isArray(data.bibliaBVA)) {
@@ -6117,7 +6128,7 @@
         if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
         if (Array.isArray(data.notificari) && window.famNotif) window.famNotif.setInbox(data.notificari);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
-          psaltireGrupData = data.psaltireGrup;
+          psaltireGrupData = cleanPsaltireGrup(data.psaltireGrup);
           localStorage.setItem('diih_psaltire_grup', JSON.stringify(psaltireGrupData));
         }
         if (data.gandulZilei && Array.isArray(data.gandulZilei)) {
@@ -6161,7 +6172,7 @@
       allSchoolTeme = JSON.parse(localStorage.getItem('diih_school_teme') || '[]');
       try { adservioData = JSON.parse(localStorage.getItem('diih_adservio') || 'null'); } catch (e) { adservioData = null; }
       try { updateSchoolTemeBadge(); } catch (e) {}
-      psaltireGrupData = JSON.parse(localStorage.getItem('diih_psaltire_grup') || '[]');
+      psaltireGrupData = cleanPsaltireGrup(JSON.parse(localStorage.getItem('diih_psaltire_grup') || '[]'));
       biblia360List = JSON.parse(localStorage.getItem('diih_biblia360') || '[]');
       allNoteAnania = JSON.parse(localStorage.getItem('diih_note_anania') || '[]');
       allGandulZilei = JSON.parse(localStorage.getItem('diih_gandul_zilei') || '[]');
@@ -6649,6 +6660,7 @@
     }
     function onNoteBibliaSearchInput() {
       noteBibliaJumpHistory = [];
+      noteBibliaShown = 40;
       renderNoteBibliaList();
     }
 
@@ -6813,6 +6825,9 @@
       `;
     }
 
+    // v24.45: lista de note se desenează câte 40, nu toate odată (era lentă)
+    let noteBibliaShown = 40;
+    function moreNoteBiblia() { noteBibliaShown += 40; renderNoteBibliaList(); }
     function renderNoteBibliaList() {
       const container = document.getElementById('noteBibliaListContainer');
       if (!container) return;
@@ -6828,7 +6843,8 @@
       if (!ref) {
         container.innerHTML = backBtn + (list.length === 0
           ? `<p class="text-xs text-slate-500 italic text-center py-4">Nicio notă găsită.</p>`
-          : list.map(renderNoteBibliaCard).join(''));
+          : list.slice(0, noteBibliaShown).map(renderNoteBibliaCard).join('')
+            + (list.length > noteBibliaShown ? `<button type="button" onclick="moreNoteBiblia()" class="w-full my-2 py-2 text-xs bg-slate-800 border border-bordercol text-amber-300 rounded-xl font-bold">Arată încă 40 (din ${list.length - noteBibliaShown} rămase)</button>` : ''));
         return;
       }
 
@@ -8086,7 +8102,7 @@
         }
         showToast("Persoană actualizată!");
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updatePsaltirePerson&rowId=${editingPsaltireRowId}&nume=${encodeURIComponent(nume)}§iune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=updatePsaltirePerson&rowId=${editingPsaltireRowId}&nume=${encodeURIComponent(nume)}&sectiune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&callback=void`;
         document.body.appendChild(script);
       } else {
         const newRowId = psaltireGrupData.length + 2;
@@ -8101,7 +8117,7 @@
         });
         showToast("Persoană adăugată în grup!");
         const script = document.createElement('script');
-        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addPsaltirePerson&nume=${encodeURIComponent(nume)}§iune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&numarRand=${psaltireGrupData.length}&callback=void`;
+        script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=addPsaltirePerson&nume=${encodeURIComponent(nume)}&sectiune=${encodeURIComponent(sectiune)}&subgrup=${encodeURIComponent(subgrup)}&catisma=${encodeURIComponent(catisma)}&exclus=${exclus}&numarRand=${psaltireGrupData.length}&callback=void`;
         document.body.appendChild(script);
       }
 

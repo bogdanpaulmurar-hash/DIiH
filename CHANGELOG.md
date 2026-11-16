@@ -1,5 +1,12 @@
 # CHANGELOG — DIiH Hub
 
+## v24.45 — 2026-11-16 — Persoane noi în psaltire fără simboluri ciudate; note Biblia mai rapide
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- **Persoană nouă în grupul de psaltire:** numele ajungea în foaie cu un adaos ciudat („Nume§iune=…”) și secțiunea aleasă nu se salva. Cauza era o greșeală în adresa trimisă la salvare (la adăugare și la editare). S-a corectat: numele iese curat, iar secțiunea aleasă se salvează.
+- Rândurile deja adăugate greșit se curăță la afișare (numele fără adaos, secțiunea recuperată din adaos). Foaia nu se modifică; la prima editare a unei persoane din ele, numele curat se salvează.
+- **Note Biblia (registrul):** lista nu se mai desenează toată odată; apar câte 40, cu butonul „Arată încă 40”. Căutarea rămâne pe toate notele.
+
 ## v24.44 — 2026-11-10 — Bolnavii în pomelnicul zilei și în cel comasat
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.

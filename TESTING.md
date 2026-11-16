@@ -2,6 +2,16 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.45 — Psaltire fără simboluri ciudate, note Biblia mai rapide
+
+Înainte: doar frontend. Pe telefon: Setări → „Curăță Cache & Reîncarcă” până apare v24.45.
+
+1. Pomelnic → Psaltire grup → ➕ persoană, alege o secțiune (ex. bolnavi) → apare în secțiunea aleasă, cu numele curat.
+2. Deschide foaia Psaltire_Grup: numele nou nu conține „§iune=”, iar coloana Secțiune are valoarea aleasă.
+3. Persoanele adăugate înainte cu „§iune=” se văd acum curate în aplicație.
+4. Mai multe → Note Biblia: se încarcă repede, apar 40 de note, „Arată încă 40” adaugă altele; căutarea găsește și note de după primele 40.
+5. Profil fără admin: aceleași verificări, dacă are drept pe Psaltire.
+
 ## v24.44 — Bolnavii în pomelnicul zilei
 
 Înainte: doar frontend. Pe telefon: Setări → „Curăță Cache & Reîncarcă” până apare v24.44.
