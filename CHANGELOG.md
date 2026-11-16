@@ -1,5 +1,11 @@
 # CHANGELOG — DIiH Hub
 
+## v24.47 — 2026-11-16 — Tab nou „Rugăciuni”
+
+Doar frontend (`index.html`, `rugaciuni.js` nou, `sw.js`). Nu necesită deploy în Apps Script.
+- În Mai multe → Rugăciune apare butonul **Rugăciuni**. Are subtaburile Spovedanie, Împărtășanie, Dimineață, Seară și Înainte de Psaltire, într-o bară care se derulează lateral. Aplicația ține minte ultimul subtab deschis.
+- Subtaburile sunt deocamdată goale; textele rugăciunilor se adaugă în versiunea următoare.
+
 ## v24.46 — 2026-11-16 — Fără „Calendar Bife” în fereastra Psaltirii
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.

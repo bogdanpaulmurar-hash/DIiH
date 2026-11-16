@@ -2,6 +2,15 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.46–24.47 — Fără Calendar Bife; tab Rugăciuni
+
+Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.47.
+
+1. Psaltire → fereastra „Rânduială Zilnică”: doar subtaburile „Catisma & Pomelnic” și „Rugăciune Neam”.
+2. Mai multe → Rugăciune: apare butonul „Rugăciuni”; se deschide tabul cu 5 subtaburi.
+3. Bara de subtaburi se derulează lateral; apeși unul → se evidențiază, iar mesajul „se adaugă în curând” își schimbă titlul.
+4. Închide și redeschide aplicația → tabul se deschide la ultimul subtab ales.
+
 ## v24.45 — Psaltire fără simboluri ciudate, note Biblia mai rapide
 
 Înainte: doar frontend. Pe telefon: Setări → „Curăță Cache & Reîncarcă” până apare v24.45.

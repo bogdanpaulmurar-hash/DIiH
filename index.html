@@ -1377,6 +1377,15 @@
     </section>
 
     <!-- TAB 6: MAI MULTE (Grup Psaltire, Notificări 3 Praguri, Setări, Widget) -->
+    <!-- TAB: RUGĂCIUNI (subtaburi pe orizontală; textele sunt în rugaciuni.js) -->
+    <section id="tab-rugaciuni" class="tab-content hidden space-y-3">
+      <div class="bg-cardbg border border-bordercol rounded-2xl p-3 shadow-sm space-y-3">
+        <h3 class="text-xs font-bold text-white uppercase tracking-wider">Rugăciuni</h3>
+        <div id="rugaciuniSubtabBar" class="flex space-x-2 overflow-x-auto pb-1"></div>
+        <div id="rugaciuniContinut" class="space-y-3"></div>
+      </div>
+    </section>
+
     <section id="tab-more" class="tab-content hidden space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
         <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-bordercol pb-2">Meniu extins</h3>
@@ -1391,6 +1400,10 @@
               <button onclick="switchSubTab('psaltire-grup')" id="btnSubPsaltire" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
                 <svg class="more-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 100 18 9 9 0 000-18zM12 7v10M8.5 10.5h7"></path></svg>
                 <span class="text-[9px] font-bold">Psaltire</span>
+              </button>
+              <button onclick="switchTab('rugaciuni')" id="btnSubRugaciuni" class="p-2.5 bg-darkbg border border-rose-900/60 rounded-xl flex flex-col items-center space-y-1 text-rose-300 hover:text-white">
+                <svg class="more-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1.6 2 1.6 3.6 0 5-1.6-1.4-1.6-3 0-5zM5 21v-6a7 7 0 0114 0v6M12 12v9"></path></svg>
+                <span class="text-[9px] font-bold">Rugăciuni</span>
               </button>
               <button onclick="switchTab('scriptura')" id="btnSubScriptura" class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex flex-col items-center space-y-1 text-slate-300 hover:text-white">
                 <svg class="more-ic" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2zM4 19V5M8 7h7"></path></svg>
@@ -2753,7 +2766,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.46";
+    const APP_VERSION = "v24.47";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -4499,7 +4512,7 @@
     }
 
     // Fișierele aplicației, reîncărcate direct de pe server (ocolind cache-ul HTTP al browserului, 10 min pe GitHub Pages)
-    const APP_SHELL_FILES = ['./', './index.html', './familie.js', './sw.js', './manifest.json', './adservio-marcaj.js'];
+    const APP_SHELL_FILES = ['./', './index.html', './familie.js', './rugaciuni.js', './sw.js', './manifest.json', './adservio-marcaj.js'];
 
     // Curăță cache-ul aplicației și aduce ultima versiune publicată. localStorage (date, cont, setări) rămâne.
     async function forceCleanStorageAndReload() {
@@ -5843,6 +5856,7 @@
         }
         renderSchoolDisplay();
       }
+      if (tabId === 'rugaciuni' && typeof renderRugaciuni === 'function') renderRugaciuni();
       if (tabId === 'scriptura') {
         updateScripturaDisplays();
       }
@@ -12879,5 +12893,6 @@
 
   </script>
   <script src="./familie.js?v=24.25"></script>
+  <script src="./rugaciuni.js?v=24.47"></script>
 </body>
 </html>
