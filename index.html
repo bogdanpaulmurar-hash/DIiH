@@ -2766,7 +2766,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.48";
+    const APP_VERSION = "v24.49";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -4512,7 +4512,7 @@
     }
 
     // Fișierele aplicației, reîncărcate direct de pe server (ocolind cache-ul HTTP al browserului, 10 min pe GitHub Pages)
-    const APP_SHELL_FILES = ['./', './index.html', './familie.js', './rugaciuni-texte.js', './rugaciuni.js', './sw.js', './manifest.json', './adservio-marcaj.js'];
+    const APP_SHELL_FILES = ['./', './index.html', './familie.js', './rugaciuni-texte.js', './rugaciuni.js', './autoscroll.js', './sw.js', './manifest.json', './adservio-marcaj.js'];
 
     // Curăță cache-ul aplicației și aduce ultima versiune publicată. localStorage (date, cont, setări) rămâne.
     async function forceCleanStorageAndReload() {
@@ -12895,5 +12895,6 @@
   <script src="./familie.js?v=24.25"></script>
   <script src="./rugaciuni-texte.js?v=24.48"></script>
   <script src="./rugaciuni.js?v=24.48"></script>
+  <script src="./autoscroll.js?v=24.49"></script>
 </body>
 </html>
