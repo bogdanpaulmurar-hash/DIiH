@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.49 — 2026-11-21 — Autoscroll plutitor
+
+Doar frontend (`autoscroll.js` nou, `familie.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- Buton nou, discret și semitransparent (săgeți în jos), fix în stânga-jos, vizibil în toată aplicația. Apăsat o dată, pornește derularea foarte lentă.
+- Derulează containerul care se mișcă efectiv în ecranul curent: pagina, ferestrele deschise, Rugăciuni, Biblia, Psaltire.
+- A doua apăsare deschide controlul mic: **−** mai încet, **+** mai repede (8 trepte, ține minte treapta), **⏹** oprește.
+- Cât ții degetul pe ecran, derularea se oprește singură; la capătul paginii se oprește cu un mesaj.
+- Se ascunde / reafișează din 🔔 Notificări, bifa „Autoscroll” (lângă „Butonul ☀️ Ecran pornit”).
+
 ## v24.48 — 2026-11-16 — Textele rugăciunilor în tabul Rugăciuni
 
 Doar frontend (`index.html`, `rugaciuni.js`, `rugaciuni-texte.js` nou, `sw.js`). Nu necesită deploy în Apps Script.

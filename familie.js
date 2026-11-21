@@ -340,6 +340,8 @@
     famLoadProfiles();
     const cb = document.getElementById('famAwakeFabToggle');
     if (cb) cb.checked = LS.get('diih_awake_fab', true);
+    const cb2 = document.getElementById('famAutoscrollFabToggle');
+    if (cb2) cb2.checked = LS.get('diih_autoscroll_fab', true);
   }
   function famCloseCenter() {
     const c = document.getElementById('famNotifCenter');
@@ -517,8 +519,9 @@
           <p class="text-[9px] text-slate-500 leading-snug">Apare în Google Calendar al fiecăruia (Samsung Calendar, iPhone cu contul Google adăugat la Calendar, Outlook/Calendar pe Windows). Fiecare îl poate ignora.</p>
         </div>
         <div id="famNotifList" class="flex-1 overflow-y-auto px-4 py-3 space-y-2"></div>
-        <div class="px-4 py-2 border-t border-bordercol flex items-center justify-between text-[10px] text-slate-400">
+        <div class="px-4 py-2 border-t border-bordercol flex flex-wrap gap-x-3 gap-y-1 items-center justify-between text-[10px] text-slate-400">
           <label class="flex items-center gap-1.5"><input id="famAwakeFabToggle" type="checkbox" onchange="famAw.fab(this.checked)" class="accent-amber-500"> Butonul ☀️ Ecran pornit</label>
+          <label class="flex items-center gap-1.5"><input id="famAutoscrollFabToggle" type="checkbox" onchange="window.famAs && famAs.fab(this.checked)" class="accent-sky-400"> Autoscroll</label>
           <span>${typeof APP_VERSION !== 'undefined' ? APP_VERSION : ''}</span>
         </div>
       </div>
