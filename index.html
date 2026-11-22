@@ -418,15 +418,16 @@
           <span id="ownerWidgetScripturaBadge" class="bg-amber-950 border border-amber-800 text-amber-200 text-[10px] px-2 py-0.5 rounded-full font-mono font-bold">0 / 1337 cap.</span>
         </div>
         <div class="flex items-center justify-between">
-          <div class="truncate pr-2">
+          <div class="pr-2 min-w-0">
             <span class="text-[10px] text-slate-400 block">De continuat lectura cu:</span>
-            <span id="ownerWidgetScripturaNext" class="text-xs font-bold text-cyan-300 truncate block">Facerea 1</span>
+            <span id="ownerWidgetScripturaNext" class="text-xs font-bold text-cyan-300 block break-words">Facerea 1</span>
           </div>
           <button onclick="event.stopPropagation(); advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl active:scale-95 transition shadow shrink-0 flex items-center space-x-1">
             <span>✓</span>
             <span>Am citit</span>
           </button>
         </div>
+        <div id="ownerWidgetScripturaConc" onclick="event.stopPropagation()" class="hidden"></div>
       </div>
 
       <!-- Aniversările Zilei -->
@@ -1291,9 +1292,9 @@
 
         <!-- Următorul de Citit -->
         <div class="p-3 bg-darkbg border border-cyan-800/80 rounded-xl flex items-center justify-between space-x-2">
-          <div class="truncate">
+          <div class="min-w-0">
             <span class="text-[10px] text-cyan-300 uppercase font-bold block">Următorul capitol de citit:</span>
-            <span id="scripturaNextChapterTitle" class="text-sm font-bold text-white truncate block">Facerea 1 (Fac, 1)</span>
+            <span id="scripturaNextChapterTitle" class="text-sm font-bold text-white block break-words">Facerea 1 (Fac, 1)</span>
           </div>
           <div class="flex items-center space-x-1.5 shrink-0">
             <button onclick="advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition shadow-lg flex items-center space-x-1">
@@ -1303,6 +1304,7 @@
             <a id="scripturaReadOnlineBtn" href="https://www.bibliaortodoxa.ro" target="_blank" rel="noopener" class="bg-slate-800 hover:bg-slate-700 border border-bordercol text-slate-200 text-xs px-2.5 py-2 rounded-xl transition" title="Citește online pe bibliaortodoxa.ro">↗</a>
           </div>
         </div>
+        <div id="scripturaNextConc" class="hidden"></div>
 
         <!-- Comasare Biblia 360 & Citatul Zilei Anania -->
         <div class="pt-2 border-t border-bordercol space-y-2">
@@ -2766,7 +2768,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.52";
+    const APP_VERSION = "v24.53";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -11794,6 +11796,44 @@
     function moreConc() { concViewCount += 12; renderModelCitirePanel(); }
     function earlierConc(start) { concViewStart = Math.max(0, start - 12); concViewCount += 12; renderModelCitirePanel(); }
 
+    // Concordanțele capitolului care urmează: ca principal (cu bife) sau ca referință a altui capitol (doar link)
+    function renderNextConcHtml(next, readMap) {
+      if (!window.CONCORDANTE_MODEL || !next || !next.book) return '';
+      const abbr = next.book.abbr, cap = next.cap;
+      const rows = [];
+      const seen = new Set();
+      getConcParsed().forEach(cp => {
+        if (cp.book.abbr === abbr && cp.cap === cap) {
+          cp.refs.forEach(r => {
+            const done = isConcRefChecked(r, readMap);
+            rows.push(`
+              <div class="py-1 border-t border-bordercol/40">
+                <div class="flex items-center space-x-2">
+                  <input type="checkbox" onchange="toggleConcRef('${r.id}', this.checked)" ${done ? 'checked' : ''} class="rounded text-cyan-500 focus:ring-0 shrink-0">
+                  <span class="text-xs flex-1 ${done ? 'text-emerald-200' : 'text-slate-100'}">${escapeHtmlText(r.book.abbr)} ${escapeHtmlText(r.loc)}${r.nivel === 3 ? ' <span class="text-amber-300" title="Așezare după cronologie sau tradiție; de verificat">?</span>' : ''}</span>
+                  <a href="${ananiaUrlForBook(r.book, r.capFrom, r.verse)}" target="_blank" rel="noopener" class="text-[11px] text-cyan-300 shrink-0">📖 Anania ↗</a>
+                </div>
+                <p class="pl-6 text-[9px] text-slate-500">${escapeHtmlText(r.sursa)}</p>
+              </div>`);
+          });
+        }
+        cp.refs.forEach(r => {
+          if (r.book.abbr !== abbr || cap < r.capFrom || cap > r.capTo) return;
+          const k = cp.id; if (seen.has(k)) return; seen.add(k);
+          rows.push(`
+            <div class="py-1 border-t border-bordercol/40 flex items-center justify-between">
+              <span class="text-xs text-slate-200">Legat de ${escapeHtmlText(cp.book.abbr)} ${cp.cap} <span class="text-slate-500">· ${escapeHtmlText(cp.per)}</span></span>
+              <a href="${ananiaUrlForBook(cp.book, cp.cap)}" target="_blank" rel="noopener" class="text-[11px] text-cyan-300 shrink-0 pl-2">📖 Anania ↗</a>
+            </div>`);
+        });
+      });
+      if (!rows.length) return '';
+      return `<div class="mt-2 p-2 rounded-xl border border-cyan-900/70 bg-cyan-950/20">
+        <p class="text-[10px] text-cyan-300 font-bold uppercase">Concordanțe de văzut (${escapeHtmlText(abbr)} ${cap})</p>
+        ${rows.join('')}
+      </div>`;
+    }
+
     // Strat „Concordanțe” peste modelele pe cărți: legăturile în care apar cărțile acestei poziții, doar ca stare + link
     function renderConcLinksForBooks(bookNames, readMap) {
       if (!window.CONCORDANTE_MODEL) return '';
@@ -11974,7 +12014,8 @@
       }, 'Debifezi poziția?', 'Debifează');
     }
 
-    function renderModelCitirePanel() {
+    function renderModelCitirePanel() { return keepScroll(renderModelCitirePanelInner); }
+    function renderModelCitirePanelInner() {
       const sel = document.getElementById('modelCitireSelect');
       const listEl = document.getElementById('modelCitirePositionsList');
       const badgeEl = document.getElementById('modelCitireProgressBadge');
@@ -12056,7 +12097,19 @@
       }, 150);
     }
 
-    function updateScripturaDisplays() {
+    // Păstrează poziția de derulare (pagina și listele cu derulare proprie) când se redesenează secțiunile
+    function keepScroll(fn) {
+      const winY = window.scrollY;
+      const saved = [];
+      document.querySelectorAll('[class*="overflow-y-auto"], [class*="overflow-auto"], [class*="overflow-y-scroll"]').forEach(el => { if (el.scrollTop > 0) saved.push([el, el.scrollTop]); });
+      const restore = () => {
+        saved.forEach(([el, t]) => { if (el.isConnected && Math.abs(el.scrollTop - t) > 1) el.scrollTop = t; });
+        if (Math.abs(window.scrollY - winY) > 1) window.scrollTo(0, winY);
+      };
+      try { return fn(); } finally { restore(); requestAnimationFrame(restore); setTimeout(restore, 350); }
+    }
+    function updateScripturaDisplays() { return keepScroll(updateScripturaDisplaysInner); }
+    function updateScripturaDisplaysInner() {
       const books = getAllScripturaBooks();
       const readMap = getScripturaReadMap();
       const totalCapsCount = getScripturaTotalCaps();
@@ -12093,6 +12146,19 @@
       if (nextTitle) {
         nextTitle.textContent = next.completed ? "Canon Parcurs Integral 🎉" : `${next.book.name} ${next.cap} (${next.book.abbr}, ${next.cap})`;
       }
+
+      // Concordanțele capitolului următor, vizibile înainte de „Am citit”, și linkul spre Anania
+      if (!next.completed) {
+        const rb = document.getElementById('scripturaReadOnlineBtn');
+        if (rb) { rb.href = ananiaUrlForBook(next.book, next.cap); rb.title = 'Citește în Biblia Anania (biblia.dervent.ro)'; }
+      }
+      const concHtml = next.completed ? '' : renderNextConcHtml(next, readMap);
+      ['scripturaNextConc', 'ownerWidgetScripturaConc'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.innerHTML = concHtml;
+        el.classList.toggle('hidden', !concHtml);
+      });
 
       // Owner widget on Astăzi
       const wgtNext = document.getElementById('ownerWidgetScripturaNext');
@@ -13155,8 +13221,15 @@
     }
 
   </script>
-  <script src="./concordante.js?v=24.52"></script>
-  <script>if (typeof renderModelCitirePanel === 'function') { try { renderModelCitirePanel(); } catch (e) {} }</script>
+  <script src="./concordante.js?v=24.53"></script>
+  <script>
+    if (typeof renderModelCitirePanel === 'function') { try { renderModelCitirePanel(); } catch (e) {} }
+    // Bifele din Scriptură nu mai mută pagina: poziția de derulare rămâne unde ai apăsat
+    ['advanceScripturaProgress', 'toggleScripturaChapter', 'setBookAllChapters', 'toggleConcMain', 'toggleConcRef', 'toggleModelCitirePozitie'].forEach(n => {
+      const f = window[n];
+      if (typeof f === 'function') window[n] = function () { const a = arguments, self = this; return keepScroll(() => f.apply(self, a)); };
+    });
+  </script>
   <script src="./familie.js?v=24.25"></script>
   <script src="./rugaciuni-texte.js?v=24.48"></script>
   <script src="./rugaciuni.js?v=24.48"></script>

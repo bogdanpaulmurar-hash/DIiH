@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.53 — 2026-11-22 — Concordanțele se văd înainte de „Am citit”; pagina nu mai sare
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- La cardul „Următorul capitol de citit” (Scriptură) și la widgetul „Continuitate Sf. Scriptură” (Astăzi) apar acum **concordanțele capitolului**, înainte să bifezi: fiecare referință cu bifa ei, sursa și link 📖 Anania; sau „Legat de …” când capitolul e referință la alt loc. Se văd în orice plan activ (și în Pr. Nicolae Dima).
+- Titlul capitolului următor nu mai e tăiat: se scrie întreg, pe mai multe rânduri.
+- Butonul ↗ de lângă „Am citit” deschide acum capitolul în Biblia Anania (înainte ducea la o pagină generală).
+- La „Am citit”, la bifarea unui capitol, a unei poziții sau a unei referințe, **pagina și listele rămân unde erau** (înainte săreau în sus la redesenare).
+
 ## v24.52 — 2026-11-22 — Concordanțe și în planul Pr. Nicolae Dima; tranșa a doua (profeți, Macabei)
 
 Doar frontend (`index.html`, `concordante.js`, `sw.js`). Nu necesită deploy în Apps Script.
