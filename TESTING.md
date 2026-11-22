@@ -2,6 +2,18 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.49 — Autoscroll plutitor
+
+Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.49.
+
+1. În stânga-jos apare un buton mic, semitransparent, cu săgeți în jos; rămâne pe loc când derulezi.
+2. Apasă-l pe Acasă sau Notițe: pagina începe să deruleze foarte lent; butonul devine mai vizibil.
+3. Apasă-l din nou: apare controlul − / treaptă / + / ⏹. „+” accelerează, „−” încetinește, ⏹ oprește.
+4. Mai multe → Rugăciuni (text lung), Biblia și Psaltire: derulează textul din ecranul respectiv.
+5. Atinge ecranul cât derulează: se oprește cât ții degetul, apoi continuă. La capăt se oprește cu mesaj.
+6. 🔔 Notificări → debifează „Autoscroll”: butonul dispare peste tot (și rămâne ascuns după reîncărcare); bifează-l: reapare.
+7. Repetă pe profilul Andreea/Luca: același comportament, iar butonul ☀️ Ecran pornit (dreapta-jos) merge ca înainte.
+
 ## v24.48 — Texte în tabul Rugăciuni
 
 Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.48.
