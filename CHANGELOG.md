@@ -1,5 +1,14 @@
 # CHANGELOG — DIiH Hub
 
+## v24.55 — 2026-11-22 — Iov, deuterocanonice și Noul Testament în modelul cu concordanțe
+
+Doar frontend (`concordante.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- **Iov** (42 de capitole) după Facerea; textul din BVA nu dă dată, deci așezarea e după tradiție (nivel 3). Referințe: Iac. 5:11, Iez. 14, 1 Cor. 3:19 (citează Iov 5:13), Rom. 11:35 (citează Iov 41:3).
+- **Deuterocanonice ca referințe**: Baruh 1–5 la 4 Regi 25 (Baruh 1:1-9, verificat în Anania), Plângerile și Epistola lui Ieremia (nivel 3), Cântarea celor trei tineri la Daniel 3, Iuditei lângă întoarcerea din robie (Iuditei 4:3, verificat în Anania; nivel 3).
+- **Noul Testament**: Matei 1–28 ca fir principal, cu fiecare capitol din Marc, Luca și Ioan atașat o singură dată ca referință întreagă (aceleași întâmplări; Ioan 2–5 și 7–11 sunt așezări de nivel 3). Fapte 1–28 cu epistolele unde Scriptura numește cetatea sau întâmplarea (1 Tes. la Corint, 1 Cor. la Efes, Romani în Grecia, Efes/Col/Filim din Roma). Apocalipsa 1–22 cu epistolele lui Ioan.
+- Modelul se numește acum „de la Facere la Apocalipsă”: 526 de poziții. ID-urile existente nu s-au schimbat.
+- Fiecare capitol al Evangheliilor, Faptelor, Apocalipsei și Iovului apare o dată (verificat prin script).
+
 ## v24.54 — 2026-11-22 — Modelul cu concordanțe începe de la Facere (Facerea–Rut, 1–2 Regi)
 
 Doar frontend (`concordante.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
