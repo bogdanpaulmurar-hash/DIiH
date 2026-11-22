@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.54 — 2026-11-22 — Modelul cu concordanțe începe de la Facere (Facerea–Rut, 1–2 Regi)
+
+Doar frontend (`concordante.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- 291 de poziții noi **înaintea lui Solomon**: Facerea, Ieșirea, Leviticul, Numerii, Deuteronomul, Isus Navi, Judecătorii, Rut, 1 Regi și 2 Regi (câte un capitol pe poziție).
+- Referințe doar unde le leagă chiar Scriptura: citate în Noul Testament (Evr. 11, Rom. 4, Fapte 7 etc.), reluări în Deuteronom și Paralipomena, psalmi cu titlu istoric (titlurile Ps. 33, 50, 58 verificate în BVA pe biblia.dervent.ro).
+- Capitolele deja bifate în evidența ta (inclusiv din planul Pr. Nicolae Dima) apar citite; primul capitol necitit din modelul cu concordanțe poate deveni acum „următorul” (începe acum de la Facere).
+- Numele modelului: „de la Facere la Macabei”. Id-urile poziției și ale referințelor existente nu s-au schimbat.
+
 ## v24.53 — 2026-11-22 — Concordanțele se văd înainte de „Am citit”; pagina nu mai sare
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.

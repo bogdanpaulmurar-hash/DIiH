@@ -11,7 +11,7 @@
 //          3 = așezare după cronologia istorică sau tradiție; de verificat (apare cu „?” în aplicație)
 // ATENȚIE: ID-ul unei referințe = id-ul poziției + litera locului ei în listă (a, b, c...). Referințele noi se adaugă
 // mereu LA FINALUL listei poziției; nu muta și nu șterge referințe vechi, ca să nu se piardă bifele salvate.
-// Pozițiile din tranșa a doua (profeții nedatați, Iov, Macabei, Noul Testament) se adaugă la final.
+// Tranșa a treia (Facerea–Rut, 1–2 Regi) stă înaintea lui Solomon. Rămân de adăugat: Iov, Iuditei, Noul Testament.
 // =====================================================================================================
 (function () {
   const S = {
@@ -26,6 +26,136 @@
   // A(id, [referințe]) adaugă referințe LA FINALUL unei poziții existente (tranșa a doua), fără să schimbe ID-urile vechi
   const A = (id, refs) => { const p = pos.find(x => x.id === id); if (!p) throw new Error('Poziție necunoscută: ' + id); refs.forEach(r => p.refs.push(R(r))); };
   const P = (id, per, carte, cap, refs, nota) => pos.push({ id, per, carte, cap, refs: (refs || []).map(r => ({ carte: r[0], loc: r[1], nivel: r[2], sursa: S[r[3]] || r[3] })), nota: nota || '' });
+
+  // =====================================================================================================
+  // TRANȘA A TREIA (v24.54): de la Facere la David (Facerea–Rut, 1–2 Regi). Pozițiile stau înaintea lui Solomon.
+  // Referințele sunt doar cele pe care le leagă chiar Scriptura (citate în Noul Testament, reluări în Deuteronom,
+  // Paralipomena, Psalmi cu titlu istoric verificat în BVA). Cele fără sursă sigură nu se pun.
+  // =====================================================================================================
+  // SEG(id, carte, nr. capitole, [[de la, până la, perioada]]) creează câte o poziție pe capitol
+  const SEG = (idp, carte, n, segs) => {
+    for (let c = 1; c <= n; c++) {
+      const s = segs.find(x => c >= x[0] && c <= x[1]);
+      P(idp + c, s ? s[2] : '', carte, c, []);
+    }
+  };
+  // AR(id, [referințe]) = adaugă referințe unei poziții din această tranșă
+  const AR = A;
+
+  SEG('Fc', 'Fac.', 50, [[1, 2, 'Facerea lumii și a omului'], [3, 5, 'Căderea și urmașii lui Adam'], [6, 9, 'Potopul'], [10, 11, 'Neamurile și turnul Babel'], [12, 25, 'Avraam'], [26, 28, 'Isaac și Iacov'], [29, 36, 'Iacov (Israel)'], [37, 50, 'Iosif în Egipt']]);
+  AR('Fc1', [['Ioan', '1:1-18', 1, 'Ioan 1:1-3 reia „la început” din Facere 1:1'], ['Evr.', '11:3', 1, 'Evr. 11:3 (lumile au fost întocmite prin cuvântul lui Dumnezeu)']]);
+  AR('Fc2', [['Mat.', '19:3-8', 1, 'Mat. 19:4-6 citează Facerea 1:27 și 2:24']]);
+  AR('Fc3', [['Rom.', '5:12-21', 1, 'Rom. 5:12-19 (Adam și Hristos)'], ['1 Tim.', '2:13-14', 1, '1 Tim. 2:13-14 (Adam și Eva)']]);
+  AR('Fc4', [['Evr.', '11:4', 1, 'Evr. 11:4 (jertfa lui Abel)'], ['1 Ioan', '3:11-12', 1, '1 Ioan 3:12 (Cain)']]);
+  AR('Fc5', [['1 Par.', '1:1-4', 1, '1 Par. 1:1-4 reia șirul neamurilor de la Adam la Noe'], ['Luc.', '3:36-38', 1, 'Luc. 3:36-38 (neamul lui Iisus până la Adam)'], ['Iuda', '1:14-15', 1, 'Iuda 14 (Enoh)']]);
+  AR('Fc6', [['Mat.', '24:37-39', 1, 'Mat. 24:37-39 (zilele lui Noe)'], ['1 Pet.', '3:20', 1, '1 Pet. 3:20 (corabia lui Noe)'], ['2 Pet.', '2:5', 1, '2 Pet. 2:5 (Noe, propovăduitor al dreptății)']]);
+  AR('Fc10', [['1 Par.', '1:5-27', 1, '1 Par. 1:5-27 reia șirul neamurilor din Facere 10–11']]);
+  AR('Fc11', [['Fapte', '2:1-11', 1, 'Pogorârea Duhului Sfânt (Fapte 2) este tâlcuită patristic ca desfacerea încurcării limbilor de la Babel (tradiție)'], ['1 Par.', '1:24-27', 1, '1 Par. 1:24-27 (șirul de la Sem la Avraam)']]);
+  AR('Fc12', [['Evr.', '11:8-10', 1, 'Evr. 11:8-10 (chemarea lui Avraam)'], ['Fapte', '7:2-4', 1, 'Fapte 7:2-4 (Ștefan despre chemarea lui Avraam)'], ['Gal.', '3:6-9', 1, 'Gal. 3:8 citează Facerea 12:3']]);
+  AR('Fc14', [['Evr.', '7:1-10', 1, 'Evr. 7:1-10 (Melhisedec)'], ['Ps.', '109', 1, 'Ps. 109:4 („preot în veac, după rânduiala lui Melhisedec”)']]);
+  AR('Fc15', [['Rom.', '4:1-25', 1, 'Rom. 4:3 citează Facerea 15:6'], ['Gal.', '3:6-18', 1, 'Gal. 3:6 citează Facerea 15:6']]);
+  AR('Fc17', [['Rom.', '4:9-12', 1, 'Rom. 4:11 (semnul tăierii împrejur)'], ['Fapte', '7:8', 1, 'Fapte 7:8 (legământul tăierii împrejur)']]);
+  AR('Fc18', [['Evr.', '13:2', 1, 'Evr. 13:2 (primirea de oaspeți, Avraam)']]);
+  AR('Fc19', [['Luc.', '17:28-32', 1, 'Luc. 17:28-32 (zilele lui Lot)'], ['2 Pet.', '2:6-8', 1, '2 Pet. 2:6-8 (Sodoma și Lot)'], ['Iuda', '1:7', 1, 'Iuda 7 (Sodoma și Gomora)']]);
+  AR('Fc21', [['Gal.', '4:22-31', 1, 'Gal. 4:22-31 (Agar și Sara)'], ['Rom.', '9:7-9', 1, 'Rom. 9:7-9 (Isaac, copilul făgăduinței)']]);
+  AR('Fc22', [['Evr.', '11:17-19', 1, 'Evr. 11:17-19 (jertfirea lui Isaac)'], ['Iac.', '2:21-23', 1, 'Iac. 2:21-23 (Avraam, ispitit și socotit drept)']]);
+  AR('Fc23', [['Fapte', '7:15-16', 1, 'Fapte 7:15-16 (mormântul din Sihem/Hebron)']]);
+  AR('Fc25', [['1 Par.', '1:28-34', 1, '1 Par. 1:28-34 (urmașii lui Avraam)'], ['Evr.', '12:16', 1, 'Evr. 12:16 (Esau și dreptul întâiului născut)']]);
+  AR('Fc27', [['Rom.', '9:10-13', 1, 'Rom. 9:10-13 (Iacov și Esau)'], ['Evr.', '11:20', 1, 'Evr. 11:20 (binecuvântarea lui Isaac)']]);
+  AR('Fc28', [['Ioan', '1:51', 1, 'Ioan 1:51 (scara lui Iacov)']]);
+  AR('Fc32', [['Os.', '12:3-5', 1, 'Os. 12:3-5 (Iacov s-a luptat cu îngerul)']]);
+  AR('Fc36', [['1 Par.', '1:35-54', 1, '1 Par. 1:35-54 (neamul lui Esau)']]);
+  AR('Fc38', [['Mat.', '1:3', 1, 'Mat. 1:3 (Iuda, Tamar, Fares)'], ['1 Par.', '2:3-4', 1, '1 Par. 2:3-4']]);
+  AR('Fc46', [['1 Par.', '2:1-2', 1, '1 Par. 2:1-2 (fiii lui Israel)'], ['Fapte', '7:14-15', 1, 'Fapte 7:14-15 (70 de suflete în Egipt)']]);
+  AR('Fc48', [['Evr.', '11:21', 1, 'Evr. 11:21 (Iacov binecuvântează pe fiii lui Iosif)']]);
+  AR('Fc49', [['Apoc.', '5:5', 1, 'Apoc. 5:5 („Leul din semințenia lui Iuda”)']]);
+  AR('Fc50', [['Evr.', '11:22', 1, 'Evr. 11:22 (poruncile lui Iosif despre oasele sale)'], ['Fapte', '7:9-16', 1, 'Fapte 7:9-16 (Ștefan despre Iosif)']]);
+
+  SEG('Ie', 'Ieș.', 40, [[1, 11, 'Robia și cele zece plăgi'], [12, 15, 'Paștele și trecerea Mării Roșii'], [16, 18, 'În pustie'], [19, 24, 'Legea la Sinai'], [25, 31, 'Porunci pentru cort'], [32, 34, 'Vițelul de aur'], [35, 40, 'Cortul mărturiei']]);
+  AR('Ie1', [['Fapte', '7:17-19', 1, 'Fapte 7:17-19 (Ștefan despre robia din Egipt)']]);
+  AR('Ie2', [['Evr.', '11:23-26', 1, 'Evr. 11:23-26 (credința lui Moise)'], ['Fapte', '7:20-29', 1, 'Fapte 7:20-29 (Ștefan despre Moise)']]);
+  AR('Ie3', [['Marc.', '12:26', 1, 'Marc. 12:26 (rugul)'], ['Fapte', '7:30-34', 1, 'Fapte 7:30-34 (rugul aprins)']]);
+  AR('Ie12', [['1 Cor.', '5:7', 1, '1 Cor. 5:7 („Paștile noastre, Hristos”)'], ['1 Pet.', '1:19', 1, '1 Pet. 1:19 (mielul fără prihană)']]);
+  AR('Ie14', [['1 Cor.', '10:1-2', 1, '1 Cor. 10:1-2'], ['Evr.', '11:29', 1, 'Evr. 11:29 (trecerea Mării Roșii)']]);
+  AR('Ie16', [['Ioan', '6:30-35', 1, 'Ioan 6:31-35 (mana)'], ['1 Cor.', '10:3', 1, '1 Cor. 10:3 (hrana duhovnicească)']]);
+  AR('Ie17', [['1 Cor.', '10:4', 1, '1 Cor. 10:4 (stânca)'], ['Num.', '20:1-13', 1, 'Num. 20:1-13 (apă din stâncă, a doua oară)']]);
+  AR('Ie18', [['Deut.', '1:9-18', 1, 'Deut. 1:9-18 reia așezarea judecătorilor']]);
+  AR('Ie19', [['Evr.', '12:18-21', 1, 'Evr. 12:18-21 (muntele Sinai)'], ['Deut.', '4:10-14', 1, 'Deut. 4:10-14']]);
+  AR('Ie20', [['Deut.', '5:1-22', 1, 'Deut. 5:6-21 reia cele zece porunci']]);
+  AR('Ie24', [['Evr.', '9:18-20', 1, 'Evr. 9:18-20 (sângele legământului)']]);
+  AR('Ie25', [['Evr.', '8:1-5', 1, 'Evr. 8:5 citează Ieșirea 25:40'], ['Evr.', '9:1-5', 1, 'Evr. 9:1-5 (cortul și odoarele)']]);
+  AR('Ie32', [['Deut.', '9:7-21', 1, 'Deut. 9:7-21 reia întâmplarea vițelului'], ['Fapte', '7:39-41', 1, 'Fapte 7:39-41'], ['Neem.', '9:16-21', 1, 'Neem. 9:16-21'], ['Ps.', '105', 1, 'Ps. 105:19-23 (Horeb și vițelul de aur)']]);
+  AR('Ie34', [['Deut.', '10:1-5', 1, 'Deut. 10:1-5 (tablele noi)'], ['2 Cor.', '3:7-18', 1, '2 Cor. 3:7-18 (fața lui Moise)']]);
+  AR('Ie35', [['Ieș.', '25-31', 1, 'Ieșirea 35–40 împlinește poruncile din Ieșirea 25–31']]);
+
+  SEG('Lv', 'Lev.', 27, [[1, 7, 'Jertfele'], [8, 10, 'Preoția lui Aaron'], [11, 15, 'Curat și necurat'], [16, 16, 'Ziua ispășirii'], [17, 22, 'Legea sfințeniei'], [23, 25, 'Sărbători și anul sabatic'], [26, 27, 'Binecuvântări, blesteme, juruințe']]);
+  AR('Lv1', [['Evr.', '10:1-18', 1, 'Evr. 10 (jertfele Legii și jertfa lui Hristos)']]);
+  AR('Lv11', [['Deut.', '14:3-21', 1, 'Deut. 14:3-21 reia legea despre mâncăruri'], ['Fapte', '10:9-16', 1, 'Fapte 10:9-16 (vedenia lui Petru)']]);
+  AR('Lv16', [['Evr.', '9:1-28', 1, 'Evr. 9 (arhiereul și ziua ispășirii)']]);
+  AR('Lv18', [['Deut.', '27:20-23', 1, 'Deut. 27:20-23 (blesteme pentru păcate de acest fel)']]);
+  AR('Lv19', [['Mat.', '22:39', 1, 'Mat. 22:39 citează Leviticul 19:18'], ['Iac.', '2:8', 1, 'Iac. 2:8']]);
+  AR('Lv23', [['Num.', '28-29', 1, 'Num. 28–29 reia jertfele sărbătorilor'], ['Deut.', '16:1-17', 1, 'Deut. 16:1-17']]);
+  AR('Lv26', [['Deut.', '28', 1, 'Deut. 28 (binecuvântări și blesteme)']]);
+
+  SEG('Nm', 'Num.', 36, [[1, 10, 'Numărătoarea și plecarea de la Sinai'], [11, 20, 'Cele patruzeci de ani în pustie'], [21, 25, 'Spre țara făgăduinței'], [26, 36, 'A doua numărătoare și hotarele']]);
+  AR('Nm9', [['Ieș.', '12', 1, 'Ieșirea 12: aceeași sărbătoare a Paștelui']]);
+  AR('Nm11', [['Ps.', '77', 1, 'Ps. 77:26-31 amintește prepelițele și mana'], ['1 Cor.', '10:6', 1, '1 Cor. 10:6']]);
+  AR('Nm13', [['Deut.', '1:19-46', 1, 'Deut. 1:19-46 reia trimiterea iscoadelor'], ['Evr.', '3:7-19', 1, 'Evr. 3:7-19 (necredința din pustie)']]);
+  AR('Nm16', [['Iuda', '1:11', 1, 'Iuda 11 (răzvrătirea lui Core)']]);
+  AR('Nm21', [['Ioan', '3:14-15', 1, 'Ioan 3:14-15 (șarpele de aramă)']]);
+  AR('Nm22', [['2 Pet.', '2:15-16', 1, '2 Pet. 2:15-16 (Valaam)'], ['Miheia', '6:5', 1, 'Miheia 6:5 (Balac și Valaam)']]);
+  AR('Nm25', [['Ps.', '105', 1, 'Ps. 105:28-31 (Baal-Peor)'], ['Apoc.', '2:14', 1, 'Apoc. 2:14']]);
+  AR('Nm27', [['Deut.', '34', 1, 'Deut. 34 (moartea lui Moise)']]);
+  AR('Nm28', [['Lev.', '23', 1, 'Lev. 23 (sărbătorile)']]);
+
+  SEG('Dt', 'Deut.', 34, [[1, 4, 'Cuvântările lui Moise: istoria pustiei'], [5, 11, 'Legea și credincioșia'], [12, 26, 'Legile pentru țara făgăduinței'], [27, 30, 'Legământul din Moab'], [31, 34, 'Cântarea și moartea lui Moise']]);
+  AR('Dt5', [['Ieș.', '20', 1, 'Ieșirea 20: cele zece porunci']]);
+  AR('Dt6', [['Mat.', '22:37-38', 1, 'Mat. 22:37-38 citează Deut. 6:5']]);
+  AR('Dt8', [['Mat.', '4:4', 1, 'Mat. 4:4 citează Deut. 8:3']]);
+  AR('Dt9', [['Ieș.', '32', 1, 'Ieșirea 32: același vițel de aur']]);
+  AR('Dt18', [['Fapte', '3:22-23', 1, 'Fapte 3:22-23 citează Deut. 18:15-19']]);
+  AR('Dt32', [['Rom.', '10:19', 1, 'Rom. 10:19 citează Deut. 32:21']]);
+  AR('Dt34', [['Iuda', '1:9', 1, 'Iuda 9 (trupul lui Moise)']]);
+
+  SEG('Ios', 'Ios.', 24, [[1, 12, 'Cucerirea țării'], [13, 22, 'Împărțirea țării'], [23, 24, 'Ultimele cuvinte ale lui Isus Navi']]);
+  AR('Ios2', [['Evr.', '11:31', 1, 'Evr. 11:31 (Rahav)'], ['Iac.', '2:25', 1, 'Iac. 2:25 (Rahav)'], ['Mat.', '1:5', 1, 'Mat. 1:5 (Rahav în neamul lui Iisus)']]);
+  AR('Ios3', [['Ps.', '113', 1, 'Ps. 113:3-5 (Iordanul se dă înapoi)']]);
+  AR('Ios6', [['Evr.', '11:30', 1, 'Evr. 11:30 (zidurile Ierihonului)']]);
+  AR('Ios7', [['1 Par.', '2:7', 1, '1 Par. 2:7 (Acar)']]);
+  AR('Ios24', [['Fapte', '7:15-16', 1, 'Fapte 7:15-16']]);
+
+  SEG('Jd', 'Jud.', 21, [[1, 2, 'După moartea lui Isus Navi'], [3, 16, 'Judecătorii lui Israel'], [17, 21, 'Fărădelegile din vremea fără rege']]);
+  AR('Jd1', [['Ios.', '15-17', 1, 'Judecători 1:1–2:5 reia pe scurt cucerirea din Isus Navi 15–17']]);
+  AR('Jd2', [['Ios.', '24:28-31', 1, 'Judecători 2:6-9 reia Isus Navi 24:28-31']]);
+  AR('Jd4', [['Evr.', '11:32', 1, 'Evr. 11:32 (Barac)']]);
+  AR('Jd6', [['Evr.', '11:32', 1, 'Evr. 11:32 (Ghedeon)'], ['Ps.', '82', 1, 'Ps. 82:11 (Oreb, Zeeb, Zebee)']]);
+  AR('Jd11', [['Evr.', '11:32', 1, 'Evr. 11:32 (Iefta)']]);
+  AR('Jd13', [['Evr.', '11:32', 1, 'Evr. 11:32 (Samson)']]);
+
+  P('Rut1', 'Rut', 'Rut', 1, []);
+  P('Rut2', 'Rut', 'Rut', 2, []);
+  P('Rut3', 'Rut', 'Rut', 3, []);
+  P('Rut4', 'Rut', 'Rut', 4, [['Mat.', '1:3-6', 1, 'Mat. 1:5 (Rut în neamul lui Iisus)'], ['1 Par.', '2:9-15', 1, '1 Par. 2:9-15 (neamul lui David)']]);
+
+  SEG('1Rg', '1 Regi', 31, [[1, 7, 'Eli și Samuel'], [8, 15, 'Saul, primul rege'], [16, 31, 'David și Saul']]);
+  AR('1Rg2', [['Luc.', '1:46-55', 1, 'Luc. 1:46-55 (Magnificatul) are ecouri din rugăciunea Anei']]);
+  AR('1Rg8', [['Fapte', '13:21', 1, 'Fapte 13:21 (cererea unui rege)']]);
+  AR('1Rg13', [['Fapte', '13:21-22', 1, 'Fapte 13:21-22 (Saul respins; David ales)']]);
+  AR('1Rg19', [['Ps.', '58', 1, 'Titlul Ps. 58 (BVA): „când Saul a trimis și i-a urmărit casa, ca să-l ucidă”']]);
+  AR('1Rg21', [['Ps.', '33', 1, 'Titlul Ps. 33 (BVA): David își schimbă înfățișarea înaintea lui Ahimelec'], ['Mat.', '12:3-4', 1, 'Mat. 12:3-4 (David și pâinile punerii înainte)'], ['Marc.', '2:25-26', 1, 'Marc. 2:25-26']]);
+  AR('1Rg28', [['Sir.', '46:13-20', 1, 'Sirah 46:13-20 (Samuel)']]);
+  AR('1Rg31', [['1 Par.', '10', 1, '1 Par. 10 reia moartea lui Saul']]);
+
+  SEG('2Rg', '2 Regi', 24, [[1, 10, 'David rege peste Iuda și Israel'], [11, 20, 'Păcatul lui David și răzvrătirea lui Avesalom'], [21, 24, 'Încheierea domniei lui David']]);
+  AR('2Rg5', [['1 Par.', '11:1-9', 1, '1 Par. 11:1-9 reia ungerea și Ierusalimul'], ['1 Par.', '14', 1, '1 Par. 14']]);
+  AR('2Rg6', [['1 Par.', '13', 1, '1 Par. 13'], ['1 Par.', '15-16', 1, '1 Par. 15–16 (chivotul în Ierusalim)']]);
+  AR('2Rg7', [['1 Par.', '17', 1, '1 Par. 17 reia profeția lui Natan']]);
+  AR('2Rg8', [['1 Par.', '18', 1, '1 Par. 18']]);
+  AR('2Rg10', [['1 Par.', '19', 1, '1 Par. 19']]);
+  AR('2Rg11', [['1 Par.', '20:1-3', 1, '1 Par. 20:1-3 (asediul Rabei)']]);
+  AR('2Rg12', [['Ps.', '50', 1, 'Titlul Ps. 50 (BVA): Natan la David, după Batșeba']]);
+  AR('2Rg23', [['1 Par.', '11:10-47', 1, '1 Par. 11:10-47 (vitejii lui David)']]);
+  AR('2Rg24', [['1 Par.', '21', 1, '1 Par. 21 reia numărătoarea poporului']]);
 
   // ---- Solomon (3 Regi 1–11) ----
   P('3Rg1', 'Începutul domniei lui Solomon', '3 Regi', 1, [['1 Par.', '28-29', 1, 'T']]);
@@ -174,7 +304,7 @@
 
   window.CONCORDANTE_MODEL = {
     id: 'CRONOLOGIC_PARALEL',
-    nume: 'Cronologic-paralel cu concordanțe (de la Solomon la Macabei)',
+    nume: 'Cronologic-paralel cu concordanțe (de la Facere la Macabei)',
     nivele: { 1: 'Scriptura leagă pasajele', 2: 'verificat pe azbyka.ru', 3: 'cronologie/tradiție, de verificat' },
     pozitii: pos
   };
