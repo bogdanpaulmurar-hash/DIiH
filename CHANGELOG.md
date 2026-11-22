@@ -1,5 +1,15 @@
 # CHANGELOG — DIiH Hub
 
+## v24.52 — 2026-11-22 — Concordanțe și în planul Pr. Nicolae Dima; tranșa a doua (profeți, Macabei)
+
+Doar frontend (`index.html`, `concordante.js`, `sw.js`). Nu necesită deploy în Apps Script.
+- **Referințele se bifează singure** când capitolele lor sunt citite: dacă bifezi un capitol sau o carte întreagă în Canonic, în planul Pr. Nicolae Dima sau în alt model, referința respectivă (de ex. Isaia 36 de la 4 Regi 18) apare bifată, cu „citit deja la …”. Funcționează și pentru referințe pe versete, când tot capitolul e citit.
+- Debifarea unei referințe deja citite cere confirmare, pentru că capitolele devin necitite peste tot.
+- În **planul Pr. Nicolae Dima** (și în celelalte modele pe cărți): fiecare poziție arată câte capitole sunt citite (de ex. „1/36 cap.”) și are „Concordanțe (N)”, lista legăturilor în care apare cartea, cu ✓ sau ○ și link 📖 Anania. Bifele pozițiilor nu s-au schimbat.
+- **Modelul cronologic-paralel** are acum 115 poziții și se numește „de la Solomon la Macabei”: Ieremia (toate cele 52 de capitole, în vremea regilor), Iezechiel, Isaia 9–35 și 40–66, Ioil, Naum, Avacum, Zaharia 9–14, apoi 3 și 1 Macabei cu 2 Macabei ca referințe. Numerotarea din Ieremia în Anania e cea ebraică (verificat pe biblia.dervent.ro).
+- Legăturile care nu sunt date în text (așezate după cronologie sau tradiție) au semnul „?”.
+- Rămân pentru v24.53+: Facerea–Rut, Iov, Iuditei, Noul Testament.
+
 ## v24.51 — 2026-11-22 — Model de citire „Cronologic-paralel (cu concordanțe)”, prima tranșă
 
 Frontend (`index.html`, `concordante.js` nou, `sw.js`) și backend (`_API.gs`, 24.51). **Necesită deploy în Apps Script** (`_API.gs`). Fără taburi noi: la prima salvare apare o coloană nouă, „Concordante”, la finalul tabului ProgresScriptura.

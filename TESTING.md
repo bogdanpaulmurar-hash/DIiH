@@ -2,6 +2,17 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.52 — Concordanțe în planul Dima, tranșa a doua
+
+Înainte: doar frontend; pe telefon „Curăță Cache & Reîncarcă” până apare v24.52 (backend-ul 24.51 trebuie să fie deja deployat).
+
+1. Canonic: bifează tot Isaia 36. Plan model „Cronologic-paralel”, poziția 4 Regi 18: referința „Isa. 36” e bifată, cu „citit deja”.
+2. Canonic: bifează toată cartea a doua Paralipomena. La 4 Regi 11 referința „2 Par. 22:10-23:21” și celelalte din 2 Par. apar bifate.
+3. Alege planul Pr. Nicolae Dima: la „Cartea a doua Paralipomena” vezi „N/36 cap.” cât e citit și „Concordanțe (N)”; deschide-l: legături ✓/○ cu 📖 Anania.
+4. Debifează o referință deja citită: apare confirmare; la „Anulează” rămâne bifată.
+5. Citește în planul cronologic 4 Regi 18 cu toate referințele, apoi mergi în planul Dima la Isaia: capitolele deja citite apar citite.
+6. Pe un profil fără drepturi de admin: aceleași rezultate.
+
 ## v24.51 — Model cronologic-paralel cu concordanțe
 
 Înainte: copiază `_API.gs_cod_din_skript.google.com.txt` în Apps Script (fișierul `_API.gs`), Deploy → Manage deployments → editează deployment-ul existent → New version. Apoi pe telefon: „Curăță Cache & Reîncarcă” până apare v24.51.

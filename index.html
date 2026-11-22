@@ -2766,7 +2766,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.51";
+    const APP_VERSION = "v24.52";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -11699,6 +11699,8 @@
     function concParseLoc(loc) {
       let m = (loc || '').match(/^(\d+)(?:-(\d+))?$/);
       if (m) return { whole: true, capFrom: +m[1], capTo: +(m[2] || m[1]), verse: 0 };
+      m = (loc || '').match(/^(\d+):(\d+)-(\d+):\d+$/);
+      if (m) return { whole: false, capFrom: +m[1], capTo: +m[3], verse: +m[2] };
       m = (loc || '').match(/^(\d+):(\d+)/);
       if (m) return { whole: false, capFrom: +m[1], capTo: +m[1], verse: +m[2] };
       return { whole: false, capFrom: 1, capTo: 1, verse: 0 };
@@ -11725,15 +11727,21 @@
       });
     }
 
+    // Referința e bifată dacă ai bifat-o tu SAU dacă toate capitolele ei sunt deja citite (în Canonic, în alt model sau la altă poziție)
+    function isConcRefDerived(r, readMap) {
+      for (let c = r.capFrom; c <= r.capTo; c++) if (!isScripturaCapRead(readMap, r.book.abbr, c)) return false;
+      return true;
+    }
+    function isConcRefChecked(r, readMap) { return concChecked.has(r.id) || isConcRefDerived(r, readMap); }
     function isConcPositionDone(cp, readMap) {
-      return isScripturaCapRead(readMap, cp.book.abbr, cp.cap) && cp.refs.every(r => concChecked.has(r.id));
+      return isScripturaCapRead(readMap, cp.book.abbr, cp.cap) && cp.refs.every(r => isConcRefChecked(r, readMap));
     }
 
     function getNextConcChapter(readMap) {
       for (const cp of getConcParsed()) {
         if (!isScripturaCapRead(readMap, cp.book.abbr, cp.cap)) return { book: cp.book, cap: cp.cap, key: `${cp.book.abbr}_${cp.cap}`, completed: false };
         for (const r of cp.refs) {
-          if (!r.whole || concChecked.has(r.id)) continue;
+          if (!r.whole || isConcRefChecked(r, readMap)) continue;
           let cap = r.capFrom;
           for (let c = r.capFrom; c <= r.capTo; c++) if (!isScripturaCapRead(readMap, r.book.abbr, c)) { cap = c; break; }
           return { book: r.book, cap, key: `${r.book.abbr}_${cap}`, completed: false, refId: r.id };
@@ -11765,6 +11773,19 @@
         saveScripturaReadMap(readMap);
         if (typeof markRanduialaItemToday === 'function') markRanduialaItemToday('scriptura', true);
       }
+      if (!checked && isConcRefDerived(r, getScripturaReadMap())) {
+        // capitolele sunt citite în evidență: debifarea cere confirmare, ca la poziții
+        renderModelCitirePanel();
+        showGenericConfirm(`Debifezi ${r.book.abbr} ${r.loc}? Capitolele vor fi marcate ca necitite peste tot.`, () => {
+          const rm = getScripturaReadMap();
+          for (let c = r.capFrom; c <= r.capTo; c++) setScripturaCapRead(rm, r.book.abbr, c, false);
+          saveScripturaReadMap(rm);
+          setConcRefChecked(refId, false);
+          updateScripturaDisplays();
+          renderModelCitirePanel();
+        }, 'Debifezi referința?', 'Debifează');
+        return;
+      }
       setConcRefChecked(refId, checked);
       updateScripturaDisplays();
       renderModelCitirePanel();
@@ -11772,6 +11793,29 @@
 
     function moreConc() { concViewCount += 12; renderModelCitirePanel(); }
     function earlierConc(start) { concViewStart = Math.max(0, start - 12); concViewCount += 12; renderModelCitirePanel(); }
+
+    // Strat „Concordanțe” peste modelele pe cărți: legăturile în care apar cărțile acestei poziții, doar ca stare + link
+    function renderConcLinksForBooks(bookNames, readMap) {
+      if (!window.CONCORDANTE_MODEL) return '';
+      const names = new Set(bookNames);
+      const items = [];
+      getConcParsed().forEach(cp => {
+        if (names.has(cp.book.name)) {
+          cp.refs.forEach(r => {
+            const done = isConcRefChecked(r, readMap);
+            items.push(`<div class="flex items-center justify-between text-[10px] ${done ? 'text-emerald-300' : 'text-slate-400'}"><span>${done ? '✓' : '○'} ${escapeHtmlText(cp.book.abbr)} ${cp.cap} ↔ ${escapeHtmlText(r.book.abbr)} ${escapeHtmlText(r.loc)}${r.nivel === 3 ? ' ?' : ''}</span><a href="${ananiaUrlForBook(r.book, r.capFrom, r.verse)}" target="_blank" rel="noopener" class="text-cyan-300 shrink-0 pl-2">📖</a></div>`);
+          });
+        } else {
+          cp.refs.forEach(r => {
+            if (!names.has(r.book.name)) return;
+            const done = isConcRefChecked(r, readMap);
+            items.push(`<div class="flex items-center justify-between text-[10px] ${done ? 'text-emerald-300' : 'text-slate-400'}"><span>${done ? '✓' : '○'} ${escapeHtmlText(r.book.abbr)} ${escapeHtmlText(r.loc)} ↔ ${escapeHtmlText(cp.book.abbr)} ${cp.cap}${r.nivel === 3 ? ' ?' : ''}</span><a href="${ananiaUrlForBook(r.book, r.capFrom, r.verse)}" target="_blank" rel="noopener" class="text-cyan-300 shrink-0 pl-2">📖</a></div>`);
+          });
+        }
+      });
+      if (!items.length) return '';
+      return `<details class="ml-6 mt-0.5"><summary class="text-[10px] text-slate-500 cursor-pointer select-none">Concordanțe (${items.length})</summary><div class="pt-1 space-y-0.5 max-h-48 overflow-y-auto">${items.join('')}</div></details>`;
+    }
 
     function renderConcPositions(listEl, positions, readMap) {
       const all = getConcParsed();
@@ -11794,19 +11838,18 @@
       const rowsHtml = positions.slice(start, end).map(p => {
         const cp = p.conc;
         const mainRead = isScripturaCapRead(readMap, cp.book.abbr, cp.cap);
-        const doneRefs = cp.refs.filter(r => concChecked.has(r.id)).length;
+        const doneRefs = cp.refs.filter(r => isConcRefChecked(r, readMap)).length;
         const total = 1 + cp.refs.length;
         const doneCount = (mainRead ? 1 : 0) + doneRefs;
         const mainLinks = others(cp.book, cp.cap, cp.id);
         const refsHtml = cp.refs.map(r => {
-          const checked = concChecked.has(r.id);
+          const explicit = concChecked.has(r.id);
+          const checked = isConcRefChecked(r, readMap);
           const label = `${r.book.abbr} ${r.loc}`;
           let already = '';
-          if (r.whole && !checked) {
-            let allRead = true;
-            for (let c = r.capFrom; c <= r.capTo; c++) if (!isScripturaCapRead(readMap, r.book.abbr, c)) allRead = false;
+          if (checked && !explicit) {
             const oth = others(r.book, r.capFrom, cp.id);
-            if (allRead) already = ` · <span class="text-emerald-300">citit deja${oth.length ? ' la ' + escapeHtmlText(oth[0]) : ''}</span>`;
+            already = ` · <span class="text-emerald-300">citit deja${oth.length ? ' la ' + escapeHtmlText(oth[0]) : ''}</span>`;
           }
           const url = ananiaUrlForBook(r.book, r.capFrom, r.verse);
           return `
@@ -11954,13 +11997,22 @@
       if (barEl) barEl.style.width = `${positions.length ? (doneCount / positions.length * 100) : 0}%`;
 
       if (isConcModel(activeId)) { renderConcPositions(listEl, positions, readMap); return; }
-      listEl.innerHTML = positions.map(p => `
+      const nameMapCnt = getCanonicNameToAbbrMap();
+      listEl.innerHTML = positions.map(p => {
+        let capsTot = 0, capsRead = 0;
+        p.carteCanonica.forEach(n => { const b = nameMapCnt[n]; if (!b) return; capsTot += b.caps; for (let c = 1; c <= b.caps; c++) if (isScripturaCapRead(readMap, b.abbr, c)) capsRead++; });
+        const partial = !p.bifat && capsRead > 0 ? `<span class="text-[10px] text-cyan-300 shrink-0">${capsRead}/${capsTot} cap.</span>` : '';
+        return `
+        <div>
         <label class="flex items-center space-x-2 p-2 bg-darkbg rounded-xl border ${p.bifat ? 'border-emerald-700 bg-emerald-950/20 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
           <input type="checkbox" onchange="toggleModelCitirePozitie(${p.rowId}, this.checked)" ${p.bifat ? 'checked' : ''} class="rounded text-violet-500 focus:ring-0 shrink-0">
           <span class="text-[9px] font-mono text-slate-500 w-5 shrink-0">${p.pozitie}</span>
           <span class="text-xs flex-1">${p.carteCanonica.join('; ')}</span>
+          ${partial}
         </label>
-      `).join('');
+        ${renderConcLinksForBooks(p.carteCanonica, readMap)}
+        </div>`;
+      }).join('');
     }
 
     // Modelele în care poziția ce conține cartea dată e încheiată — pentru indicatorul din Canonic
@@ -13103,7 +13155,7 @@
     }
 
   </script>
-  <script src="./concordante.js?v=24.51"></script>
+  <script src="./concordante.js?v=24.52"></script>
   <script>if (typeof renderModelCitirePanel === 'function') { try { renderModelCitirePanel(); } catch (e) {} }</script>
   <script src="./familie.js?v=24.25"></script>
   <script src="./rugaciuni-texte.js?v=24.48"></script>
