@@ -15,6 +15,7 @@ Aplicația familiei (PWA): Astăzi, Pomelnic, Calendar, Notițe, Cumpărături, 
   - tab-urile: `<section id="tab-` (today, pomelnic, calendar, notite, cumparaturi, scriptura, notazilei, more);
   - modulele: `// ======` (ex. ADSERVIO, ȘCOALĂ → SUBTAB-URI + TEME, NOTIȚE PER PROFIL, CALENDARUL ANULUI ȘCOLAR);
   - apoi deschide doar porțiunea găsită.
+- `concordante.js` — datele modelului de citire „Cronologic-paralel cu concordanțe” (poziții, referințe, sursă, nivel); id-urile referințelor nu se reordonează
 - `familie.js` (remindere/familie, Ecran pornit), `adservio-marcaj.js`, `sw.js` (service worker), `manifest*.json`, `icons/`
 - Backend Apps Script, copiat din script.google.com: `_API.gs…txt` (`doGet`/`doPost`, rutare), `_Familie.gs…txt`, `_Adservio.gs…txt`, `_Cod.gs…txt`, `_Psaltire.gs…txt`
 

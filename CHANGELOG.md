@@ -1,5 +1,19 @@
 # CHANGELOG — DIiH Hub
 
+## v24.51 — 2026-11-22 — Model de citire „Cronologic-paralel (cu concordanțe)”, prima tranșă
+
+Frontend (`index.html`, `concordante.js` nou, `sw.js`) și backend (`_API.gs`, 24.51). **Necesită deploy în Apps Script** (`_API.gs`). Fără taburi noi: la prima salvare apare o coloană nouă, „Concordante”, la finalul tabului ProgresScriptura.
+- Plan de citire (Model): apare modelul **„Cronologic-paralel cu concordanțe (de la Solomon la Neemia)”**, lângă cele existente. Ai 92 de poziții: 3 și 4 Regi, apoi Daniel, 1 Ezdra, Estera și Neemia.
+- La fiecare poziție ai **o bifă pentru capitolul principal** și **câte una pentru fiecare referință** (de ex. 4 Regi 18 → Isaia 36, 2 Paralipomena 29–32, Sirah 48, Miheia). Le bifezi când vrei, în orice ordine. Poziția se încheie (verde) doar când sunt bifate toate.
+- Fiecare capitol are link **📖 Anania** direct în Biblia Anania (biblia.dervent.ro), la versetul exact acolo unde e cazul. Sub fiecare referință e scrisă sursa legăturii. Legăturile așezate după cronologie sau tradiție au semnul „?”.
+- Capitolul principal se bifează în evidența ta obișnuită, deci apare citit și în Canonic și în celelalte modele. Referința pe capitole întregi bifează și capitolul în evidență; referința pe câteva versete, nu.
+- Când un capitol apare și în altă poziție, vezi „Apare și la: …”, iar o referință deja citită arată „citit deja la …”.
+- „Lectură nouă” golește și bifele referințelor (rămân în istoric); copia de siguranță și restaurarea admin le includ.
+- **Linkurile spre Biblia Anania** din aplicație (versetul zilei etc.) foloseau coduri ghicite din primele litere și greșeau la multe cărți (de ex. Isaia). Acum folosesc codurile reale de pe site.
+- Ce nu e încă în această tranșă (vine în v24.52+): profeții fără dată în text (Isaia 9–35 și 40–66, Ieremia 2–51, Iezechiel 2–48, Ioil, Naum, Avacum), Iov, Iuditei, Macabei, adaosurile la Estera, Facerea–Rut și Noul Testament. Numerotarea capitolelor din Ieremia în BVA se verifică înainte.
+- Backend (`_API.gs`): `scripturaFindRow`, `scripturaSaveRow`, `scripturaArchive`, `scripturaPublic` și acțiunile `saveScripturaProgress` / `adminRestoreScriptura` citesc și scriu coloana „Concordante”. Acțiunile existente nu își schimbă semnătura; aplicația nouă merge și cu backend-ul vechi (doar că bifele referințelor rămân pe dispozitiv până la deploy).
+- Sursele legăturilor: textul Scripturii (BVA), trimiterile „Параллели” din Biblia ortodoxă de pe azbyka.ru (verificate pentru Isaia 36 și Isaia 7), titlurile profeților și ale psalmilor. Neverificat încă pe fiecare capitol în Anania; se completează în tranșele următoare.
+
 ## v24.50 — 2026-11-22 — Autoscroll fluid
 
 Doar frontend (`autoscroll.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.

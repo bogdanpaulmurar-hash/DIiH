@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.42
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.51
  * Autor: Bogdan Murar
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.42";
+const BACKEND_VERSION = "24.51";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -790,6 +790,7 @@ function doGet(e) {
     const row = scripturaGetRow(ss, auth.profile.email);
     if (e.parameter.capitole !== undefined) row.capitole = e.parameter.capitole.toString().slice(0, 40000);
     if (e.parameter.modelActiv !== undefined) row.modelActiv = e.parameter.modelActiv.toString().slice(0, 100);
+    if (e.parameter.concordante !== undefined) row.concordante = e.parameter.concordante.toString().slice(0, 40000);
     if (!row.inceputLa) row.inceputLa = authNow();
     scripturaSaveRow(ss, row);
     return returnResponse(e, { success: true, scripturaProgres: scripturaPublic(row) });
@@ -815,6 +816,7 @@ function doGet(e) {
     if (!last || last.capitole === undefined) return returnResponse(e, { success: false, error: "Nu există o copie de restaurat." });
     row.istoric.pop();
     row.capitole = last.capitole;
+    row.concordante = last.concordante || "";
     row.modelActiv = last.model || row.modelActiv;
     row.inceputLa = last.inceput || row.inceputLa;
     row.nrLectura = Math.max(1, row.nrLectura - 1);
@@ -2285,7 +2287,7 @@ function instaleazaBackupSaptamanal() {
 // Capitole = listă compactă „indexCarte:capitole” (ex. „0:1-50|1:1-3,5”), indexul fiind ordinea canonului din aplicație.
 // Istoric = lecturile anterioare (JSON); ultimele copii păstrează și capitolele, pentru restaurare.
 // =====================================================================================================
-const SCRIPTURA_PROGRES_COLUMNS = ["Email", "Capitole", "ModelActiv", "NrLectura", "InceputLa", "Istoric", "Actualizat"];
+const SCRIPTURA_PROGRES_COLUMNS = ["Email", "Capitole", "ModelActiv", "NrLectura", "InceputLa", "Istoric", "Actualizat", "Concordante"];
 const SCRIPTURA_ISTORIC_COPII = 5;
 
 function getOrCreateScripturaProgresSheet(ss) {
@@ -2293,7 +2295,7 @@ function getOrCreateScripturaProgresSheet(ss) {
   if (!sh) {
     sh = ss.insertSheet("ProgresScriptura");
     sh.appendRow(SCRIPTURA_PROGRES_COLUMNS);
-    sh.getRange("A1:G1").setFontWeight("bold");
+    sh.getRange("A1:H1").setFontWeight("bold");
   }
   return sh;
 }
@@ -2302,7 +2304,7 @@ function scripturaFindRow(ss, email) {
   const sh = ss.getSheetByName("ProgresScriptura");
   const em = (email || "").toString().trim().toLowerCase();
   if (!sh || sh.getLastRow() < 2 || !em) return null;
-  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 7).getValues();
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, 8).getValues();
   for (let i = 0; i < rows.length; i++) {
     if ((rows[i][0] || "").toString().trim().toLowerCase() !== em) continue;
     let istoric = [];
@@ -2315,33 +2317,36 @@ function scripturaFindRow(ss, email) {
       nrLectura: parseInt(rows[i][3], 10) || 1,
       inceputLa: rows[i][4] ? (rows[i][4] instanceof Date ? Utilities.formatDate(rows[i][4], "Europe/Bucharest", "yyyy-MM-dd HH:mm:ss") : rows[i][4].toString()) : "",
       istoric: Array.isArray(istoric) ? istoric : [],
-      actualizat: rows[i][6] ? rows[i][6].toString() : ""
+      actualizat: rows[i][6] ? rows[i][6].toString() : "",
+      concordante: rows[i][7] ? rows[i][7].toString() : ""
     };
   }
   return null;
 }
 
 function scripturaGetRow(ss, email) {
-  return scripturaFindRow(ss, email) || { rowId: 0, email: (email || "").toString().trim().toLowerCase(), capitole: "", modelActiv: "", nrLectura: 1, inceputLa: "", istoric: [], actualizat: "" };
+  return scripturaFindRow(ss, email) || { rowId: 0, email: (email || "").toString().trim().toLowerCase(), capitole: "", modelActiv: "", nrLectura: 1, inceputLa: "", istoric: [], actualizat: "", concordante: "" };
 }
 
 function scripturaSaveRow(ss, row) {
   const sh = getOrCreateScripturaProgresSheet(ss);
   // Doar ultimele copii păstrează capitolele (limita de caractere a unei celule)
-  row.istoric.forEach((h, i) => { if (i < row.istoric.length - SCRIPTURA_ISTORIC_COPII) delete h.capitole; });
+  row.istoric.forEach((h, i) => { if (i < row.istoric.length - SCRIPTURA_ISTORIC_COPII) { delete h.capitole; delete h.concordante; } });
   row.actualizat = authNow();
-  const values = [row.email, row.capitole, row.modelActiv, row.nrLectura, row.inceputLa, JSON.stringify(row.istoric), row.actualizat];
-  if (row.rowId) sh.getRange(row.rowId, 1, 1, 7).setValues([values]);
+  ensureSheetColumns(sh, ["Concordante"]); // v24.51: coloană nouă la final, creată doar dacă lipsește
+  const values = [row.email, row.capitole, row.modelActiv, row.nrLectura, row.inceputLa, JSON.stringify(row.istoric), row.actualizat, row.concordante || ""];
+  if (row.rowId) sh.getRange(row.rowId, 1, 1, 8).setValues([values]);
   else { sh.appendRow(values); row.rowId = sh.getLastRow(); }
 }
 
 function scripturaArchive(ss, email, motiv) {
   const row = scripturaGetRow(ss, email);
   if (row.capitole || row.inceputLa) {
-    row.istoric.push({ nr: row.nrLectura, model: row.modelActiv, inceput: row.inceputLa, sfarsit: authNow(), motiv: motiv, capitole: row.capitole });
+    row.istoric.push({ nr: row.nrLectura, model: row.modelActiv, inceput: row.inceputLa, sfarsit: authNow(), motiv: motiv, capitole: row.capitole, concordante: row.concordante || "" });
     row.nrLectura = row.nrLectura + 1;
   }
   row.capitole = "";
+  row.concordante = "";
   row.inceputLa = authNow();
   scripturaSaveRow(ss, row);
   return row;
@@ -2349,7 +2354,7 @@ function scripturaArchive(ss, email, motiv) {
 
 function scripturaPublic(row) {
   return {
-    capitole: row.capitole, modelActiv: row.modelActiv, nrLectura: row.nrLectura, inceputLa: row.inceputLa, actualizat: row.actualizat,
+    capitole: row.capitole, concordante: row.concordante || "", modelActiv: row.modelActiv, nrLectura: row.nrLectura, inceputLa: row.inceputLa, actualizat: row.actualizat,
     istoric: row.istoric.map(h => ({ nr: h.nr, model: h.model, inceput: h.inceput, sfarsit: h.sfarsit, motiv: h.motiv, areCopie: h.capitole !== undefined }))
   };
 }
