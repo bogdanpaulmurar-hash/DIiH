@@ -2,6 +2,16 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.54 — Concordanțe de la Facere
+
+Doar frontend; „Curăță Cache & Reîncarcă” până apare v24.54.
+
+1. Scriptură → Model de citire → „Cronologic-paralel cu concordanțe (de la Facere la Macabei)”: lista începe cu Facerea 1, înaintea lui 3 Regi 1.
+2. Facerea 1 are referințe (Ioan 1:1-18, Evr. 11:3), fiecare cu bifă, sursă și 📖 Anania.
+3. Bifează Facerea 1 → capitolul apare citit în evidența generală; referințele ei rămân de bifat separat.
+4. La Ieșirea 32: referința Ps. 105 bifată din card nu mută pagina.
+5. 2 Regi 12: referința Ps. 50 duce la psalmul 50 în Anania.
+
 ## v24.53 — Concordanțe în widget, fără salt de pagină
 
 Înainte: doar frontend; „Curăță Cache & Reîncarcă” până apare v24.53.
