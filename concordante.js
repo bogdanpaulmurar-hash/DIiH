@@ -22,6 +22,9 @@
   };
   const pos = [];
   // P(id, perioadă, carte, capitol, [referințe], notă?)
+  const R = r => ({ carte: r[0], loc: r[1], nivel: r[2], sursa: S[r[3]] || r[3] });
+  // A(id, [referințe]) adaugă referințe LA FINALUL unei poziții existente (tranșa a doua), fără să schimbe ID-urile vechi
+  const A = (id, refs) => { const p = pos.find(x => x.id === id); if (!p) throw new Error('Poziție necunoscută: ' + id); refs.forEach(r => p.refs.push(R(r))); };
   const P = (id, per, carte, cap, refs, nota) => pos.push({ id, per, carte, cap, refs: (refs || []).map(r => ({ carte: r[0], loc: r[1], nivel: r[2], sursa: S[r[3]] || r[3] })), nota: nota || '' });
 
   // ---- Solomon (3 Regi 1–11) ----
@@ -83,7 +86,7 @@
   P('Dn6', 'Daniel în groapa cu lei', 'Dan.', 6, [['Bel', '1', 3, 'C']]);
   P('Dn7', 'Viziunea celor patru fiare (anul 1 al lui Belșațar)', 'Dan.', 7, []);
   P('Dn8', 'Berbecul și țapul (anul 3 al lui Belșațar)', 'Dan.', 8, []);
-  P('Dn9', 'Rugăciunea lui Daniel; cele șaptezeci de săptămâni', 'Dan.', 9, [], 'Daniel 9:2 citează profeția lui Ieremia despre cei 70 de ani; numerotarea capitolului din Ieremia în BVA se verifică în tranșa următoare.');
+  P('Dn9', 'Rugăciunea lui Daniel; cele șaptezeci de săptămâni', 'Dan.', 9, [['Ier.', '25:11-12', 1, 'Daniel 9:2 numește pe Ieremia și cei 70 de ani'], ['Ier.', '29:10', 1, 'Daniel 9:2 numește pe Ieremia și cei 70 de ani']]);
   P('Dn10', 'Viziunea de la Tigru (anul 3 al lui Cirus)', 'Dan.', 10, []);
   P('Dn11', 'Războaiele regilor', 'Dan.', 11, []);
   P('Dn12', 'Sfârșitul vremurilor', 'Dan.', 12, []);
@@ -117,9 +120,61 @@
   });
   // Neemia: în aplicație „Cartea lui Neemia (a doua a lui Ezdra)” folosește prescurtarea „Neem.”
 
+
+  // =====================================================================================================
+  // TRANȘA A DOUA (v24.52): profeții și pozițiile de după Neemia. Numerotarea din Ieremia în Anania e cea
+  // ebraică (25 = cei 70 de ani, 26 = cuvântarea din templu, 36 = cartea arsă, 51 = Babilonul): verificat pe biblia.dervent.ro.
+  // =====================================================================================================
+  A('4Rg15', [['Ioil', '1-3', 3, 'C']]);
+  A('4Rg16', [['Isa.', '9-12', 3, 'C']]);
+  A('4Rg18', [['Isa.', '13-23', 3, 'Isaia 14:28 (anul morții lui Ahaz) și 20:1 (Sargon, Asdod) dau reperele; restul n-are dată în text'], ['Isa.', '24-35', 3, 'C']]);
+  A('4Rg22', [['Ier.', '2-6', 1, 'Ieremia 3:6 (în zilele regelui Iosia)']]);
+  A('4Rg23', [['Naum', '1-3', 3, 'Naum 3:8 vorbește de Tebe ca de o cetate căzută; Ninive e încă în picioare']]);
+  A('4Rg24', [
+    ['Avac.', '1-3', 3, 'Avacum 1:6 („ridic pe Caldei”); textul nu dă domnia'],
+    ['Ier.', '7-20', 3, 'Ieremia 7:1-15 și 26:1-6 repetă aceeași cuvântare, datată în 26:1 la începutul domniei lui Ioiachim; capitolele 8–20 n-au dată în text'],
+    ['Ier.', '22', 1, 'Ieremia 22:11, 18, 24 numește pe Salum (Ioahaz), Ioiachim și Conia'],
+    ['Ier.', '23', 3, 'C'],
+    ['Ier.', '24', 1, 'Ieremia 24:1 (după robia lui Iehonia)'],
+    ['Ier.', '25-26', 1, 'Ieremia 25:1 (anul 4 al lui Ioiachim) și 26:1 (începutul domniei lui Ioiachim)'],
+    ['Ier.', '35-36', 1, 'Ieremia 35:1 și 36:1 (în zilele lui Ioiachim)'],
+    ['Ier.', '45-46', 1, 'Ieremia 45:1 și 46:2 (anul 4 al lui Ioiachim)']
+  ]);
+  A('4Rg25', [
+    ['Ier.', '21', 1, 'Ieremia 21:1 (regele Zedechia)'],
+    ['Ier.', '27-29', 1, 'Ieremia 27:1 și 28:1 (anul 4 al lui Zedechia)'],
+    ['Ier.', '30-34', 1, 'Ieremia 32:1 (anul 10 al lui Zedechia) și 34:1 (asediul); capitolele 30–31 n-au dată'],
+    ['Ier.', '37-39', 1, 'Ieremia 37:1 și 39:1-2 (Zedechia, căderea cetății)'],
+    ['Ier.', '40-44', 1, 'Ieremia 40:1 și 41:1 (după căderea Ierusalimului); vezi 4 Regi 25:22-26'],
+    ['Ier.', '47-49', 3, 'Ieremia 49:34 e datat (începutul domniei lui Zedechia); celelalte oracole despre neamuri n-au dată'],
+    ['Ier.', '50-51', 1, 'Ieremia 51:59 (anul 4 al lui Zedechia)'],
+    ['Iez.', '2-23', 1, 'Iezechiel 1:2, 8:1 și 20:1 (anii 5–7 ai robiei) și 24:1 (anul 9)'],
+    ['Iez.', '25-32', 1, 'Iezechiel 26:1, 29:1, 32:1 (anii 10–12 ai robiei)'],
+    ['Iez.', '33', 1, 'Iezechiel 33:21 (anul 12 al robiei: vestea căderii Ierusalimului)']
+  ]);
+  A('Dn3', [['Iez.', '34-39', 3, 'C']]);
+  A('Dn4', [['Iez.', '40-48', 3, 'Iezechiel 40:1 (anul 25 al robiei); așezare tradițională în timpul robiei']]);
+  A('1Ez1', [['Isa.', '40-43', 3, 'Isaia 44:28 și 45:1 numesc pe Cirus; capitolele de mângâiere 40–43 și 46–66 se așază aici tematic'], ['Isa.', '46-66', 3, 'C']]);
+  A('Ne13', [['Zah.', '9-14', 3, 'C']]);
+
+  // ---- Epoca Macabeilor (după Neemia și Maleahi) ----
+  ['Persecuția lui Ptolemeu Filopator', 'Rugăciunea lui Simon', 'Dumnezeu scapă pe evrei', 'Rugăciunea lui Eleazar', 'Libertate și sărbătoare', 'Scrisoarea regelui', 'Pocăința și mulțumirea']
+    .forEach((per, i) => P('3Mc' + (i + 1), per, '3 Mac.', i + 1, [], i === 0 ? 'Cartea a treia a Macabeilor se petrece sub Ptolemeu al IV-lea Filopator (în Egipt), înaintea persecuției lui Antioh din 1 Macabei (așezare istorică, de verificat).' : ''));
+  const MAC1 = ['Antioh Epifan și prigoana', 'Matatia și răscoala', 'Iuda Macabeul', 'Curățirea și înnoirea templului', 'Luptele lui Iuda în jur', 'Moartea lui Antioh; Lisias', 'Nicanor și Alchim', 'Alianța cu romanii', 'Ionatan', 'Ionatan mare preot', 'Ionatan și Demetrie', 'Ionatan și Iudeea', 'Ionatan prins', 'Simon, mare preot', 'Simon și Antioh al VII-lea', 'Sfârșitul lui Simon'];
+  const MAC1_REFS = {
+    1: [['Dan.', '8', 3, 'Tâlcuire patristică (de verificat): Daniel 8 și 11 privesc la Antioh Epifan'], ['Dan.', '11', 3, 'C'], ['2 Mac.', '1-6', 1, 'T']],
+    2: [['2 Mac.', '7', 1, '2 Macabei 7: mucenicii din aceeași prigoană']],
+    3: [['2 Mac.', '8', 1, 'T']],
+    4: [['2 Mac.', '10-11', 1, 'T'], ['Ioan', '10:22', 1, 'Ioan 10:22 (sărbătoarea înnoirii templului)']],
+    5: [['2 Mac.', '12', 1, 'T']],
+    6: [['2 Mac.', '9', 1, 'T'], ['2 Mac.', '13', 1, 'T']],
+    7: [['2 Mac.', '14-15', 1, 'T']]
+  };
+  MAC1.forEach((per, i) => P('1Mc' + (i + 1), per, '1 Mac.', i + 1, MAC1_REFS[i + 1] || []));
+
   window.CONCORDANTE_MODEL = {
     id: 'CRONOLOGIC_PARALEL',
-    nume: 'Cronologic-paralel cu concordanțe (de la Solomon la Neemia)',
+    nume: 'Cronologic-paralel cu concordanțe (de la Solomon la Macabei)',
     nivele: { 1: 'Scriptura leagă pasajele', 2: 'verificat pe azbyka.ru', 3: 'cronologie/tradiție, de verificat' },
     pozitii: pos
   };
