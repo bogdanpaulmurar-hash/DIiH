@@ -302,9 +302,84 @@
   };
   MAC1.forEach((per, i) => P('1Mc' + (i + 1), per, '1 Mac.', i + 1, MAC1_REFS[i + 1] || []));
 
+  // =====================================================================================================
+  // TRANȘA A PATRA (v24.55): Iov, cărțile deuterocanonice ca referințe, Noul Testament.
+  // Iov: textul din BVA nu dă dată; așezat după Facere, după tradiția patristică (nivel 3).
+  // Baruh 1:1-9 (verificat în BVA): scris în Babilon, după arderea Ierusalimului, înaintea lui Iehonia.
+  // Iuditei 4:3 (verificat în BVA): poporul „de abia se întorsese din robie”, templul sfințit după pângărire.
+  // =====================================================================================================
+  const IOV = pos.length;
+  SEG('Iov', 'Iov', 42, [[1, 2, 'Prologul: Iov și încercarea'], [3, 31, 'Iov și prietenii lui'], [32, 37, 'Cuvântările lui Elihu'], [38, 42, 'Răspunsul Domnului și sfârșitul']]);
+  { const iov = pos.splice(IOV); const at = pos.findIndex(x => x.id === 'Fc50') + 1; pos.splice(at, 0, ...iov); }
+  AR('Iov1', [['Iac.', '5:11', 1, 'Iac. 5:11 (răbdarea lui Iov)'], ['Iez.', '14:12-20', 1, 'Iez. 14:14, 20 (Noe, Daniel și Iov)']]);
+  AR('Iov5', [['1 Cor.', '3:19', 1, '1 Cor. 3:19 citează Iov 5:13']]);
+  AR('Iov38', [['Fac.', '1', 3, 'Iov 38:4-11 amintește zidirea pământului și a mării (Facerea 1)']]);
+  AR('Iov41', [['Rom.', '11:35', 1, 'Rom. 11:35 citează Iov 41:3']]);
+  AR('Iov42', [['Iac.', '5:11', 1, 'Iac. 5:11 („sfârșitul pe care i l-a dat Domnul”)']]);
+
+  // Deuterocanonice ca referințe ale pozițiilor existente
+  A('4Rg25', [
+    ['Bar.', '1-5', 1, 'Baruh 1:1-9 (în Babilon, după arderea Ierusalimului, în fața lui Iehonia, vremea lui Sedechia)'],
+    ['Ep. Ier.', '1', 3, 'Epistola lui Ieremia către cei duși în robie (vezi Ier. 29); tradiția o așază aici'],
+    ['Plâng.', '1-5', 3, 'Plângerile urmează căderii Ierusalimului (4 Regi 25; Ier. 52); așezare tradițională']
+  ]);
+  A('Dn3', [['Cânt. 3 tin.', '1', 1, 'Cântarea celor trei tineri: Septuaginta o așază în Daniel 3 (în BVA e cartea de sine stătătoare)']]);
+  A('1Ez6', [['Iud.', '1-16', 3, 'Iuditei 4:3 (BVA): poporul „de abia se întorsese din robie”, templul sfințit după pângărire; începutul cărții numește pe Nabucodonosor „în Ninive” (așezare de verificat)']]);
+
+  // =====================================================================================================
+  // NOUL TESTAMENT (v24.55). Evangheliile: Matei ca fir principal; la fiecare capitol, capitolele din Marc, Luca și Ioan
+  // care povestesc aceleași întâmplări. Fiecare capitol din Marc, Luca și Ioan apare o singură dată ca referință întreagă.
+  // =====================================================================================================
+  Object.assign(S, { SY: 'Aceeași întâmplare povestită și în alte evanghelii (textul evangheliilor); sinopsa evanghelică', NT: 'Textul Noului Testament (Fapte / epistole): numește aceeași cetate, persoană sau întâmplare' });
+  const MT = ['Genealogia și nașterea', 'Magii și fuga în Egipt', 'Botezul Domnului', 'Ispitirea și chemarea ucenicilor', 'Predica de pe munte: fericirile', 'Predica de pe munte: rugăciunea', 'Predica de pe munte: încheierea', 'Vindecări și furtuna', 'Vindecări și chemarea lui Matei', 'Trimiterea celor doisprezece', 'Ioan Botezătorul și cei necredincioși', 'Sâmbăta și semnul lui Iona', 'Pildele Împărăției', 'Moartea Botezătorului; înmulțirea pâinilor', 'Predania bătrânilor; femeia cananeeancă', 'Mărturisirea lui Petru', 'Schimbarea la față', 'Smerenia și iertarea', 'Căsătoria; tânărul bogat', 'Lucrătorii viei; calea spre Ierusalim', 'Intrarea în Ierusalim', 'Pilda nunții; întrebările', 'Cuvântare împotriva fariseilor', 'Cuvântarea despre sfârșit', 'Pildele despre veghere și judecată', 'Cina cea de taină; Ghetsimani', 'Răstignirea', 'Învierea'];
+  MT.forEach((per, i) => P('Mt' + (i + 1), per, 'Mat.', i + 1, []));
+  const G = (id, arr) => A(id, arr.map(([c, l, n, s]) => [c, l, n, s || 'SY']));
+  G('Mt1', [['Luc.', '1', 1], ['Luc.', '3:23-38', 1]]);
+  G('Mt2', [['Luc.', '2', 1]]);
+  G('Mt3', [['Marc.', '1', 1], ['Luc.', '3', 1], ['Ioan', '1', 1]]);
+  G('Mt4', [['Luc.', '4', 1], ['Ioan', '2', 3], ['Ioan', '3', 3], ['Ioan', '4', 3]]);
+  G('Mt5', [['Luc.', '6', 1]]);
+  G('Mt6', [['Luc.', '11', 1], ['Luc.', '12', 1], ['Luc.', '16', 1]]);
+  G('Mt8', [['Marc.', '5', 1]]);
+  G('Mt9', [['Marc.', '2', 1], ['Luc.', '5', 1]]);
+  G('Mt10', [['Luc.', '10', 1]]);
+  G('Mt11', [['Luc.', '7', 1]]);
+  G('Mt12', [['Marc.', '3', 1], ['Ioan', '5', 3]]);
+  G('Mt13', [['Marc.', '4', 1], ['Luc.', '8', 1], ['Luc.', '13', 1]]);
+  G('Mt14', [['Marc.', '6', 1], ['Ioan', '6', 1]]);
+  G('Mt15', [['Marc.', '7', 1]]);
+  G('Mt16', [['Marc.', '8', 1], ['Luc.', '9', 1]]);
+  G('Mt17', [['Marc.', '9', 1]]);
+  G('Mt18', [['Luc.', '15', 1]]);
+  G('Mt19', [['Marc.', '10', 1], ['Luc.', '18', 1], ['Ioan', '7', 3], ['Ioan', '8', 3], ['Ioan', '9', 3], ['Ioan', '10', 3]]);
+  G('Mt20', [['Ioan', '11', 3]]);
+  G('Mt21', [['Marc.', '11', 1], ['Luc.', '19', 1], ['Ioan', '12', 1]]);
+  G('Mt22', [['Marc.', '12', 1], ['Luc.', '20', 1], ['Luc.', '14', 1]]);
+  G('Mt24', [['Marc.', '13', 1], ['Luc.', '21', 1], ['Luc.', '17', 1]]);
+  G('Mt26', [['Marc.', '14', 1], ['Luc.', '22', 1], ['Ioan', '13', 1], ['Ioan', '14', 1], ['Ioan', '15', 1], ['Ioan', '16', 1], ['Ioan', '17', 1]]);
+  G('Mt27', [['Marc.', '15', 1], ['Luc.', '23', 1], ['Ioan', '18', 1], ['Ioan', '19', 1]]);
+  G('Mt28', [['Marc.', '16', 1], ['Luc.', '24', 1], ['Ioan', '20', 1], ['Ioan', '21', 1]]);
+
+  // Faptele Apostolilor, cu epistolele așezate unde Scriptura numește cetatea sau întâmplarea
+  const FA = ['Înălțarea; alegerea lui Matia', 'Pogorârea Duhului Sfânt', 'Vindecarea șchiopului', 'Petru și Ioan înaintea Sinedriului', 'Anania și Safira', 'Cei șapte diaconi', 'Cuvântarea și uciderea lui Ștefan', 'Filip; Simon Magul', 'Convertirea lui Pavel', 'Petru și Corneliu', 'Biserica din Antiohia', 'Moartea lui Iacov; Petru în temniță', 'Prima călătorie: Cipru', 'Iconiu, Listra și Derbe', 'Soborul din Ierusalim', 'A doua călătorie: Filipi', 'Tesalonic, Berea, Atena', 'Corint', 'Efes', 'Troa; Milet', 'Pavel la Ierusalim', 'Pavel înaintea poporului', 'Pavel înaintea Sinedriului', 'Pavel înaintea lui Felix', 'Pavel înaintea lui Festus', 'Pavel înaintea lui Agripa', 'Furtuna pe mare', 'Malta și Roma'];
+  FA.forEach((per, i) => P('Fa' + (i + 1), per, 'Fapte', i + 1, []));
+  A('Fa9', [['Gal.', '1', 1, 'NT']]);
+  A('Fa13', [['2 Tim.', '3:10-12', 1, '2 Tim. 3:11 numește Antiohia, Iconiu și Listra']]);
+  A('Fa15', [['Gal.', '2', 3, 'Galateni 2:1-10 se leagă de acest sobor (tâlcuire tradițională)'], ['Iac.', '1-5', 3, 'Iacov, „fratele Domnului”, prezidează soborul (Fapte 15:13); tradiția așază aici epistola sa']]);
+  A('Fa16', [['Filip.', '1-4', 3, 'Biserica din Filipi a fost întemeiată aici (Fapte 16:12-40); epistola e scrisă mai târziu, din temniță']]);
+  A('Fa18', [['1 Tes.', '1-5', 1, 'Fapte 18:5 și 1 Tes. 3:6 (Timotei vine din Macedonia la Pavel în Corint)'], ['2 Tes.', '1-3', 3, 'Scrisă în același timp cu 1 Tesaloniceni']]);
+  A('Fa19', [['1 Cor.', '1-16', 1, '1 Cor. 16:8 („voi rămâne în Efes până la Cincizecime”)']]);
+  A('Fa20', [['2 Cor.', '1-13', 3, 'Scrisă din Macedonia (2 Cor. 2:13; 7:5; 9:2), la vremea din Fapte 20:1-2'], ['Rom.', '1-16', 1, 'Fapte 20:2-3 (trei luni în Grecia) și Rom. 15:25-26; 16:23 (Gaiu, Corint)']]);
+  A('Fa28', [['Efes.', '1-6', 1, 'Efes. 6:20 (Pavel în lanțuri)'], ['Col.', '1-4', 1, 'Col. 4:3, 10, 18 (Pavel în lanțuri; Aristarh)'], ['Filim.', '1', 1, 'Filimon 1, 9-10 (Pavel în lanțuri, Onisim)'], ['Evr.', '1-13', 3, 'Evr. 13:23-24 („cei din Italia”, Timotei eliberat); tradiția o leagă de Pavel'], ['1 Tim.', '1-6', 3, 'După Fapte: epistolele pastorale (1 Tim. 1:3 Macedonia, Efes)'], ['Tit', '1-3', 3, 'După Fapte (Tit 1:5, Creta)'], ['2 Tim.', '1-4', 3, 'Ultima epistolă a lui Pavel din Roma (2 Tim. 4:6-8)'], ['1 Pet.', '1-5', 3, '1 Pet. 5:13 („Babilon” = Roma); tradiția'], ['2 Pet.', '1-3', 3, '2 Pet. 1:14-15 (apropiata sa moarte); tradiția'], ['Iuda', '1', 1, 'Iuda 3-18 reia 2 Pet. 2–3']]);
+
+  // Apocalipsa, cu epistolele lui Ioan
+  const AP = ['Vedenia Fiului Omului', 'Scrisorile către Efes, Smirna, Pergam, Tiatira', 'Scrisorile către Sardes, Filadelfia, Laodiceea', 'Tronul din cer', 'Cartea cu șapte peceți', 'Cele șase peceți', 'Cei 144.000', 'A șaptea pecete; primele trâmbițe', 'A cincea și a șasea trâmbiță', 'Îngerul cu cărticica', 'Cei doi martori', 'Femeia și balaurul', 'Cele două fiare', 'Mielul și secerișul', 'Cântarea Mielului; cele șapte cupe', 'Revărsarea cupelor', 'Marea curvă', 'Căderea Babilonului', 'Nunta Mielului', 'Cele o mie de ani', 'Cerul nou și pământul nou', 'Încheierea'];
+  AP.forEach((per, i) => P('Ap' + (i + 1), per, 'Apoc.', i + 1, []));
+  A('Ap1', [['1 Ioan', '1-5', 3, 'Tradiția: Ioan scrie la Efes, apoi pe Patmos (Apoc. 1:9)'], ['2 Ioan', '1', 3, 'C'], ['3 Ioan', '1', 3, 'C']]);
+
   window.CONCORDANTE_MODEL = {
     id: 'CRONOLOGIC_PARALEL',
-    nume: 'Cronologic-paralel cu concordanțe (de la Facere la Macabei)',
+    nume: 'Cronologic-paralel cu concordanțe (de la Facere la Apocalipsă)',
     nivele: { 1: 'Scriptura leagă pasajele', 2: 'verificat pe azbyka.ru', 3: 'cronologie/tradiție, de verificat' },
     pozitii: pos
   };

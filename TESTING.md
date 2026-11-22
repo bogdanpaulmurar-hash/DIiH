@@ -2,6 +2,16 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.55 — Iov, deuterocanonice, Noul Testament
+
+Doar frontend; „Curăță Cache & Reîncarcă” până apare v24.55.
+
+1. Modelul cu concordanțe: după Facerea 50 urmează Iov 1 (42 de capitole), apoi Ieșirea 1.
+2. La 4 Regi 25 apar Baruh 1–5, Plângerile și Epistola lui Ieremia; la Daniel 3, Cântarea celor trei tineri.
+3. La finalul modelului: Matei 1 cu Luca 1 și 3:23-38; Matei 14 cu Marc 6 și Ioan 6; Matei 28 cu Marc 16, Luca 24, Ioan 20–21.
+4. Bifează Marc 6 din Matei 14: la Marc, capitolul apare citit și în lista generală.
+5. Fapte 18 are 1 Tes. și 2 Tes.; Fapte 28 are Efes., Col., Filim. etc.; Apoc. 1 are 1–3 Ioan.
+
 ## v24.54 — Concordanțe de la Facere
 
 Doar frontend; „Curăță Cache & Reîncarcă” până apare v24.54.
