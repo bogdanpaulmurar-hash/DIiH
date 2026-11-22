@@ -1,4 +1,4 @@
-/* DIiH — autoscroll.js (v24.49)
+/* DIiH — autoscroll.js (v24.50)
  * Buton plutitor „Autoscroll”: derulează foarte lent pagina (sau containerul care derulează efectiv în ecranul curent).
  * Prima apăsare pornește; apăsarea următoare deschide controlul discret (mai încet / mai repede / oprește).
  * Se poate ascunde din 🔔 Notificări (aceeași casetă ca „Ecran pornit”). Doar frontend, fără date în foaie.
@@ -10,9 +10,9 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
   // Pixeli pe secundă, de la foarte lent la mai rapid
-  const SPEEDS = [4, 8, 14, 22, 34, 50, 75, 110];
-  let level = Math.min(SPEEDS.length - 1, Math.max(0, LS.get('diih_autoscroll_level', 2)));
-  let running = false, raf = 0, last = 0, acc = 0, touching = false, menuOpen = false;
+  const SPEEDS = [3, 5, 7, 10, 14, 19, 26, 35, 48, 65, 90, 125];
+  let level = Math.min(SPEEDS.length - 1, Math.max(0, LS.get('diih_autoscroll_v2', 3)));
+  let running = false, raf = 0, last = 0, touching = false, menuOpen = false;
   let target = null, targetCheck = 0;
 
   function isScrollable(el) {
@@ -32,28 +32,32 @@
   }
   function atEnd(el) { return el.scrollTop + el.clientHeight >= el.scrollHeight - 1; }
 
+  // Poziție ținută în zecimale: nu mai rotunjim la pixel întreg la fiecare pas, deci mișcarea e continuă
+  let pos = 0;
   function frame(t) {
     if (!running) return;
-    const dt = Math.min(0.1, (t - last) / 1000); last = t;
+    const dt = Math.min(0.05, (t - last) / 1000); last = t;
     if (!touching && !document.hidden) {
-      if (!target || !target.isConnected || t - targetCheck > 700) { target = findTarget(); targetCheck = t; }
-      acc += SPEEDS[level] * dt;
-      if (acc >= 1) {
-        const px = Math.floor(acc); acc -= px;
-        const before = target.scrollTop;
-        target.scrollTop = before + px;
-        if (target.scrollTop === before && atEnd(target)) { // am ajuns la capăt: reîncearcă pe alt container la următoarea verificare
-          targetCheck = 0;
-          const alt = findTarget();
-          if (alt === target) { stop(true); return; }
-        }
+      if (!target || !target.isConnected || t - targetCheck > 700) {
+        const nt = findTarget(); targetCheck = t;
+        if (nt !== target) { target = nt; pos = target.scrollTop; target.style.scrollBehavior = 'auto'; }
+      }
+      // dacă utilizatorul a derulat singur (sau pagina s-a mutat), reluăm de unde e acum
+      if (Math.abs(target.scrollTop - pos) > 2) pos = target.scrollTop;
+      const before = target.scrollTop;
+      pos += SPEEDS[level] * dt;
+      target.scrollTop = pos;
+      if (atEnd(target) && target.scrollTop - before < 0.01) {
+        const alt = findTarget();
+        if (alt === target) { stop(true); return; }
+        target = null;
       }
     }
     raf = requestAnimationFrame(frame);
   }
   function start() {
     if (running) return;
-    running = true; acc = 0; target = null; last = performance.now();
+    running = true; target = null; last = performance.now();
     raf = requestAnimationFrame(frame);
     render();
   }
@@ -64,7 +68,7 @@
   }
   function setLevel(d) {
     level = Math.min(SPEEDS.length - 1, Math.max(0, level + d));
-    LS.set('diih_autoscroll_level', level);
+    LS.set('diih_autoscroll_v2', level);
     render();
   }
   function menu(show) {
