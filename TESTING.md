@@ -2,6 +2,17 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.53 — Concordanțe în widget, fără salt de pagină
+
+Înainte: doar frontend; „Curăță Cache & Reîncarcă” până apare v24.53.
+
+1. Planul Pr. Nicolae Dima, următorul capitol 2 Par. 20: în Scriptură, sub „Următorul capitol de citit”, apare „Concordanțe de văzut (2 Par. 20)” cu „Legat de 3 Regi 22” și link 📖 Anania. Titlul se vede întreg.
+2. Același text apare în widgetul „Continuitate Sf. Scriptură” din Astăzi; atingerea linkului nu te duce în Scriptură.
+3. La un capitol cu referințe (ex. 3 Regi 5 în planul cronologic): referințele au bife; bifează una din widget, fără să se miște pagina.
+4. Din Astăzi: apasă „Am citit” de mai multe ori: pagina rămâne exact unde ești.
+5. În Scriptură, în lista modelului derulată în jos: bifează o poziție; lista nu sare la început.
+6. Butonul ↗ de lângă „Am citit” deschide capitolul în biblia.dervent.ro.
+
 ## v24.52 — Concordanțe în planul Dima, tranșa a doua
 
 Înainte: doar frontend; pe telefon „Curăță Cache & Reîncarcă” până apare v24.52 (backend-ul 24.51 trebuie să fie deja deployat).
