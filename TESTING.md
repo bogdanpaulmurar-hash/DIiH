@@ -2,6 +2,15 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.50 — Autoscroll fluid
+
+Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.50.
+
+1. Pornește Autoscroll pe un text lung (Rugăciuni): textul urcă lin, fără tremur sau sărituri, la treapta implicită și la cele mai mici.
+2. „+” de câteva ori: viteza crește treptat, fără salt mare între trepte; la treapta 12 e rapid, dar tot fluid.
+3. Derulează cu degetul în timp ce merge, apoi dă drumul: continuă de unde ai rămas, fără să sară înapoi.
+4. Verifică pe iPhone și pe Samsung.
+
 ## v24.49 — Autoscroll plutitor
 
 Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.49.

@@ -1,5 +1,11 @@
 # CHANGELOG — DIiH Hub
 
+## v24.50 — 2026-11-22 — Autoscroll fluid
+
+Doar frontend (`autoscroll.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- Derularea nu mai înaintează din pixel în pixel (care făcea textul să tremure): mișcarea e acum continuă, chiar și la viteza cea mai mică.
+- Treptele de viteză sunt mai fine (12, de la foarte lent la rapid); treapta implicită e lentă. Treapta aleasă se resetează o dată la această versiune.
+
 ## v24.49 — 2026-11-21 — Autoscroll plutitor
 
 Doar frontend (`autoscroll.js` nou, `familie.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
