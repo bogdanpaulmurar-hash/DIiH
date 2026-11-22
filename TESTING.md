@@ -2,6 +2,21 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.51 — Model cronologic-paralel cu concordanțe
+
+Înainte: copiază `_API.gs_cod_din_skript.google.com.txt` în Apps Script (fișierul `_API.gs`), Deploy → Manage deployments → editează deployment-ul existent → New version. Apoi pe telefon: „Curăță Cache & Reîncarcă” până apare v24.51.
+
+1. Scriptură → Plan de Citire (Model): în listă apare „Cronologic-paralel cu concordanțe (de la Solomon la Neemia)”; alege-l. Vezi „0 / 92”.
+2. La „3 Regi 1” bifează capitolul principal: poziția rămâne neîncheiată, scrie „1 din 2 bifate”. Bifează referința „1 Par. 28-29”: poziția devine verde, contorul urcă la „1 / 92”.
+3. În Canonic (Anania): 3 Regi 1 și 1 Paralipomena 28–29 apar citite.
+4. Apasă „📖 Anania ↗” la o referință pe versete (de ex. 2 Par. 32:1-19 la 4 Regi 18): se deschide biblia.dervent.ro la versetul respectiv.
+5. La 4 Regi 18 bifează „Isaia 36”: capitolul Isaia 36 apare citit în Canonic. Mai jos, la 4 Regi 19, „Isaia 37” apare cu sursa azbyka.ru.
+6. Bifează referința „Isaia 36” și vezi la 4 Regi 18 „Apare și la: …” unde e cazul; o referință pe capitol deja citit arată „citit deja”.
+7. Închide și redeschide aplicația, apoi intră de pe alt dispozitiv: bifele referințelor sunt aceleași (în Sheet, tabul ProgresScriptura, coloana „Concordante” conține ID-uri ca `3Rg1.a`).
+8. Schimbă modelul pe „Ordinea canonică Anania”: lista veche și bifele ei merg ca înainte.
+9. Versetul zilei / Biblia: butonul spre Anania deschide cartea și capitolul corect (de ex. Isaia, Psalmi).
+10. Repetă pe un profil fără drepturi de admin: aceleași bife; „Lectură nouă” golește și referințele.
+
 ## v24.50 — Autoscroll fluid
 
 Înainte: doar frontend. Pe telefon: „Curăță Cache & Reîncarcă” până apare v24.50.

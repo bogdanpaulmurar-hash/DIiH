@@ -1,10 +1,11 @@
-const CACHE_NAME = 'diih-cache-v24.50';
+const CACHE_NAME = 'diih-cache-v24.51';
 const ASSETS = [
   './index.html',
   './familie.js',
   './rugaciuni-texte.js',
   './rugaciuni.js',
   './autoscroll.js',
+  './concordante.js',
   './andreea.html',
   './manifest.json',
   './manifest-andreea.json',

@@ -2766,7 +2766,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.50";
+    const APP_VERSION = "v24.51";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -4512,7 +4512,7 @@
     }
 
     // Fișierele aplicației, reîncărcate direct de pe server (ocolind cache-ul HTTP al browserului, 10 min pe GitHub Pages)
-    const APP_SHELL_FILES = ['./', './index.html', './familie.js', './rugaciuni-texte.js', './rugaciuni.js', './autoscroll.js', './sw.js', './manifest.json', './adservio-marcaj.js'];
+    const APP_SHELL_FILES = ['./', './index.html', './familie.js', './rugaciuni-texte.js', './rugaciuni.js', './autoscroll.js', './concordante.js', './sw.js', './manifest.json', './adservio-marcaj.js'];
 
     // Curăță cache-ul aplicației și aduce ultima versiune publicată. localStorage (date, cont, setări) rămâne.
     async function forceCleanStorageAndReload() {
@@ -6503,6 +6503,8 @@
 
     function generateBibliaDerventUrl(cartea, capitol) {
       if (!cartea) return "https://biblia.dervent.ro";
+      const exactUrl = (typeof ananiaUrlByName === 'function') ? ananiaUrlByName(cartea, capitol) : null; // v24.51: codurile reale de pe site
+      if (exactUrl) return exactUrl;
       const capNum = String(parseInt(capitol, 10) || 1).padStart(2, '0');
       const b = cartea.toLowerCase();
       let code = "Fc";
@@ -11379,7 +11381,12 @@
         return 0;
       };
       const nameMap = getCanonicNameToAbbrMap();
-      const positions = (typeof allModelCitire !== 'undefined' && allModelCitire.length) ? getModelCitirePositions(getActiveModelCitireId()) : [];
+      const activeModelId = getActiveModelCitireId();
+      if (isConcModel(activeModelId)) {
+        const nx = getNextConcChapter(readMap);
+        if (nx) return nx;
+      }
+      const positions = (typeof allModelCitire !== 'undefined' && allModelCitire.length && !isConcModel(activeModelId)) ? getModelCitirePositions(activeModelId) : [];
       for (const p of positions) {
         for (const n of p.carteCanonica) {
           const b = nameMap[n];
@@ -11404,6 +11411,7 @@
       const readMap = getScripturaReadMap();
       setScripturaCapRead(readMap, next.book.abbr, next.cap, true);
       saveScripturaReadMap(readMap);
+      if (next.refId) setConcRefChecked(next.refId, true);
 
       // Bifează automat lectura scripturii în calendarul de rânduială pentru ziua de azi
       if (typeof markRanduialaItemToday === 'function') {
@@ -11490,7 +11498,7 @@
     async function pushScripturaProgress() {
       if (!getAuthSession()) return;
       scripturaPushInFlight = true;
-      const params = { ...apiAuthParams(), action: 'saveScripturaProgress', capitole: encodeScripturaProgress(getScripturaReadMap()), ...scripturaPendingExtra };
+      const params = { ...apiAuthParams(), action: 'saveScripturaProgress', capitole: encodeScripturaProgress(getScripturaReadMap()), concordante: encodeConcChecked(), ...scripturaPendingExtra };
       scripturaPendingExtra = {};
       try {
         const data = await apiJsonp(params);
@@ -11511,6 +11519,7 @@
       if (sp) {
         applyScripturaStateMeta(sp);
         localStorage.setItem('diih_scriptura_read', JSON.stringify(decodeScripturaProgress(sp.capitole)));
+        if (typeof sp.concordante === 'string') applyConcCheckedFromCloud(sp.concordante); // serverul vechi nu trimite câmpul: rămân bifele locale
       } else if (sess && sess.profile) {
         // Primul contact cu cloudul: adminul își mută progresul existent (local + pozițiile bifate în vechiul
         // sistem comun); celelalte profiluri încep de la zero
@@ -11571,6 +11580,7 @@
           if (!data || !data.success) { showToast((data && data.error) || 'Lectura nouă nu a putut fi pornită.'); return; }
           applyScripturaStateMeta(data.scripturaProgres);
           localStorage.setItem('diih_scriptura_read', '{}');
+          applyConcCheckedFromCloud('');
           updateScripturaDisplays();
           renderModelCitirePanel();
           showToast(`Lectura nr. ${data.scripturaProgres.nrLectura} a început!`);
@@ -11629,12 +11639,207 @@
           if (email === getMyAuthEmail()) {
             applyScripturaStateMeta(data.scripturaProgres);
             localStorage.setItem('diih_scriptura_read', JSON.stringify(decodeScripturaProgress(data.scripturaProgres.capitole)));
+            if (typeof data.scripturaProgres.concordante === 'string') applyConcCheckedFromCloud(data.scripturaProgres.concordante);
             updateScripturaDisplays();
             renderModelCitirePanel();
           }
           showToast(isReset ? 'Progres resetat (copie păstrată).' : 'Progres restaurat.');
         } catch (e) { showToast(e.message); }
       }, isReset ? 'Resetare progres Scriptură' : 'Restaurare progres Scriptură', isReset ? 'Resetează' : 'Restaurează');
+    }
+
+    // ====== MODELUL CU CONCORDANȚE (v24.51) — date în concordante.js ======
+    // Capitolul principal se bifează în evidența existentă (diih_scriptura_read / ProgresScriptura.Capitole).
+    // Referințele au bife proprii, salvate doar ca ID-uri (diih_scriptura_conc / ProgresScriptura.Concordante).
+    // O poziție e încheiată când capitolul principal și toate referințele sunt bifate.
+    const ANANIA_COD_VT = ['Fc','Ies','Lv','Nm','Dt','Ios','Jd','Rut','1Rg','2Rg','3Rg','4Rg','1Par','2Par','Ezr','Ne','Est','Iov','Ps','Pr','Ecc','Cant','Is','Ir','Plg','Iz','Dn','Os','Am','Mi','Ioil','Avd','Iona','Naum','Avc','Sof','Ag','Za','Mal','Tob','Idt','Bar','Epist','Tin','3Ezr','Sol','Sir','Sus','Bel','1Mac','2Mac','3Mac','Man'];
+    const ANANIA_COD_NT = ['Mt','Mc','Lc','In','FA','Rm','1Co','2Co','Ga','Ef','Flp','Col','1Tes','2Tes','1Tim','2Tim','Tit','Flm','Evr','Iac','1Ptr','2Ptr','1In','2In','3In','Iuda','Ap'];
+    let concChecked = new Set();
+    try { concChecked = new Set(JSON.parse(localStorage.getItem('diih_scriptura_conc') || '[]')); } catch (e) { concChecked = new Set(); }
+    let concParsedCache = null;
+    let concViewStart = null;
+    let concViewCount = 12;
+
+    function isConcModel(id) { return !!(window.CONCORDANTE_MODEL && id === window.CONCORDANTE_MODEL.id); }
+    function encodeConcChecked() { return Array.from(concChecked).join(','); }
+    function saveConcChecked() {
+      try { localStorage.setItem('diih_scriptura_conc', JSON.stringify(Array.from(concChecked))); } catch (e) {}
+      scheduleScripturaPush();
+    }
+    function applyConcCheckedFromCloud(str) {
+      concChecked = new Set((str || '').split(',').map(x => x.trim()).filter(Boolean));
+      try { localStorage.setItem('diih_scriptura_conc', JSON.stringify(Array.from(concChecked))); } catch (e) {}
+    }
+    function setConcRefChecked(refId, val) {
+      if (val) concChecked.add(refId); else concChecked.delete(refId);
+      saveConcChecked();
+    }
+
+    // Linkul spre Biblia Anania (biblia.dervent.ro): VT-<cod>-<capitol pe 2 cifre>#VT-<cod>-<cap>-<verset>
+    function ananiaUrlForBook(book, cap, verse) {
+      if (!book) return 'https://biblia.dervent.ro';
+      const all = getAllScripturaBooks();
+      const idx = all.findIndex(b => b.abbr === book.abbr);
+      const vtN = SCRIPTURA_CANON.vt.length;
+      const cod = idx < 0 ? null : (idx < vtN ? ANANIA_COD_VT[idx] : ANANIA_COD_NT[idx - vtN]);
+      if (!cod) return 'https://biblia.dervent.ro';
+      const t = idx < vtN ? 'VT' : 'NT';
+      const cc = String(parseInt(cap, 10) || 1).padStart(2, '0');
+      return `https://biblia.dervent.ro/${t}-${cod}-${cc}` + (verse ? `#${t}-${cod}-${cc}-${verse}` : '');
+    }
+    function ananiaUrlByName(cartea, capitol) {
+      const norm = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, '').trim();
+      const q = norm(cartea);
+      if (!q) return null;
+      const books = getAllScripturaBooks();
+      const book = books.find(b => norm(b.name) === q || norm(b.abbr) === q) || books.find(b => norm(b.name).includes(q) || q.includes(norm(b.name)));
+      return book ? ananiaUrlForBook(book, capitol) : null;
+    }
+
+    function concParseLoc(loc) {
+      let m = (loc || '').match(/^(\d+)(?:-(\d+))?$/);
+      if (m) return { whole: true, capFrom: +m[1], capTo: +(m[2] || m[1]), verse: 0 };
+      m = (loc || '').match(/^(\d+):(\d+)/);
+      if (m) return { whole: false, capFrom: +m[1], capTo: +m[1], verse: +m[2] };
+      return { whole: false, capFrom: 1, capTo: 1, verse: 0 };
+    }
+
+    function getConcParsed() {
+      if (concParsedCache) return concParsedCache;
+      const model = window.CONCORDANTE_MODEL;
+      if (!model) return [];
+      const byAbbr = {};
+      getAllScripturaBooks().forEach(b => { byAbbr[b.abbr] = b; });
+      concParsedCache = model.pozitii.map((p, i) => ({
+        id: p.id, idx: i, per: p.per, nota: p.nota, book: byAbbr[p.carte], cap: p.cap,
+        refs: p.refs.map((r, j) => ({ id: `${p.id}.${String.fromCharCode(97 + j)}`, book: byAbbr[r.carte], loc: r.loc, nivel: r.nivel, sursa: r.sursa, ...concParseLoc(r.loc) })).filter(r => r.book)
+      })).filter(p => p.book);
+      return concParsedCache;
+    }
+
+    function getConcPositions() {
+      return getConcParsed().map(cp => {
+        const names = [cp.book.name];
+        cp.refs.forEach(r => { if (!names.includes(r.book.name)) names.push(r.book.name); });
+        return { rowId: 'c:' + cp.id, modelId: window.CONCORDANTE_MODEL.id, pozitie: cp.idx + 1, carteCanonica: names, conc: cp };
+      });
+    }
+
+    function isConcPositionDone(cp, readMap) {
+      return isScripturaCapRead(readMap, cp.book.abbr, cp.cap) && cp.refs.every(r => concChecked.has(r.id));
+    }
+
+    function getNextConcChapter(readMap) {
+      for (const cp of getConcParsed()) {
+        if (!isScripturaCapRead(readMap, cp.book.abbr, cp.cap)) return { book: cp.book, cap: cp.cap, key: `${cp.book.abbr}_${cp.cap}`, completed: false };
+        for (const r of cp.refs) {
+          if (!r.whole || concChecked.has(r.id)) continue;
+          let cap = r.capFrom;
+          for (let c = r.capFrom; c <= r.capTo; c++) if (!isScripturaCapRead(readMap, r.book.abbr, c)) { cap = c; break; }
+          return { book: r.book, cap, key: `${r.book.abbr}_${cap}`, completed: false, refId: r.id };
+        }
+      }
+      return null;
+    }
+
+    function toggleConcMain(posId, checked) {
+      const cp = getConcParsed().find(x => x.id === posId);
+      if (!cp) return;
+      const readMap = getScripturaReadMap();
+      setScripturaCapRead(readMap, cp.book.abbr, cp.cap, checked);
+      saveScripturaReadMap(readMap);
+      if (checked && typeof markRanduialaItemToday === 'function') markRanduialaItemToday('scriptura', true);
+      updateScripturaDisplays();
+      renderModelCitirePanel();
+    }
+
+    // Referință pe capitole întregi: bifa marchează și capitolele în evidența generală. Debifarea nu le șterge de acolo.
+    function toggleConcRef(refId, checked) {
+      const posId = refId.split('.')[0];
+      const cp = getConcParsed().find(x => x.id === posId);
+      const r = cp && cp.refs.find(x => x.id === refId);
+      if (!r) return;
+      if (checked && r.whole) {
+        const readMap = getScripturaReadMap();
+        for (let c = r.capFrom; c <= r.capTo; c++) setScripturaCapRead(readMap, r.book.abbr, c, true);
+        saveScripturaReadMap(readMap);
+        if (typeof markRanduialaItemToday === 'function') markRanduialaItemToday('scriptura', true);
+      }
+      setConcRefChecked(refId, checked);
+      updateScripturaDisplays();
+      renderModelCitirePanel();
+    }
+
+    function moreConc() { concViewCount += 12; renderModelCitirePanel(); }
+    function earlierConc(start) { concViewStart = Math.max(0, start - 12); concViewCount += 12; renderModelCitirePanel(); }
+
+    function renderConcPositions(listEl, positions, readMap) {
+      const all = getConcParsed();
+      // unde mai apare același capitol (capitol principal sau referință) — „a avut legătură cu alt loc”
+      const where = {};
+      const addWhere = (book, from, to, posId, label) => { for (let c = from; c <= to; c++) { const k = `${book.abbr}|${c}`; (where[k] = where[k] || []).push({ posId, label }); } };
+      all.forEach(cp => {
+        addWhere(cp.book, cp.cap, cp.cap, cp.id, `${cp.book.abbr} ${cp.cap}`);
+        cp.refs.forEach(r => addWhere(r.book, r.capFrom, r.capTo, cp.id, `${cp.book.abbr} ${cp.cap}`));
+      });
+      const others = (book, cap, posId) => {
+        const seen = new Set();
+        return (where[`${book.abbr}|${cap}`] || []).filter(w => w.posId !== posId && !seen.has(w.label) && seen.add(w.label)).map(w => w.label);
+      };
+      const firstUndone = positions.findIndex(p => !p.bifat);
+      let start = concViewStart !== null ? concViewStart : Math.max(0, (firstUndone < 0 ? 0 : firstUndone) - 1);
+      start = Math.min(start, Math.max(0, all.length - 1));
+      const end = Math.min(all.length, start + concViewCount);
+      const nivelTag = n => n === 3 ? ' <span class="text-amber-300 font-bold" title="Așezare după cronologie sau tradiție; de verificat">?</span>' : '';
+      const rowsHtml = positions.slice(start, end).map(p => {
+        const cp = p.conc;
+        const mainRead = isScripturaCapRead(readMap, cp.book.abbr, cp.cap);
+        const doneRefs = cp.refs.filter(r => concChecked.has(r.id)).length;
+        const total = 1 + cp.refs.length;
+        const doneCount = (mainRead ? 1 : 0) + doneRefs;
+        const mainLinks = others(cp.book, cp.cap, cp.id);
+        const refsHtml = cp.refs.map(r => {
+          const checked = concChecked.has(r.id);
+          const label = `${r.book.abbr} ${r.loc}`;
+          let already = '';
+          if (r.whole && !checked) {
+            let allRead = true;
+            for (let c = r.capFrom; c <= r.capTo; c++) if (!isScripturaCapRead(readMap, r.book.abbr, c)) allRead = false;
+            const oth = others(r.book, r.capFrom, cp.id);
+            if (allRead) already = ` · <span class="text-emerald-300">citit deja${oth.length ? ' la ' + escapeHtmlText(oth[0]) : ''}</span>`;
+          }
+          const url = ananiaUrlForBook(r.book, r.capFrom, r.verse);
+          return `
+            <div class="pl-6 py-1 border-t border-bordercol/40">
+              <div class="flex items-center space-x-2">
+                <input type="checkbox" onchange="toggleConcRef('${r.id}', this.checked)" ${checked ? 'checked' : ''} class="rounded text-cyan-500 focus:ring-0 shrink-0">
+                <span class="text-xs flex-1 ${checked ? 'text-emerald-200' : 'text-slate-200'}">${escapeHtmlText(label)}${nivelTag(r.nivel)}${already}</span>
+                <a href="${url}" target="_blank" rel="noopener" class="text-[11px] text-cyan-300 shrink-0">📖 Anania ↗</a>
+              </div>
+              <p class="pl-6 text-[9px] text-slate-500">${escapeHtmlText(r.sursa)}</p>
+            </div>`;
+        }).join('');
+        return `
+          <div class="rounded-xl border ${p.bifat ? 'border-emerald-700 bg-emerald-950/20' : 'border-bordercol bg-darkbg'} p-2">
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" onchange="toggleConcMain('${cp.id}', this.checked)" ${mainRead ? 'checked' : ''} class="rounded text-violet-500 focus:ring-0 shrink-0">
+              <span class="text-[9px] font-mono text-slate-500 w-6 shrink-0">${p.pozitie}</span>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold ${p.bifat ? 'text-emerald-200' : 'text-white'}">${escapeHtmlText(cp.book.abbr)} ${cp.cap} <span class="font-normal text-slate-400">· ${escapeHtmlText(cp.per)}</span></p>
+                ${mainLinks.length ? `<p class="text-[9px] text-slate-500">Apare și la: ${escapeHtmlText(mainLinks.slice(0, 3).join(', '))}</p>` : ''}
+              </div>
+              <a href="${ananiaUrlForBook(cp.book, cp.cap)}" target="_blank" rel="noopener" class="text-[11px] text-cyan-300 shrink-0">📖 Anania ↗</a>
+            </div>
+            ${refsHtml}
+            ${cp.refs.length ? `<p class="pl-6 pt-1 text-[10px] ${p.bifat ? 'text-emerald-300' : 'text-slate-400'}">${doneCount} din ${total} bifate</p>` : ''}
+            ${cp.nota ? `<p class="pl-6 pt-1 text-[10px] text-amber-200/80">${escapeHtmlText(cp.nota)}</p>` : ''}
+          </div>`;
+      }).join('');
+      listEl.innerHTML =
+        (start > 0 ? `<button onclick="earlierConc(${start})" class="w-full text-[11px] text-slate-400 py-1">↑ Arată pozițiile de dinainte (${start})</button>` : '') +
+        rowsHtml +
+        (end < all.length ? `<button onclick="moreConc()" class="w-full text-[11px] text-cyan-300 py-1.5 border border-bordercol rounded-xl">Arată încă 12 (${all.length - end} rămase)</button>` : '') +
+        `<p class="text-[9px] text-slate-500 pt-1">Legături: ? = așezare după cronologie sau tradiție (de verificat). Numerotarea e cea din Biblia Anania (BVA, Septuaginta). Textul se deschide în biblia.dervent.ro.</p>`;
     }
 
     // ====== PLAN DE CITIRE PE MODEL (ModelCitire) — Secțiunile 4-5 ======
@@ -11655,7 +11860,10 @@
       allModelCitire.forEach(p => {
         if (!byId[p.modelId]) byId[p.modelId] = { modelId: p.modelId, modelNume: p.modelNume, activ: p.activ };
       });
-      return Object.values(byId);
+      const list = Object.values(byId);
+      // Modelul cu concordanțe vine din concordante.js (nu din Sheet) și apare în aceeași listă
+      if (window.CONCORDANTE_MODEL) list.push({ modelId: window.CONCORDANTE_MODEL.id, modelNume: window.CONCORDANTE_MODEL.nume, activ: true });
+      return list;
     }
 
     function getActiveModelCitireId() {
@@ -11675,6 +11883,7 @@
     }
 
     function getModelCitirePositions(modelId) {
+      if (isConcModel(modelId)) return getConcPositions();
       return allModelCitire.filter(p => p.modelId === modelId).sort((a, b) => a.pozitie - b.pozitie);
     }
 
@@ -11695,6 +11904,7 @@
 
     // O poziție din model e bifată când toate capitolele tuturor cărților ei sunt citite (în orice model)
     function isModelPositionDone(p, readMap) {
+      if (p.conc) return isConcPositionDone(p.conc, readMap);
       const nameMap = getCanonicNameToAbbrMap();
       const books = p.carteCanonica.map(n => nameMap[n]).filter(Boolean);
       return books.length > 0 && books.every(b => {
@@ -11743,6 +11953,7 @@
       if (badgeEl) badgeEl.textContent = `${doneCount} / ${positions.length}`;
       if (barEl) barEl.style.width = `${positions.length ? (doneCount / positions.length * 100) : 0}%`;
 
+      if (isConcModel(activeId)) { renderConcPositions(listEl, positions, readMap); return; }
       listEl.innerHTML = positions.map(p => `
         <label class="flex items-center space-x-2 p-2 bg-darkbg rounded-xl border ${p.bifat ? 'border-emerald-700 bg-emerald-950/20 text-emerald-200' : 'border-bordercol text-slate-300'} cursor-pointer">
           <input type="checkbox" onchange="toggleModelCitirePozitie(${p.rowId}, this.checked)" ${p.bifat ? 'checked' : ''} class="rounded text-violet-500 focus:ring-0 shrink-0">
@@ -12892,6 +13103,8 @@
     }
 
   </script>
+  <script src="./concordante.js?v=24.51"></script>
+  <script>if (typeof renderModelCitirePanel === 'function') { try { renderModelCitirePanel(); } catch (e) {} }</script>
   <script src="./familie.js?v=24.25"></script>
   <script src="./rugaciuni-texte.js?v=24.48"></script>
   <script src="./rugaciuni.js?v=24.48"></script>
