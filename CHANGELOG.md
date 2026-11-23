@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.56 — 2026-11-23 — Număr de note Anania la capitolul de citit
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- În widgetul „Continuitate Sf. Scriptură” (Astăzi) și în cardul „Următorul capitol de citit” (Scriptură) apare „📝 N note Anania”: câte note are capitolul în registrul „Note Biblia” (foaia de calcul, deja încărcată în aplicație).
+- Același număr apare la fiecare referință (concordanță) din card și din lista modelului cu concordanțe, și la capitolul principal din listă; la referințele pe versete se numără doar notele din versetele respective.
+- Atingerea numărului deschide „Note Biblia” direct la capitolul respectiv.
+- Dacă o carte nu are nicio notă în registru (ex. Evangheliile), nu se afișează nimic; nu se pretinde „0 note”.
+
 ## v24.55 — 2026-11-22 — Iov, deuterocanonice și Noul Testament în modelul cu concordanțe
 
 Doar frontend (`concordante.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
