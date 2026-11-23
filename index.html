@@ -1960,6 +1960,7 @@
             <span>Doar notele care au trimiteri („vezi …”)</span>
           </label>
 
+          <div id="noteBibliaLinkReport"></div>
           <div id="noteBibliaSelectionBar" class="hidden flex items-center justify-between px-2 py-1.5 bg-rose-950/30 border border-rose-800/60 rounded-xl"></div>
           <div id="noteBibliaListContainer" class="space-y-2 max-h-[60vh] overflow-y-auto"></div>
         </div>
@@ -2770,7 +2771,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.56";
+    const APP_VERSION = "v24.57";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -6847,10 +6848,39 @@
     // v24.45: lista de note se desenează câte 40, nu toate odată (era lentă)
     let noteBibliaShown = 40;
     function moreNoteBiblia() { noteBibliaShown += 40; renderNoteBibliaList(); }
+    // Raport: câte note din registru sunt legate de capitolele din Scriptură și ce cărți din Sheet nu se potrivesc
+    function noteAnLinkReport() {
+      const idx = getNoteAnIdx();
+      const linked = new Set();
+      let ok = 0, fara = 0;
+      getAllScripturaBooks().forEach(b => {
+        const e = noteAnBookEntry(b);
+        if (!e || linked.has(e)) return;
+        linked.add(e);
+        e.note.forEach(x => { if (x.cap != null && x.cap >= 1 && x.cap <= b.caps) ok++; else fara++; });
+      });
+      const nelegate = [];
+      let nelegateN = 0;
+      idx.forEach(e => { if (!linked.has(e)) { nelegate.push(`${e.nume} (${e.note.length})`); nelegateN += e.note.length; } });
+      return { total: ok + fara + nelegateN, ok, fara, nelegateN, nelegate };
+    }
+    function renderNoteBibliaLinkReport() {
+      const el = document.getElementById('noteBibliaLinkReport');
+      if (!el) return;
+      if (!allNoteAnania || !allNoteAnania.length) { el.textContent = ''; return; }
+      const r = noteAnLinkReport();
+      const probleme = r.fara + r.nelegateN;
+      el.className = `text-[10px] rounded-lg px-2 py-1 border ${probleme ? 'text-amber-200 border-amber-800 bg-amber-950/30' : 'text-emerald-300 border-emerald-800 bg-emerald-950/20'}`;
+      el.innerHTML = `Legate de capitole: <b>${r.ok}</b> din ${r.total} note.` +
+        (r.fara ? ` ${r.fara} au capitol lipsă sau în afara cărții.` : '') +
+        (r.nelegateN ? ` Cărți din Sheet care nu se potrivesc cu aplicația: ${escapeHtmlText(r.nelegate.join(', '))}.` : '');
+    }
+
     function renderNoteBibliaList() {
       const container = document.getElementById('noteBibliaListContainer');
       if (!container) return;
       renderNoteBibliaSelectionBar();
+      renderNoteBibliaLinkReport();
       const { ref, list, referrers } = getFilteredNoteBiblia();
       const badge = document.getElementById('noteBibliaCountBadge');
       if (badge) badge.textContent = list.length;
@@ -13298,7 +13328,7 @@
     }
 
   </script>
-  <script src="./concordante.js?v=24.56"></script>
+  <script src="./concordante.js?v=24.57"></script>
   <script>
     if (typeof renderModelCitirePanel === 'function') { try { renderModelCitirePanel(); } catch (e) {} }
     // Bifele din Scriptură nu mai mută pagina: poziția de derulare rămâne unde ai apăsat

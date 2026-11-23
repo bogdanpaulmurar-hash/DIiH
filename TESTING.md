@@ -2,6 +2,13 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.57 — Raport note legate
+
+Doar frontend; „Curăță Cache & Reîncarcă” până apare v24.57.
+
+1. Mai multe → Note Biblia: deasupra listei apare „Legate de capitole: X din N note”.
+2. Dacă apar „Cărți din Sheet care nu se potrivesc”, notează numele și numărul și trimite-le; se adaugă potrivirea.
+
 ## v24.56 — Număr de note Anania
 
 Doar frontend; „Curăță Cache & Reîncarcă” până apare v24.56. Necesită notele deja sincronizate (Note Biblia afișează lista).

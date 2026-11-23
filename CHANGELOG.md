@@ -1,5 +1,10 @@
 # CHANGELOG — DIiH Hub
 
+## v24.57 — 2026-11-23 — Raport „note legate” în Note Biblia
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- În Note Biblia apare o linie: „Legate de capitole: X din N note”, cu câte note au capitol lipsă sau în afara cărții și lista cărților din Sheet care nu se potrivesc cu numele din aplicație (cu numărul de note). Verde dacă toate sunt legate, galben dacă nu.
+
 ## v24.56 — 2026-11-23 — Număr de note Anania la capitolul de citit
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
