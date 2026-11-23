@@ -421,6 +421,7 @@
           <div class="pr-2 min-w-0">
             <span class="text-[10px] text-slate-400 block">De continuat lectura cu:</span>
             <span id="ownerWidgetScripturaNext" class="text-xs font-bold text-cyan-300 block break-words">Facerea 1</span>
+            <span id="ownerWidgetScripturaNotes" onclick="event.stopPropagation()" class="block mt-0.5"></span>
           </div>
           <button onclick="event.stopPropagation(); advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl active:scale-95 transition shadow shrink-0 flex items-center space-x-1">
             <span>✓</span>
@@ -1295,6 +1296,7 @@
           <div class="min-w-0">
             <span class="text-[10px] text-cyan-300 uppercase font-bold block">Următorul capitol de citit:</span>
             <span id="scripturaNextChapterTitle" class="text-sm font-bold text-white block break-words">Facerea 1 (Fac, 1)</span>
+            <span id="scripturaNextNotes" class="block mt-0.5"></span>
           </div>
           <div class="flex items-center space-x-1.5 shrink-0">
             <button onclick="advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition shadow-lg flex items-center space-x-1">
@@ -2768,7 +2770,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.55";
+    const APP_VERSION = "v24.56";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -11797,6 +11799,76 @@
     function earlierConc(start) { concViewStart = Math.max(0, start - 12); concViewCount += 12; renderModelCitirePanel(); }
 
     // Concordanțele capitolului care urmează: ca principal (cu bife) sau ca referință a altui capitol (doar link)
+    // ---- Note Anania (registrul „Note Biblia”): câte note are capitolul de citit ----
+    // Numărul vine din notele deja încărcate din foaia de calcul (allNoteAnania); nu se cere nimic în plus.
+    // Dacă cartea nu are nicio notă în registru, nu se afișează nimic (nu se pretinde „0 note”).
+    const NOTE_AN_CARTE_DUPA_ABR = {
+      'Fac.': 'Facerea', 'Ieș.': 'Ieșirea', 'Lev.': 'Leviticul', 'Num.': 'Numerele', 'Deut.': 'Deuteronomul', 'Ios.': 'Iosua Navi',
+      'Jud.': 'Judecători', 'Rut': 'Rut', '1 Regi': 'Cartea Întâi a Regilor', '2 Regi': 'Cartea a Doua a Regilor',
+      '3 Regi': 'Cartea a Treia a Regilor', '4 Regi': 'Cartea a Patra a Regilor', '1 Par.': '1 Paralipomena', '2 Par.': '2 Paralipomena',
+      '1 Ezdr.': 'Ezdra', 'Neem.': 'Neemia', 'Est.': 'Estera', 'Iov': 'Iov', 'Ps.': 'Psalmii', 'Isa.': 'Isaia'
+    };
+    let noteAnIdx = null, noteAnIdxSrc = null, noteAnIdxLen = -1;
+    function getNoteAnIdx() {
+      if (noteAnIdx && noteAnIdxSrc === allNoteAnania && noteAnIdxLen === allNoteAnania.length) return noteAnIdx;
+      const byBook = new Map();
+      (allNoteAnania || []).forEach(n => {
+        const k = normNoteBibliaBook(n.cartea);
+        if (!k) return;
+        if (!byBook.has(k)) byBook.set(k, { nume: n.cartea, note: [] });
+        byBook.get(k).note.push({ cap: noteBibliaCapNum(n), v: noteBibliaVersNum(n) });
+      });
+      noteAnIdx = byBook; noteAnIdxSrc = allNoteAnania; noteAnIdxLen = allNoteAnania.length;
+      return noteAnIdx;
+    }
+    function noteAnBookEntry(book) {
+      const idx = getNoteAnIdx();
+      if (!idx.size || !book) return null;
+      const cands = [NOTE_AN_CARTE_DUPA_ABR[book.abbr], book.name, book.abbr].filter(Boolean).map(normNoteBibliaBook);
+      for (const c of cands) if (idx.has(c)) return idx.get(c);
+      return null;
+    }
+    // loc de forma „36”, „2-4”, „32:1-19”, „22:10-23:21”; întoarce null dacă cartea nu are note în registru
+    function noteAnCount(book, capFrom, capTo, v1, v2, c2) {
+      const e = noteAnBookEntry(book);
+      if (!e) return null;
+      let n = 0;
+      e.note.forEach(x => {
+        if (x.cap == null || x.cap < capFrom || x.cap > capTo) return;
+        if (v1) {
+          if (x.cap === capFrom && x.v != null && x.v < v1) return;
+          if (x.cap === capTo && v2 && x.v != null && x.v > v2) return;
+        }
+        n++;
+      });
+      return n;
+    }
+    function noteAnCountForRef(r) {
+      if (r.whole) return noteAnCount(r.book, r.capFrom, r.capTo);
+      let m = (r.loc || '').match(/^(\d+):(\d+)-(\d+):(\d+)$/);
+      if (m) return noteAnCount(r.book, +m[1], +m[3], +m[2], +m[4]);
+      m = (r.loc || '').match(/^(\d+):(\d+)(?:-(\d+))?$/);
+      if (m) return noteAnCount(r.book, +m[1], +m[1], +m[2], m[3] ? +m[3] : +m[2]);
+      return noteAnCount(r.book, r.capFrom, r.capTo);
+    }
+    // Deschide registrul „Note Biblia” la capitolul cerut
+    function openNoteBibliaFor(abbr, cap) {
+      const book = getAllScripturaBooks().find(b => b.abbr === abbr);
+      const e = noteAnBookEntry(book);
+      if (!e) return;
+      switchTab('more');
+      switchSubTab('notebiblia');
+      jumpToNoteBibliaRef(`${e.nume} ${cap}`);
+    }
+    function noteAnChipHtml(book, cap, count) {
+      if (count == null) return '';
+      const cls = count ? 'text-amber-300 border-amber-800 bg-amber-950/40' : 'text-slate-500 border-bordercol bg-darkbg';
+      return `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); openNoteBibliaFor('${book.abbr.replace(/'/g, "\\'")}', ${cap})" class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${cls}" title="Note Anania în registru: ${count}">📝 ${count} ${count === 1 ? 'notă' : 'note'} Anania</button>`;
+    }
+    function noteAnChapterHtml(book, cap) {
+      return book ? noteAnChipHtml(book, cap, noteAnCount(book, cap, cap)) : '';
+    }
+
     function renderNextConcHtml(next, readMap) {
       if (!window.CONCORDANTE_MODEL || !next || !next.book) return '';
       const abbr = next.book.abbr, cap = next.cap;
@@ -11811,6 +11883,7 @@
                 <div class="flex items-center space-x-2">
                   <input type="checkbox" onchange="toggleConcRef('${r.id}', this.checked)" ${done ? 'checked' : ''} class="rounded text-cyan-500 focus:ring-0 shrink-0">
                   <span class="text-xs flex-1 ${done ? 'text-emerald-200' : 'text-slate-100'}">${escapeHtmlText(r.book.abbr)} ${escapeHtmlText(r.loc)}${r.nivel === 3 ? ' <span class="text-amber-300" title="Așezare după cronologie sau tradiție; de verificat">?</span>' : ''}</span>
+                  ${noteAnChipHtml(r.book, r.capFrom, noteAnCountForRef(r))}
                   <a href="${ananiaUrlForBook(r.book, r.capFrom, r.verse)}" target="_blank" rel="noopener" class="text-[11px] text-cyan-300 shrink-0">📖 Anania ↗</a>
                 </div>
                 <p class="pl-6 text-[9px] text-slate-500">${escapeHtmlText(r.sursa)}</p>
@@ -11897,6 +11970,7 @@
               <div class="flex items-center space-x-2">
                 <input type="checkbox" onchange="toggleConcRef('${r.id}', this.checked)" ${checked ? 'checked' : ''} class="rounded text-cyan-500 focus:ring-0 shrink-0">
                 <span class="text-xs flex-1 ${checked ? 'text-emerald-200' : 'text-slate-200'}">${escapeHtmlText(label)}${nivelTag(r.nivel)}${already}</span>
+                ${noteAnChipHtml(r.book, r.capFrom, noteAnCountForRef(r))}
                 <a href="${url}" target="_blank" rel="noopener" class="text-[11px] text-cyan-300 shrink-0">📖 Anania ↗</a>
               </div>
               <p class="pl-6 text-[9px] text-slate-500">${escapeHtmlText(r.sursa)}</p>
@@ -11911,6 +11985,7 @@
                 <p class="text-xs font-bold ${p.bifat ? 'text-emerald-200' : 'text-white'}">${escapeHtmlText(cp.book.abbr)} ${cp.cap} <span class="font-normal text-slate-400">· ${escapeHtmlText(cp.per)}</span></p>
                 ${mainLinks.length ? `<p class="text-[9px] text-slate-500">Apare și la: ${escapeHtmlText(mainLinks.slice(0, 3).join(', '))}</p>` : ''}
               </div>
+              ${noteAnChapterHtml(cp.book, cp.cap)}
               <a href="${ananiaUrlForBook(cp.book, cp.cap)}" target="_blank" rel="noopener" class="text-[11px] text-cyan-300 shrink-0">📖 Anania ↗</a>
             </div>
             ${refsHtml}
@@ -12152,6 +12227,8 @@
         const rb = document.getElementById('scripturaReadOnlineBtn');
         if (rb) { rb.href = ananiaUrlForBook(next.book, next.cap); rb.title = 'Citește în Biblia Anania (biblia.dervent.ro)'; }
       }
+      const notesHtml = next.completed ? '' : noteAnChapterHtml(next.book, next.cap);
+      ['scripturaNextNotes', 'ownerWidgetScripturaNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = notesHtml; });
       const concHtml = next.completed ? '' : renderNextConcHtml(next, readMap);
       ['scripturaNextConc', 'ownerWidgetScripturaConc'].forEach(id => {
         const el = document.getElementById(id);
@@ -13221,7 +13298,7 @@
     }
 
   </script>
-  <script src="./concordante.js?v=24.55"></script>
+  <script src="./concordante.js?v=24.56"></script>
   <script>
     if (typeof renderModelCitirePanel === 'function') { try { renderModelCitirePanel(); } catch (e) {} }
     // Bifele din Scriptură nu mai mută pagina: poziția de derulare rămâne unde ai apăsat

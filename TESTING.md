@@ -2,6 +2,15 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.56 — Număr de note Anania
+
+Doar frontend; „Curăță Cache & Reîncarcă” până apare v24.56. Necesită notele deja sincronizate (Note Biblia afișează lista).
+
+1. Astăzi, widgetul „Continuitate Sf. Scriptură” cu capitolul următor din Facerea/Psalmi: sub titlu apare „📝 N note Anania”.
+2. Același număr în Scriptură, sub „Următorul capitol de citit”, și la referințele din dreapta bifei.
+3. Atinge numărul: se deschide Note Biblia, căutarea fiind „Facerea 1” (sau capitolul respectiv); lista arată exact atâtea note.
+4. La o carte fără note în registru (ex. Matei) nu apare niciun număr.
+
 ## v24.55 — Iov, deuterocanonice, Noul Testament
 
 Doar frontend; „Curăță Cache & Reîncarcă” până apare v24.55.
