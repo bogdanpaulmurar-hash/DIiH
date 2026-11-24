@@ -423,10 +423,16 @@
             <span id="ownerWidgetScripturaNext" class="text-xs font-bold text-cyan-300 block break-words">Facerea 1</span>
             <span id="ownerWidgetScripturaNotes" onclick="event.stopPropagation()" class="block mt-0.5"></span>
           </div>
-          <button onclick="event.stopPropagation(); advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl active:scale-95 transition shadow shrink-0 flex items-center space-x-1">
-            <span>✓</span>
-            <span>Am citit</span>
-          </button>
+          <div class="flex flex-col gap-1.5 shrink-0">
+            <a id="ownerWidgetScripturaReadBtn" href="https://biblia.dervent.ro" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="bg-sky-700 hover:bg-sky-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl active:scale-95 transition shadow flex items-center justify-center space-x-1" title="Citește capitolul în Biblia Anania (biblia.dervent.ro)">
+              <span>📖</span>
+              <span>Citește</span>
+            </a>
+            <button onclick="event.stopPropagation(); advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl active:scale-95 transition shadow flex items-center justify-center space-x-1">
+              <span>✓</span>
+              <span>Am citit</span>
+            </button>
+          </div>
         </div>
         <div id="ownerWidgetScripturaConc" onclick="event.stopPropagation()" class="hidden"></div>
       </div>
@@ -1298,12 +1304,15 @@
             <span id="scripturaNextChapterTitle" class="text-sm font-bold text-white block break-words">Facerea 1 (Fac, 1)</span>
             <span id="scripturaNextNotes" class="block mt-0.5"></span>
           </div>
-          <div class="flex items-center space-x-1.5 shrink-0">
-            <button onclick="advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition shadow-lg flex items-center space-x-1">
+          <div class="flex flex-col gap-1.5 shrink-0">
+            <a id="scripturaReadOnlineBtn" href="https://biblia.dervent.ro" target="_blank" rel="noopener noreferrer" class="bg-sky-700 hover:bg-sky-600 text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition shadow-lg flex items-center justify-center space-x-1" title="Citește capitolul în Biblia Anania (biblia.dervent.ro)">
+              <span>📖</span>
+              <span>Citește</span>
+            </a>
+            <button onclick="advanceScripturaProgress()" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl active:scale-95 transition shadow-lg flex items-center justify-center space-x-1">
               <span>✓</span>
               <span>Am citit</span>
             </button>
-            <a id="scripturaReadOnlineBtn" href="https://www.bibliaortodoxa.ro" target="_blank" rel="noopener" class="bg-slate-800 hover:bg-slate-700 border border-bordercol text-slate-200 text-xs px-2.5 py-2 rounded-xl transition" title="Citește online pe bibliaortodoxa.ro">↗</a>
           </div>
         </div>
         <div id="scripturaNextConc" class="hidden"></div>
@@ -2771,7 +2780,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.57";
+    const APP_VERSION = "v24.58";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -12254,8 +12263,13 @@
 
       // Concordanțele capitolului următor, vizibile înainte de „Am citit”, și linkul spre Anania
       if (!next.completed) {
-        const rb = document.getElementById('scripturaReadOnlineBtn');
-        if (rb) { rb.href = ananiaUrlForBook(next.book, next.cap); rb.title = 'Citește în Biblia Anania (biblia.dervent.ro)'; }
+        const readUrl = ananiaUrlForBook(next.book, next.cap);
+        ['scripturaReadOnlineBtn', 'ownerWidgetScripturaReadBtn'].forEach(id => {
+          const rb = document.getElementById(id);
+          if (rb) { rb.href = readUrl; rb.title = `Citește ${next.book.name} ${next.cap} în Biblia Anania (biblia.dervent.ro)`; rb.classList.remove('hidden'); }
+        });
+      } else {
+        ['scripturaReadOnlineBtn', 'ownerWidgetScripturaReadBtn'].forEach(id => { const rb = document.getElementById(id); if (rb) rb.classList.add('hidden'); });
       }
       const notesHtml = next.completed ? '' : noteAnChapterHtml(next.book, next.cap);
       ['scripturaNextNotes', 'ownerWidgetScripturaNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = notesHtml; });
