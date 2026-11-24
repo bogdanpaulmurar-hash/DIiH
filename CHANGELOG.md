@@ -1,5 +1,12 @@
 # CHANGELOG — DIiH Hub
 
+## v24.58 — 2026-11-24 — Buton „Citește” spre Biblia Anania
+
+Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- În widgetul „Continuitate Sf. Scriptură” (Astăzi) și în cardul „Următorul capitol de citit” (Scriptură) apare un buton albastru **📖 Citește**, deasupra lui „✓ Am citit”. Deschide într-un tab nou capitolul curent din programul de citire pe biblia.dervent.ro (Biblia Anania), ex. 2 Par. 23.
+- Butonul mic ↗ din cardul Scripturii a fost înlocuit de noul buton (același link).
+- Când tot canonul e parcurs, butonul se ascunde.
+
 ## v24.57 — 2026-11-23 — Raport „note legate” în Note Biblia
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
