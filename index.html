@@ -872,6 +872,7 @@
         <button onclick="setSchoolSubTab('activitati')" id="btnSchoolSub_activitati" class="flex-1 px-2 py-1.5 text-xs rounded-xl bg-cyan-900 text-cyan-200 font-bold">📅 Activități</button>
         <button onclick="setSchoolSubTab('teme')" id="btnSchoolSub_teme" class="flex-1 px-2 py-1.5 text-xs rounded-xl text-slate-400">📚 Teme <span id="schoolTemeTabBadge" class="hidden ml-0.5 bg-rose-700 text-white rounded-full px-1.5 text-[9px]"></span></button>
         <button onclick="setSchoolSubTab('adservio')" id="btnSchoolSub_adservio" class="flex-1 px-2 py-1.5 text-xs rounded-xl text-slate-400">🏫 Adservio</button>
+        <button onclick="setSchoolSubTab('sabloane')" id="btnSchoolSub_sabloane" class="flex-1 px-2 py-1.5 text-xs rounded-xl text-slate-400">🔁 Șabloane</button>
       </div>
       <div id="schoolSubView_activitati" class="space-y-4">
       <div class="bg-cardbg border border-bordercol rounded-2xl p-4 shadow-sm space-y-3">
@@ -993,6 +994,16 @@
             <span id="schoolEditModeBadge" class="hidden text-[10px] bg-amber-950 border border-amber-700 text-amber-200 px-2 py-0.5 rounded-full font-bold">Mod Editare</span>
           </div>
           <div id="schoolEditInfoBanner" class="hidden p-2 bg-amber-950/40 border border-amber-800 rounded-lg text-[11px] text-amber-200"></div>
+          <!-- v24.59: precompletare din șablon de plată recurentă sau profil de copil -->
+          <div id="schoolTemplatePickBox" class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="text-slate-400 text-[11px] whitespace-nowrap">🔁 Din șablon:</span>
+              <select id="schoolTemplatePick" onchange="applySchoolTemplatePick(this.value)" class="flex-1 min-w-0 bg-darkbg border border-bordercol rounded-lg p-2 text-white text-xs">
+                <option value="">— fără șablon —</option>
+              </select>
+            </div>
+            <p id="schoolTemplateRateHint" class="hidden text-[11px] text-emerald-300 leading-snug"></p>
+          </div>
           <div class="grid grid-cols-2 gap-2">
             <input type="text" id="schoolChild" placeholder="Copil (ex: Paul / Maria)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
             <input type="text" id="schoolInstitution" placeholder="Instituție (ex: Școala 11 / Meditații)" class="bg-darkbg border border-bordercol rounded-lg p-2 text-white">
@@ -1015,7 +1026,7 @@
             </div>
             <div>
               <label class="text-[9px] text-slate-400 block">Tarif/Sumă:</label>
-              <input type="number" id="schoolRate" placeholder="Lei" oninput="calcSchoolAutoTotal()" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs text-center">
+              <input type="number" id="schoolRate" placeholder="Lei" oninput="schoolRateManual = true; calcSchoolAutoTotal()" class="w-full bg-darkbg border border-bordercol rounded-lg p-1.5 text-white text-xs text-center">
             </div>
           </div>
 
@@ -1180,6 +1191,46 @@
           <h3 class="font-bold text-amber-300 uppercase text-xs">Scutiri, vacanțe și zile libere</h3>
           <div id="adservioExtraList" class="space-y-1"></div>
         </div>
+      </div>
+
+      <!-- v24.59: ȘABLOANE PLĂȚI RECURENTE (cu istoric de prețuri) + PROFILE COPIL -->
+      <div id="schoolSubView_sabloane" class="hidden space-y-3 text-xs">
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-1">
+          <p class="text-[11px] text-slate-300 leading-snug">Un <b>șablon</b> e o plată care se repetă mereu cu același nume (ex. „Semi”). Când se schimbă prețul, adaugi un <b>tarif nou valabil de la o dată</b>: activitățile de dinainte rămân cu prețul vechi în calendar, sumar și rapoarte.</p>
+        </div>
+
+        <!-- Șabloane -->
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-bold text-cyan-300 text-xs">🔁 Șabloane plăți recurente</h3>
+            <button onclick="openSablonForm()" class="text-[11px] bg-cyan-800 text-white px-2.5 py-1 rounded-lg font-bold">➕ Șablon nou</button>
+          </div>
+          <div id="sablonFormBox" class="hidden p-2.5 bg-darkbg border border-cyan-800 rounded-xl space-y-2"></div>
+          <div id="sabloaneList" class="space-y-2"></div>
+        </div>
+
+        <!-- Profile copil -->
+        <div class="bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-bold text-violet-300 text-xs">👤 Profile copil</h3>
+            <button onclick="openProfilForm()" class="text-[11px] bg-violet-800 text-white px-2.5 py-1 rounded-lg font-bold">➕ Profil nou</button>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-snug">Copil + instituție, cu tipul de plată, orele și culoarea folosite de obicei.</p>
+          <div id="profilFormBox" class="hidden p-2.5 bg-darkbg border border-violet-800 rounded-xl space-y-2"></div>
+          <div id="profileCopilList" class="space-y-2"></div>
+        </div>
+
+        <!-- Sugestii din activitățile existente -->
+        <div id="sabloaneSugestiiBox" class="hidden bg-cardbg border border-bordercol rounded-2xl p-3 space-y-2">
+          <h3 class="font-bold text-amber-300 text-xs">💡 Sugestii din activitățile tale</h3>
+          <p class="text-[11px] text-slate-400 leading-snug">Combinații găsite în calendar. O atingere creează profilul sau șablonul; la șabloane, prețurile folosite până acum devin istoricul lui.</p>
+          <div id="sabloaneSugestiiList" class="space-y-1.5"></div>
+        </div>
+
+        <details class="bg-cardbg border border-bordercol rounded-2xl p-3">
+          <summary class="text-slate-400 font-semibold cursor-pointer select-none text-[11px]">🗄️ Arhivate</summary>
+          <div id="sabloaneArhivaList" class="space-y-1.5 pt-2"></div>
+        </details>
       </div>
     </section>
 
@@ -2780,7 +2831,7 @@
 
   <script>
     const GOOGLE_SCRIPT_API_URL = "https://script.google.com/macros/s/AKfycbwP7VaC5qkkG1ImHNByC_29it2Xm_pVpOkYAOSB3yGSSXQJOQ-UXqnmjPBAHgfgz2I20g/exec";    
-    const APP_VERSION = "v24.58";
+    const APP_VERSION = "v24.59";
 
     const BASE_DATE = new Date(2026, 8, 22);
     const BASE_RAND = 6;
@@ -5983,6 +6034,7 @@
           ...a,
           date: dStr,
           color: a.color || (existing && existing.color) || 'auto',
+          templateId: a.templateId || (existing && existing.templateId) || '',
           startHour: a.startHour || (existing && existing.startHour) || '08:00',
           endHour: a.endHour || (existing && existing.endHour) || '16:00'
         };
@@ -6048,6 +6100,7 @@
           persistSchoolTemeLocal();
           if (schoolSubTab === 'teme') renderSchoolTeme();
         }
+        if (data.schoolSabloane && typeof data.schoolSabloane === 'object') setSchoolSabloaneFromCloud(data.schoolSabloane);
         if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
         if (Array.isArray(data.notificari) && window.famNotif) window.famNotif.setInbox(data.notificari);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
@@ -6152,6 +6205,7 @@
           persistSchoolTemeLocal();
           if (schoolSubTab === 'teme') renderSchoolTeme();
         }
+        if (data.schoolSabloane && typeof data.schoolSabloane === 'object') setSchoolSabloaneFromCloud(data.schoolSabloane);
         if (data.adservio && !Array.isArray(data.adservio)) setAdservioData(data.adservio);
         if (Array.isArray(data.notificari) && window.famNotif) window.famNotif.setInbox(data.notificari);
         if (data.psaltireGrup && Array.isArray(data.psaltireGrup)) {
@@ -6197,6 +6251,7 @@
       allGanduri = JSON.parse(localStorage.getItem('diih_ganduri') || '[]');
       schoolActivities = JSON.parse(localStorage.getItem('diih_school_activities') || '[]');
       allSchoolTeme = JSON.parse(localStorage.getItem('diih_school_teme') || '[]');
+      try { loadSchoolSabloaneLocal(); refreshSchoolTemplatePicker(); } catch (e) {}
       try { adservioData = JSON.parse(localStorage.getItem('diih_adservio') || 'null'); } catch (e) { adservioData = null; }
       try { updateSchoolTemeBadge(); } catch (e) {}
       psaltireGrupData = cleanPsaltireGrup(JSON.parse(localStorage.getItem('diih_psaltire_grup') || '[]'));
@@ -8518,6 +8573,7 @@
       const rate = parseFloat(document.getElementById('schoolRate').value) || 0;
       let total = (type === 'Pe oră') ? (hours * rate) : rate;
       document.getElementById('schoolTotalCalculatedDisplay').textContent = `${total.toFixed(0)} Lei`;
+      try { refreshSchoolTemplateHint(); } catch (e) {}
     }
 
     function renderSchoolDisplay() {
@@ -8832,6 +8888,7 @@
         document.getElementById('schoolColorSelect').value = act.color || 'auto';
       }
 
+      syncSchoolTemplatePickerToEdit(act);
       calcSchoolAutoTotal();
 
       const badge = document.getElementById('schoolEditModeBadge');
@@ -8858,6 +8915,7 @@
 
     function cancelSchoolActivityEdit() {
       editingSchoolActivity = null;
+      try { resetSchoolTemplatePicker(); } catch (e) {}
       document.getElementById('schoolEditModeBadge').classList.add('hidden');
       document.getElementById('schoolEditInfoBanner').classList.add('hidden');
       document.getElementById('btnCancelSchoolEdit').classList.add('hidden');
@@ -8932,8 +8990,10 @@
           targetAct.endHour = slot.endHour;
           targetAct.noHours = false;
           targetAct.hours = hours;
-          targetAct.rate = rate;
-          targetAct.total = total;
+          const editRate = schoolRateForSave(targetAct.date, rate);
+          targetAct.rate = editRate;
+          targetAct.total = (paymentType === 'Pe oră') ? (hours * editRate) : editRate;
+          if (schoolFormTemplateId) targetAct.templateId = schoolFormTemplateId;
           targetAct.paymentType = paymentType;
           targetAct.paymentStatus = paymentStatus;
           targetAct.deadline = deadline;
@@ -8962,6 +9022,8 @@
         const slot = findFreeSchoolSlot(dateStr, child, startHour, endHour, null);
         if (slot.moved) movedSlots.push({ title, ...slot });
         if (slot.noRoom) noRoomSlot = true;
+        // v24.59: cu șablon ales, fiecare zi primește tariful valabil la data ei
+        const dayRate = schoolRateForSave(dateStr, rate);
         const item = {
           id: 'ACT-' + dateStr + '-' + Date.now() + Math.random().toString(36).substring(2,5),
           date: dateStr,
@@ -8972,8 +9034,8 @@
           endHour: slot.endHour,
           noHours: false,
           hours: hours,
-          rate: rate,
-          total: total,
+          rate: dayRate,
+          total: (paymentType === 'Pe oră') ? (hours * dayRate) : dayRate,
           paymentType: paymentType,
           paymentStatus: paymentStatus,
           deadline: deadline,
@@ -8981,6 +9043,7 @@
           color: chosenColor,
           reminders: pickupReminders,
           author: getDeviceName(),
+          templateId: schoolFormTemplateId || '',
           dataAchitat: dataAchitat,
           comentariuPlata: comentariuPlata
         };
@@ -9030,8 +9093,10 @@
           a.endHour = slot.endHour;
           a.noHours = false;
           a.hours = hours;
-          a.rate = rate;
-          a.total = total;
+          const bulkRate = schoolRateForSave(a.date, rate);
+          a.rate = bulkRate;
+          a.total = (paymentType === 'Pe oră') ? (hours * bulkRate) : bulkRate;
+          if (schoolFormTemplateId) a.templateId = schoolFormTemplateId;
           a.paymentType = paymentType;
           a.paymentStatus = paymentStatus;
           a.deadline = deadline;
@@ -9075,7 +9140,7 @@
 
     function setSchoolSubTab(tab) {
       schoolSubTab = tab;
-      ['activitati', 'teme', 'adservio'].forEach(t => {
+      ['activitati', 'teme', 'adservio', 'sabloane'].forEach(t => {
         const view = document.getElementById('schoolSubView_' + t);
         const btn = document.getElementById('btnSchoolSub_' + t);
         if (view) view.classList.toggle('hidden', t !== tab);
@@ -9088,6 +9153,7 @@
         renderSchoolTeme();
       }
       if (tab === 'adservio') renderAdservio();
+      if (tab === 'sabloane') renderSchoolSabloane();
     }
 
     function temaAddDays(n) {
@@ -9352,6 +9418,724 @@
           }).join('')}
         </div>`;
       }).join('');
+    }
+
+    // ====== ȘCOALĂ → ȘABLOANE PLĂȚI RECURENTE + PROFILE COPIL (v24.59) ======
+    // Foi: Scoala_Sabloane (profile + șabloane) și Scoala_Tarife (istoricul prețurilor, „valabil de la”).
+    // Activitățile salvate își păstrează tariful și totalul; tariful unui șablon se alege după data fiecărei activități.
+    let schoolSabloane = { items: [], tarife: [] };
+    let schoolFormTemplateId = '';   // șablonul ales în formularul de activitate
+    let schoolRateManual = false;    // true după ce tariful e scris de mână (nu se mai ia din șablon)
+    let editingSablonId = null;
+    let editingProfilId = null;
+    let sablonOpenPanel = {};        // id -> 'istoric' | 'pret'
+
+    const SAB_COLORS = [['auto', 'Auto (după copil/instituție)'], ['#06b6d4', 'Cyan'], ['#10b981', 'Smarald'], ['#f59e0b', 'Chihlimbar'], ['#ec4899', 'Roz'], ['#8b5cf6', 'Violet'], ['#3b82f6', 'Albastru'], ['#ef4444', 'Roșu']];
+    const SAB_PAY_TYPES = ['Pe oră', 'Sumă Fixă', 'Pe ședință', 'Abonament lunar'];
+    const SAB_STATUSES = ['În așteptare', 'Achitat', 'Fără plată', 'Abonament'];
+
+    function sabNorm(s) {
+      return (s || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+    function sabEsc(s) { return escapeHtmlText(s); }
+    function sabFmtDate(iso) {
+      if (!iso) return '-';
+      const p = iso.substring(0, 10).split('-');
+      return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : iso;
+    }
+    function sabFmtLei(n) {
+      const v = Number(n) || 0;
+      return (Math.round(v * 100) / 100).toString().replace('.', ',') + ' lei';
+    }
+    function sabNewId(prefix) { return prefix + '-' + Date.now() + Math.random().toString(36).substring(2, 5); }
+
+    function loadSchoolSabloaneLocal() {
+      try {
+        const d = JSON.parse(localStorage.getItem('diih_school_sabloane') || 'null');
+        if (d && Array.isArray(d.items) && Array.isArray(d.tarife)) schoolSabloane = d;
+      } catch (e) {}
+    }
+    function persistSchoolSabloaneLocal() {
+      try { localStorage.setItem('diih_school_sabloane', JSON.stringify(schoolSabloane)); } catch (e) {}
+    }
+
+    // Ce s-a salvat local în ultimele 3 minute rămâne până îl confirmă serverul
+    function sabMergeList(local, cloud) {
+      const recent = Date.now() - 180000;
+      const cloudIds = new Set(cloud.map(x => x.id));
+      const localById = {};
+      local.forEach(x => { localById[x.id] = x; });
+      const merged = cloud.map(x => {
+        const loc = localById[x.id];
+        return (loc && loc._pending && loc._pending > recent) ? loc : x;
+      });
+      local.forEach(x => { if (!cloudIds.has(x.id) && x._pending && x._pending > recent) merged.push(x); });
+      return merged;
+    }
+
+    function setSchoolSabloaneFromCloud(data) {
+      if (!data || !Array.isArray(data.items) || !Array.isArray(data.tarife)) return;
+      schoolSabloane = {
+        items: sabMergeList(schoolSabloane.items || [], data.items),
+        tarife: sabMergeList(schoolSabloane.tarife || [], data.tarife)
+      };
+      persistSchoolSabloaneLocal();
+      refreshSchoolTemplatePicker();
+      if (typeof schoolSubTab !== 'undefined' && schoolSubTab === 'sabloane') renderSchoolSabloane();
+    }
+
+    function sabSendItem(it) {
+      const q = new URLSearchParams({
+        action: 'saveSchoolSablon', id: it.id, tip: it.tip, nume: it.nume || '', copil: it.copil || '', institutie: it.institutie || '',
+        profilId: it.profilId || '', titlu: it.titlu || '', tipPlata: it.tipPlata || '', oraStart: it.oraStart || '', oraSfarsit: it.oraSfarsit || '',
+        ore: it.ore === undefined || it.ore === null ? '' : String(it.ore), culoare: it.culoare || 'auto', statusImplicit: it.statusImplicit || '',
+        mesaj: it.mesaj || '', activ: it.activ === false ? 'NU' : 'DA', callback: 'void'
+      });
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&${q.toString()}`;
+      document.body.appendChild(script);
+    }
+    function sabSendTarif(t) {
+      const q = new URLSearchParams({
+        action: 'saveSchoolTarif', id: t.id, sablonId: t.sablonId, valabilDeLa: t.valabilDeLa, tarif: String(t.tarif),
+        observatie: t.observatie || '', activ: t.activ === false ? 'NU' : 'DA', callback: 'void'
+      });
+      const script = document.createElement('script');
+      script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&${q.toString()}`;
+      document.body.appendChild(script);
+    }
+    function sabUpsertItem(it) {
+      it._pending = Date.now();
+      const i = schoolSabloane.items.findIndex(x => x.id === it.id);
+      if (i >= 0) schoolSabloane.items[i] = it; else schoolSabloane.items.push(it);
+      persistSchoolSabloaneLocal();
+      sabSendItem(it);
+    }
+    function sabUpsertTarif(t) {
+      t._pending = Date.now();
+      const i = schoolSabloane.tarife.findIndex(x => x.id === t.id);
+      if (i >= 0) schoolSabloane.tarife[i] = t; else schoolSabloane.tarife.push(t);
+      persistSchoolSabloaneLocal();
+      sabSendTarif(t);
+    }
+
+    function sabGet(id) { return (schoolSabloane.items || []).find(x => x.id === id) || null; }
+    function sabProfiles(includeArchived) { return (schoolSabloane.items || []).filter(x => x.tip === 'Profil' && (includeArchived || x.activ !== false)); }
+    function sabTemplates(includeArchived) { return (schoolSabloane.items || []).filter(x => x.tip === 'Sablon' && (includeArchived || x.activ !== false)); }
+    function sabProfilLabel(p) { return p.nume || [p.copil, p.institutie].filter(Boolean).join(' · ') || 'Profil'; }
+
+    // Șablonul completat cu valorile profilului de copil (câmpurile goale din șablon vin din profil)
+    function sablonEffective(s) {
+      const p = s.profilId ? sabGet(s.profilId) : null;
+      const pick = (k) => (s[k] !== undefined && s[k] !== null && s[k] !== '' && s[k] !== 'auto') ? s[k] : (p ? p[k] : s[k]);
+      return {
+        ...s,
+        copil: pick('copil') || '', institutie: pick('institutie') || '', tipPlata: pick('tipPlata') || 'Pe oră',
+        oraStart: pick('oraStart') || '', oraSfarsit: pick('oraSfarsit') || '', ore: pick('ore'),
+        culoare: pick('culoare') || 'auto', titlu: s.titlu || s.nume || ''
+      };
+    }
+
+    // Tarifele active, de la cel mai vechi la cel mai nou (la aceeași dată câștigă ultimul salvat)
+    function sablonTarife(id) {
+      return (schoolSabloane.tarife || []).filter(t => t.sablonId === id && t.activ !== false && t.valabilDeLa)
+        .sort((a, b) => a.valabilDeLa.localeCompare(b.valabilDeLa) || (a.dataCreare || '').localeCompare(b.dataCreare || '') || a.id.localeCompare(b.id));
+    }
+
+    // Tariful valabil la o dată: ultimul cu „valabil de la” <= data. Înainte de primul tarif se folosește primul.
+    function sablonRateForDate(id, dateStr) {
+      const list = sablonTarife(id);
+      if (!list.length) return null;
+      const d = (dateStr || localDateStr()).substring(0, 10);
+      let found = null;
+      list.forEach(t => { if (t.valabilDeLa <= d) found = t; });
+      if (found) return { tarif: Number(found.tarif) || 0, valabilDeLa: found.valabilDeLa, beforeFirst: false };
+      return { tarif: Number(list[0].tarif) || 0, valabilDeLa: list[0].valabilDeLa, beforeFirst: true };
+    }
+
+    // Activitățile care țin de un șablon: legate explicit sau (cele vechi) cu același copil + instituție + titlu
+    function sablonActivities(s) {
+      const e = sablonEffective(s);
+      const kc = sabNorm(e.copil), ki = sabNorm(e.institutie), kt = sabNorm(e.titlu);
+      return getRealSchoolActivities().filter(a => {
+        if (a.templateId) return a.templateId === s.id;
+        return kt && sabNorm(a.title) === kt && sabNorm(a.child) === kc && (!ki || sabNorm(a.institution) === ki);
+      });
+    }
+
+    function sabTotalFor(paymentType, hours, rate) {
+      return (paymentType === 'Pe oră') ? (Number(hours) || 0) * (Number(rate) || 0) : (Number(rate) || 0);
+    }
+
+    // ---------- Formularul „Adaugă / Editează activitate” ----------
+    function refreshSchoolTemplatePicker() {
+      const sel = document.getElementById('schoolTemplatePick');
+      if (!sel) return;
+      const cur = sel.value;
+      const tpls = sabTemplates().sort((a, b) => (a.nume || '').localeCompare(b.nume || '', 'ro'));
+      const profs = sabProfiles().sort((a, b) => sabProfilLabel(a).localeCompare(sabProfilLabel(b), 'ro'));
+      let html = '<option value="">— fără șablon —</option>';
+      if (tpls.length) {
+        html += '<optgroup label="Plăți recurente">' + tpls.map(t => {
+          const e = sablonEffective(t);
+          const r = sablonRateForDate(t.id, localDateStr());
+          const who = [e.copil, e.institutie].filter(Boolean).join(' · ');
+          return `<option value="S:${sabEsc(t.id)}">${sabEsc(t.nume)}${who ? ' — ' + sabEsc(who) : ''}${r ? ' (' + sabFmtLei(r.tarif) + ')' : ''}</option>`;
+        }).join('') + '</optgroup>';
+      }
+      if (profs.length) {
+        html += '<optgroup label="Profile copil">' + profs.map(p => `<option value="P:${sabEsc(p.id)}">👤 ${sabEsc(sabProfilLabel(p))}</option>`).join('') + '</optgroup>';
+      }
+      sel.innerHTML = html;
+      const box = document.getElementById('schoolTemplatePickBox');
+      if (box) box.classList.toggle('hidden', !tpls.length && !profs.length);
+      const want = cur || (schoolFormTemplateId ? 'S:' + schoolFormTemplateId : '');
+      if (want && sel.querySelector(`option[value="${CSS.escape(want)}"]`)) sel.value = want;
+    }
+
+    function schoolFormReferenceDate() {
+      if (editingSchoolActivity && editingSchoolActivity.date) return editingSchoolActivity.date;
+      const days = Array.from(selectedSchoolDays || []).sort();
+      return days[0] || localDateStr();
+    }
+
+    function setSchoolSelectValue(id, val) {
+      const el = document.getElementById(id);
+      if (!el || val === undefined || val === null || val === '') return;
+      if (el.tagName === 'SELECT' && !Array.from(el.options).some(o => o.value === val)) {
+        const o = document.createElement('option');
+        o.value = val; o.textContent = val;
+        el.appendChild(o);
+      }
+      el.value = val;
+    }
+
+    function fillSchoolFormDefaults(src) {
+      if (src.copil) document.getElementById('schoolChild').value = src.copil;
+      if (src.institutie) document.getElementById('schoolInstitution').value = src.institutie;
+      if (src.tipPlata) setSchoolSelectValue('schoolPaymentType', src.tipPlata);
+      if (src.oraStart) document.getElementById('schoolStartHour').value = src.oraStart;
+      if (src.oraSfarsit) document.getElementById('schoolEndHour').value = src.oraSfarsit;
+      if (src.ore !== undefined && src.ore !== null && src.ore !== '') document.getElementById('schoolHours').value = src.ore;
+      if (src.culoare) setSchoolSelectValue('schoolColorSelect', src.culoare);
+    }
+
+    function applySchoolTemplatePick(val) {
+      if (!val) {
+        schoolFormTemplateId = '';
+        schoolRateManual = false;
+        refreshSchoolTemplateHint();
+        return;
+      }
+      const id = val.substring(2);
+      const it = sabGet(id);
+      if (!it) return;
+      if (val.startsWith('P:')) {
+        fillSchoolFormDefaults(it);
+        schoolFormTemplateId = '';
+        schoolRateManual = false;
+        calcSchoolAutoTotal();
+        showToast(`Profil aplicat: ${sabProfilLabel(it)}`);
+        return;
+      }
+      const e = sablonEffective(it);
+      fillSchoolFormDefaults(e);
+      document.getElementById('schoolActTitle').value = e.titlu || e.nume || '';
+      if (e.statusImplicit && !editingSchoolActivity) {
+        setSchoolSelectValue('schoolPaymentStatus', e.statusImplicit);
+        if (typeof onSchoolPaymentStatusChange === 'function') onSchoolPaymentStatusChange();
+      }
+      if (e.mesaj && !document.getElementById('schoolDayMessage').value) document.getElementById('schoolDayMessage').value = e.mesaj;
+      schoolFormTemplateId = id;
+      schoolRateManual = false;
+      const r = sablonRateForDate(id, schoolFormReferenceDate());
+      if (r) document.getElementById('schoolRate').value = r.tarif;
+      calcSchoolAutoTotal();
+    }
+
+    function refreshSchoolTemplateHint() {
+      const hint = document.getElementById('schoolTemplateRateHint');
+      if (!hint) return;
+      const s = schoolFormTemplateId ? sabGet(schoolFormTemplateId) : null;
+      if (!s) { hint.classList.add('hidden'); hint.innerHTML = ''; return; }
+      const refDate = schoolFormReferenceDate();
+      const r = sablonRateForDate(s.id, refDate);
+      let txt;
+      if (!r) {
+        txt = `🔁 ${sabEsc(s.nume)}: șablonul nu are încă niciun tarif; se folosește suma scrisă.`;
+      } else if (schoolRateManual) {
+        txt = `🔁 ${sabEsc(s.nume)}: tarif scris de mână (în șablon, la ${sabFmtDate(refDate)}: ${sabFmtLei(r.tarif)}). Alege din nou șablonul ca să revii la prețul lui.`;
+      } else if (editingSchoolActivity) {
+        txt = `🔁 ${sabEsc(s.nume)}: tariful valabil la ${sabFmtDate(refDate)} este ${sabFmtLei(r.tarif)} (de la ${sabFmtDate(r.valabilDeLa)}).`;
+      } else {
+        const days = Array.from(selectedSchoolDays || []).sort();
+        const distinct = {};
+        days.forEach(d => { const x = sablonRateForDate(s.id, d); if (x) distinct[x.tarif] = (distinct[x.tarif] || 0) + 1; });
+        const keys = Object.keys(distinct);
+        txt = `🔁 ${sabEsc(s.nume)}: ${sabFmtLei(r.tarif)} (valabil de la ${sabFmtDate(r.valabilDeLa)}${r.beforeFirst ? ', primul tarif din istoric' : ''}).`;
+        if (keys.length > 1) txt += ` Zilele selectate cad pe tarife diferite: ${keys.map(k => `${distinct[k] === 1 ? '1 zi' : distinct[k] + ' zile'} × ${sabFmtLei(k)}`).join(', ')}. Fiecare zi se salvează cu tariful ei.`;
+        else txt += ' Fiecare zi se salvează cu tariful valabil la data ei.';
+      }
+      hint.innerHTML = txt;
+      hint.classList.remove('hidden');
+    }
+
+    // Tariful pentru o activitate nouă/editată la o dată (șablon ales și tarif nemodificat de mână)
+    function schoolRateForSave(dateStr, formRate) {
+      if (schoolFormTemplateId && !schoolRateManual) {
+        const r = sablonRateForDate(schoolFormTemplateId, dateStr);
+        if (r) return r.tarif;
+      }
+      return formRate;
+    }
+
+    function syncSchoolTemplatePickerToEdit(act) {
+      schoolFormTemplateId = (act && act.templateId && sabGet(act.templateId)) ? act.templateId : '';
+      schoolRateManual = true; // la editare tariful salvat rămâne, până se alege din nou șablonul
+      const sel = document.getElementById('schoolTemplatePick');
+      if (sel) sel.value = schoolFormTemplateId ? 'S:' + schoolFormTemplateId : '';
+      refreshSchoolTemplateHint();
+    }
+
+    function resetSchoolTemplatePicker() {
+      schoolFormTemplateId = '';
+      schoolRateManual = false;
+      const sel = document.getElementById('schoolTemplatePick');
+      if (sel) sel.value = '';
+      refreshSchoolTemplateHint();
+    }
+
+    // ---------- Subtab „Șabloane” ----------
+    function sabKnownValues(field) {
+      const set = new Map();
+      const add = (v) => { const t = (v || '').toString().trim(); if (t && t !== '-' && t !== 'Copil' && !set.has(sabNorm(t))) set.set(sabNorm(t), t); };
+      getRealSchoolActivities().forEach(a => add(field === 'copil' ? a.child : a.institution));
+      (schoolSabloane.items || []).forEach(x => add(x[field]));
+      if (field === 'copil') (allSchoolTeme || []).forEach(t => add(t.child));
+      return Array.from(set.values()).sort((a, b) => a.localeCompare(b, 'ro'));
+    }
+    function sabDatalists() {
+      return `<datalist id="sabCopilList">${sabKnownValues('copil').map(v => `<option value="${sabEsc(v)}"></option>`).join('')}</datalist>` +
+        `<datalist id="sabInstList">${sabKnownValues('institutie').map(v => `<option value="${sabEsc(v)}"></option>`).join('')}</datalist>`;
+    }
+    function sabOptions(list, selected, emptyLabel) {
+      let h = emptyLabel !== undefined ? `<option value="">${sabEsc(emptyLabel)}</option>` : '';
+      list.forEach(v => {
+        const val = Array.isArray(v) ? v[0] : v, lab = Array.isArray(v) ? v[1] : v;
+        h += `<option value="${sabEsc(val)}"${val === selected ? ' selected' : ''}>${sabEsc(lab)}</option>`;
+      });
+      return h;
+    }
+    const SAB_IN = 'w-full bg-cardbg border border-bordercol rounded-lg p-2 text-white text-xs';
+    const SAB_LBL = 'text-[10px] text-slate-400 block mb-0.5';
+
+    function sabTimeFields(prefix, v) {
+      return `<div class="grid grid-cols-3 gap-2">
+        <div><label class="${SAB_LBL}">De la</label><input type="time" id="${prefix}OraStart" value="${sabEsc(v.oraStart || '')}" oninput="sabAutoHours('${prefix}')" class="${SAB_IN}"></div>
+        <div><label class="${SAB_LBL}">Până la</label><input type="time" id="${prefix}OraSfarsit" value="${sabEsc(v.oraSfarsit || '')}" oninput="sabAutoHours('${prefix}')" class="${SAB_IN}"></div>
+        <div><label class="${SAB_LBL}">Ore</label><input type="number" step="0.5" min="0" id="${prefix}Ore" value="${sabEsc(v.ore === undefined || v.ore === null ? '' : v.ore)}" class="${SAB_IN} text-center"></div>
+      </div>`;
+    }
+    function sabAutoHours(prefix) {
+      const a = document.getElementById(prefix + 'OraStart').value, b = document.getElementById(prefix + 'OraSfarsit').value;
+      if (!a || !b) return;
+      const [h1, m1] = a.split(':').map(Number), [h2, m2] = b.split(':').map(Number);
+      const diff = ((h2 * 60 + m2) - (h1 * 60 + m1)) / 60;
+      if (diff > 0) document.getElementById(prefix + 'Ore').value = Math.round(diff * 2) / 2;
+    }
+
+    function openProfilForm(id) {
+      editingProfilId = id || null;
+      const p = id ? sabGet(id) : {};
+      const box = document.getElementById('profilFormBox');
+      box.innerHTML = `${sabDatalists()}
+        <p class="font-bold text-violet-200">${id ? '✏️ Editează profilul' : '➕ Profil nou de copil'}</p>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="${SAB_LBL}">Copil</label><input id="profCopil" list="sabCopilList" value="${sabEsc(p.copil || '')}" placeholder="Prenume" class="${SAB_IN}"></div>
+          <div><label class="${SAB_LBL}">Instituție</label><input id="profInst" list="sabInstList" value="${sabEsc(p.institutie || '')}" placeholder="Școala / club" class="${SAB_IN}"></div>
+        </div>
+        <div><label class="${SAB_LBL}">Nume afișat (opțional)</label><input id="profNume" value="${sabEsc(p.nume || '')}" placeholder="implicit: copil · instituție" class="${SAB_IN}"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="${SAB_LBL}">Tip plată</label><select id="profTipPlata" class="${SAB_IN}">${sabOptions(SAB_PAY_TYPES, p.tipPlata || 'Pe oră')}</select></div>
+          <div><label class="${SAB_LBL}">Culoare calendar</label><select id="profCuloare" class="${SAB_IN}">${sabOptions(SAB_COLORS, p.culoare || 'auto')}</select></div>
+        </div>
+        ${sabTimeFields('prof', p)}
+        <div class="flex gap-2">
+          <button onclick="saveProfilForm()" class="flex-1 bg-violet-700 text-white font-bold py-2 rounded-xl">💾 Salvează profilul</button>
+          <button onclick="closeSabForms()" class="px-3 py-2 bg-slate-800 text-slate-300 rounded-xl">Renunță</button>
+        </div>`;
+      box.classList.remove('hidden');
+      document.getElementById('sablonFormBox').classList.add('hidden');
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function saveProfilForm() {
+      const copil = document.getElementById('profCopil').value.trim();
+      const inst = document.getElementById('profInst').value.trim();
+      if (!copil) return showToast('Scrie numele copilului.');
+      const old = editingProfilId ? sabGet(editingProfilId) : null;
+      const it = {
+        ...(old || {}), id: editingProfilId || sabNewId('PROF'), tip: 'Profil', activ: true,
+        nume: document.getElementById('profNume').value.trim(), copil: copil, institutie: inst,
+        tipPlata: document.getElementById('profTipPlata').value, culoare: document.getElementById('profCuloare').value,
+        oraStart: document.getElementById('profOraStart').value, oraSfarsit: document.getElementById('profOraSfarsit').value,
+        ore: document.getElementById('profOre').value
+      };
+      sabUpsertItem(it);
+      closeSabForms();
+      showToast(old ? 'Profil actualizat.' : 'Profil creat.');
+      renderSchoolSabloane();
+    }
+
+    function openSablonForm(id, preset, history) {
+      editingSablonId = id || null;
+      openSablonForm._presetHistory = history || null;
+      const s = id ? sabGet(id) : (preset || {});
+      const profs = sabProfiles();
+      const box = document.getElementById('sablonFormBox');
+      box.innerHTML = `${sabDatalists()}
+        <p class="font-bold text-cyan-200">${id ? '✏️ Editează șablonul' : '➕ Șablon nou de plată recurentă'}</p>
+        <div><label class="${SAB_LBL}">Nume (rămâne la fel mereu)</label><input id="sabNume" value="${sabEsc(s.nume || '')}" placeholder="ex. Semi, Catering, Engleză" class="${SAB_IN}"></div>
+        <div><label class="${SAB_LBL}">Profil copil</label><select id="sabProfil" onchange="onSablonProfilChange()" class="${SAB_IN}">${sabOptions(profs.map(p => [p.id, sabProfilLabel(p)]), s.profilId || '', '— fără profil (scriu copilul) —')}</select></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="${SAB_LBL}">Copil</label><input id="sabCopil" list="sabCopilList" value="${sabEsc(s.copil || '')}" placeholder="din profil" class="${SAB_IN}"></div>
+          <div><label class="${SAB_LBL}">Instituție</label><input id="sabInst" list="sabInstList" value="${sabEsc(s.institutie || '')}" placeholder="din profil" class="${SAB_IN}"></div>
+        </div>
+        <div><label class="${SAB_LBL}">Titlu în calendar (opțional)</label><input id="sabTitlu" value="${sabEsc(s.titlu || '')}" placeholder="implicit: numele șablonului" class="${SAB_IN}"></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="${SAB_LBL}">Tip plată</label><select id="sabTipPlata" class="${SAB_IN}">${sabOptions(SAB_PAY_TYPES, s.tipPlata || '', '— din profil —')}</select></div>
+          <div><label class="${SAB_LBL}">Status implicit</label><select id="sabStatus" class="${SAB_IN}">${sabOptions(SAB_STATUSES, s.statusImplicit || '', '— În așteptare —')}</select></div>
+        </div>
+        ${sabTimeFields('sab', s)}
+        <div><label class="${SAB_LBL}">Culoare calendar</label><select id="sabCuloare" class="${SAB_IN}">${sabOptions(SAB_COLORS, s.culoare || 'auto')}</select></div>
+        <div><label class="${SAB_LBL}">Mesaj în zi (opțional)</label><input id="sabMesaj" value="${sabEsc(s.mesaj || '')}" class="${SAB_IN}"></div>
+        ${id ? '<p class="text-[11px] text-slate-400">Prețul nu se schimbă de aici: folosește „💲 Preț nou” pe card, ca să rămână istoricul.</p>' : `
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="${SAB_LBL}">Tarif / sumă (lei)</label><input type="number" step="0.01" min="0" id="sabTarif" value="${sabEsc(preset && preset.tarif !== undefined ? preset.tarif : '')}" class="${SAB_IN} text-center"></div>
+          <div><label class="${SAB_LBL}">Valabil de la</label><input type="date" id="sabValabil" value="${sabEsc((preset && preset.valabilDeLa) || localDateStr())}" class="${SAB_IN}"></div>
+        </div>`}
+        <div class="flex gap-2">
+          <button onclick="saveSablonForm()" class="flex-1 bg-cyan-700 text-white font-bold py-2 rounded-xl">💾 Salvează șablonul</button>
+          <button onclick="closeSabForms()" class="px-3 py-2 bg-slate-800 text-slate-300 rounded-xl">Renunță</button>
+        </div>`;
+      box.classList.remove('hidden');
+      document.getElementById('profilFormBox').classList.add('hidden');
+      onSablonProfilChange();
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function onSablonProfilChange() {
+      const sel = document.getElementById('sabProfil');
+      const p = sel && sel.value ? sabGet(sel.value) : null;
+      const c = document.getElementById('sabCopil'), i = document.getElementById('sabInst');
+      if (c) c.placeholder = p ? (p.copil || 'din profil') : 'Copil';
+      if (i) i.placeholder = p ? (p.institutie || 'din profil') : 'Instituție';
+    }
+
+    function saveSablonForm() {
+      const nume = document.getElementById('sabNume').value.trim();
+      if (!nume) return showToast('Scrie numele șablonului.');
+      const profilId = document.getElementById('sabProfil').value;
+      const copil = document.getElementById('sabCopil').value.trim();
+      if (!profilId && !copil) return showToast('Alege un profil sau scrie copilul.');
+      const dup = sabTemplates().find(t => t.id !== editingSablonId && sabNorm(t.nume) === sabNorm(nume) && sabNorm(sablonEffective(t).copil) === sabNorm(copil || (sabGet(profilId) || {}).copil));
+      if (dup) return showToast(`Există deja șablonul „${dup.nume}” pentru acest copil.`);
+      const old = editingSablonId ? sabGet(editingSablonId) : null;
+      const it = {
+        ...(old || {}), id: editingSablonId || sabNewId('SAB'), tip: 'Sablon', activ: true, nume: nume, profilId: profilId,
+        copil: copil, institutie: document.getElementById('sabInst').value.trim(), titlu: document.getElementById('sabTitlu').value.trim(),
+        tipPlata: document.getElementById('sabTipPlata').value, statusImplicit: document.getElementById('sabStatus').value,
+        oraStart: document.getElementById('sabOraStart').value, oraSfarsit: document.getElementById('sabOraSfarsit').value,
+        ore: document.getElementById('sabOre').value, culoare: document.getElementById('sabCuloare').value,
+        mesaj: document.getElementById('sabMesaj').value.trim()
+      };
+      if (!old) {
+        const tarifRaw = document.getElementById('sabTarif').value;
+        const valabil = document.getElementById('sabValabil').value || localDateStr();
+        sabUpsertItem(it);
+        if (tarifRaw !== '') sabUpsertTarif({ id: sabNewId('TRF'), sablonId: it.id, valabilDeLa: valabil, tarif: parseFloat(tarifRaw) || 0, observatie: 'Tarif inițial', activ: true, dataCreare: sabNowText() });
+        // Istoric preluat din activitățile existente (sugestie)
+        const hist = (openSablonForm._presetHistory || []).filter(h => h.valabilDeLa !== valabil);
+        hist.forEach(h => sabUpsertTarif({ id: sabNewId('TRF'), sablonId: it.id, valabilDeLa: h.valabilDeLa, tarif: h.tarif, observatie: 'Preluat din activitățile existente', activ: true, dataCreare: sabNowText() }));
+      } else {
+        sabUpsertItem(it);
+      }
+      openSablonForm._presetHistory = null;
+      closeSabForms();
+      showToast(old ? 'Șablon actualizat.' : 'Șablon creat.');
+      renderSchoolSabloane();
+    }
+
+    function sabNowText() {
+      const d = new Date(), z = (n) => String(n).padStart(2, '0');
+      return `${localDateStr(d)} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
+    }
+
+    function closeSabForms() {
+      editingSablonId = null; editingProfilId = null;
+      ['sablonFormBox', 'profilFormBox'].forEach(id => { const el = document.getElementById(id); if (el) { el.classList.add('hidden'); el.innerHTML = ''; } });
+    }
+
+    function toggleSablonPanel(id, panel) {
+      sablonOpenPanel[id] = sablonOpenPanel[id] === panel ? null : panel;
+      renderSchoolSabloane();
+    }
+
+    function setSablonActiv(id, activ) {
+      const it = sabGet(id);
+      if (!it) return;
+      const label = it.tip === 'Profil' ? sabProfilLabel(it) : it.nume;
+      const doIt = () => {
+        sabUpsertItem({ ...it, activ: activ });
+        showToast(activ ? 'Reactivat.' : 'Arhivat. Îl găsești la „Arhivate”.');
+        renderSchoolSabloane();
+      };
+      if (activ) return doIt();
+      showGenericConfirm(`Arhivezi „${label}”? Activitățile deja create rămân neschimbate; îl poți reactiva oricând din „Arhivate”.`, doIt, 'Arhivare', 'Arhivează');
+    }
+
+    function saveSablonNewPrice(id) {
+      const s = sabGet(id);
+      if (!s) return;
+      const tarifRaw = document.getElementById('sabNewPrice_' + id).value;
+      const valabil = document.getElementById('sabNewPriceDate_' + id).value;
+      const obs = document.getElementById('sabNewPriceObs_' + id).value.trim();
+      if (tarifRaw === '' || isNaN(parseFloat(tarifRaw))) return showToast('Scrie noul preț.');
+      if (!valabil) return showToast('Alege data de la care se aplică.');
+      const tarif = parseFloat(tarifRaw);
+      sabUpsertTarif({ id: sabNewId('TRF'), sablonId: id, valabilDeLa: valabil, tarif: tarif, observatie: obs, activ: true, dataCreare: sabNowText() });
+      sablonOpenPanel[id] = 'istoric';
+      showToast(`Preț nou: ${sabFmtLei(tarif)} de la ${sabFmtDate(valabil)}.`);
+      renderSchoolSabloane();
+      refreshSchoolTemplatePicker();
+      offerSablonRepriceFuture(s, valabil);
+    }
+
+    // Activitățile deja create de la data nouă încolo, încă neachitate, pot primi prețul corect (cu confirmare).
+    // Cele de dinainte de dată și cele achitate nu se ating niciodată.
+    function offerSablonRepriceFuture(s, fromDate) {
+      const changes = [];
+      sablonActivities(s).forEach(a => {
+        if (!a.date || a.date < fromDate) return;
+        if (a.paymentStatus === 'Achitat' || a.paymentStatus === 'Fără plată') return;
+        const r = sablonRateForDate(s.id, a.date);
+        if (!r || Number(a.rate) === r.tarif) return;
+        changes.push({ a, rate: r.tarif });
+      });
+      if (!changes.length) return;
+      showGenericConfirm(
+        `${changes.length === 1 ? 'Există o activitate' : 'Există ' + changes.length + ' activități'} „${s.nume}” deja creat${changes.length === 1 ? 'ă' : 'e'} de la ${sabFmtDate(fromDate)} încolo, încă neachitat${changes.length === 1 ? "ă" : "e"} și cu alt preț. Actualizez prețul la cel valabil în ziua respectivă? Activitățile de dinainte și cele achitate rămân cum sunt.`,
+        () => {
+          const payload = [];
+          changes.forEach(({ a, rate }) => {
+            const act = schoolActivities.find(x => x.id === a.id);
+            if (!act) return;
+            act.rate = rate;
+            act.total = sabTotalFor(act.paymentType, act.hours, rate);
+            if (!act.templateId) act.templateId = s.id;
+            payload.push(act);
+          });
+          localStorage.setItem('diih_school_activities', JSON.stringify(schoolActivities));
+          for (let i = 0; i < payload.length; i += 20) {
+            const script = document.createElement('script');
+            script.src = `${GOOGLE_SCRIPT_API_URL}?${apiAuthQuery()}&action=saveSchoolActivities&data=${encodeURIComponent(JSON.stringify(payload.slice(i, i + 20)))}&callback=void`;
+            document.body.appendChild(script);
+          }
+          showToast(`${payload.length} activități actualizate la noul preț.`);
+          renderSchoolSabloane();
+          if (typeof renderSchoolDisplay === 'function') renderSchoolDisplay();
+        },
+        'Preț nou pe activitățile viitoare', 'Actualizează'
+      );
+    }
+
+    function cancelSablonTarif(tid) {
+      const t = (schoolSabloane.tarife || []).find(x => x.id === tid);
+      if (!t) return;
+      showGenericConfirm(`Anulezi tariful de ${sabFmtLei(t.tarif)} valabil de la ${sabFmtDate(t.valabilDeLa)}? Rămâne în foaie marcat ca anulat; activitățile deja create nu se schimbă.`, () => {
+        sabUpsertTarif({ ...t, activ: false });
+        showToast('Tarif anulat.');
+        renderSchoolSabloane();
+        refreshSchoolTemplatePicker();
+      }, 'Anulare tarif', 'Anulează tariful');
+    }
+
+    function useSablonInForm(id) {
+      setSchoolSubTab('activitati');
+      const sel = document.getElementById('schoolTemplatePick');
+      if (sel) sel.value = 'S:' + id;
+      applySchoolTemplatePick('S:' + id);
+      const f = document.getElementById('schoolFormTitle');
+      if (f) f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast('Selectează zilele în calendar, apoi Salvează.');
+    }
+
+    function sablonCardHtml(s) {
+      const e = sablonEffective(s);
+      const color = e.culoare && e.culoare !== 'auto' ? e.culoare : getSchoolActivityColor({ child: e.copil, title: e.titlu });
+      const today = localDateStr();
+      const cur = sablonRateForDate(s.id, today);
+      const list = sablonTarife(s.id);
+      const next = list.find(t => t.valabilDeLa > today);
+      const acts = sablonActivities(s);
+      const sum = acts.reduce((x, a) => x + (Number(a.total) || 0), 0);
+      const who = [e.copil, e.institutie].filter(Boolean).join(' · ');
+      const panel = sablonOpenPanel[s.id];
+      let h = `<div class="p-2.5 bg-darkbg border border-bordercol rounded-xl space-y-1.5" style="border-left:3px solid ${sabEsc(color)}">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <p class="font-bold text-white text-sm truncate">${sabEsc(s.nume)}</p>
+            <p class="text-[11px] text-slate-400 truncate">${sabEsc(who || '-')} · ${sabEsc(e.tipPlata)}${e.ore ? ' · ' + sabEsc(e.ore) + ' h' : ''}${e.oraStart ? ' · ' + sabEsc(e.oraStart) + (e.oraSfarsit ? '–' + sabEsc(e.oraSfarsit) : '') : ''}</p>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="font-bold text-emerald-300 text-sm">${cur ? sabFmtLei(cur.tarif) : '—'}</p>
+            <p class="text-[10px] text-slate-500">${cur ? (cur.beforeFirst ? 'de la ' : 'din ') + sabFmtDate(cur.valabilDeLa) : 'fără tarif'}</p>
+          </div>
+        </div>`;
+      if (next && (!cur || next.valabilDeLa !== cur.valabilDeLa)) h += `<p class="text-[11px] text-amber-300">⏭️ ${sabFmtLei(next.tarif)} de la ${sabFmtDate(next.valabilDeLa)}</p>`;
+      h += `<p class="text-[10px] text-slate-500">${acts.length} activități în calendar · ${sabFmtLei(sum)} în total</p>
+        <div class="flex flex-wrap gap-1.5">
+          <button onclick="useSablonInForm('${sabEsc(s.id)}')" class="text-[11px] px-2 py-1 rounded-lg bg-cyan-900 text-cyan-100 font-bold">📅 Folosește</button>
+          <button onclick="toggleSablonPanel('${sabEsc(s.id)}','pret')" class="text-[11px] px-2 py-1 rounded-lg bg-emerald-900 text-emerald-100 font-bold">💲 Preț nou</button>
+          <button onclick="toggleSablonPanel('${sabEsc(s.id)}','istoric')" class="text-[11px] px-2 py-1 rounded-lg bg-cardbg border border-bordercol text-slate-200">📜 Istoric (${list.length})</button>
+          <button onclick="openSablonForm('${sabEsc(s.id)}')" class="text-[11px] px-2 py-1 rounded-lg bg-cardbg border border-bordercol text-slate-200">✏️</button>
+          <button onclick="setSablonActiv('${sabEsc(s.id)}', false)" class="text-[11px] px-2 py-1 rounded-lg bg-cardbg border border-bordercol text-slate-400" title="Arhivează">🗄️</button>
+        </div>`;
+      if (panel === 'pret') {
+        h += `<div class="p-2 bg-cardbg border border-emerald-800 rounded-lg space-y-2">
+          <div class="grid grid-cols-2 gap-2">
+            <div><label class="${SAB_LBL}">Preț nou (lei)</label><input type="number" step="0.01" min="0" id="sabNewPrice_${sabEsc(s.id)}" value="${cur ? cur.tarif : ''}" class="${SAB_IN} text-center"></div>
+            <div><label class="${SAB_LBL}">Valabil de la</label><input type="date" id="sabNewPriceDate_${sabEsc(s.id)}" value="${today}" class="${SAB_IN}"></div>
+          </div>
+          <input id="sabNewPriceObs_${sabEsc(s.id)}" placeholder="Observație (opțional), ex. scumpire de la 1 ianuarie" class="${SAB_IN}">
+          <p class="text-[11px] text-slate-400 leading-snug">Zilele de dinainte de această dată rămân cu prețul vechi în calendar și rapoarte.</p>
+          <button onclick="saveSablonNewPrice('${sabEsc(s.id)}')" class="w-full bg-emerald-700 text-white font-bold py-2 rounded-xl">💾 Salvează prețul nou</button>
+        </div>`;
+      }
+      if (panel === 'istoric') {
+        const all = (schoolSabloane.tarife || []).filter(t => t.sablonId === s.id).sort((a, b) => b.valabilDeLa.localeCompare(a.valabilDeLa));
+        h += `<div class="p-2 bg-cardbg border border-bordercol rounded-lg space-y-1">` + (all.length ? all.map(t => {
+          const isCur = cur && !cur.beforeFirst && t.activ !== false && t.valabilDeLa === cur.valabilDeLa && Number(t.tarif) === cur.tarif;
+          return `<div class="flex items-center justify-between gap-2 ${t.activ === false ? 'opacity-50 line-through' : ''}">
+            <div class="min-w-0"><span class="font-bold ${isCur ? 'text-emerald-300' : 'text-slate-200'}">${sabFmtLei(t.tarif)}</span>
+              <span class="text-slate-400"> de la ${sabFmtDate(t.valabilDeLa)}</span>${isCur ? ' <span class="text-[10px] text-emerald-400">(acum)</span>' : ''}
+              ${t.observatie ? `<span class="block text-[10px] text-slate-500 truncate">${sabEsc(t.observatie)}</span>` : ''}</div>
+            ${t.activ === false ? '<span class="text-[10px] text-slate-500 no-underline">anulat</span>' : `<button onclick="cancelSablonTarif('${sabEsc(t.id)}')" class="text-[10px] text-slate-400 border border-slate-700 px-1.5 py-0.5 rounded shrink-0">Anulează</button>`}
+          </div>`;
+        }).join('') : '<p class="text-slate-500 italic">Niciun tarif încă. Adaugă unul cu „💲 Preț nou”.</p>') + `</div>`;
+      }
+      return h + '</div>';
+    }
+
+    function profilCardHtml(p) {
+      const color = p.culoare && p.culoare !== 'auto' ? p.culoare : getSchoolActivityColor({ child: p.copil });
+      const n = sabTemplates().filter(t => t.profilId === p.id).length;
+      return `<div class="p-2.5 bg-darkbg border border-bordercol rounded-xl flex items-center justify-between gap-2" style="border-left:3px solid ${sabEsc(color)}">
+        <div class="min-w-0">
+          <p class="font-bold text-white truncate">👤 ${sabEsc(sabProfilLabel(p))}</p>
+          <p class="text-[11px] text-slate-400 truncate">${sabEsc(p.tipPlata || 'Pe oră')}${p.ore ? ' · ' + sabEsc(p.ore) + ' h' : ''}${p.oraStart ? ' · ' + sabEsc(p.oraStart) + (p.oraSfarsit ? '–' + sabEsc(p.oraSfarsit) : '') : ''}${n ? ' · ' + n + ' șabloane' : ''}</p>
+        </div>
+        <div class="flex gap-1.5 shrink-0">
+          <button onclick="openSablonForm(null, {profilId:'${sabEsc(p.id)}'})" class="text-[11px] px-2 py-1 rounded-lg bg-cyan-900 text-cyan-100" title="Șablon nou pentru acest profil">➕🔁</button>
+          <button onclick="openProfilForm('${sabEsc(p.id)}')" class="text-[11px] px-2 py-1 rounded-lg bg-cardbg border border-bordercol text-slate-200">✏️</button>
+          <button onclick="setSablonActiv('${sabEsc(p.id)}', false)" class="text-[11px] px-2 py-1 rounded-lg bg-cardbg border border-bordercol text-slate-400" title="Arhivează">🗄️</button>
+        </div>
+      </div>`;
+    }
+
+    // Sugestii: combinații copil + instituție (profile) și copil + instituție + titlu (șabloane) din calendar
+    let sabSuggestionsCache = [];
+    function buildSabloaneSuggestions() {
+      const acts = getRealSchoolActivities().filter(a => a.child && a.title && a.child !== 'Copil');
+      const profKeys = new Set(sabProfiles(true).map(p => sabNorm(p.copil) + '|' + sabNorm(p.institutie)));
+      const tplKeys = new Set(sabTemplates(true).map(t => { const e = sablonEffective(t); return sabNorm(e.copil) + '|' + sabNorm(e.titlu); }));
+      const byProf = {}, byTpl = {};
+      acts.forEach(a => {
+        const inst = a.institution && a.institution !== '-' ? a.institution : '';
+        const pk = sabNorm(a.child) + '|' + sabNorm(inst);
+        (byProf[pk] = byProf[pk] || []).push(a);
+        const tk = sabNorm(a.child) + '|' + sabNorm(a.title);
+        (byTpl[tk] = byTpl[tk] || []).push(a);
+      });
+      const out = [];
+      Object.keys(byProf).forEach(k => {
+        if (profKeys.has(k)) return;
+        const list = byProf[k].slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        const last = list[0];
+        out.push({ kind: 'profil', count: list.length, copil: last.child, institutie: last.institution && last.institution !== '-' ? last.institution : '', last: last });
+      });
+      Object.keys(byTpl).forEach(k => {
+        if (tplKeys.has(k) || byTpl[k].length < 2) return;
+        const list = byTpl[k].slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+        const last = list[list.length - 1];
+        const hist = [];
+        list.forEach(a => {
+          const r = Number(a.rate) || 0;
+          if (r <= 0 || !a.date) return;
+          if (!hist.length || hist[hist.length - 1].tarif !== r) hist.push({ tarif: r, valabilDeLa: a.date });
+        });
+        out.push({ kind: 'sablon', count: list.length, copil: last.child, institutie: last.institution && last.institution !== '-' ? last.institution : '', titlu: last.title, last: last, hist: hist });
+      });
+      out.sort((a, b) => (a.kind === b.kind ? b.count - a.count : (a.kind === 'profil' ? -1 : 1)));
+      sabSuggestionsCache = out.slice(0, 10);
+      return sabSuggestionsCache;
+    }
+
+    function acceptSabSuggestion(i) {
+      const sg = sabSuggestionsCache[i];
+      if (!sg) return;
+      const L = sg.last;
+      if (sg.kind === 'profil') {
+        sabUpsertItem({
+          id: sabNewId('PROF'), tip: 'Profil', activ: true, nume: '', copil: sg.copil, institutie: sg.institutie,
+          tipPlata: L.paymentType || 'Pe oră', oraStart: L.noHours ? '' : (L.startHour || ''), oraSfarsit: L.noHours ? '' : (L.endHour || ''),
+          ore: L.hours || '', culoare: L.color || 'auto'
+        });
+        showToast(`Profil creat: ${sg.copil}${sg.institutie ? ' · ' + sg.institutie : ''}`);
+        renderSchoolSabloane();
+        return;
+      }
+      const prof = sabProfiles().find(p => sabNorm(p.copil) === sabNorm(sg.copil) && sabNorm(p.institutie) === sabNorm(sg.institutie));
+      const lastHist = sg.hist[sg.hist.length - 1];
+      openSablonForm(null, {
+        nume: sg.titlu, profilId: prof ? prof.id : '', copil: prof ? '' : sg.copil, institutie: prof ? '' : sg.institutie,
+        tipPlata: prof && prof.tipPlata === L.paymentType ? '' : (L.paymentType || ''),
+        oraStart: L.noHours ? '' : (L.startHour || ''), oraSfarsit: L.noHours ? '' : (L.endHour || ''), ore: L.hours || '',
+        culoare: L.color || 'auto',
+        tarif: lastHist ? lastHist.tarif : '', valabilDeLa: lastHist ? lastHist.valabilDeLa : localDateStr()
+      }, sg.hist.slice(0, -1));
+      if (sg.hist.length > 1) showToast(`Se preia și istoricul: ${sg.hist.length} prețuri.`);
+    }
+
+    function renderSchoolSabloane() {
+      const tl = document.getElementById('sabloaneList');
+      if (!tl) return;
+      const tpls = sabTemplates().sort((a, b) => (a.nume || '').localeCompare(b.nume || '', 'ro'));
+      tl.innerHTML = tpls.length ? tpls.map(sablonCardHtml).join('') : '<p class="text-slate-500 italic">Niciun șablon încă. Creează unul sau folosește sugestiile de mai jos.</p>';
+      const pl = document.getElementById('profileCopilList');
+      const profs = sabProfiles().sort((a, b) => sabProfilLabel(a).localeCompare(sabProfilLabel(b), 'ro'));
+      pl.innerHTML = profs.length ? profs.map(profilCardHtml).join('') : '<p class="text-slate-500 italic">Niciun profil încă.</p>';
+
+      const sugg = buildSabloaneSuggestions();
+      const sb = document.getElementById('sabloaneSugestiiBox');
+      sb.classList.toggle('hidden', !sugg.length);
+      document.getElementById('sabloaneSugestiiList').innerHTML = sugg.map((sg, i) => {
+        const who = [sg.copil, sg.institutie].filter(Boolean).join(' · ');
+        const detail = sg.kind === 'profil'
+          ? `👤 <b>${sabEsc(who)}</b> <span class="text-slate-500">(${sg.count} activități)</span>`
+          : `🔁 <b>${sabEsc(sg.titlu)}</b> — ${sabEsc(who)} <span class="text-slate-500">(${sg.count} activități${sg.hist.length ? '; ' + sg.hist.map(h => sabFmtLei(h.tarif) + ' din ' + sabFmtDate(h.valabilDeLa)).join(', ') : ''})</span>`;
+        return `<div class="flex items-center justify-between gap-2 p-2 bg-darkbg border border-bordercol rounded-lg">
+          <p class="min-w-0 text-[11px] text-slate-200 leading-snug">${detail}</p>
+          <button onclick="acceptSabSuggestion(${i})" class="shrink-0 text-[11px] px-2 py-1 rounded-lg bg-amber-800 text-white font-bold">${sg.kind === 'profil' ? 'Creează profil' : 'Creează șablon'}</button>
+        </div>`;
+      }).join('');
+
+      const arch = (schoolSabloane.items || []).filter(x => x.activ === false);
+      document.getElementById('sabloaneArhivaList').innerHTML = arch.length ? arch.map(x => `<div class="flex items-center justify-between gap-2">
+          <span class="text-slate-400 truncate">${x.tip === 'Profil' ? '👤 ' + sabEsc(sabProfilLabel(x)) : '🔁 ' + sabEsc(x.nume)}</span>
+          <button onclick="setSablonActiv('${sabEsc(x.id)}', true)" class="text-[10px] text-cyan-300 border border-cyan-800 px-2 py-0.5 rounded shrink-0">Reactivează</button>
+        </div>`).join('') : '<p class="text-slate-500 italic text-[11px]">Nimic arhivat.</p>';
+      refreshSchoolTemplatePicker();
     }
 
     // ====== ADSERVIO (v24.6): date aduse de sincronizarea din Apps Script ======

@@ -1,5 +1,5 @@
 /**
- * BACKEND API DEFINITIV PENTRU DIiH HUB v24.51
+ * BACKEND API DEFINITIV PENTRU DIiH HUB v24.59
  * Autor: Bogdan Murar
  * Păstrează compatibilitatea 100% cu structura existentă a taburilor din Google Sheets
  * NOTĂ: Acest fișier .txt este doar INFORMATIV - reflectă codul care trebuie copiat manual
@@ -7,7 +7,7 @@
  * direct la Apps Script din acest mediu.
  */
 
-const BACKEND_VERSION = "24.51";
+const BACKEND_VERSION = "24.59";
 const SPREADSHEET_ID = "107cZOxLdMMTuOsytriNmZt_d3FM0Nwz1z2ykzpnCcfY";
 
 function getSpreadsheet() {
@@ -127,7 +127,9 @@ function doGet(e) {
         color: item.color || "auto",
         startHour: item.startHour || "08:00",
         endHour: item.endHour || "16:00",
-        author: item.author || "Bogdan"
+        author: item.author || "Bogdan",
+        // v24.59: șablonul de plată recurentă din care s-a creat activitatea (gol = activitate obișnuită)
+        templateId: item.templateId || ""
       };
 
       sh.appendRow([
@@ -624,6 +626,51 @@ function doGet(e) {
     return returnResponse(e, { success: true });
   }
 
+  // 8a1. ȘCOALĂ → ȘABLOANE PLĂȚI RECURENTE + PROFILE COPIL (v24.59)
+  //      Foi noi: Scoala_Sabloane (profile + șabloane) și Scoala_Tarife (istoricul prețurilor).
+  //      Doar adăugări/actualizări pe ID; „ștergerea” e soft (Activ = NU).
+  if (action === "setupScoalaSabloane") {
+    return returnResponse(e, setupScoalaSabloane(ss));
+  }
+
+  if (action === "saveSchoolSablon") {
+    const sh = getOrCreateScoalaSabloaneSheet(ss);
+    const now = authNow();
+    const p = e.parameter;
+    const id = p.id || ((p.tip === "Profil" ? "PROF-" : "SAB-") + Date.now());
+    const row = [id, p.tip === "Profil" ? "Profil" : "Sablon", p.nume || "", p.copil || "", p.institutie || "",
+      p.profilId || "", p.titlu || "", p.tipPlata || "", p.oraStart || "", p.oraSfarsit || "", p.ore || "",
+      p.culoare || "auto", p.statusImplicit || "", p.mesaj || "", p.activ === "NU" ? "NU" : "DA",
+      now, now, auth.profile.email || ""];
+    const idx = findRowIndexById(sh, id);
+    if (idx > 0) {
+      row[15] = sh.getRange(idx, 16).getValue() || now; // DataCreare rămâne cea inițială
+      row[17] = sh.getRange(idx, 18).getValue() || row[17]; // Autorul inițial rămâne
+      sh.getRange(idx, 1, 1, row.length).setValues([row]);
+    } else {
+      sh.appendRow(row);
+    }
+    return returnResponse(e, { success: true, id: id });
+  }
+
+  if (action === "saveSchoolTarif") {
+    const sh = getOrCreateScoalaTarifeSheet(ss);
+    const now = authNow();
+    const p = e.parameter;
+    const id = p.id || ("TRF-" + Date.now());
+    const row = [id, p.sablonId || "", p.valabilDeLa || "", parseFloat(p.tarif) || 0, p.observatie || "",
+      p.activ === "NU" ? "NU" : "DA", now, auth.profile.email || ""];
+    const idx = findRowIndexById(sh, id);
+    if (idx > 0) {
+      row[6] = sh.getRange(idx, 7).getValue() || now;
+      row[7] = sh.getRange(idx, 8).getValue() || row[7];
+      sh.getRange(idx, 1, 1, row.length).setValues([row]);
+    } else {
+      sh.appendRow(row);
+    }
+    return returnResponse(e, { success: true, id: id });
+  }
+
   // 8a2. ADSERVIO (v24.6) — datele aduse de sincronizare (fișierul Adservio.gs) + sincronizare la cerere
   if (action === "getAdservioData") {
     return returnResponse(e, { adservio: getAdservioData(ss) });
@@ -865,6 +912,7 @@ function doGet(e) {
       modelCitire: getModelCitireData(ss),
       schoolActivities: getSchoolActivitiesData(ss),
       schoolTeme: getSchoolTemeData(ss),
+      schoolSabloane: getScoalaSabloaneData(ss),
       adservio: getAdservioDataSafe(ss),
       psaltireGrup: getPsaltireGrupData(ss)
     };
@@ -888,6 +936,7 @@ function doGet(e) {
     bibliaBVA: getBiblia360Data(ss),
     schoolActivities: getSchoolActivitiesData(ss),
     schoolTeme: getSchoolTemeData(ss),
+    schoolSabloane: getScoalaSabloaneData(ss),
     adservio: getAdservioDataSafe(ss),
     psaltireGrup: getPsaltireGrupData(ss)
   };
@@ -1060,6 +1109,7 @@ function getSchoolActivitiesData(ss) {
     const startHour = isMetaObj ? (meta.startHour || "08:00") : "08:00";
     const endHour = isMetaObj ? (meta.endHour || "16:00") : "16:00";
     const author = isMetaObj ? (meta.author || "Bogdan") : "Bogdan";
+    const templateId = isMetaObj ? (meta.templateId || "") : "";
 
     return {
       id: r[0],
@@ -1081,6 +1131,7 @@ function getSchoolActivitiesData(ss) {
       // true = rândul nu are oră salvată (importuri vechi / metadate fără ore): nu ocupă un interval orar
       noHours: !(isMetaObj && meta.startHour),
       author: author,
+      templateId: templateId,
       dataAchitat: r[cols["Data_Achitat"] - 1] ? parseDateToText(r[cols["Data_Achitat"] - 1]) : "",
       comentariuPlata: r[cols["Comentariu_Plata"] - 1] || ""
     };
@@ -1551,6 +1602,75 @@ function getOrCreateSchoolTemeSheet(ss) {
   return sh;
 }
 
+// ====== ȘCOALĂ → ȘABLOANE PLĂȚI RECURENTE (v24.59) ======
+// Scoala_Sabloane: un rând per profil de copil (Tip = Profil) sau per șablon de plată (Tip = Sablon).
+// Scoala_Tarife: istoricul prețurilor unui șablon; fiecare tarif are „ValabilDeLa” (aaaa-ll-zz).
+// Activitățile deja salvate în Scoala_Activitati își păstrează tariful și totalul lor — nu se recalculează.
+const SCOALA_SABLOANE_HEADERS = ["ID", "Tip", "Nume", "Copil", "Institutie", "ProfilId", "Titlu", "TipPlata", "OraStart", "OraSfarsit", "Ore", "Culoare", "StatusImplicit", "Mesaj", "Activ", "DataCreare", "DataModificare", "Autor"];
+const SCOALA_TARIFE_HEADERS = ["ID", "SablonId", "ValabilDeLa", "Tarif", "Observatie", "Activ", "DataCreare", "Autor"];
+
+function getOrCreateScoalaSabloaneSheet(ss) {
+  let sh = ss.getSheetByName("Scoala_Sabloane");
+  if (!sh) {
+    sh = ss.insertSheet("Scoala_Sabloane");
+    sh.appendRow(SCOALA_SABLOANE_HEADERS);
+    sh.getRange(1, 1, 1, SCOALA_SABLOANE_HEADERS.length).setFontWeight("bold");
+    sh.setFrozenRows(1);
+    sh.getRange("I:J").setNumberFormat("@"); // orele rămân text (08:00), nu devin dată
+  }
+  return sh;
+}
+
+function getOrCreateScoalaTarifeSheet(ss) {
+  let sh = ss.getSheetByName("Scoala_Tarife");
+  if (!sh) {
+    sh = ss.insertSheet("Scoala_Tarife");
+    sh.appendRow(SCOALA_TARIFE_HEADERS);
+    sh.getRange(1, 1, 1, SCOALA_TARIFE_HEADERS.length).setFontWeight("bold");
+    sh.setFrozenRows(1);
+    sh.getRange("C:C").setNumberFormat("@"); // data rămâne text aaaa-ll-zz
+  }
+  return sh;
+}
+
+// Setup idempotent: creează foile dacă lipsesc; dacă există, adaugă doar coloanele lipsă la final.
+// Se poate rula oricând din editorul Apps Script (sau se face singur la prima salvare din aplicație).
+function setupScoalaSabloane(ssParam) {
+  const ss = ssParam || getSpreadsheet();
+  const a = getOrCreateScoalaSabloaneSheet(ss);
+  ensureSheetColumns(a, SCOALA_SABLOANE_HEADERS);
+  const b = getOrCreateScoalaTarifeSheet(ss);
+  ensureSheetColumns(b, SCOALA_TARIFE_HEADERS);
+  return { success: true, sabloane: a.getName(), tarife: b.getName() };
+}
+
+// Doar citire: dacă foile nu există încă, întoarce liste goale (nu creează nimic).
+function getScoalaSabloaneData(ss) {
+  const out = { items: [], tarife: [] };
+  const a = ss.getSheetByName("Scoala_Sabloane");
+  if (a && a.getLastRow() >= 2) {
+    const rows = a.getRange(2, 1, a.getLastRow() - 1, SCOALA_SABLOANE_HEADERS.length).getDisplayValues();
+    out.items = rows.filter(r => r[0]).map(r => ({
+      id: r[0], tip: r[1] === "Profil" ? "Profil" : "Sablon", nume: r[2] || "", copil: r[3] || "", institutie: r[4] || "",
+      profilId: r[5] || "", titlu: r[6] || "", tipPlata: r[7] || "", oraStart: r[8] || "", oraSfarsit: r[9] || "",
+      ore: r[10] || "", culoare: r[11] || "auto", statusImplicit: r[12] || "", mesaj: r[13] || "",
+      activ: (r[14] || "DA").toString().trim().toUpperCase() !== "NU",
+      dataCreare: r[15] || "", dataModificare: r[16] || "", autor: r[17] || ""
+    }));
+  }
+  const b = ss.getSheetByName("Scoala_Tarife");
+  if (b && b.getLastRow() >= 2) {
+    const rows = b.getRange(2, 1, b.getLastRow() - 1, SCOALA_TARIFE_HEADERS.length).getValues();
+    out.tarife = rows.filter(r => r[0]).map(r => ({
+      id: r[0].toString(), sablonId: (r[1] || "").toString(), valabilDeLa: parseDateToISO(r[2]),
+      tarif: parseFloat(r[3]) || 0, observatie: r[4] || "",
+      activ: (r[5] || "DA").toString().trim().toUpperCase() !== "NU",
+      dataCreare: r[6] ? parseDateToText(r[6]) : "", autor: r[7] || ""
+    }));
+  }
+  return out;
+}
+
 function findRowIndexById(sheet, id) {
   const last = sheet.getLastRow();
   if (last < 2) return -1;
@@ -1775,6 +1895,7 @@ const AUTH_ACTION_RULES = {
   uploadDriveFile: ["setari", "edit"],
   saveSchoolActivities: ["scoala", "edit"], deleteSchoolActivity: ["scoala", "edit"], batchUpdateSchoolStatus: ["scoala", "edit"],
   saveSchoolTema: ["scoala", "edit"], deleteSchoolTema: ["scoala", "edit"],
+  saveSchoolSablon: ["scoala", "edit"], saveSchoolTarif: ["scoala", "edit"], setupScoalaSabloane: ["scoala", "edit"],
   getAdservioData: ["scoala", "view"], adservioSyncNow: ["scoala", "edit"], adservioConnect: ["scoala", "edit"],
   addPsaltirePerson: ["psaltire", "edit"], updatePsaltirePerson: ["psaltire", "edit"], deletePsaltirePerson: ["psaltire", "edit"],
   addNotita: ["notite", "edit"], updateNotita: ["notite", "edit"], deleteNotita: ["notite", "edit"],
@@ -1797,7 +1918,7 @@ const AUTH_ACTION_RULES = {
 // Ce cheie din răspunsul de sincronizare ține de ce modul (cheile nelistate, ex. settings, se trimit tuturor)
 const AUTH_RESPONSE_MODULES = {
   pomelnic: "pomelnic", cumparaturi: "cumparaturi", ganduri: "notite", notite: "notite", gandulZilei: "gandul",
-  modelCitire: "scriptura", noteAnania: "scriptura", bibliaBVA: "biblia360", schoolActivities: "scoala", schoolTeme: "scoala", adservio: "scoala", psaltireGrup: "psaltire"
+  modelCitire: "scriptura", noteAnania: "scriptura", bibliaBVA: "biblia360", schoolActivities: "scoala", schoolTeme: "scoala", schoolSabloane: "scoala", adservio: "scoala", psaltireGrup: "psaltire"
 };
 
 function authRoleDefaults(rol) {
