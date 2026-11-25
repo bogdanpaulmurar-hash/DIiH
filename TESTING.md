@@ -2,6 +2,18 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.59 — Șabloane plăți recurente
+
+Deploy `_API.gs` (New version), apoi „Curăță Cache & Reîncarcă” până apare v24.59.
+
+1. Școală → 🔁 Șabloane: la „Sugestii” apar combinațiile din calendar. „Creează profil” pe copil + școală → apare la Profile copil.
+2. „Creează șablon” pe „Semi” → formularul e completat; Salvează → cardul arată prețul curent și „📜 Istoric” cu prețurile găsite.
+3. „💲 Preț nou” cu o dată din viitor → cardul arată „⏭️ … de la …”; în Sheet apare rândul în `Scoala_Tarife`.
+4. Activități → selectează o zi înainte și una după data nouă → „🔁 Din șablon” = Semi → Salvează. Ziua veche are prețul vechi, cea nouă prețul nou; Sumarul și Raportul pe lunile trecute nu se schimbă.
+5. Editează o activitate veche: tariful rămâne cel salvat.
+6. 🗄️ Arhivează un șablon → dispare din listă și din „Din șablon”; „Arhivate” → Reactivează.
+7. Profil fără drept de editare la Școală: subtabul se vede, dar salvările sunt refuzate de server.
+
 ## v24.57 — Raport note legate
 
 Doar frontend; „Curăță Cache & Reîncarcă” până apare v24.57.

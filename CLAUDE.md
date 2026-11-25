@@ -29,6 +29,7 @@ Aplicația familiei (PWA): Astăzi, Pomelnic, Calendar, Notițe, Cumpărături, 
 - Utilizatori: admin (Bogdan), Andreea, Luca — fiecare cu login Google și setări per profil.
 - Fiecare membru își poate redenumi aplicația. Ce primesc ceilalți (evenimente, remindere, notificări) **nu** conține „DIiH”, doar prenumele expeditorului. Calendarul comun: „Familia-ABL_Murar”.
 - Datele Adservio vin din sincronizarea din Apps Script (butonul „Actualizează din Adservio”, triggere 07:00/16:00; codul 2FA se scrie o dată în aplicație, dispozitivul de încredere stă în `ADSERVIO_TFA_COOKIES`). Marcajul din browser e doar rezervă.
+- Școală → Șabloane (v24.59): foi `Scoala_Sabloane` (profile + șabloane) și `Scoala_Tarife` (preț + „valabil de la”). Activitățile își păstrează tariful salvat; tariful nou se alege după data activității, nu se recalculează trecutul. Legătura e `templateId` în JSON-ul din `RemindereJson`.
 - Pașii de test pe versiune: `TESTING.md`.
 - Comentarii, CHANGELOG și commit-uri în română; răspunsuri scurte, ușor de citit pe telefon.
 - De verificat: „Încarcă în Drive” din Calendarul Anului Școlar dă eroarea de permisiune `DriveApp.createFolder` (scope Drive în `appsscript.json` + reautorizare).

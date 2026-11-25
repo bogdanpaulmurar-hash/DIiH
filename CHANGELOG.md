@@ -1,5 +1,17 @@
 # CHANGELOG — DIiH Hub
 
+## v24.59 — 2026-11-25 — Școală: șabloane de plăți recurente cu istoric de prețuri
+
+Frontend (`index.html`, `sw.js`) și backend (`_API.gs`). **Necesită deploy** în Apps Script (fișierul `_API.gs`; foile noi `Scoala_Sabloane` și `Scoala_Tarife` se creează singure la prima salvare sau cu `setupScoalaSabloane`).
+- Subtab nou **🔁 Șabloane** în Școală. Un șablon e o plată care se repetă cu același nume (ex. „Semi”), legată de un copil și o instituție, cu tip de plată, ore, culoare și status implicit.
+- **Istoric de prețuri**: „💲 Preț nou” cere prețul și data „valabil de la”. Zilele de dinainte rămân cu prețul vechi în calendar, sumar și rapoarte (activitățile salvate își păstrează tariful). Istoricul se vede pe card; un tarif greșit se poate anula (rămâne în foaie, marcat).
+- După un preț nou, dacă există activități deja create de la acea dată, neachitate și cu alt preț, aplicația întreabă dacă să le actualizeze. Cele achitate și cele de dinainte nu se ating.
+- **Profile copil** (copil + instituție, tip plată, ore, culoare), oricâte. Un șablon poate folosi un profil, iar câmpurile lăsate goale vin din profil.
+- **Sugestii din activitățile tale**: combinațiile găsite în calendar (ex. copil + școală, „Semi”) devin profil sau șablon dintr-o atingere; la șabloane, prețurile folosite până acum devin istoricul lui.
+- În „Adaugă / Editează activitate” apare **🔁 Din șablon**: alegerea unui șablon sau profil completează câmpurile. La salvarea pe mai multe zile, fiecare zi primește tariful valabil la data ei. La editarea unei activități existente tariful salvat rămâne, până alegi din nou șablonul.
+- Arhivarea e soft (🗄️), cu confirmare; se poate reactiva din „Arhivate”.
+- Activitățile vechi nu se schimbă; cele noi țin minte șablonul în metadatele existente (coloana `RemindereJson`), fără coloane noi în `Scoala_Activitati`.
+
 ## v24.58 — 2026-11-24 — Buton „Citește” spre Biblia Anania
 
 Doar frontend (`index.html`, `sw.js`). Nu necesită deploy în Apps Script.
