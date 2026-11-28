@@ -1,5 +1,13 @@
 # CHANGELOG — DIiH Hub
 
+## v24.60 — 2026-11-28 — Autoscroll: ecranul nu se stinge cât derulează
+
+Doar frontend (`autoscroll.js`, `index.html`, `sw.js`). Nu necesită deploy în Apps Script.
+- Cât rulează **Autoscroll**, ecranul rămâne aprins, fără buton în plus și fără nimic pe ecran. La oprire (⏹ sau la capătul paginii) telefonul revine la stingerea normală.
+- Funcționează separat de butonul ☀️ „Ecran pornit”: nu îi schimbă setarea și nu îl pornește sau oprește.
+- Android și iPhone cu iOS recent folosesc blocarea de ecran a browserului (Wake Lock). Doar pe telefoanele fără ea pornește, cât derulează, un clip video mut și invizibil.
+- Dacă ieși din aplicație și revii, ecranul se ține din nou aprins cât autoscrollul încă rulează.
+
 ## v24.59 — 2026-11-25 — Școală: șabloane de plăți recurente cu istoric de prețuri
 
 Frontend (`index.html`, `sw.js`) și backend (`_API.gs`). **Necesită deploy** în Apps Script (fișierul `_API.gs`; foile noi `Scoala_Sabloane` și `Scoala_Tarife` se creează singure la prima salvare sau cu `setupScoalaSabloane`).
