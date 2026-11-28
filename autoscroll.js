@@ -1,7 +1,9 @@
-/* DIiH — autoscroll.js (v24.50)
+/* DIiH — autoscroll.js (v24.60)
  * Buton plutitor „Autoscroll”: derulează foarte lent pagina (sau containerul care derulează efectiv în ecranul curent).
  * Prima apăsare pornește; apăsarea următoare deschide controlul discret (mai încet / mai repede / oprește).
  * Se poate ascunde din 🔔 Notificări (aceeași casetă ca „Ecran pornit”). Doar frontend, fără date în foaie.
+ * v24.60: cât rulează autoscrollul, ecranul nu se stinge (Wake Lock propriu, separat de butonul ☀️ „Ecran pornit”;
+ * rezervă: clip video mut, invizibil, doar pe telefoanele fără Wake Lock). La oprire se eliberează.
  */
 (function () {
   'use strict';
@@ -30,6 +32,40 @@
     }
     return document.scrollingElement || document.documentElement;
   }
+  // ---- Ecran aprins cât derulează (independent de „Ecran pornit” din familie.js) ----
+  let asLock = null, asVideo = null;
+  async function wakeOn() {
+    if (!running) return;
+    try {
+      if ('wakeLock' in navigator) {
+        if (asLock && !asLock.released) return;
+        asLock = await navigator.wakeLock.request('screen');
+        asLock.addEventListener('release', () => { asLock = null; });
+        if (!running) wakeOff(); // s-a oprit între timp
+        return;
+      }
+    } catch (e) { /* refuzat sau indisponibil: cade pe clipul video */ }
+    try {
+      if (!asVideo) {
+        asVideo = document.createElement('video');
+        asVideo.src = './awake.mp4';
+        asVideo.muted = true; asVideo.loop = true; asVideo.playsInline = true;
+        asVideo.setAttribute('playsinline', ''); asVideo.setAttribute('muted', '');
+        asVideo.setAttribute('aria-hidden', 'true');
+        asVideo.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0.01;pointer-events:none;bottom:0;left:0';
+        document.body.appendChild(asVideo);
+      }
+      await asVideo.play();
+    } catch (e) { /* telefonul nu permite: autoscrollul merge oricum */ }
+  }
+  function wakeOff() {
+    try { if (asLock) asLock.release(); } catch (e) {}
+    asLock = null;
+    try { if (asVideo) asVideo.pause(); } catch (e) {}
+  }
+  // Sistemul eliberează blocarea când ieși din aplicație; la revenire o reluăm dacă autoscrollul încă rulează
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && running) wakeOn(); });
+
   function atEnd(el) { return el.scrollTop + el.clientHeight >= el.scrollHeight - 1; }
 
   // Poziție ținută în zecimale: nu mai rotunjim la pixel întreg la fiecare pas, deci mișcarea e continuă
@@ -59,10 +95,12 @@
     if (running) return;
     running = true; target = null; last = performance.now();
     raf = requestAnimationFrame(frame);
+    wakeOn();
     render();
   }
   function stop(atBottom) {
     running = false; cancelAnimationFrame(raf);
+    wakeOff();
     render();
     if (atBottom) { try { showToast('Autoscroll: ai ajuns la capăt.'); } catch (e) {} }
   }

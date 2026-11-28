@@ -2,6 +2,15 @@
 
 Pașii de test pe versiune (ce faci → ce trebuie să se întâmple). Rezultatele raportate se notează în CHANGELOG.md.
 
+## v24.60 — Autoscroll ține ecranul aprins
+
+Doar frontend; „Curăță Cache & Reîncarcă” până apare v24.60. Pune înainte stingerea ecranului la 30 s (Android: Setări → Ecran → Timp expirare; iPhone: Ecran și luminozitate → Blocare automată).
+1. Android, ☀️ „Ecran pornit” oprit: pornește Autoscroll pe un text lung → după 1–2 min ecranul e tot aprins.
+2. ⏹ Oprește → după ~30 s ecranul se stinge normal.
+3. Pornește Autoscroll, ieși în altă aplicație, revino → derularea continuă și ecranul nu se stinge.
+4. ☀️ cu 5′ pornit, apoi Autoscroll pornit și oprit → numărătoarea ☀️ continuă neatinsă.
+5. Același test pe iPhone 13 Pro Max (și XR) și pe un profil fără drepturi de admin.
+
 ## v24.59 — Șabloane plăți recurente
 
 Deploy `_API.gs` (New version), apoi „Curăță Cache & Reîncarcă” până apare v24.59.
